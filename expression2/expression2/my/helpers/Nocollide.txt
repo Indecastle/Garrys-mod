@@ -1,0 +1,12 @@
+function number heviside(Num) {
+    if(Num > 0) { return Num }
+    return 0
+}
+
+function void array:noCollideEnt() {
+    for(I=1, This:count()-1) {
+        for(J=I+1, This:count()) {
+            noCollide(This[I,entity], This[J,entity])
+        }
+    }
+}

@@ -1,0 +1,63 @@
+@name SHL9PA All
+@persist [O EE Player]:entity Pla:array I Max H1 H2 H3
+
+interval(500)
+
+if(first())
+{   
+    O = owner()
+    EE = entity()
+    
+    #findIncludeClass("player")
+    #findInSphere(EE:pos(), 20000)
+    #Pla = findToArray()
+    
+    Pla = players()
+    print("count of player: " + Pla:count())
+    Max = Pla:count()
+    I = 1
+    Player = findPlayerByName("Xaryohiz")
+}
+
+
+
+if(I <= Max)
+{
+    H1 = 1+(I-1)*3 
+    H2 = 2+(I-1)*3 
+    H3 = 3+(I-1)*3
+    holoCreate(H1)
+    holoPos(H1, Pla[I,entity]:attachmentPos("eyes"))
+    holoAng(H1, Pla[I,entity]:attachmentAng("eyes"))
+    holoParentAttachment(H1, Pla[I,entity], "eyes")
+    
+    holoAlpha(H1,0)
+    
+    holoCreate(H2)
+    holoPos(H2, holoEntity(H1):pos() + holoEntity(H1):up()*7 + holoEntity(H1):forward()*-3)
+    holoAng(H2,holoEntity(H1):angles())
+    holoModel(H2, "hqcylinder")
+    holoColor(H2,vec(0,0,0))
+    holoScale(H2,vec(0.7,0.7,0.7))
+    holoParent(H2,H1)
+    
+    holoCreate(H3)
+    holoPos(H3, holoEntity(H1):pos() + holoEntity(H1):up()*2 + holoEntity(H1):forward()*-3)
+    holoAng(H3,holoEntity(H1):angles())
+    holoModel(H3, "hqtorus")
+    holoColor(H3,vec(255,255,255))
+    holoScale(H3,vec(0.8,0.8,0.6))
+    holoParent(H3,H1)
+    
+    holoVisible(H1,Pla[I,entity], 0)
+    holoVisible(H2,Pla[I,entity], 0)
+    holoVisible(H3,Pla[I,entity], 0)
+    
+}
+else
+{
+    if(I > Max+2) { stoptimer("interval") }
+}
+
+I++
+

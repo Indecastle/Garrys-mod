@@ -1,0 +1,45 @@
+@name Ott's Box
+@persist [Player]:entity
+@model models/props_junk/cardboard_box002a.mdl
+if(first() | duped()){#[
+Solid Snake Box made by Ott (www.steamcommunity.com/id/DaaOtt)
+You have my permsision to edit and recycle this code as long as you give me credit. Thanks.
+]#
+holoCreate(1)
+#[
+holoPos(1, owner():attachmentPos("eyes"))
+holoAng(1, owner():attachmentAng("eyes"))
+holoParentAttachment(1, owner(), "eyes")
+]#
+holoAlpha(1,0)
+
+holoCreate(2)
+holoScaleUnits(2,vec(60,60,60))
+holoPos(2, holoEntity(1):pos() + holoEntity(1):up()*-10 + holoEntity(1):forward()*-5 + holoEntity(1):right())
+holoAng(2, holoEntity(1):angles())
+holoColor(2, vec(255, 255, 255), 0)
+holoModel(2, "models/props_wasteland/wood_fence01a")
+holoMaterial(2, "models/props_wasteland/wood_fence01a")
+holoParent(2,1)
+holoCreate(3)
+holoScaleUnits(3,vec(-60,-60,-60))
+holoPos(3, holoEntity(1):pos() + holoEntity(1):up()*-10 + holoEntity(1):forward()*-5 + holoEntity(1):right())
+holoAng(3, holoEntity(1):angles())
+holoColor(3, vec(255, 255, 255), 0)
+holoModel(3, "models/props_wasteland/wood_fence01a")
+holoMaterial(3, "models/props_wasteland/wood_fence01a")
+holoParent(3,1)
+Player=owner()
+}
+
+interval(50)
+if (Player:isCrouch()) {holoColor(2, vec(255, 255, 255), 255) holoColor(3, vec(255, 255, 255), 50)} else {holoColor(2, vec(255, 255, 255), 0) holoColor(3, vec(255, 255, 255), 0)}
+if (Player:vel()==vec(0,0,0)) {
+holoUnparent(1)
+holoPos(1, Player:pos() + holoEntity(1):up()*40 + holoEntity(1):forward() + holoEntity(1):right())
+holoAng(1, ang(vec(0,0,0)))
+} else {
+holoPos(1, owner():attachmentPos("eyes"))
+holoAng(1, owner():attachmentAng("eyes"))
+holoParentAttachment(1, owner(), "eyes")
+}

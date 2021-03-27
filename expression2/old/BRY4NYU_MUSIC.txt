@@ -1,0 +1,51 @@
+@name BRY4NYU MUSIC
+@persist I E:entity O:entity FFT:array HOH:string Id:string COL:vector
+
+if(first()) {
+    runOnChat(1)
+    runOnTick(1)
+}
+
+Last=owner():lastSaid():explode(" ")
+
+if(Last:string(1)=="!"){
+    hideChat(1)
+    Muz=Last:string(2)
+}
+
+
+if(first()) {
+    E = owner()
+    MAX=50
+    if(first()){
+        for( I=1,MAX)
+        {
+            holoCreate(I)
+            holoModel(I, "cube" )
+            holoScale(I, vec( 0.1,0.1,1 ) )
+            holoPos(I, entity():toWorld( vec(1,(I-25),50 ) ) )
+            holoParent(I,entity())
+        }
+    }
+}
+
+if(first()) {
+    O=entity()
+    Id="test"
+}
+
+if(owner():keyPressed("t")) {
+    HOH=Muz
+    print("your link is "+ Muz)
+    soundURLload(Id,HOH,1,0,entity())
+    soundURLplay(Id)
+}
+
+FFT = O:soundFFT( Id )
+
+for(I=1,50) {
+    if(first()){ RGB =((I/(MAX)*360))%360
+    COL =hsv2rgb(vec(RGB,1,1))
+    holoColor(I,COL)}
+    holoScale(I, vec(0.1,0.1,0.3+FFT:number(I)*0.04))
+}

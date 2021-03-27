@@ -1,0 +1,9 @@
+@name HSV color
+@outputs Color:vector
+@persist I
+
+if(first()) { runOnTick(1) }
+I = (I+10)%360
+Color = hsv2rgb(I, 1, 1)
+#Color = vec(sin(I*20+255)*127+127,sin(I*20 + 255*2)*127+127,sin(I*2 + 3*255)*127+127)
+

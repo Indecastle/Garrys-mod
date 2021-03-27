@@ -1,0 +1,28 @@
+@name Muffin and Middle's Soccerball
+@persist I Ar:array [T T2]:entity B B2 [C V]:vector M:array
+@model models/props_phx/misc/soccerball.mdl
+if (first()){
+findByClass("player")
+Ar=findToArray()
+C=vec(255,255,255)
+}
+E=entity()
+if(duped()) {selfDestructAll()}
+E:setMass(5)
+runOnTick(1)
+I = (I+1)%Ar:count()
+T = Ar:entity(I+1)
+if(T:pos():distance(entity():pos())<110) {
+C=T:getColor()
+E:setColor(C)
+}
+if (T:isCrouch()) {B=2,B2=7} if(!T:isCrouch()) {B=4,B2=15}
+if(T:pos():distance(entity():pos())<90&!T:keyUse()&!T:keyAttack2()&!T:keyAttack1())
+{E:applyForce(((T:pos()+vec(0,0,45)-E:massCenter())*-B-E:vel())*E:mass())}
+if(T:pos():distance(entity():pos())<135&!T:keyUse()&!T:keyAttack1()&T:keyAttack2()){
+E:applyForce(((T:pos()+vec(0,0,45)-E:massCenter())*-B2-E:vel())*E:mass())
+}
+if(T:pos():distance(entity():pos())<150&T:keyUse()&!T:keyAttack1()&!T:keyAttack2()) {
+V = (T:pos()+vec(0,0,75)-(-T:eye()*65))-E:massCenter()
+E:applyForce(E:mass()*($V*15+V))
+}

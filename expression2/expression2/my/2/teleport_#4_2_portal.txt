@@ -1,0 +1,376 @@
+@name Teleport #4_2
+@inputs Active W:wirelink
+@outputs LocalPosition:vector Angle:angle
+@persist [A B Vehicle]:entity SoundOk [WhiteList BlackList]:array AllP LetFriend TPSoundA TPSoundB
+@trigger 
+interval(100)
+if(first() | dupefinished()) { runOnChat(1) OK = 1 LocalPosition = vec(0,0,1)
+    
+    findIncludePlayerProps(owner())
+    findByModel("models/props_phx/construct/plastic/plastic_angle_360.mdl")
+    findSortByDistance(entity():pos())
+    A = findResult(1) ### A:propFreeze(1) ###########
+    B = findResult(2) ### B:propFreeze(1) ###########
+    #print(A)
+    #print(B)
+    
+    findByClass("prop_vehicle_*")
+    Vehicle = findClosest(entity():pos()) ### Vehicle:propFreeze(1) ####################  #Vehicle:noCollideAll(1)
+    #print(Vehicle)
+    
+    findClearWhiteList()
+    
+    timer("OK",400)
+    
+    WhiteList:pushEntity(owner())
+    findIncludePlayer(owner())
+    AllP = 0
+    LetFriend = 1
+    TPSoundA = 0 TPSoundB = 0
+    
+    printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!help\"")
+}
+
+#print(owner():pos():distance(Vehicle:pos()) )
+
+function number array:checkAr(Ent:entity) {
+    local OK = 0
+    for(I=1,This:count()) {
+        if(This:entity(I) == Ent) { OK = 1 break}
+    }
+    return OK
+}
+function number array:indexEnt(Ent:entity) {
+    local OK = 0
+    for(I=1,This:count()) {
+        if(This:entity(I) == Ent) { OK = I break}
+    } 
+    return OK
+}
+function number array:removeEnt(Ent:entity) {
+    local OK = 0
+    if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+    return OK
+}
+function number array:addEnt(Ent:entity) {
+    local OK = 0
+    if(!This:checkAr(Ent)) { This:pushEntity(Ent) OK=1}
+    return OK
+}
+
+if(!Active) { 
+    SoundOk = 0
+    Vehicle:setPos(A:pos()+vec(0,0,-10)) Vehicle:setAng(A:toWorld(ang(-90,0,0)))
+    Angle = B:toWorld(ang(-90,0,0))
+}
+else {
+    #Vehicle:setPos(B:pos()+vec(0,0,20)) 
+    OK = 0
+    local Driver = Vehicle:driver()
+    local OKb = BlackList:checkAr(Driver)
+    if(!OKb) {
+        OK = WhiteList:checkAr(Driver)
+    }
+    if(OK | (AllP & !OKb)){
+        SoundOk = 1
+        ### Vehicle:propFreeze(1) Vehicle:setAng(ang(0,0,0))  ########################
+    }
+    else { W["Eject",number] = 1 }
+}
+
+if(changed(SoundOk) & SoundOk == 1) { 
+    #soundPlayWorld("k_lab.mini_teleport_crack1",A:pos(),1,1,1)
+    #soundPlayWorld("k_lab.mini_teleport_crack1",B:pos(),1,1,1)
+    timer("tpsound", 50)
+    timer("work1",0)
+
+}
+
+if(chatClk()) {
+    Pla = lastSpoke()
+    OK = 0
+    if(!BlackList:checkAr(Pla)) {
+        OK = WhiteList:checkAr(Pla)
+    }
+    if((OK & LetFriend) | Pla == owner()) {
+        local Ar = Pla:lastSaid():explode(" ")
+        
+        #[if(Pla:lastSaid() == "!res") { # Swap A,B
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local Temp = A
+                A = B
+                B = Temp
+                timer("work4",40)
+            }
+        }]#
+        if(Pla:lastSaid() == "!ref") { # Refresh vehicle
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                timer("work4",40)
+            }
+        }
+        #[elseif(Pla:lastSaid() == "!resall" & Pla == owner()) { # Swap A,B (at any distance)
+            hideChat(1)
+            local Temp = A
+            A = B
+            B = Temp
+            timer("work4",40)
+        }]#
+        elseif(Pla:lastSaid() == "!refall") { # Refresh vehicle (at any distance)
+            hideChat(1)
+            timer("work4",40)
+        }
+        elseif(Ar:string(1) == "!add") { # Add Friend to WhiteList
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            local OnlyA = (Ar:string(3) == "a") ? 1 : 0
+            if(L1 < 100 | (!OnlyA & (L2 < 100))) {
+                local P = noentity()
+                if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                else { P = findPlayerByName(Ar:string(2)) }
+                if(!(P:isPlayer() & Ar:string(2)!="")) { print("player not found") }
+                elseif(WhiteList:checkAr(P)) { print("The WhiteList already has this player") }
+                else {  findIncludePlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" added to the WhiteList") timer("OK",1)}
+            }
+            
+        }
+        elseif(Ar:string(1) == "!addb") { # Add Player to BlackList
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            local OnlyA = (Ar:string(3) == "a") ? 1 : 0
+            if(L1 < 100 | (!OnlyA & (L2 < 100))) {
+                local P = noentity()
+                if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                else { P = findPlayerByName(Ar:string(2)) }
+                if(!(P:isPlayer() & P != owner() & Ar:string(2)!="")) { print("player not found") }
+                elseif(!BlackList:addEnt(P)) { print("The BlackList already has this player") }
+                else {  print(P:name()+" added to the BlackList") timer("OK",1)}
+            }
+            
+        }
+        elseif(Ar:string(1) == "!dell") { # Remove Friend from WhiteList
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            local OnlyA = (Ar:string(3) == "a") ? 1 : 0
+            if(L1 < 100 | (!OnlyA & (L2 < 100))) {
+                local P = noentity()
+                if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                else { P = findPlayerByName(Ar:string(2)) }
+                if(!(P:isPlayer() & P != owner() & Ar:string(2)!="")) { print("player not found") }
+                elseif(!WhiteList:checkAr(P)) { print("This player is not WhiteListed") }
+                else {  findDisallowPlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" deleted from WhiteList") timer("OK",1)}
+            }
+        }
+        elseif(Ar:string(1) == "!dellb") { # Remove Player from BlackList
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            local OnlyA = (Ar:string(3) == "a") ? 1 : 0
+            if(L1 < 100 | (!OnlyA & (L2 < 100))) {
+                local P = noentity()
+                if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                else { P = findPlayerByName(Ar:string(2)) }
+                if(!(P:isPlayer() & Ar:string(2)!="")) { print("player not found") }
+                elseif(!BlackList:removeEnt(P)) { print("This player is not BlackListed") }
+                else { print(P:name()+" deleted from BlackList") timer("OK",1)}
+            }
+        }
+        elseif(Ar:string(1) == "!addall" & Pla == owner()) { # Add friend to WhiteList (at any distance)
+            hideChat(1)
+            local P = noentity()
+            if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+            else { P = findPlayerByName(Ar:string(2)) }
+            if(WhiteList:checkAr(P)) { print("The WhiteList already has this player") }
+            elseif(P:isPlayer() & Ar:string(2)!="") {  findIncludePlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" added to the WhiteList") timer("OK",1)}
+            else { print("player not found") }
+        }
+        elseif(Ar:string(1) == "!addball" & Pla == owner()) { # Add enemy to BlackList (at any distance)
+            hideChat(1)
+            local P = noentity()
+            if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+            else { P = findPlayerByName(Ar:string(2)) }
+            if(!BlackList:addEnt(P)) { print("The BlackList already has this player") }
+            elseif(P:isPlayer() & P != owner() & Ar:string(2)!="") {  print(P:name()+" added to the BlackList") timer("OK",1)}
+            else { print("player not found") }
+        }
+        elseif(Ar:string(1) == "!dellall" & Pla == owner()) { # Remove friend from WhiteList (at any distance)
+            hideChat(1)
+            local P = noentity()
+            if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+            else { P = findPlayerByName(Ar:string(2)) }
+            if(!WhiteList:checkAr(P)) { print("This player is not WhiteListed") }
+            elseif(P:isPlayer() & P != owner() & Ar:string(2)!="") {  findDisallowPlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" deleted from WhiteList") timer("OK",1)}
+            else { print("player not found") }
+            
+        }
+        elseif(Ar:string(1) == "!dellball" & Pla == owner()) { # Remove enemy to BlackList (at any distance)
+            hideChat(1)
+            local P = noentity()
+            if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+            else { P = findPlayerByName(Ar:string(2)) }
+            if(!BlackList:removeEnt(P)) { print("This player is not BlackListed") }
+            elseif(P:isPlayer() & Ar:string(2)!="") { print(P:name()+" deleted from BlackList") timer("OK",1)}
+            else { print("player not found") }
+            
+        }
+        
+        elseif(Ar:string(1) == "!allp") { # allow all players to use teleport
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            local OnlyA = (Ar:string(3) == "a") ? 1 : 0
+            if(L1 < 100 | (!OnlyA & (L2 < 100))) {
+                if(Ar:string(2) == "0") { AllP = 0 print("AllPlayers off") timer("OK",1) }
+                elseif(Ar:string(2) == "1") { AllP = 1 print("AllPlayers on") timer("OK",1)}
+            }
+            
+        }
+        elseif(Ar:string(1) == "!allpall" & Pla == owner()) { # allow all players to use teleport (at any distance)
+            hideChat(1)
+            if(Ar:string(2) == "0") { AllP = 0 print("AllPlayers off") timer("OK",1) }
+            elseif(Ar:string(2) == "1") { AllP = 1 print("AllPlayers on") timer("OK",1)}
+        }
+        elseif(Ar:string(1) == "!letf" & Pla == owner()) { # allow all friend to use commands
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            local OnlyA = (Ar:string(3) == "a") ? 1 : 0
+            if(L1 < 100 | (!OnlyA & (L2 < 100))) {
+                if(Ar:string(2) == "0") { LetFriend = 0 print("LetFriend off") timer("OK",1) }
+                elseif(Ar:string(2) == "1") { LetFriend = 1 print("LetFriend on") timer("OK",1)}
+            }
+            
+        }
+        elseif(Ar:string(1) == "!letfall" & Pla == owner()) { # allow all friend to use commands (at any distance)
+            hideChat(1)
+            if(Ar:string(2) == "0") { LetFriend = 0 print("LetFriend off") timer("OK",1) }
+            elseif(Ar:string(2) == "1") { LetFriend = 1 print("LetFriend on") timer("OK",1)}
+        }
+        elseif(Ar:string(1) == "!tpsound") { # allow all friend to use commands
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            local OnlyA = (Ar:string(3) == "a") ? 1 : 0
+            if(L1 < 100 | L2 < 100) {
+                if (OnlyA & L1<100) {
+                    if(Ar:string(2) == "0") { TPSoundA = 0 print("TPSound off A") timer("OK",1) }
+                    elseif(Ar:string(2) == "1") { TPSoundA = 1 print("TPSound on A") timer("OK",1)}
+                }
+                elseif (OnlyA & L2<100) {
+                    if(Ar:string(2) == "0") { TPSoundB = 0 print("TPSound off B") timer("OK",1) }
+                    elseif(Ar:string(2) == "1") { TPSoundB = 1 print("TPSound on B") timer("OK",1)}
+                }
+                else {
+                    if(Ar:string(2) == "0") { TPSoundA = 0 TPSoundB = 0 print("TPSound off") timer("OK",1) }
+                    elseif(Ar:string(2) == "1") { TPSoundA = 1 TPSoundB = 1 print("TPSound on") timer("OK",1)}
+                }
+            }
+            
+        }
+        elseif(Ar:string(1) == "!tpsoundall" & Pla == owner()) { # allow all friend to use commands (at any distance)
+            hideChat(1)
+            if(Ar:string(2) == "0") { TPSoundA = 0 TPSoundB = 0 print("TPSound off") timer("OK",1) }
+            elseif(Ar:string(2) == "1") { TPSoundA = 1 TPSoundB = 1 print("TPSound on") timer("OK",1)}
+        }
+        elseif(Ar:string(1) == "!help" & Pla == owner()) { # allow all players to use teleport
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            if(L1 < 100) {
+                #if(Ar:string(2) == "ru") { timer("help_ru",100) }
+                #elseif(Ar:string(2) == "en") { timer("help_en",100)}
+                timer("help_en",100)
+            }
+            
+        }
+    }
+}
+
+
+
+if (clk("work1")) {
+    #TargetPos = 
+    Vehicle:setPos(B:pos()+vec(0,0,-50))
+    timer("work3",10)
+    
+}
+#[if (clk("work2")) {
+    #Jump = 1
+    Vehicle:setPos(TargetPos)
+    timer("work3",10)
+    
+}]#
+if (clk("work3")) {
+    #Eject = 1
+    W["Eject",number] = 1
+    #Jump = 0
+    #timer("OK",10)
+}
+#[if (clk("work4")) {
+    #TargetPos = 
+
+    timer("OK",10)
+}]#
+#[if (clk("OK")) {
+    if(Active) { timer("OK",100) }
+    else { 
+        #Jump = 1
+        Vehicle:setPos(A:pos()+vec(0,0,-10))
+        #timer("work6",100)
+    }
+}]#
+#[if (clk("work6")) {
+    Jump = 0
+    Eject = 0
+}]#
+
+if (clk("tpsound")) {
+    if(TPSoundA) {
+        soundStop(1)
+        A:soundPlay(1,4,"k_lab.teleport_sound")
+    }
+    if(TPSoundB) {
+        soundStop(2)
+        B:soundPlay(2,4,"k_lab.teleport_sound")
+    }
+}
+
+if (clk("OK")) {
+    A:soundPlay(20,4,"buttons/button9.wav")
+    B:soundPlay(20,4,"buttons/button9.wav")
+}
+
+if (clk("help_en")) {
+    printColor(vec(255,0,0), "###################################")
+    printColor(vec(255,255,0), "!add", vec(0,255,255), "  - Add Friend to WhiteList")
+    printColor(vec(255,255,0), "!addall", vec(0,255,255), "  - Add friend to WhiteList (at any distance)")
+    printColor(vec(255,255,0), "!dell", vec(0,255,255), "  - Remove Friend from WhiteList")
+    printColor(vec(255,255,0), "!dellall", vec(0,255,255), "  - Remove friend from WhiteList (at any distance)")
+    printColor(vec(255,255,0), "!addb", vec(0,255,255), "  - Add Player to BlackList")
+    printColor(vec(255,255,0), "!addball", vec(0,255,255), "  - Add enemy to BlackList (at any distance)")
+    printColor(vec(255,255,0), "!dellb", vec(0,255,255), "  - Remove Player from BlackList")
+    printColor(vec(255,255,0), "!dellball", vec(0,255,255), "  - Remove enemy to BlackList (at any distance)")
+    printColor(vec(255,255,0), "!allp", vec(0,255,255), "  - allow all players to use teleport")
+    printColor(vec(255,255,0), "!allpall", vec(0,255,255), "  - allow all players to use teleport (at any distance)")
+    printColor(vec(255,255,0), "!res", vec(0,255,255), "  - Swap A,B")
+    printColor(vec(255,255,0), "!resall", vec(0,255,255), "  - Swap A,B (at any distance)")
+    printColor(vec(255,255,0), "!ref", vec(0,255,255), "  - Refresh vehicle")
+    print(_HUD_PRINTCENTER, "Wait :)")
+    timer("help_en2", 2000)
+}
+
+if(clk("help_en2")) {
+    printColor(vec(255,255,0), "!refall", vec(0,255,255), "  - Refresh vehicle (at any distance)")
+    printColor(vec(255,255,0), "!letf", vec(0,255,255), "  - allow all friend to use commands")
+    printColor(vec(255,255,0), "!letfall", vec(0,255,255), "  - allow all friend to use commands (at any distance)")
+    printColor(vec(255,255,0), "!tpsound", vec(0,255,255), "  - allow all friend to use commands")
+    printColor(vec(255,255,0), "!tpsoundall", vec(0,255,255), " - allow all friend to use commands (at any distance)")
+    printColor(vec(255,0,0), "###################################")
+}

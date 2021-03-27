@@ -1,0 +1,25 @@
+@name NoClip
+
+
+
+@outputs
+
+
+
+interval(100)
+
+if(owner():keyPressed("v"))
+
+{A=1
+
+owner():playerNoclip(A)
+
+}
+
+if(owner():keyPressed("b")){
+
+A=0
+
+owner():playerNoclip(A)
+
+}

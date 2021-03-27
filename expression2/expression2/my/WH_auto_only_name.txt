@@ -1,0 +1,63 @@
+@name WH auto only name
+@inputs WW:wirelink
+@persist EI I [Players OP]:table O:entity W:wirelink
+@model models/cheeze/wires/nano_compare.mdl
+#if(dupefinished() | duped()) { selfDestructAll() }
+if(first() || dupefinished() || duped()) {
+    W = entity():isWeldedTo():wirelink()
+    W:egpClear()
+    setName("generic")
+    timer("scan",10)
+    findIncludeClass("player")
+    reset()
+}
+if ((->WW|W)&(first() || dupefinished() || duped() || changed(->WW) || changed(W))){   entity():setMaterial("Models/effects/vol_light001") entity():propStatic(1) entity():propNotSolid(1) entity():propFreeze(1) entity():isWeldedTo():propStatic(1)
+    if(->WW) { W = WW }
+    W:egpClear()
+    setName("generic")
+    timer("scan",10)
+    #findByClass("player")
+    findIncludeClass("player")
+}
+
+if (clk("scan")){
+    O = owner()
+    findInSphere(owner():pos(), 500000)
+    Players=findToTable()
+    if (Players:count()!=OP:count()){
+        I=0
+        EI=0
+        timer("egp",10)
+    }
+    OP=Players
+    timer("scan",1000)
+}
+
+if (clk("egp")&(I<Players:count())){
+    if (clk("egp")&!I){W:egpClear()}
+    I++
+    P=Players[I,entity]
+    
+    EI++
+    W:egp3DTracker(EI,vec(0,0,0))
+    W:egpParent(EI,P)
+    EI++
+    W:egpBox(EI,vec2(0,0),vec2(10,10))
+    if (Players[I,entity]:isAdmin()){
+        W:egpColor(EI,vec4(255,0,0,100))
+    } else {
+        W:egpColor(EI,vec4(100,255,100,100))
+    }
+    W:egpPos(EI,W:egpPos(EI-1))
+    W:egpParent(EI,EI-1)
+    
+    EI++
+    W:egpText(EI,Players[I,entity]:name() ,vec2(-10,0))
+    W:egpSize(EI,13)
+    
+    W:egpParent(EI,EI-2)
+    W:egpParent(EI+Players:count()*5,EI-2)
+    if(I<=Players:count()) { timer("egp",1) }
+}
+
+entity():setAlpha(255)

@@ -1,0 +1,9 @@
+@name Lever Door
+@inputs A1 A2
+@outputs Fade 
+@persist 
+@trigger 
+
+if(changed(A1) & A1) { Fade=!Fade }
+if(changed(A2) & A2) { Fade=!Fade }
+

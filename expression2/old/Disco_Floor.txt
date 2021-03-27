@@ -1,0 +1,121 @@
+@name Disco Floor
+@persist Hol:table DIM SIZ MOD SX SY
+#Tech's Disco Floor
+
+runOnTick(1)
+if(first()){
+    #This changes which mode the floor starts on.
+    #0 is diagonal flow, 1 is vertical lines, 2 is the moving square, and 3 is full flow.
+    MOD = 0
+    
+    #Don't touch these.
+    SX = 1
+    SY = 1
+    
+    #This determines the dimensions of the board (Base is 5x5)
+    DIM = 5
+    
+    #This determines the size of each square (Base is 5HU)
+    SIZ = 5
+    
+    Hol = table()
+    for(X = 1,DIM){
+        Hol:pushTable(table())
+    }
+    
+    for(X = 1, DIM){
+        for(Y = 1, DIM){
+            Index = DIM * X + Y - DIM
+            holoCreate(Index,entity():pos(),vec(SIZ,SIZ,0.1),ang(0,0,0),vec(255,255,255))
+            Hol[X,table]:pushEntity(holoEntity(Index))
+            holoDisableShading(Index,1)
+            holoPos(Index,entity():toWorld(vec(X*(SIZ + 0.1)*12,Y*(SIZ + 0.1)*12,0)))
+        }
+    }
+    
+    holoCreate(-1)
+    holoScale(-1,vec(DIM * SIZ + DIM * 0.1, DIM * SIZ + DIM * 0.1, 0.05))
+    holoPos(-1,Hol[int(DIM/2)+1,table][int(DIM/2)+1,entity]:pos())
+    holoColor(-1,vec(0,0,0))
+    holoParent(-1,holoIndex(Hol[int(DIM/2)+1,table][int(DIM/2)+1,entity]))
+    
+    for(X = 1,DIM){
+        for(Y = 1,DIM){
+            Index = holoIndex(Hol[X,table][Y,entity])
+            holoParent(Index,holoIndex(Hol[int(DIM/2)+1,table][int(DIM/2)+1,entity]))
+        }
+    }
+    
+    holoPos(holoIndex(Hol[int(DIM/2)+1,table][int(DIM/2)+1,entity]),entity():pos() + vec(0,0,0.2))
+    holoParent(holoIndex(Hol[int(DIM/2)+1,table][int(DIM/2)+1,entity]),entity())
+}
+
+if(MOD == 0){
+    for(X = 1, DIM){
+        for(Y = 1, DIM){
+            MULT = 255
+            ADD = 126
+            CMULT = 50
+            Index = holoIndex(Hol[X,table][Y,entity])
+            holoColor(Index,vec(sin(curtime()*CMULT + 30 + 40 + X*Y)*80 + 85,sin(curtime()*(CMULT + 0) + 30 + 80 + X*Y)*80 + 85,sin(curtime()*(CMULT + 0) + 30 + 120 + X*Y)*80 + 85))
+        }
+    }
+    
+}
+
+if(MOD == 1){
+    MULT = 255
+    ADD = 150
+    CMULT = 40
+    for(X = 1, DIM){
+        for(Y = 1, DIM){
+            Index = holoIndex(Hol[X,table][Y,entity])
+            holoColor(Index,vec(sin(curtime()*CMULT + 30 + 40 + X*Y)*80 + 85,sin(curtime()*(CMULT + 10) + 30 + 80 + X*Y)*80 + 85,sin(curtime()*(CMULT + 20) + 30 + 120 + X*Y)*80 + 85))
+        }
+        CMULT = CMULT-10
+    }
+}
+
+if(MOD == 2){
+    for(X = 1, DIM){
+        for(Y = 1, DIM){
+            MULT = 255
+            ADD = 126
+            CMULT = 50
+            Index = holoIndex(Hol[X,table][Y,entity])
+            holoColor(Index,vec(sin(curtime()*CMULT + 30+ 40)*80 + 85,sin(curtime()*(CMULT + 0) + 30 + 80)*80 + 85,sin(curtime()*(CMULT + 0) + 30 + 120)*80 + 85))
+        }
+    }
+    if(SX > DIM){
+        SX = 1
+        SY++
+    }
+    if(SY > DIM){
+        SY = 1
+    }
+    
+    holoColor(holoIndex(Hol[SX,table][SY,entity]),vec(0,0,0))
+    
+    if(int(curtime()/0.5) == curtime()/0.5){
+        SX++
+    }
+}
+
+if(MOD == 3){
+    for(X = 1, DIM){
+        for(Y = 1, DIM){
+            MULT = 255
+            ADD = 126
+            CMULT = 50
+            Index = holoIndex(Hol[X,table][Y,entity])
+            holoColor(Index,vec(sin(curtime()*CMULT + 30+ 40)*80 + 85,sin(curtime()*(CMULT + 0) + 30 + 80)*80 + 85,sin(curtime()*(CMULT + 0) + 30 + 120)*80 + 85))
+        }
+    }
+}
+
+if(int(curtime()/(12.5/5*DIM)) == curtime()/(12.5/5*DIM)){
+    LASTMOD = MOD
+    while(MOD == LASTMOD){
+        MOD = randint(0,3)
+    }
+}

@@ -1,0 +1,103 @@
+@name SHAR V5
+
+@persist [O E]:entity V:array I360 B As
+
+runOnTick(1)
+
+E=entity()
+
+O=owner()
+
+if(first()) {
+
+entity():propFreeze(1)
+
+holoCreate(1)
+
+holoParent(1,entity())
+
+holoModel(1, "hq_sphere")
+
+holoScale(1, vec(-51))
+
+holoColor(1,vec(0,0,255))
+
+holoMaterial(1,"models/props_combine/portalball001_sheet")
+
+holoCreate(2)
+
+holoColor(2,vec(0,0,255))
+
+holoParent(2,entity())
+
+holoScale(2, vec(50))
+
+holoModel(2, "hq_sphere")
+
+holoMaterial(2,"models/props_combine/portalball001_sheet")
+
+}
+
+A=findToArray()
+
+findInSphere(E:pos(),500)
+
+findByClass("player")
+
+findByClass("prop_*")
+
+findByClass("wire_*")
+
+findExcludeClass("weapon_*")
+
+findExcludeClass("gmod_wire_hologram")
+
+findExcludeClass("env_laserdot")
+
+I360=(I360+0.5)%360
+
+Color=hsl2rgb(I360,1,1)
+
+holoColor(1,Color)
+
+holoColor(2,Color)
+
+foreach(K,V:entity=A){
+
+if(
+
+V != E &
+
+V:owner() != owner()&
+
+V:name() != "CyberPank" &
+
+V:name() !="FreeBSD" &
+
+V:name() != "WOLFraMix" &
+
+V:pos():distance(E:pos())<300){
+
+if(V:isPlayer()){
+
+print(V:name()+" in your area")
+
+}
+
+V:propFreeze(0)
+
+V:playerNoclip(0)
+
+V:propFreeze(0)
+
+V:setVel(((V:pos()-entity():pos())*25))
+
+if(V:pos():z()<entity():pos():z()-4){
+
+V:setPos(entity():pos()+vec(0,0,250))
+
+}
+
+}
+
+}

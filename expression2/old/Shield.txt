@@ -1,0 +1,268 @@
+@name Shield
+@persist Mepos:vector
+@persist Array:array Me:entity Angle [Entity]:array Spawned Dead
+@persist Die Dist On Del Lent Ice Caution Danger [ARPG RPG]:entity 
+@persist EntityAngle:angle Find_time Props:array Spawn_delay Spawn_delay_m
+@persist Alpha
+if (first()|duped())
+{
+    Alpha=255
+    Me = owner()
+    runOnTick(1)
+    Dist=50
+    On=4
+    entity():setAlpha(0)
+    Spawn_delay_m=200
+    concmd("echo --------------------------------------------")
+    concmd("echo shields are controlled with chat. Use -shield in front of a command")
+    concmd("echo Command list:")
+    concmd("echo --------------------------------------------")
+    concmd("echo --------------------------------------------")
+    concmd("echo spawn ~~~~~~~~~~ creates missing shields")
+    concmd("echo undo ~~~~~~~~~~~ deletes all shields")
+    concmd("echo on ~~~~~~~~~~~~~ turns shield closed-mode on")
+    concmd("echo off ~~~~~~~~~~~~ turns shield closed-mode off")
+    concmd("echo caution ~~~~~~~~ turns shield caution-mode on, anti-prop kill mode")
+    concmd("echo safe ~~~~~~~~~~~ turns shield caution-mode off, shields will not freeze")
+    concmd("echo glass ~~~~~~~~~~ turns shields partially invisible")
+    concmd("echo metal ~~~~~~~~~~ returns shields to their former visibility")
+    concmd("echo lend <name> ~~~~ lends the shield to another player, who can use on/off/caution/safe/glass/metal commands")
+    concmd("echo return ~~~~~~~~~ returns shields form the player you lent them to")
+    concmd("echo delete ~~~~~~~~~ deletes the chip and the shields as long as you are standing on the ground after saying it")
+}
+
+
+Said=owner():lastSaid():lower():explode(" ")
+MeSaid=Me:lastSaid():lower():explode(" ")
+
+if (Said[1,string]=="!")
+{
+    if (Said[2,string]=="spawn")
+    {
+        if (!Entity[1,entity]) #improved spawn code, replace function
+        {
+        Spawn_delay=Spawn_delay_m
+        hint("Spawned shield 1!",2)
+        Entity[1,entity]=propSpawn("models/props_phx/construct/metal_plate_curve2x2.mdl",vec(0,0,30),0)
+        }
+        if (!Entity[2,entity]) #improved spawn code, replace function
+        {
+        Spawn_delay=Spawn_delay_m
+        hint("Spawned shield 2!",2)
+        Entity[2,entity]=propSpawn("models/props_phx/construct/metal_plate_curve2x2.mdl",vec(0,0,130),0)
+        }
+        if (!Entity[3,entity]) #improved spawn code, replace function
+        {
+        Spawn_delay=Spawn_delay_m
+        hint("Spawned shield 3!",2)
+        Entity[3,entity]=propSpawn("models/props_phx/construct/metal_plate_curve2x2.mdl",vec(0,0,230),0)
+        }
+        if (!Entity[4,entity]) #improved spawn code, replace function
+        {
+        Spawn_delay=Spawn_delay_m
+        hint("Spawned shield 4!",2)
+        Entity[4,entity]=propSpawn("models/props_phx/construct/metal_plate_curve2x2.mdl",vec(0,0,330),0)
+        }
+    }
+    if (Said[2,string]=="undo")
+    {
+        if (Entity[1,entity])
+        {
+            Entity[1,entity]:propDelete()
+            hint("Undid shield 1!",2)
+        }
+        if (Entity[2,entity])
+        {
+            Entity[2,entity]:propDelete()
+            hint("Undid shield 2!",2)
+        }
+        if (Entity[3,entity])
+        {
+            Entity[3,entity]:propDelete()
+            hint("Undid shield 3!",2)
+        }
+        if (Entity[4,entity])
+        {
+            Entity[4,entity]:propDelete()
+            hint("Undid shield 4!",2)
+        }
+        
+        
+    }
+    if (MeSaid[2,string]=="on" & On!=1 & !Die & !Dead)
+    {
+        On=1
+        hint("Shield ON!",2)
+    }
+    if (MeSaid[2,string]=="off" & On!=4 | Die)
+    {
+        On=4
+        Die=0
+        hint("Shield OFF!",2)
+    }
+    if (Said[2,string]=="delete" & owner():isOnGround())
+    {
+        Entity[1,entity]:propDelete()
+        Entity[2,entity]:propDelete()
+        Entity[3,entity]:propDelete()
+        Entity[4,entity]:propDelete()
+        Spawned=0
+        hint("Chip deleted. Shield deleted",2)
+        entity():propDelete()
+    }
+    if (Said[2,string]=="lend" & !Lent)
+    {
+        if (Said[3,string])
+        {
+            Lent=1
+            Spawn_delay=Spawn_delay_m
+            Me=findPlayerByName(Said[3,string])
+            hint("Shield lent to: "+Me:name(),2)
+        }
+    }
+    if (Said[2,string]=="return" & Lent)
+    {
+        Lent=0
+        Spawn_delay=Spawn_delay_m
+        Me=owner()
+    }
+    if (MeSaid[2,string]=="caution" & !Caution)
+    {
+        Caution=1
+        hint("Shield is cautious of others props.",2)
+        hint("Find props not owned by you and block them!",2)
+    }
+    if (MeSaid[2,string]=="safe" & Caution)
+    {
+        Caution=0
+        hint("Shield will not care about others props",2)
+    }
+    if (MeSaid[2,string]=="glass" & Alpha!=150)
+    {
+        Alpha=150
+    }
+    if (MeSaid[2,string]=="metal" & Alpha!=255)
+    {
+        Alpha=255
+    }
+    
+}
+
+
+if (!Me:isAlive() & !Die)
+{
+    Die=1
+    Dead=1
+    Spawn_delay=Spawn_delay_m
+    if (~Die)
+    {
+        hint("you died, shield is in off-mode to prevent spawn kill",2)
+    }
+}
+else
+{
+    Dead=0
+}
+
+if (Die)
+{
+    On=4
+    Die=0
+    if (~Die)
+    {
+        hint("Shield OFF!",2)
+    }
+}
+
+# Angle is increased by 1, are lovely friend modulus keeps is between 0 and 359. (That's not really needed, but I think it looks better.)
+Angle = (Angle+1) % 360
+MePos = Me:pos()
+if (Spawn_delay>0)
+{
+    Spawn_delay-=1
+}
+if (!Danger)
+{
+for (I=1,4) {
+   # retrieve an entity from the array.
+    E = Entity[I,entity]
+    Mass = E:mass()
+ 
+    # The position vector is calculated by trig on the Angle
+
+    Vector = MePos + vec( cos(Angle), sin(Angle) ,0.1) *(Dist *On) - E:pos()
+    E:applyForce( ( Vector*10 - E:vel() ) * Mass )
+
+    # Angle with an added 140 is the plates required rotation.
+    # This value needs to be adjusted when you change speed!!
+    EntityAngle = angnorm( ang( 0, Angle + 140, 0) - E:angles() )
+    E:applyAngForce( ( EntityAngle*5 - E:angVel() ) * Mass  )
+    
+    # Angle is increased by 90 for the next plate.
+    # There are 4 plates, so Angle is increased by 4 * 90 = 360, which brings it back where it started. The added 360 is taken care of with the % 360.
+    Angle += 90 
+    if (Spawn_delay>0 | EntityAngle:roll()<-4 & !Danger | EntityAngle:roll()>4 & !Danger | E:pos():distance(Me:pos())>500)
+    {
+        E:propNotSolid(1)
+    }
+    else
+    {
+        E:propNotSolid(0)
+    }
+    if (E:getAlpha()!=Alpha)
+    {
+        E:setAlpha(Alpha)
+    }
+}
+}
+
+
+if (Caution)
+{
+    if (!Find_time)
+    {
+        timer("find",500) #set timer
+        Find_time=1 #stop it from setting a new timer all the time
+        findExcludePlayerProps(Me)
+        findByClass("prop_physics") #find only props
+        findClipToSphere(Me:pos(),1000) #find only in sphere
+        findSortByDistance(Me:pos()) #self-explained
+        Props=findToArray() #make it into an array
+    }#ok nice, we got all the props inside the sphere, except mine!
+    #now let's work with them!
+    if (Props[1,entity]:pos():distance(Me:pos())<500)
+    #no need to check any other props, the closest one will do.
+    #is it closer than 500 inches?
+    {
+        Danger=1
+        Entity[1,entity]:propFreeze(1)
+        Entity[2,entity]:propFreeze(1)
+        Entity[3,entity]:propFreeze(1)
+        Entity[4,entity]:propFreeze(1)
+    }
+    else
+    {
+        Danger=0
+        Entity[1,entity]:propFreeze(0)
+        Entity[2,entity]:propFreeze(0)
+        Entity[3,entity]:propFreeze(0)
+        Entity[4,entity]:propFreeze(0)
+    }
+}
+else
+{
+        Danger=0
+        Entity[1,entity]:propFreeze(0)
+        Entity[2,entity]:propFreeze(0)
+        Entity[3,entity]:propFreeze(0)
+        Entity[4,entity]:propFreeze(0)
+}
+if (clk("find")) #is the timer up?
+{
+    Find_time=0 #if so, reset it!
+}
+#by KTCCD, please do not pretend that you made this expression. There is nothing cool with that.
+#this is not the finished chip, only something I released because I was asked.
+#check out: [url]http://www.wiremod.com/forum/contraptions-saves/15432-my-shield-my-sword.html[/url] for newer versions or to give suggestions!
+#now have fun ^^.
+ 

@@ -1,0 +1,31 @@
+@name SHL9PA
+
+
+holoCreate(1)
+holoPos(1, owner():attachmentPos("eyes"))
+holoAng(1, owner():attachmentAng("eyes"))
+holoParentAttachment(1, owner(), "eyes")
+
+holoAlpha(1,0)
+
+holoCreate(2)
+holoPos(2, holoEntity(1):pos() + holoEntity(1):up()*7 + holoEntity(1):forward()*-3)
+holoAng(2,holoEntity(1):angles())
+holoModel(2, "hqcylinder")
+holoColor(2,vec(0,0,0))
+holoScale(2,vec(0.7,0.7,0.7))
+holoParent(2,1)
+
+holoCreate(3)
+holoPos(3, holoEntity(1):pos() + holoEntity(1):up()*2 + holoEntity(1):forward()*-3)
+holoAng(3,holoEntity(1):angles())
+holoModel(3, "hqtorus")
+holoColor(3,vec(255,255,255))
+holoScale(3,vec(0.8,0.8,0.6))
+holoParent(3,1)
+
+holoVisible(1,owner(),0)
+holoVisible(2,owner(),0)
+holoVisible(3,owner(),0)
+
+

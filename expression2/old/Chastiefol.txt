@@ -1,0 +1,585 @@
+@name Chastiefol
+@persist [Chfl Target Block Block_2 Target_Ent]:entity [Target_Pos Throw]:vector [Knife_Attack Knifes]:array
+@persist Form Rotate I_1 I_2 Change Knife Have Cd
+interval(10)
+O = owner()
+runOnKeys(O,1)
+runOnLast(1)
+
+#Maximum 40
+#Optimal 20
+Knife_Count = 20
+
+KU = O:keyUse()
+K1 = O:keyAttack1()
+K2 = O:keyAttack2()
+KR = O:keyReload()
+TAB = O:keyPressed("tab")
+#//////////////////////////////////////////////////
+#//////////////////// FIRST ///////////////////////
+#//////////////////////////////////////////////////
+
+if(first()){
+    Chfl = propSpawn("models/hunter/plates/plate025x3.mdl",0) Chfl:setAlpha(0)
+    Chfl:soundPlay(1,0,"ambient/wind/tube_suck.wav") soundPitch(1,0) soundVolume(1,200)
+    Form = 1
+
+    E = entity()
+    HS = 1
+    H = 1 holoCreate(H) holoPos(H,E:toWorld(vec())) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.17,0.17,6) * HS) holoModel(H,"hqcylinder") holoParent(H,Chfl) holoMaterial(H,"models/shiny") holoColor(H,vec(200))
+    
+    H = 2 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,-38.2) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.5,0.5,0.7) * HS) holoModel(H,"hq_torus_thick") holoParent(H,1) holoMaterial(H,"phoenix_storms/middle") holoColor(H,vec(50,100,100))
+    H = 3 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,-43) * HS)) holoAng(H,E:toWorld(ang(180,0,0))) holoScale(H,vec(0.17,0.17,0.4) * HS) holoModel(H,"hq_cone") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+
+    H = 4 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,36) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.34,0.34,0.2) * HS) holoModel(H,"hqsphere") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 5 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,39) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.17,0.17,0.6) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/gibs/woodgibs/woodgibs01") holoColor(H,vec(50,150,150))
+    H = 6 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,43) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.34,0.34,0.2) * HS) holoModel(H,"hqsphere") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    
+    H = 7 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,47) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.16,0.16,0.6) * HS) holoModel(H,"hq_cone") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 8 holoCreate(H) holoPos(H,E:toWorld(vec(0,11.87,37) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.7,0.5,0.1) * HS) holoModel(H,"models/hunter/misc/platehole1x1d.mdl") holoParent(H,1) holoClipEnabled(H,1) holoClip(H,vec(-12.2,-12.2,0) * HS,vec(1,1,0),0) holoMaterial(H,"models/shiny") holoColor(H,vec(50))
+    H = 9 holoCreate(H) holoPos(H,E:toWorld(vec(0,-11.87,37) * HS)) holoAng(H,E:toWorld(ang(90,180,0))) holoScale(H,vec(0.7,0.5,0.1) * HS) holoModel(H,"models/hunter/misc/platehole1x1d.mdl") holoParent(H,1) holoClipEnabled(H,1) holoClip(H,vec(-12.2,-12.2,0) * HS,vec(1,1,0),0) holoMaterial(H,"models/shiny") holoColor(H,vec(50))
+    H = 10 holoCreate(H) holoPos(H,E:toWorld(vec(0,11.87,70.2) * HS)) holoAng(H,E:toWorld(ang(-90,0,0))) holoScale(H,vec(0.7,0.5,0.1) * HS) holoModel(H,"models/hunter/misc/platehole1x1d.mdl") holoParent(H,1) holoClipEnabled(H,1) holoClip(H,vec(-12.2,-12.2,0) * HS,vec(1,1,0),0) holoMaterial(H,"models/shiny") holoColor(H,vec(50))
+    H = 11 holoCreate(H) holoPos(H,E:toWorld(vec(0,-11.87,70.2) * HS)) holoAng(H,E:toWorld(ang(-90,180,0))) holoScale(H,vec(0.7,0.5,0.1) * HS) holoModel(H,"models/hunter/misc/platehole1x1d.mdl") holoParent(H,1) holoClipEnabled(H,1) holoClip(H,vec(-12.2,-12.2,0) * HS,vec(1,1,0),0) holoMaterial(H,"models/shiny") holoColor(H,vec(50))
+    H = 12 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,53.5) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.75) * HS) holoModel(H,"hq_torus_thick") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 13 holoCreate(H) holoPos(H,E:toWorld(vec(0,7,53.5) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.3,0.3,0.2) * HS) holoModel(H,"hqsphere") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 14 holoCreate(H) holoPos(H,E:toWorld(vec(0,7,53.5) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.1,0.1,0.2) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 15 holoCreate(H) holoPos(H,E:toWorld(vec(0,-7,53.5) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.3,0.3,0.2) * HS) holoModel(H,"hqsphere") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 16 holoCreate(H) holoPos(H,E:toWorld(vec(0,-7,53.5) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.1,0.1,0.2) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 17 holoCreate(H) holoPos(H,E:toWorld(vec(0,3,49.3) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.05,0.05,0.04) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 18 holoCreate(H) holoPos(H,E:toWorld(vec(0,-3,49.3) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.05,0.05,0.04) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 19 holoCreate(H) holoPos(H,E:toWorld(vec(0,1.5,46.5) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.05,0.05,0.04) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 20 holoCreate(H) holoPos(H,E:toWorld(vec(0,-1.5,46.5) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.05,0.05,0.04) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    
+    H = 21 holoCreate(H) holoPos(H,E:toWorld(vec(0,6.5,57) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.4,0.2,0.2) * HS) holoModel(H,"models/hunter/misc/platehole1x1d.mdl") holoParent(H,1) holoMaterial(H,"lights/white") holoColor(H,vec(200))
+    H = 22 holoCreate(H) holoPos(H,E:toWorld(vec(0,-6.5,57) * HS)) holoAng(H,E:toWorld(ang(90,180,0))) holoScale(H,vec(0.4,0.2,0.2) * HS) holoModel(H,"models/hunter/misc/platehole1x1d.mdl") holoParent(H,1) holoMaterial(H,"lights/white") holoColor(H,vec(200))
+    H = 23 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,61.7) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.8,0.3,0.05) * HS) holoParent(H,1) holoMaterial(H,"lights/white") holoColor(H,vec(200))
+    H = 24 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,66.5) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.06,1.1,6) * HS) holoParent(H,1) holoModel(H,"hq_dome") holoMaterial(H,"lights/white") holoColor(H,vec(200))
+    holoClipEnabled(H,1,1) holoClip(H,1,vec(0,0,30) * HS,vec(0,0,-1),0)
+    holoClipEnabled(H,2,1) holoClip(H,2,vec(0,0,33) * HS,vec(0,1,-1),0)
+    holoClipEnabled(H,3,1) holoClip(H,3,vec(0,0,33) * HS,vec(0,-1,-1),0)
+    H = 25 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,101) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.03,0.6,0.7) * HS) holoParent(H,1) holoModel(H,"hq_cone") holoMaterial(H,"lights/white") holoColor(H,vec(200))
+    holoClipEnabled(H,1,1) holoClip(H,1,vec(0,0,-7) * HS,vec(0,1,1),0)
+    holoClipEnabled(H,2,1) holoClip(H,2,vec(0,0,-7) * HS,vec(0,-1,1),0)
+    H = 26 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,66.5) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.06,1.1,5.8) * HS) holoParent(H,1) holoModel(H,"hq_dome") holoMaterial(H,"lights/white") holoColor(H,vec(50))
+    holoClipEnabled(H,1,1) holoClip(H,1,vec(0,0,33) * HS,vec(0,1,-1),0)
+    holoClipEnabled(H,2,1) holoClip(H,2,vec(0,0,33) * HS,vec(0,-1,-1),0)
+    holoClipEnabled(H,3,1) holoClip(H,3,vec(0,0,30) * HS,vec(0,0,1),0)
+    H = 27 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,83.4) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.1,0.2,2.2) * HS) holoParent(H,1) holoModel(H,"hqcylinder") holoMaterial(H,"models/shiny") holoColor(H,vec(200))
+    H = 28 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,99.8) * HS)) holoAng(H,E:toWorld(ang())) holoScale(H,vec(0.1,0.2,0.5) * HS) holoParent(H,1) holoModel(H,"hqcone") holoMaterial(H,"models/shiny") holoColor(H,vec(200))
+    H = 29 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,70) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.15,0.15,0.1) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 30 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,70) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.2,0.03,0.1) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 31 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,70) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoAng(H,holoEntity(H):toWorld(ang(0,90,0))) holoScale(H,vec(0.2,0.05,0.1) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 32 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,70) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoAng(H,holoEntity(H):toWorld(ang(0,45,0))) holoScale(H,vec(0.2,0.05,0.1) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 33 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,70) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoAng(H,holoEntity(H):toWorld(ang(0,135,0))) holoScale(H,vec(0.2,0.05,0.1) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+    H = 34 holoCreate(H) holoPos(H,E:toWorld(vec(0,0,70) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.05,0.05,0.12) * HS) holoModel(H,"hqcylinder") holoParent(H,1) holoMaterial(H,"models/shiny") holoColor(H,vec(175,125,25))
+    
+    holoPos(1,Chfl:toWorld(vec(0,-30,0)))
+    holoAng(1,Chfl:toWorld(ang(90,0,-90)))
+    Have = Knife_Count
+}
+#///////////////////////////////////////////////////
+#//////////////////// FORM 1 ///////////////////////
+#//////////////////////////////////////////////////
+
+if(Form == 1 & !Change){
+
+    #//////////////////////////////////////////////////
+    #//////////////////// FIND ////////////////////////
+    #/////////////////////////////////////////////////
+    if(Throw == vec() & !Chfl:isWeldedTo():isValid()){
+        if(KU & Target_Pos == vec()){
+            findExcludeEntity(Chfl)
+            findExcludeEntity(Block)
+            findExcludeEntity(O)
+            findInCone(O:shootPos(),O:eye(),2000,100)
+            Ar = findToArray()
+            DIS = 2000
+            while(perf()){
+                I_1 += 1
+                En = Ar[I_1,entity]
+                
+                if(En:mass() | En:isAlive() | En:isPlayer()){
+                    rangerFilter(O)
+                    rangerFilter(Ar)
+                    rangerFilter(Block)
+                    R = rangerOffset(O:shootPos(),En:boxCenterW())
+                    
+                    if(DIS > O:shootPos():distance(En:boxCenterW()) & R:position():distance(En:boxCenterW()) < 1 & (En:boxCenterW() + En:vel():normalized() * (En:boxCenterW() - O:boxCenterW()):length()):distance(O:boxCenterW()) < (En:radius() + O:height() / 2)
+                    |DIS > O:shootPos():distance(En:boxCenterW()) & R:position():distance(En:boxCenterW()) < 1 & En:isAlive()){
+                        DIS = O:shootPos():distance(En:boxCenterW())
+                        if(!holoEntity(0):isValid()){holoCreate(0)}
+                        if(!En:isAlive()){
+                            holoModel(0,En:model())
+                            holoScale(0,vec(1.1))
+                            holoPos(0,En:pos() - (En:boxCenterW() - En:pos()) / 10)
+                        }
+                        else{
+                            holoModel(0,"cube")
+                            holoScaleUnits(0,En:boxSize())
+                            holoPos(0,En:boxCenterW())
+                        }
+                        holoAng(0,En:angles())
+                        holoMaterial(0,"lights/white")
+                        holoColor(0,vec(255,0,0),100)
+            
+                        if(changed(O:keyAttack1()) & O:keyAttack1()){
+                            Target = En Trails = 1
+                        }
+                    }
+                }
+                else{
+                    findExcludeEntity(En)
+                }
+                if(I_1 >= Ar:count()){I_1 = 0 break}
+            }
+        }
+        else{
+            #/////////////////////////////////////////////////////////
+            #//////////////////// BLOCK/ATTACK ///////////////////////
+            #////////////////////////////////////////////////////////
+
+            if(changed(K2) & K2){Trails = 1}
+            if(K2){
+                if(K1 & !Chfl:isFrozen()){Throw = O:eye() Trails = 1}
+                Target_Pos = O:shootPos() + O:eye() * 200
+                if(KR & !Block:isValid()){
+                    Block = propSpawn("models/hunter/tubes/circle4x4.mdl",Chfl:pos() + Chfl:up() * 5,Chfl:angles(),1)
+                    Block:parentTo(Chfl)
+                    Block:setAlpha(0)
+                    Block:setMass(0)
+                }
+            }
+        }
+    }
+
+    if(Target_Pos != vec()){
+        CfPos = Target_Pos - O:eye() * 40
+        CfAng = O:eye():toAngle() + ang(0,0,90)
+        if(KR){CfAng = O:eyeAngles() + ang(curtime() * 1000,90,0)}
+        if(Target_Pos:distance(Chfl:boxCenterW()) > 80){CfAng = CfAng + ang(0,90,0)}else{timer("reset_target_pos",250)}
+    }
+    if(clk("reset_target_pos") & !K2){Target_Pos = vec() RTrails = 1 Block:propDelete()}
+
+    #//////////////////////////////////////////////////////////
+    #//////////////////// ATTACK TARGET ///////////////////////
+    #/////////////////////////////////////////////////////////
+
+    if(Target:isValid()){
+        rangerFilter(O)
+        rangerFilter(Chfl)
+        rangerFilter(Block)
+        RF = rangerOffset(100,Chfl:boxCenterW(),Target:boxCenterW() - Chfl:boxCenterW())
+        
+        CfPos = Target:boxCenterW() - (Target:boxCenterW() - Chfl:boxCenterW()):normalized() * 40
+        CfAng = (Target:boxCenterW() - Chfl:pos()):toAngle() + ang(0,-45,90)
+        if(Target:boxCenterW():distance(Chfl:boxCenterW()) > 80){CfAng = CfAng + ang(0,135,0)}
+    
+        if(RF:hit()){timer("reset_target",200)}
+    }
+    holoAlpha(0,KU * 150)
+    if(Target:isValid()){holoParent(0,Target)}
+    if(clk("reset_target")){
+        Target:soundPlay(2,0,"weapons/samurai/tf_katana_0" + randint(1,6) + ".wav")
+        Target = noentity()
+        RTrails = 1
+    }
+
+    if(!Target:isValid() & Target_Pos == vec()){
+        CfPos = O:toWorld(vec(cos(curtime() * 20) * 5,50 + cos(curtime() * 25) * 5,100 + sin(curtime() * 30) * 5))
+        CfAng = ((O:forward() + O:eye()) / 2):toAngle() + ang(0,0,Rotate)
+        soundPitch(1,0)
+    }else{
+        soundPitch(1,Chfl:angVelVector():length() / 10)
+    }
+
+    #//////////////////////////////////////////////////////////
+    #///////////////////////// THROW //////////////////////////
+    #/////////////////////////////////////////////////////////
+    if(changed(K2) & K2){
+        if(Chfl:isFrozen() | Throw != vec() | Chfl:isWeldedTo():isValid()){
+            Chfl:constraintBreak("weld",Chfl:isWeldedTo())
+            Chfl:soundPlay(3,0,"physics/concrete/concrete_impact_bullet" + randint(1,4) + ".wav")
+            Chfl:propFreeze(0)
+            RTrails = 1
+            Throw = vec()
+        }
+    }
+    if(Throw != vec()){
+        if(Target:isAlive()){
+            Throw = (Target:boxCenterW() - Chfl:pos()):normalized()
+        }
+
+        CfPos = Chfl:boxCenterW() + Throw * 1000
+        CfAng = Throw:toAngle() + ang(0,0,curtime() * 1000)
+        rangerFilter(O)
+        rangerFilter(Chfl)
+        rangerFilter(Block)
+        if(Chfl:isWeldedTo()){rangerHitEntities(0)}
+        RO = rangerOffset(150,Chfl:boxCenterW(),Throw)
+        
+        if(RO:hit()){
+            if(RO:hitNormal():distance(Chfl:right()) > 1.4){Chfl:setAng(Chfl:toWorld(Chfl:toLocal(RO:hitNormal():toAngle() + ang(90,0,-90)) / 1.5))}
+            Chfl:setPos(RO:position() + Chfl:right() * min(70,40 + Chfl:isWeldedTo():radius() / 1.5))
+            if(RO:entity():isAlive()){
+                Chfl:soundPlay(3,0,"ambient/machines/slicer" + randint(1,4) + ".wav")
+            }
+            else{
+                Chfl:soundPlay(3,0,"physics/metal/sawblade_stick" + randint(1,3) + ".wav")
+                if(!RO:entity():isValid()){Chfl:propFreeze(1) Throw = vec()}
+                elseif(!Chfl:isWeldedTo()){
+                    weld(Chfl,RO:entity())
+                    noCollide(Chfl,RO:entity())
+                    
+                    rangerHitEntities(0)
+                    RG = rangerOffset(150,Chfl:boxCenterW(),Throw)
+                    if(RG:hit()){Chfl:propFreeze(1) Throw = vec()}
+                    if(RO:entity():mass() > 50){Throw = vec()}
+                }
+            }
+        }
+    }
+
+    if(!Chfl:isWeldedTo():isValid() | Throw != vec()){
+        #//////////////////////////////////////////////////
+        #//////////////////// VEL /////////////////////////
+        #//////////////////////////////////////////////////
+
+        if(CfPos != vec()){Chfl:applyForce((CfPos - Chfl:pos()) * Chfl:mass() * 10 - Chfl:vel() * Chfl:mass())}
+        if(CfAng != ang()){Chfl:applyAngForce(Chfl:toLocal(toWorldAng(vec(),ang(90,0,90),CfPos,CfAng)) * Chfl:mass() * 100 - Chfl:angVel() * Chfl:mass() * 3.3)}
+    }
+    Chfl:setMass(max(2,min(1000,(Chfl:boxCenterW():distance(O:shootPos()) - 100) * 10)))
+    if(Chfl:isWeldedTo():isValid() & Throw == vec()){Chfl:setMass(100)}
+    
+    if(Trails){
+        for(I = 24,28){holoEntity(I):setTrails(15,15,0.1,"effects/beam_generic01",vec(255),255)}
+    }
+    if(RTrails){
+        for(I = 24,28){holoEntity(I):removeTrails()}
+    }
+}
+if(last()){soundStop(0)}
+
+#///////////////////////////////////////////////////
+#//////////////////// FORM 2 ///////////////////////
+#//////////////////////////////////////////////////
+
+Cd += 1 if(Cd > 2){Cd = 0}
+Have = max(0,min(Knife_Count,Have))
+
+if(Form == 2 & !Change){
+
+    #//////////////////////////////////////////////////
+    #////////////////////// Target ////////////////////
+    #//////////////////////////////////////////////////
+
+    if(changed(TAB) & TAB){
+        if(Target_Ent:isValid()){Target_Ent = noentity()}else{Target_Ent = O:aimEntity()}
+    }
+    if(Target_Ent:isValid()){
+        if(!holoEntity(0):isValid()){holoCreate(0) holoMaterial(0,"lights/white") holoColor(0,vec(255,0,0))}
+        if(!Target_Ent:isAlive()){
+            holoModel(0,Target_Ent:model())
+            holoScale(0,vec(1.1))
+            holoPos(0,Target_Ent:pos() - (Target_Ent:boxCenterW() - Target_Ent:pos()) / 10)
+        }
+        else{
+            holoModel(0,"cube")
+            holoScaleUnits(0,Target_Ent:boxSize())
+            holoPos(0,Target_Ent:boxCenterW())
+        }
+        holoAng(0,Target_Ent:angles())
+        holoAlpha(0,200)
+        if(Target_Ent:isValid() & Target_Ent:health() <= 0){holoAlpha(0,0)}
+    }else{holoAlpha(0,0)}
+    
+    #//////////////////////////////////////////////////
+    #///////////////// Shield /////////////////////////
+    #//////////////////////////////////////////////////
+
+    if(KU & K2 & ((Have * 100) / Knife_Count) >= 75){
+        if(!Block_2:isValid()){
+            Block_2 = propSpawn("models/hunter/misc/sphere2x2.mdl",1)
+            Block_2:setAlpha(0)
+            for(I = 1,Knifes:count()){
+                Knifes[I,entity]:setTrails(5,5,0.1,"effects/beam_generic01",vec(255),255)
+            }
+            O:soundPlay(2,0,"ambient/wind/tube_suck.wav") soundPitch(2,100)
+        }
+        Block_2:setAng(ang())
+        Block_2:setPos(O:boxCenterW())
+    }
+    elseif(Block_2:isValid()){
+        Block_2:propDelete()
+        for(I = 1,Knifes:count()){
+            Knifes[I,entity]:removeTrails()
+            soundStop(2,1)
+        }
+    }
+    if(Target_Ent:isValid()){Pz = Target_Ent:boxCenterW()}else{Pz = O:aimPos()}
+    while(perf()){
+        if(I_2 >= Knifes:count()){I_2 = 0 break}
+        I_2 += 1
+        Kn = Knifes[I_2,entity]
+        KnA = Knife_Attack[I_2,vector]
+        
+        if(KnA == vec() & !Kn:isFrozen() & !Kn:isWeldedTo():isValid() & !Block_2:isValid()){
+            if(K1 & !Cd & !KR | !KR & K1 & Target_Ent:isValid()){
+                Kn:soundPlay(3,0,"weapons/slam/throw.wav") soundPitch(3,200)
+                Knife_Attack[I_2,vector] = (Pz - Kn:pos()):normalized()
+                Cd = 1
+                Kn:setTrails(5,5,0.1,"effects/beam_generic01",vec(255),255)
+                noCollideAll(Kn,0)
+                Have -= 1
+            }
+            Float = cos((curtime() + I_2 * 10) * 50)
+            KnPos = O:pos() + vec(0,0,O:height()) + vec(0,cos((270 / (Knifes:count())) * (I_2 - 1) - 45),sin((270 / (Knifes:count())) * (I_2 - 1) - 45) / 2):rotate(O:eyeAngles()) * (35 + Float * 15)
+            if(!Kn:isFrozen() & !Kn:isWeldedTo():isValid()){KnAng = (Pz - Kn:pos()):toAngle()}
+        }
+        
+        KnA = Knife_Attack[I_2,vector]
+        
+
+        if(K2){
+            S = sin((90 / Knifes:count()) * (I_2 - 1))
+            KnPos = Pz + vec(cos((I_2 - 1) * 100) * S,sin((I_2 - 1) * 100) * S,cos((90 / Knifes:count()) * (I_2 - 1))) * (75 + Float * 15)
+            KnAng = (Pz - Kn:pos()):toAngle()
+            
+            #//////////////////////////////////////////////
+            #///////////////// Shield /////////////////////
+            #/////////////////////////////////////////////
+            if(KU & ((Have * 100) / Knife_Count) >= 75){
+                S = sin((180 / Knifes:count()) * (I_2 - 1))
+                KnPos = O:boxCenterW() + vec(cos((I_2 - 1) * 100 + curtime() * 500) * S * 2,sin((I_2 - 1) * 100 + curtime() * 500) * S * 2,cos((180 / Knifes:count()) * (I_2 - 1))) * O:height() / 2
+                KnAng = (KnPos - Kn:pos()):toAngle()
+            }
+        }
+
+        if(!Kn:isFrozen() & !Kn:isWeldedTo():isValid()){
+            if(KnA != vec()){
+                KnAng = KnA:toAngle()
+                rangerFilter(O)
+                rangerFilter(Knifes)
+                RH = rangerOffset(100,Kn:pos(),KnA)
+                if(RH:entity():isAlive()){Kn:soundPlay(3,0,"ambient/machines/slicer" + randint(1,4) + ".wav")}
+                else{
+                    if(RH:hit()){
+                        Kn:setPos(RH:position() - Kn:forward() * 5)
+                        Knife_Attack[I_2,vector] = vec()
+                        Kn:soundPlay(3,0,"weapons/crossbow/hit1.wav")
+                        Kn:removeTrails()
+                        if(RH:entity():mass()){weld(Kn,RH:entity())
+                            if(!Kn:isWeldedTo():isValid()){Have -= 1}
+                        }
+                        else{
+                            Kn:propFreeze(1)
+                        }
+                        noCollideAll(Kn,1)
+                    }
+                }
+            }
+            if(!Kn:isValid()){Knifes:remove(I_2)}
+        }
+        if(KR & !Cd){
+            if(KnA != vec() | Kn:isFrozen() | Kn:isWeldedTo():isValid()){
+                Kn:propFreeze(0)
+                Kn:constraintBreak("weld",Kn:isWeldedTo())
+                Kn:soundPlay(3,0,"physics/concrete/concrete_impact_bullet" + randint(1,4) + ".wav")
+                Cd = 1
+                noCollideAll(Kn,1)
+                Knife_Attack[I_2,vector] = vec()
+                Kn:removeTrails()
+                Have += 1
+            }
+        }
+        
+        if(Kn:isWeldedTo():isValid()){
+            Kn:setMass(10)
+        }else{
+            Kn:setMass(max(2,min(1000,(Kn:boxCenterW():distance(O:shootPos()) - 100) * 10)))
+        }
+        
+        KnA = Knife_Attack[I_2,vector]
+
+        #//////////////////////////////////////////////////
+        #//////////////////// VEL /////////////////////////
+        #//////////////////////////////////////////////////
+
+        if(!Kn:isFrozen() & !Kn:isWeldedTo():isValid()){
+            if(KnA == vec()){
+                Kn:applyForce((KnPos - Kn:pos()) * Kn:mass() * 10 - Kn:vel() * Kn:mass())
+            }
+            else{
+                Kn:applyForce(KnA * Kn:mass() * 1000 - Kn:vel() * Kn:mass())
+            }
+            Kn:applyAngForce(Kn:toLocal(KnAng) * Kn:mass() / 2 - Kn:angVel() * Kn:mass() / 100)
+        }
+
+        if(holoEntity(I_2 * 4 + 34 - 3):getColor() == vec(0,255,255)){
+            if(KnPos:distance(Kn:pos()) < 4){
+                H = I_2 * 4 + 34 - 3 holoMaterial(H,"models/shiny") holoColor(H,vec(0,100,100))
+                H = I_2 * 4 + 34 - 2 holoMaterial(H,"models/shiny") holoColor(H,vec(0,100,100))
+                H = I_2 * 4 + 34 - 1 holoMaterial(H,"models/gibs/woodgibs/woodgibs01") holoColor(H,vec(50,150,150))
+                H = I_2 * 4 + 34 holoMaterial(H,"models/shiny") holoColor(H,vec(255))
+            }
+        }
+    }
+}
+
+#///////////////////////////////////////////////////
+#///////////////// Change form /////////////////////
+#//////////////////////////////////////////////////
+if(!Chfl:isFrozen() & !Chfl:isWeldedTo() & !Change){
+    if(O:keyPressed("pad_1") & Form != 1){Change = 1 Form = 1 O:soundPlay(4,0,"ambient/machines/fan4.wav") soundPitch(4,250)}
+    if(O:keyPressed("pad_2") & Form != 2){Change = 1 Form = 2 for(I = 24,28){holoEntity(I):removeTrails()}}
+}
+
+if(Change){
+    Change += 1
+    
+    #//////////////////////////////////////////////////
+    #///////////////// Form 1 /////////////////////////
+    #/////////////////////////////////////////////////
+
+    if(Form == 1){
+        while(perf()){
+            if(I_2 >= Knifes:count()){I_2 = 0 break}
+            I_2 += 1
+            Kn = Knifes[I_2,entity]
+
+            Float = cos((curtime() + I_2 * 10) * 50)
+            KnPos = O:pos() + vec(0,0,O:height()) + vec(0,cos((270 / (Knifes:count())) * (I_2 - 1) - 45),sin((270 / (Knifes:count())) * (I_2 - 1) - 45) / 2):rotate(O:eyeAngles()) * (35 + Float * 15)
+            KnAng = (O:aimPos() - Kn:pos()):toAngle()
+
+            if((Change / 5) > I_2){
+                KnPos = O:toWorld(vec(cos(curtime() * 20) * 5,50 + cos(curtime() * 25) * 5,100 + sin(curtime() * 30) * 5)) + randvec(1,-1) * 10
+                + ((O:forward() + O:eye()) / 2):normalized() * (60 - (120 / Knifes:count()) * I_2)
+                KnAng = (KnPos - Kn:pos()):toAngle()
+
+                if(Kn:pos():distance(KnPos) < 25){
+                    KnAng = ((O:forward() + O:eye()) / 2):toAngle()
+                    H = I_2 * 4 + 34 - 3 holoColor(H,vec(0,255,255)) holoMaterial(H,"lights/white")
+                    H = I_2 * 4 + 34 - 2 holoColor(H,vec(0,255,255)) holoMaterial(H,"lights/white")
+                    H = I_2 * 4 + 34 - 1 holoColor(H,vec(0,255,255)) holoMaterial(H,"lights/white")
+                    H = I_2 * 4 + 34 holoColor(H,vec(0,255,255)) holoMaterial(H,"lights/white")
+                }elseif((Change / 5) >= (Knifes:count() + 1)){Change = Knifes:count() * 5}
+            }
+
+            #//////////////////////////////////////////////////
+            #//////////////////// VEL /////////////////////////
+            #//////////////////////////////////////////////////
+
+            Kn:applyForce((KnPos - Kn:pos()) * Kn:mass() * 10 - Kn:vel() * Kn:mass())
+            Kn:applyAngForce(Kn:toLocal(KnAng) * Kn:mass() / 2 - Kn:angVel() * Kn:mass() / 100)
+            if(((Change - 100) / 5) > Knifes:count()){
+                soundStop(4,0.5)
+                Change = 0
+                Chfl = propSpawn("models/hunter/plates/plate025x3.mdl",O:toWorld(vec(cos(curtime() * 20) * 5,50 + cos(curtime() * 25) * 5,100 + sin(curtime() * 30) * 5)),((O:forward() + O:eye()) / 2):toAngle(),0)
+                Chfl:setAng(Chfl:toWorld(ang(0,-90,0)))
+                Chfl:setAlpha(0)
+                Chfl:soundPlay(1,0,"ambient/wind/tube_suck.wav") soundPitch(1,0) soundVolume(1,200)
+                holoPos(1,Chfl:boxCenterW())
+                holoAng(1,Chfl:angles())
+                holoPos(1,Chfl:toWorld(vec(0,-30,0)))
+                holoAng(1,Chfl:toWorld(ang(90,0,-90)))
+                holoParent(1,Chfl)
+                for(I = 1,34){holoAlpha(I,255)}
+                for(I = 1,Knifes:count()){
+                    Knifes[I,entity]:propFreeze(1)
+                    noCollideAll(Knifes[I,entity],1)
+                    H = I * 4 + 34 - 3 holoAlpha(H,0)
+                    H = I * 4 + 34 - 2 holoAlpha(H,0)
+                    H = I * 4 + 34 - 1 holoAlpha(H,0)
+                    H = I * 4 + 34 holoAlpha(H,0)
+                }
+                O:soundPlay(5,0,"ambient/energy/whiteflash.wav") soundPitch(5,200)
+                
+                H = 1 holoMaterial(H,"models/shiny") holoColor(H,vec(200))
+                H = 2 holoMaterial(H,"phoenix_storms/middle") holoColor(H,vec(50,100,100))
+                H = 3 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 4 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 5 holoMaterial(H,"models/gibs/woodgibs/woodgibs01") holoColor(H,vec(50,150,150))
+                H = 6 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 7 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 8 holoMaterial(H,"models/shiny") holoColor(H,vec(50))
+                H = 9 holoMaterial(H,"models/shiny") holoColor(H,vec(50))
+                H = 10 holoMaterial(H,"models/shiny") holoColor(H,vec(50))
+                H = 11 holoMaterial(H,"models/shiny") holoColor(H,vec(50))
+                H = 12 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 13 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 14 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 15 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 16 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 17 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 18 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 19 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 20 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 21 holoMaterial(H,"lights/white") holoColor(H,vec(200))
+                H = 22 holoMaterial(H,"lights/white") holoColor(H,vec(200))
+                H = 23 holoMaterial(H,"lights/white") holoColor(H,vec(200))
+                H = 24 holoMaterial(H,"lights/white") holoColor(H,vec(200))
+                H = 25 holoMaterial(H,"lights/white") holoColor(H,vec(200))
+                H = 26 holoMaterial(H,"lights/white") holoColor(H,vec(50))
+                H = 27 holoMaterial(H,"models/shiny") holoColor(H,vec(200))
+                H = 28 holoMaterial(H,"models/shiny") holoColor(H,vec(200))
+                H = 29 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 30 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 31 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 32 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 33 holoMaterial(H,"models/shiny") holoColor(H,vec(200,150,50))
+                H = 34 holoMaterial(H,"models/shiny") holoColor(H,vec(175,125,25))
+            }
+        }
+    }
+    #//////////////////////////////////////////////////
+    #///////////////////// Form 2 /////////////////////
+    #/////////////////////////////////////////////////
+
+    if(Chfl:isValid()){
+        if(Form == 2){
+            soundPitch(1,Chfl:angVelVector():length() / 10)
+            if(Change == 75){
+                for(I = 1,34){holoColor(I,vec(0,255,255)) holoMaterial(I,"lights/white")}
+            }
+            if(Change > 125 & Knife < Knife_Count){
+                timer("Create",300)
+                if(clk("Create") | Knifes[Knife + 1,entity]:isValid()){
+                    Knife += 1
+                    HS = 1
+                    E = Chfl
+                    if(!Knifes[Knife,entity]:isValid()){PR = propSpawn("models/props_junk/PopCan01a.mdl",1) Knifes[Knife,entity] = PR PR:setAlpha(0) PR:setMass(100) noCollideAll(PR,1) Kn:propGravity(0)}
+                    E = Knifes[Knife,entity]
+                    H = Knife * 4 + 34 - 3 if(!holoEntity(H):isValid()){holoCreate(H)} holoPos(H,E:toWorld(vec(0,0,0))) holoAng(H,E:toWorld(ang(0,0,0))) holoScale(H,vec(0.5,0.5,0.5) * HS) holoModel(H,"hq_torus_thick") holoParent(H,E) holoColor(H,vec(0,255,255)) holoMaterial(H,"lights/white") holoAlpha(H,0)
+                    E = holoEntity(H)
+                    H = Knife * 4 + 34 - 2 if(!holoEntity(H):isValid()){holoCreate(H)} holoPos(H,E:toWorld(vec(-3.4,0,0) * HS)) holoAng(H,E:toWorld(ang(0,90,-90))) holoScale(H,vec(0.3,0.08,0.2) * HS) holoModel(H,"prism") holoParent(H,E) holoColor(H,vec(0,255,255)) holoMaterial(H,"lights/white") holoAlpha(H,0)
+                    H = Knife * 4 + 34 - 1 if(!holoEntity(H):isValid()){holoCreate(H)} holoPos(H,E:toWorld(vec(3,0,0) * HS)) holoAng(H,E:toWorld(ang(270,0,0))) holoScale(H,vec(0.1,0.3,0.4) * HS) holoModel(H,"hqcone") holoParent(H,E) holoColor(H,vec(0,255,255)) holoMaterial(H,"lights/white") holoAlpha(H,0)
+                    holoClipEnabled(H,1) holoClip(H,vec(0,0,1),vec(0,0,-1),0)
+                    H = Knife * 4 + 34 if(!holoEntity(H):isValid()){holoCreate(H)} holoPos(H,E:toWorld(vec(10.2,0,0) * HS)) holoAng(H,E:toWorld(ang(90,0,0))) holoScale(H,vec(0.1,0.3,0.8) * HS) holoModel(H,"hqcone") holoParent(H,E) holoColor(H,vec(0,255,255)) holoMaterial(H,"lights/white") holoAlpha(H,0)
+                }
+            }
+            
+            if(Knife >= Knife_Count){
+                Change = 0
+                Knife = 0
+                holoParent(1,entity())
+                O:soundPlay(5,0,"ambient/energy/whiteflash.wav") soundPitch(5,200)
+                for(I2 = 1,Knifes:count()){
+                    Knifes[I2,entity]:setPos(Chfl:toWorld(randvec(Chfl:boxSize(),-Chfl:boxSize()) / 2)) 
+                    Knifes[I2,entity]:setAng(Chfl:toWorld(ang(0,0,90)))
+                    Knifes[I2,entity]:propFreeze(0)
+                    H = I2 * 4 + 34 - 3 holoAlpha(H,255)
+                    H = I2 * 4 + 34 - 2 holoAlpha(H,255)
+                    H = I2 * 4 + 34 - 1 holoAlpha(H,255)
+                    H = I2 * 4 + 34 holoAlpha(H,255)
+                }
+                soundStop(1)
+                Chfl:propDelete()
+                for(I = 1,34){holoAlpha(I,0)}
+            }
+        }
+        CfPos = O:toWorld(vec(cos(curtime() * 20) * 5,cos(curtime() * 25) * 5,100 + sin(curtime() * 30) * 5))
+        CfAng = ((O:forward() + O:eye()) / 2):toAngle() + ang(0,0,curtime() * 1000)
+
+        if(CfPos != vec()){Chfl:applyForce((CfPos - Chfl:pos()) * Chfl:mass() * 10 - Chfl:vel() * Chfl:mass())}
+        if(CfAng != ang()){Chfl:applyAngForce(Chfl:toLocal(toWorldAng(vec(),ang(90,0,90),CfPos,CfAng)) * Chfl:mass() * 100 - Chfl:angVel() * Chfl:mass() * 3.3)}
+    }
+}

@@ -1,0 +1,95 @@
+@name security players (apply_force)
+@inputs Damage Clk Attacker:entity [T1 T2 T3 T4 T5]:entity Friends:array
+@outputs ON Fire
+@persist [O E]:entity [Turrets Poses WW]:array Timer  IsPosing
+@trigger Clk
+
+#interval(1)
+if(first() | duped() | dupefinished()) { O = owner() E = entity()
+    runOnTick(1)
+    runOnKeys(owner(),1)
+    #runOnMouseKey(1)
+    
+    Timer = 1000
+    ON = 0
+    IsPosing = 1
+    
+    Turrets = array(T1, T2, T3, T4, T5)
+    Poses = array(vec(), vec(), vec(), vec(), vec())
+    
+    WW = array()
+    
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+    
+    function void entity:myapply(Pos:vector, Ang:angle, Precision:number) {
+        This:applyForce(((Pos-This:pos())*15-This:vel()/2)*This:mass())
+        This:applyTorque((Precision*150*This:toLocalAxis(rotationVector(quat(Ang)/quat(This)))-12*This:angVelVector())*This:inertia())
+    }
+}
+
+
+if(changed(Clk) & ON & Attacker!=owner() & !Friends:checkAr(Attacker)) {
+    Fire = 1
+    stoptimer("stopfires")
+    timer("stopfires", 1000)
+}
+
+if(IsPosing) {
+    if(Fire & ON) {
+        foreach(K,T:entity=Turrets) {
+            T:myapply(Poses[K, vector], (Attacker:shootPos() - T:pos() + Attacker:vel() * tickInterval()*1.5):toAngle(), 3)
+        }
+        if(!Attacker:isAlive()) {
+            Fire = 0
+            stoptimer("stopfires")
+        }
+    }
+    else {
+        foreach(K,T:entity=Turrets) {
+            T:myapply(Poses[K, vector], ang(90,0,0), 1)
+        }
+    }
+}
+
+
+
+if(changed(owner():keyPressed("m")) & owner():keyPressed("m")) { 
+    printColor(vec(255,255,0), "Secure Info:", vec(0,255,255), "- Secure ", vec(255,0,0), "Disabled")
+    ON = 0 Fire = 0
+    stoptimer("stopfires")
+}
+if(changed(owner():keyPressed("n")) & owner():keyPressed("n")) { 
+    printColor(vec(255,255,0), "Secure Info:", vec(0,255,255), "- Secure ", vec(0,255,0), "Enabled")
+    ON = 1 Fire = 0
+    stoptimer("stopfires") 
+    timer("stopfires", 1000)
+}
+if(changed(owner():keyPressed("o")) & owner():keyPressed("o")) { 
+    printColor(vec(255,255,0), "Secure Info:", vec(0,255,255), "- Secure Posing ", vec(0,255,0), "Enabled")
+    foreach(K,T:entity=Turrets) {
+        Poses[K, vector] = T:pos()
+    }
+    IsPosing = 1
+}
+if(changed(owner():keyPressed("p")) & owner():keyPressed("p")) { 
+    printColor(vec(255,255,0), "Secure Info:", vec(0,255,255), "- Secure Posing ", vec(255,0,0), "Disabled")
+    IsPosing = 0
+}
+if(changed(owner():keyPressed("l")) & owner():keyPressed("l") & ON & Attacker!=owner() & !Friends:checkAr(Attacker)) { 
+    if(Fire) {
+        Fire = 0
+    }
+    else {
+        Fire = 1
+    }
+    stoptimer("stopfires") 
+    timer("stopfires", 1000)
+}
+
+if(clk("stopfires")) { Fire = 0 }

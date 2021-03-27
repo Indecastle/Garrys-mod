@@ -1,0 +1,14 @@
+@name NPC_Control 
+ 
+@outputs 
+NPC:array Me:entity 
+Free-Max Trigger 
+interval(100) 
+Me=owner() 
+findByClass("npc_*") 
+NPC=findToArray() 
+Count=NPC:count() 
+for (I=1,NPC:count()){ 
+if ($Count){NPC[I,entity]:npcGiveWeapon("rpg")} 
+NPC[I,entity]:npcShoot() 
+}

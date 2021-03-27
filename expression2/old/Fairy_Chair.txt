@@ -1,0 +1,186 @@
+@name Fairy Chair
+@inputs 
+@outputs Pos:vector Ang:angle Active 
+@persist LastPos:vector Color:vector Player:entity Ping LastC OldDriver
+
+interval(10)
+if(first()){
+    Player = noentity()
+    if(entity():isWeldedTo():model() != "models/nova/airboat_seat.mdl" | !entity():isWeldedTo():isVehicle()){
+        selfDestructAll()
+    }
+    
+    #=====Holo Creation=====#
+    N = 1
+    #[      Format:
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(0,0,30)))
+    holoAng(N, entity():toWorld(ang(0,0,0)))
+    holoModel(N, "")
+    holoColor(N, vec(255,255,255))
+    holoScale(N, vec(1,1,1))
+    N++
+    ]#
+    Rand = random(1000)
+    Color = vec(sin(Rand*50+0)*255+255/2,sin(Rand*50+50)*255+255/2,sin(Rand*50+100)*255+255/2)
+    
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(0,0,30)))
+    holoAng(N, entity():toWorld(ang(0,0,0)))
+    holoModel(N, "hq_sphere")
+    holoColor(N, vec4(255,255,255,255))
+    holoScale(N, vec(0.4,0.4,0.4))
+    N++
+    
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(0,0,30)))
+    holoAng(N, entity():toWorld(ang(0,0,0)))
+    holoModel(N, "hq_sphere")
+    holoColor(N, Color,150)
+    holoScale(N, vec(0.5,0.5,0.5))
+    holoParent(N,1)
+    N++
+    
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(2,2,30)))
+    holoAng(N, entity():toWorld(ang(0,0,0)))
+    holoModel(N, "")
+    holoColor(N, vec4(255,255,255,0))
+    holoScale(N, vec(0.1,0.1,1))
+    holoParent(N,1)
+    N++
+    
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(2,-2,30)))
+    holoAng(N, entity():toWorld(ang(0,0,0)))
+    holoModel(N, "")
+    holoColor(N, vec4(255,255,255,0))
+    holoScale(N, vec(0.1,0.1,1))
+    holoParent(N,1)
+    N++
+    
+    
+    
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(1,2,32)))
+    holoAng(N, entity():toWorld(ang(-50,20,45)))
+    holoModel(N, "hq_dome")
+    holoColor(N, vec(200,255,255))
+    holoScale(N, vec(0.5,0.3,0.1))
+    holoParent(N,3)
+    N++
+    
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(1,-2,32)))
+    holoAng(N, entity():toWorld(ang(-50,-20,-45)))
+    holoModel(N, "hq_dome")
+    holoColor(N, vec(200,255,255))
+    holoScale(N, vec(0.5,0.3,0.1))
+    holoParent(N,4)
+    N++
+    
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(2,2,29)))
+    holoAng(N, entity():toWorld(ang(50,20,-45)))
+    holoModel(N, "hq_dome")
+    holoColor(N, vec(200,255,255))
+    holoScale(N, vec(0.5,0.3,0.1))
+    holoParent(N,4)
+    N++
+    
+    holoCreate(N)
+    holoPos(N, entity():toWorld(vec(2,-2,29)))
+    holoAng(N, entity():toWorld(ang(50,-20,45)))
+    holoModel(N, "hq_dome")
+    holoColor(N, vec(200,255,255))
+    holoScale(N, vec(0.5,0.3,0.1))
+    holoParent(N,3)
+    N++
+    
+    holoAng(1,ang(0,0,0))
+    
+    #holoEntity(1):setTrails(10,0,0.75,"trails/plasma",Color,155)
+    holoCreate(99)
+    holoAlpha(99,0)
+    holoShadow(99,0)
+    holoDisableShading(99,1)
+}
+
+holoAng(3,holoEntity(3):toWorld(ang(0,sin(curtime()*500),sin(curtime()*500))))
+holoAng(4,holoEntity(4):toWorld(ang(0,-sin(curtime()*500),-sin(curtime()*500))))
+Driver = entity():isWeldedTo():driver()
+Pos = holoEntity(1):pos()
+Ang = holoEntity(1):angles()
+
+if(Driver == noentity()){
+    Active = 0
+    holoPos(1,entity():isWeldedTo():toWorld(vec(sin(curtime()*50)*entity():isWeldedTo():boxMax():x()*5,cos(curtime()*50)*entity():isWeldedTo():boxMax():x()*5,entity():isWeldedTo():boxMax():z())))
+    holoAng(1,(holoEntity(1):pos()-LastPos):toAngle()+ang(180,0,180))
+    LastPos = holoEntity(1):pos()
+}elseif(changed(Driver)){
+    Active = 1
+    holoPos(1,entity():isWeldedTo():toWorld(vec(0,0,entity():isWeldedTo():boxMax():z()*2)))
+    holoAng(1,entity():isWeldedTo():angles():setRoll(0))
+}else{
+    holoAng(1,Driver:eyeAngles()+ang(180,0,180))
+    if(Driver:keyForward() & Player == noentity()){
+        holoPos(1,holoEntity(1):toWorld(vec(-5,0,0)))
+    }
+    if(Driver:keyLeft() & Player == noentity()){
+        holoPos(1,holoEntity(1):toWorld(vec(0,-5,0)))
+    }
+    if(Driver:keyBack() & Player == noentity()){
+        holoPos(1,holoEntity(1):toWorld(vec(5,0,0)))
+    }
+    if(Driver:keyRight() & Player == noentity()){
+        holoPos(1,holoEntity(1):toWorld(vec(0,5,0)))
+    }
+    if(Driver:keyJump() & Player == noentity()){
+        holoPos(1,holoEntity(1):pos()+vec(0,0,5))
+    }
+    if(Driver:keySprint() & Player == noentity()){
+        holoPos(1,holoEntity(1):pos()+vec(0,0,-5))
+    }
+    
+    if(Player:isValid()){
+        holoPos(1,Player:toWorld(vec(sin(curtime()*50)*Player:boxMax():x()*5,cos(curtime()*50)*Player:boxMax():x()*5,130)))
+        holoAng(1,(holoEntity(1):pos()-LastPos):toAngle()+ang(180,0,180))
+    }
+    if(Driver:keyAttack1() & !LastC){
+        RD = rangerOffset(9999999,holoEntity(1):pos(),-holoEntity(1):forward())
+        if(!RD:entity():isPlayer() & !RD:entity():isWorld() & Player == noentity()){
+            holoMaterial(99,"models/debug/debugwhite")
+            holoScale(99,RD:entity():boxMax()/6+vec(0.1,0.1,0.1))
+            holoPos(99,RD:entity():pos())
+            holoAng(99,RD:entity():angles())
+            holoColor(99,Color)
+            Ping = 155
+        }elseif(Player == noentity()){
+            Player = RD:entity()
+        }else{
+            Player = noentity()
+        }
+    }
+    if(Player == noentity()){
+        Pos = holoEntity(1):pos()
+        Ang = Driver:eyeAngles()
+    }else{
+        Pos = Player:toWorld(vec(-30,0,120))
+        Ang = ang(0,0,0)+Driver:eyeAngles()
+    }
+}
+if(Ping > 0){
+    Ping -= 5
+    holoAlpha(99,Ping)
+}
+LastC = Driver:keyAttack1()
+
+if(Active){
+    for(I = 1, 8){
+        holoVisible(I,Driver,0)
+    }
+}else{
+    for(I = 1, 8){
+        holoVisible(I,Driver,1)
+    }
+}

@@ -1,0 +1,82 @@
+@name kakashka prigausha9 za vami
+@inputs 
+@outputs Gyro:angle
+@persist T Target:entity
+@trigger all
+
+if(first()){
+    runOnTick(1)
+    Target = owner()
+    #Target = findPlayerByName("pav")
+    #Target = findPlayerBySteamID("STEAM_0:0:245102061")
+    print(Target)
+    entity():propNotSolid(1)
+    #entity():propStatic(1)
+    entity():propFreeze(0)
+    #noCollideAll(entity(), 1)
+    
+    holoCreate(1)
+    holoCreate(2)
+    holoCreate(3)
+    holoCreate(4)
+    holoCreate(5)
+    holoModel(1,"hqtorus")
+    holoModel(2,"hqtorus")
+    holoModel(3,"hqtorus")
+    holoModel(4,"hqtorus")
+    holoModel(5,"hqtorus")
+    holoScale(1,vec(0.6,0.6,0.6))
+    holoScale(2,vec(0.5,0.5,0.5))
+    holoScale(3,vec(0.4,0.4,0.4))
+    holoScale(4,vec(0.3,0.3,0.3))
+    holoScale(5,vec(0.22,0.22,0.22))
+    holoPos(1,entity():pos()+vec(0,0,0))
+    holoPos(2,entity():pos()+vec(0,0,1))
+    holoPos(3,entity():pos()+vec(0,0,2))
+    holoPos(4,entity():pos()+vec(0,0,2.8))
+    holoPos(5,entity():pos()+vec(0,0,3.4))
+    holoColor(1,vec(130,82,10))
+    holoColor(2,vec(130,82,10))
+    holoColor(3,vec(130,82,10))
+    holoColor(4,vec(130,82,10))
+    holoColor(5,vec(130,82,10))
+    holoCreate(6)
+    holoModel(6,"hqcone")
+    holoScale(6,vec(0.2,0.2,0.2))
+    holoPos(6,entity():pos()+vec(0,0,4))
+    holoColor(6,vec(130,82,10))
+    
+    
+    holoParent(1,entity())
+    holoParent(2,entity())
+    holoParent(3,entity())
+    holoParent(4,entity())
+    holoParent(5,entity())
+    holoParent(6,entity())
+
+}
+E = entity()
+E:setColor(255,255,255)
+E:setMaterial("models/effects/vol_light002")
+
+
+
+T=T*1+1
+
+Gyro = (ang(0,0,0)*100 -E:angles())
+E:applyAngForce(Gyro + $Gyro*5)
+
+if(T==1){
+    E:applyForce(((((Target:pos()+vec(10,0,130))-E:pos()) -E:vel())*E:mass()))
+}
+if(T==15){
+    soundPlay(1,100,"friends/message.wav")
+    soundPitch(1,200)
+    E:applyForce((((Target:pos()+vec(10,0,130))-E:pos()) -E:vel())*E:mass())
+    
+}
+if(T==25){
+    soundStop(1)
+    T = 1
+}
+

@@ -1,0 +1,70 @@
+@name Turret ACF
+@inputs [Turret_1 Turret_2 Turret_3 Ammo Refill]:entity
+@outputs Fire Active Unload IsEnabled
+@persist [O E]:entity
+@persist [Entities StartAngs StartPos DiffPoses]:array
+
+interval(100)
+
+if (first() || dupefinished() || duped()) {
+    O = owner()  E = entity()
+    Active = 1  Unload = 1
+    runOnKeys(O, 1)
+    Entities = array(Turret_1, Turret_2, Turret_3, Ammo, Refill)
+    DiffPoses = array(vec(0, 50, 300), 
+                      vec(0, 0, 300), 
+                      vec(0, -50, 300), 
+                      vec(0, 0, -50), 
+                      vec(0, 0, -100))
+    
+    function show_help() {
+        printColor(vec(255,255,0), "key '", vec(0,255,255), "b", vec(255,255,0), "' - ", vec(0,255,0), "ON", vec(200,200,200), "/", vec(255,0,0), "OFF")
+    }
+    function save_start() {
+        foreach (I, P:entity = Entities) {
+            StartPos[I, vector] = P:pos()
+            StartAngs[I, angle] = P:angles()
+        }
+    }
+    save_start()
+    
+    show_help()
+}
+
+local AimPos = O:aimPos()
+
+if(changed(O:keyPressed("b")) && O:keyPressed("b")) {
+    IsEnabled = !IsEnabled
+    if (!IsEnabled) {
+        Fire = 0
+        foreach (I, P:entity = Entities) {
+            P:setPos(StartPos[I, vector])
+            P:setAng(StartAngs[I, angle])
+        }
+        printColor(vec(255,255,0), "Turret-ACF: ", vec(255,0,0), "OFF")
+    }
+    else {
+        save_start()
+        printColor(vec(255,255,0), "Turret-ACF: ", vec(0,255,0), "ON")
+    }
+}
+
+if(changed(O:keyPressed("mouse_left")) && O:keyPressed("mouse_left")) {
+    if (IsEnabled) {
+        Fire = 1
+        stoptimer("OffFire")
+        timer("OffFire", 500)
+    }
+}
+
+if(clk("OffFire")) {
+    Fire = 0
+}
+
+if (IsEnabled) {
+    foreach (I, P:entity = Entities) {
+        P:setPos(O:toWorld(DiffPoses[I, vector]))
+        P:setAng((AimPos - P:pos()):toAngle())
+    }
+}
+

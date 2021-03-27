@@ -1,0 +1,26 @@
+@name StreamRadio
+@inputs 
+@outputs Url:string Play Pause Radius Volume
+@persist W:wirelink
+@trigger 
+interval(1000)
+if(first()) {
+W = entity():isWeldedTo():wirelink()
+entity():isWeldedTo():createWire(entity(),"Play","Play")
+entity():isWeldedTo():createWire(entity(),"Volume","Volume")
+entity():isWeldedTo():createWire(entity(),"Pause","Pause")
+entity():isWeldedTo():createWire(entity(),"Radius","Radius")
+entity():isWeldedTo():createWire(entity(),"Stream URL","Url")
+
+
+Url = "http://cdndl.zaycev.net/121569/3200628/laskovyy_may_-_belye_rozy_%28zaycev.net%29.mp3"
+Play = 1
+Volume = 1
+Pause = 0
+Radius = 10000
+
+#W["Stream URL",string] = Url
+
+
+}
+W["Play",number] = 1

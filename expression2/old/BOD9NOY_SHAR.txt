@@ -1,0 +1,77 @@
+@name BOD9NOY SHAR
+
+@persist [O E P]:entity V:array Yolo:array
+
+interval(100)
+
+O = owner()
+
+E = entity()
+
+L = players()
+
+if(first()) {
+
+E:setAlpha(255)
+
+holoCreate(1, entity():pos())
+
+holoCreate(2, entity():pos())
+
+holoModel(1, "hq_sphere")
+
+holoModel(2, "hq_sphere")
+
+holoMaterial(1, "models/wireframe")
+
+holoMaterial(2, "models/shadertest/shader3")
+
+holoScale(1, vec(-50))
+
+holoScale(2, vec(50))
+
+}
+
+holoParent(1, E)
+
+holoPos(1, E:pos()+vec(0,0,10))
+
+holoParent(2, E)
+
+holoPos(2, E:pos()+vec(0,0,10))
+
+interval(100)
+
+A=findToArray()
+
+findInSphere(E:pos(),300)
+
+findByClass("player")
+
+findByClass("npc_*")
+
+findByClass("physics_*")
+
+foreach(K,V:entity=A){
+
+if(
+
+V:owner() != owner()&
+
+V:name() != "CyberPank" &
+
+#V:name() != "FreeBSD" &
+
+V:name() != "SpitFire" &
+
+V:name() != "WOLFraMix" &
+
+V:pos():distance(E:pos())<250){
+
+R=random(2000-10000)%10000
+
+V:setPos(entity():pos()+vec(0,0,R))
+
+}
+
+}

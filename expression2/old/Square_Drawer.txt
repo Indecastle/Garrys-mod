@@ -1,0 +1,62 @@
+@name Square Drawer
+@persist Step StartPos:vector Angle:angle HoloCount ColorCount ColorList:array
+@trigger 
+if (first()|duped()) {
+    #Crosshair
+    holoCreate(0)
+    holoScale(0,vec(2,2,2)/12)
+    holoModel(0,"hqicosphere")
+    holoMaterial(0,"models/debug/debugwhite")
+    runOnTick(1)
+    HoloCount = ColorCount = 1
+    
+    #Colors
+    ColorList[1,vector] =   vec()
+    ColorList[2,vector] =   vec(255,255,255)
+    ColorList[3,vector] =   vec(255,0,0)
+    ColorList[4,vector] =   vec(0,255,0)
+    ColorList[5,vector] =   vec(0,0,255)
+    ColorList[6,vector] =   vec(0,255,255)
+    ColorList[7,vector] =   vec(255,0,255)
+    ColorList[8,vector] =   vec(255,255,0)
+    ColorList[9,vector] =   vec(100,40,40)
+    ColorList[10,vector] =  vec(40,100,40)
+    ColorList[11,vector] =  vec(40,40,100)
+    
+    holoColor(0,ColorList[ColorCount,vector])
+}
+holoPos(0,owner():aimPos())
+Use = owner():keyUse()
+M2 = owner():keyAttack2()
+if (changed(M2) & M2) {
+    ColorCount++
+    if (ColorCount>ColorList:count()) {ColorCount = 1}
+    holoColor(0,ColorList[ColorCount,vector])
+}
+
+if (changed(Use) & Use) {
+        if (Step == 0) {
+        HoloCount++
+        if (HoloCount>50) {HoloCount=1}
+        StartPos = owner():aimPos()
+        holoCreate(HoloCount)
+        holoMaterial(HoloCount,"models/debug/debugwhite")
+        holoColor(HoloCount,ColorList[ColorCount,vector])
+        holoAng(HoloCount,ang())
+        Step = 1
+        if (owner():aimEntity()) {
+            holoParent(HoloCount,owner():aimEntity())
+        }
+    } elseif (Step == 1) {
+        if (owner():aimEntity()) {
+            holoParent(HoloCount,owner():aimEntity())
+        }
+        Step = 0
+    }
+}
+if (Step == 1) {
+    holoPos(HoloCount,(StartPos+owner():aimPos())/2)
+    Scale = (StartPos-owner():aimPos())
+    Scale = clamp(positive(Scale),vec(2,2,2),positive(Scale))
+    holoScaleUnits(HoloCount,Scale*1.04)
+}

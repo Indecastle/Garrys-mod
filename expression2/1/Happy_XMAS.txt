@@ -1,0 +1,142 @@
+@name FailCake Happy XMAS!
+@inputs 
+@outputs RRS Rands Rs Limit
+@persist Back [S AllSnow Table Snow]:array Max Height Count I X Y Os E:entity SS A Z Range
+@trigger all
+@model models/props_foliage/tree_deciduous_03a.mdl
+
+runOnTick(1)
+runOnChat(1)
+
+
+Snow[1,string]= "models/hunter/plates/plate1x1.mdl"
+Snow[2,string]= "models/hunter/plates/plate1x2.mdl"
+Snow[3,string]= "models/hunter/blocks/cube1x1x025.mdl"
+Snow[4,string]= "models/hunter/blocks/cube05x05x025.mdl"
+Snow[5,string]= "models/hunter/blocks/cube05x075x025.mdl"
+
+if(first()){
+propSpawnEffect(0)
+E = entity() 
+hint("Made by Failcake and Jack",7) 
+
+######### SETTINGS #########
+Range = 190
+Height = 300
+Rands = 3000
+Max = 0
+Limit = 40
+######### SETTINGS #########
+Prop = propSpawn("models/hunter/plates/plate8x8.mdl",E:toWorld(vec(0,0,0)),ang(0,0,0),1)
+Prop:setColor(255,255,255)
+Prop:setMaterial("models/debug/debugwhite")
+
+Present = propSpawn("models/effects/bday_gib01.mdl",E:toWorld(vec(20,0,10)),ang(0,0,0),1)
+
+A = 0
+
+for(X2 = -5,5){
+
+for(Y2 = -5,5){
+Os++
+Table[Os,vector2] = vec2(X2,Y2) 
+} 
+
+}
+
+}
+
+
+
+Back+=0.1
+
+if(Back == 2){
+E:soundPlay(1,999,"music/portal_android_hell.mp3") 
+soundPitch(1,100) 
+}
+if(Back >= 500){
+Back = 0
+soundStop(1) 
+}
+
+
+if(A < 30)
+{
+timer("spawn",500)
+}
+
+if(clk("spawn"))
+{
+X = random(E:pos():x() - Range,E:pos():x() + Range)
+Y = random(E:pos():y() - Range,E:pos():y() + Range)
+A++
+RRS = randint(3,7)
+holoCreate(A)
+holoModel(A,"hqicosphere")
+holoScaleUnits(A,vec(RRS,RRS,RRS))
+holoPos(A,vec(X,Y,E:pos():z() + Height))
+holoColor(A,vec(255,255,255))
+holoAlpha(A,200)
+holoMaterial(A,"models/debug/debugwhite")
+S:pushEntity(holoEntity(A)) 
+}
+
+for(I = 1,S:count())
+{
+Z = S[I,entity]:pos():z() - 0.5
+holoPos(I,vec(S[I,entity]:pos():x(),S[I,entity]:pos():y(),Z))
+if(Z < E:pos():z()) {holoPos(I,vec(S[I,entity]:pos():x(),S[I,entity]:pos():y(),E:pos():z() + Height))}
+
+}
+
+timer("Scan",100)
+
+if(clk("Scan")){
+SS++
+holoCreate(-2)
+holoModel(-2,"cube")
+holoScale(-2,vec(2,2,2))
+holoPos(-2,E:toWorld(vec((Table[SS,vector2])*30)))
+holoAlpha(-2,0)
+holoMaterial(-2,"models/wireframe") 
+if(SS >= 120){
+SS = 0 
+} 
+}
+
+timer("Random",100)
+
+if(clk("Random")){
+holoColor(-2,vec(0,0,255))
+Rands = randint(3000,5000) 
+}
+
+
+timer("SpawnIce",Rands)
+
+if(clk("SpawnIce")){
+if(Max <= Limit){
+Rs = randint(1,5)
+holoColor(-2,vec(255,0,0))
+SnowBlock = propSpawn(Snow[Rs,string],E:toWorld(vec((Table[SS,vector2])*30))+vec(0,0,2.5),ang(0,0,0),1)
+AllSnow:pushEntity(SnowBlock) 
+SnowBlock:setColor(255,255,255)
+SnowBlock:setMaterial("models/debug/debugwhite")
+Max+=1
+}
+}
+
+
+
+if(chatClk(owner()))
+{
+if(lastSaid():lower() == "/remove")
+{
+Snow:propDelete()
+selfDestruct()
+SnowBlock:propDelete()
+hint("Removed!",7)
+}
+
+}
+if(duped()) {selfDestruct()}

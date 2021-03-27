@@ -1,0 +1,46 @@
+@name krik DyIIIbl - AAAAAAAAAAAAAAAAAAAAA
+@inputs 
+@outputs Count
+@persist I Tuples:table Prop:entity [StartPos LastPos]:vector [StartAng LastAng]:angle ON Back
+@trigger 
+
+#interval(10) 
+if(first()) {
+    runOnKeys(owner(),1)
+    runOnTick(1)
+    Tuples = table()
+    Prop = entity():isWeldedTo()
+    print(Prop)
+    StartPos = LastPos = Prop:pos()
+    StartAng = LastAng = Prop:angles()
+}
+
+if(StartPos!=Prop:pos() & StartAng!=Prop:angles() & !Back) {
+    if(LastPos != Prop:pos() & LastAng != Prop:angles()) {
+        Tuples:pushArray(array(Prop:pos(),Prop:angles()) )
+    }
+    LastPos = Prop:pos()
+    LastAng = Prop:angles()
+}
+
+if(changed(owner():keyPressed("b")) & owner():keyPressed("b")) {
+    Back = 1
+    Prop:propFreeze(1)
+    Prop:setColor(vec(230,0,0), 255)
+}
+
+if(Tuples:exists(1) & Back) {
+    Tuple = Tuples:popArray()
+    Prop:setPos(Tuple:vector(1))
+    Prop:setAng(Tuple:angle(2))
+    #print(Tuple:vector(1), Tuple:angle(2))
+    #timer("azaz",1)
+}
+
+if(!Tuples:exists(1) & Back) {
+    Back = 0
+    Prop:setColor(vec(255), 255)
+    Prop:propFreeze(0)
+}
+
+Count = Tuples:count()

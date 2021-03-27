@@ -1,0 +1,31 @@
+@name podnimator
+@inputs 
+@outputs E:entity P:entity
+@persist EV:vector
+@trigger 
+interval(100)
+if(first()){
+  #  entity():propNotSolid(1)
+   # entity():setAlpha(0)
+P = propSpawn("models/hunter/misc/shell2x2.mdl",1)
+P:setColor(vec(255,0,0),40)
+P:setAlpha(0)
+P:setMass(2)
+}
+P:setAlpha(0)
+PV = P:pos()
+EVV = entity():pos()
+E = owner():aimEntity()
+#E = findPlayerByName("Trigger")
+EV = E:pos()+vec(0,0,40)
+#if(!P){  P = propSpawn("models/hunter/misc/shell2x2.mdl",1)}
+if(owner():weapon():type() == "weapon_physgun"){
+
+if(owner():keyAttack1() | owner():keyPressed("F")){
+    if(E != P){
+    if(PV == EVV){
+    if(E:isPlayer()){P:setPos(EV) P:setAlpha(0)}else{if(owner():keyPressed("F")){P:setPos(EV) P:setAlpha(0)}}
+}}}else{
+P:setPos(entity():pos())
+P:propFreeze(1)}
+}

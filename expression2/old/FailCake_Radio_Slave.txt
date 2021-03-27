@@ -1,0 +1,283 @@
+@name FailCake Radio Slave
+@persist GTable:gtable
+@persist [O E]:entity Start Time:string TimeF:string Min Sec Tims Pop Okss Ond
+@persist Sec2 Min2 Convert BB On Alpha Al GGs Cos Plya Dead Pi Broke
+@trigger all
+@model models/props_lab/reciever01d.mdl
+
+if(first() | duped()){
+runOnLast(1)
+runOnTick(1)
+
+setName("FailCake Radio [SLAVE]")
+
+O = owner()
+E = entity()
+
+GTable = gTable("stream",1)
+Ond = 0
+GTable["Count",number] = GTable["Count",number] + 1
+Al = 150
+Alpha = 0
+Pi = 100
+GGs = 0
+Dead = 0
+Broke = 0
+Plya = 0
+holoCreate(1)
+holoModel(1,"hqcylinder")
+holoPos(1,E:toWorld(vec(-1,3.5,3)))
+holoScaleUnits(1,vec(0.5,0.5,6))
+holoParent(1,E)
+
+hint("* Made By FailCake *",7)
+
+holoCreate(2)
+holoModel(2,"dome")
+holoPos(2,E:toWorld(vec(-1,3.5,0.6)))
+holoScaleUnits(2,vec(1.5,1.5,1))
+holoParent(2,E)
+
+holoCreate(3)
+holoModel(3,"hqsphere")
+holoPos(3,E:toWorld(vec(-1,3.5,6)))
+holoScaleUnits(3,vec(1.5,1.5,1.5))
+holoParent(3,E)
+
+
+holoCreate(4)
+holoModel(4,"hqsphere")
+holoPos(4,E:toWorld(vec(-1,3.5,6)))
+holoScaleUnits(4,vec(1,1,1))
+holoParent(4,E)
+holoColor(4,vec(0,255,0))
+holoAlpha(4,0)
+
+
+holoMaterial(1,"models/props_combine/metal_combinebridge001")
+holoMaterial(2,"models/props_pipes/GutterMetal01a")
+holoMaterial(3,"models/debug/debugwhite")
+holoColor(3,vec(255,0,0))
+}
+
+if(Broke == 0){
+if(GTable["Brod",number] == 1){
+Ond = 0 
+}
+#Made By FailCake
+
+if(Ond == 0 & GTable["Brod",number] == 0){
+holoColor(3,vec(0,255,0))
+
+E:soundPlay(GTable["Count",number],0,GTable["music",string])
+Start = 1
+Min = 0
+Sec = 0
+Min2 = 0
+BB = 0
+Sec2 = 0
+Pop = 0
+TimeF = ""
+Plya = 0
+Ond = 1
+Convert = 1
+}
+
+
+
+if(Convert){
+
+while(BB < GTable["time",number]){
+
+Sec2+=1
+BB+=1
+
+if(Sec2 >= 60){
+Sec2=0
+Min2+=1 
+} 
+
+if(BB >= GTable["time",number]){
+
+if(Sec2 < 10){
+TimeF = Min2:toString() + ":0" + Sec2:toString()
+Convert = 0
+}else{
+TimeF = Min2:toString() + ":" + Sec2:toString()
+Convert = 0
+} 
+
+}
+
+}
+
+
+}
+
+
+
+if(Start){
+On = 1
+
+timer("count",1000)
+
+if(clk("count")){
+
+Pop+=1
+
+Sec += 1
+
+if(Sec >= 60){
+Sec = 0
+Min += 1 
+}
+#Made By FailCake
+if(Sec < 10){ 
+Time = Min:toString() + ":0" + Sec:toString() 
+}else{
+Time = Min:toString() + ":" + Sec:toString() 
+}
+
+if(Dead == 0){
+if(Plya == 1){ 
+setName("FailCake Radio [Slave][" + GTable["name",string] + "]
+[Low Signal]")
+}else{
+setName("FailCake Radio [Slave][" + GTable["name",string] + "]
+["+Time+ "-"+TimeF+"]")
+}
+
+}else{
+setName("FailCake Radio [Slave][" + randint(1,3445) + "]
+["+randint(1,3564)+ "-"+randint(1,3224)+"]")
+}
+
+}
+
+if(Pop >= GTable["time",number]){
+Start = 0
+Pop = 0
+On = 0
+GTable["Done",number] = 1
+setName("FailCake Radio [Slave]") 
+holoColor(3,vec(255,0,0))
+}
+
+}
+
+
+if(GTable["STOP",number] == 1){
+GTable["STOPED",number] = GTable["STOPED",number] + 1 ## Means it stoped
+Start = 0
+On = 0
+soundStop(GTable["Count",number],2)
+holoAlpha(4,0)
+holoColor(3,vec(255,0,0))
+setName("FailCake Radio [Slave]") 
+}
+
+
+
+
+if(On){
+
+if(GTable["Static",number]){
+if(E:pos():distance(GTable["Maintra",entity]:pos()) >= GTable["MRANGE",number]){
+
+if(Plya == 0){
+E:soundPlay(3,0,"synth/white_noise.wav") 
+soundVolume(3,0.2) 
+Plya = 1 
+soundVolume(GTable["Count",number],0.1)
+}
+
+}else{
+if(Plya == 1){
+soundStop(3,2)
+soundVolume(GTable["Count",number],100)
+Plya = 0
+} 
+} 
+}
+#Made By FailCake
+if(Plya == 0){
+
+if(Alpha == 0){ 
+
+if(Dead == 0){ 
+holoColor(3,vec(0,255,0))
+}
+
+GGs-=1
+Cos = cos(GGs/2)*10 
+
+if(Cos < 0){
+holoScaleUnits(4,vec(Cos,Cos,Cos))
+}
+}
+
+if(round(Cos) == -9){
+Alpha = 1 
+}
+
+
+if(Alpha){
+
+if(Al > 0){
+Al -= 3 
+holoAlpha(4,Al)
+}else{
+Alpha = 0
+Al = 150
+GGs = 0
+holoScaleUnits(4,vec(0,0,0))
+holoAlpha(4,Al)
+}
+}
+}else{
+holoColor(3,vec(255,155,0))
+holoAlpha(4,0)
+}
+
+
+}
+}
+
+if(E:isUnderWater() & Dead == 0 & GTable["Break",number] == 1){
+Dead = 1 
+E:setColor(90,90,90,255)
+holoColor(3,vec(90,90,90))
+holoDelete(4)
+holoColor(2,vec(90,90,90))
+holoColor(1,vec(90,90,90))
+E:soundPlay(9,0,"ambient/energy/spark"+randint(1,6)+".wav")
+}
+
+if(Dead){
+
+if(Pi > 10){
+Pi-=0.2
+soundPitch(GTable["Count",number],Pi) 
+}elseif(Broke == 0){
+Broke = 1
+setName("FailCake Radio [BROKEN]") 
+soundStop(GTable["Count",number])
+holoColor(3,vec(90,90,90))
+} 
+
+}
+#Made By FailCake
+if(last()){
+GTable["Count",number] = GTable["Count",number] - 1 
+}
+
+if(duped()){
+selfDestructAll() 
+}
+
+if(GTable["Maintra",entity] == noentity() & Okss == 0){
+Okss = 1
+printColor(vec(255,0,0),"[ERROR] Spawn a Radio Master First!")
+selfDestructAll() 
+}
+#Made By FailCake

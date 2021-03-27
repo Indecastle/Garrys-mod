@@ -1,0 +1,35 @@
+@name Player Killer
+
+@inputs
+
+@outputs
+
+@persist E:entity Ar:array F:vector Ents:entity Counter T
+
+@model models/props_phx/construct/metal_plate1.mdl
+
+interval(10)
+
+if (duped()) {reset()}
+
+if (first()) {E:setMass(50000)}
+
+findExcludeEntity(owner())
+
+findByClass("player")
+
+T++
+
+if (T > 100) {T=0,Counter++}
+
+if (Counter > findToArray():count()) {Counter = 1}
+
+E = entity()
+
+Ents = findToArray():entity(Counter)
+
+F = Ents:pos() + vec(0,0,60) - E:pos()
+
+E:applyForce((F + $F * 5) * 50000)
+
+E:explosion()

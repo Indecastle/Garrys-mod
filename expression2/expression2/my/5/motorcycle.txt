@@ -1,0 +1,298 @@
+@name Motorcycle
+@inputs 
+@outputs YY
+@persist E:entity Zpower Color:vector In A Gear Gearmul Speed F Mul YY YZ Vel:vector Driver:entity Turn Go Rpm Timer
+@trigger 
+
+
+
+if(first()) {        
+###color variable####   
+Color=vec(random(255),random(255),random(255))    
+#####################
+
+
+
+
+
+
+
+
+#############################    
+    
+E=entity():isConstrainedTo()   
+E:setMass(200) 
+E:setAlpha(0)
+entity():setAlpha(0)
+E:killPod()
+
+###check seat###
+if(E==noentity()) {print("Chip was not spawned on a seat, selfdestructing...")
+    
+    selfDestruct()
+    }
+
+
+#A is the angle of the seat
+A=14  
+
+
+holoCreate(0)
+holoParent(0,E)
+holoAng(0,E:toWorld(ang(0,0,A)))
+holoPos(0,E:toWorld(vec(0,6,-1))) 
+
+
+######turning holo
+holoCreate(20)
+holoPos(20,holoEntity(0):toWorld(vec(0,22,10)))
+holoAng(20,holoEntity(0):toWorld(ang()))
+holoParent(20,E)
+
+#wheels 
+
+holoCreate(1)    
+holoCreate(2)    
+holoScaleUnits(1,vec(27,27,30))   
+holoScaleUnits(2,vec(27,27,30)) 
+holoAng(1,holoEntity(0):toWorld(ang(90,0,0)))
+holoAng(2,holoEntity(0):toWorld(ang(90,0,0)))
+holoPos(1,holoEntity(0):toWorld(vec(0,-28,-5)))    
+holoPos(2,holoEntity(0):toWorld(vec(0,32,-5)))   
+holoModel(1,"hqtorus2")
+holoModel(2,"hqtorus2")  
+holoParent(1,0)    
+holoParent(2,20)   
+holoMaterial(1,"phoenix_storms/car_tire")
+holoMaterial(2,"phoenix_storms/car_tire")
+
+#main body 
+holoCreate(3)    
+holoPos(3,holoEntity(0):toWorld(vec(0,2,1)))    
+holoScale(3,vec(0.9,1.2,2))    
+holoAng(3,holoEntity(0):toWorld(ang(0,0,-60)))    
+ holoParent(3,0)   
+    
+holoCreate(4)    
+holoPos(4,holoEntity(0):toWorld(vec(0,2,4))) 
+holoModel(4,"hq_sphere")   
+holoScale(4,vec(0.8,1.6,2.2))    
+holoAng(4,holoEntity(0):toWorld(ang(0,0,-90)))    
+ holoParent(4,0)       
+
+holoCreate(5)    
+holoPos(5,holoEntity(0):toWorld(vec(0,-18,14))) 
+holoModel(5,"hq_sphere")   
+holoScale(5,vec(0.85,0.7,3.3))    
+holoAng(5,holoEntity(0):toWorld(ang(0,0,65)))    
+ holoParent(5,0)   
+
+    
+#handlebar
+holoCreate(6)
+holoModel(6,"hqsphere")    
+holoPos(6,holoEntity(0):toWorld(vec(0,14,12)))    
+holoScale(6,vec(1.2,1.2,2.2))    
+holoAng(6,holoEntity(0):toWorld(ang(0,0,-90)))    
+ holoParent(6,0)   
+
+
+#suspension
+holoCreate(8)    
+holoPos(8,holoEntity(0):toWorld(vec(-6.2,-16,-2)))    
+holoScale(8,vec(0.3,0.8,2.4))    
+holoAng(8,holoEntity(0):toWorld(ang(0,0,-90)))    
+ holoParent(8,0)     
+
+
+holoCreate(9)    
+holoCreate(10)    
+holoScaleUnits(9,vec(5,5,10))   
+holoScaleUnits(10,vec(5,5,10)) 
+holoAng(9,holoEntity(0):toWorld(ang(90,0,0)))
+holoAng(10,holoEntity(0):toWorld(ang(90,0,0)))
+holoPos(9,holoEntity(0):toWorld(vec(-2,-28,-5)))    
+holoPos(10,holoEntity(0):toWorld(vec(0,32,-5)))   
+holoModel(9,"cylinder")
+holoModel(10,"cylinder")  
+holoParent(9,0)    
+holoParent(10,20) 
+
+holoCreate(11)    
+holoCreate(12)    
+holoScaleUnits(11,vec(27,27,2))   
+holoScaleUnits(12,vec(27,27,2)) 
+holoAng(11,holoEntity(0):toWorld(ang(90,0,0)))
+holoAng(12,holoEntity(0):toWorld(ang(90,0,0)))
+holoPos(11,holoEntity(0):toWorld(vec(0,-28,-5)))    
+holoPos(12,holoEntity(0):toWorld(vec(0,32,-5)))   
+holoModel(11,"cylinder")
+holoModel(12,"cylinder")  
+holoParent(11,0)    
+holoParent(12,20)  
+
+holoCreate(13)
+holoModel(13,"hqcylinder")    
+holoPos(13,holoEntity(0):toWorld(vec(-6.1,28.5,3.5)))    
+holoScale(13,vec(0.25,0.4,1.8))    
+holoAng(13,holoEntity(0):toWorld(ang(0,0,25)))    
+ holoParent(13,20)     
+ 
+holoCreate(14)   
+holoModel(14,"hqcylinder")   
+holoPos(14,holoEntity(0):toWorld(vec(6.1,28.5,3.5)))    
+holoScale(14,vec(0.25,0.4,1.8))    
+holoAng(14,holoEntity(0):toWorld(ang(0,0,25)))    
+ holoParent(14,20) 
+
+#handlingbar and instruments
+holoCreate(15) 
+holoModel(15,"cylinder")   
+holoPos(15,holoEntity(0):toWorld(vec(0,21,15)))    
+holoScale(15,vec(0.9,1.1,0.2))    
+holoAng(15,holoEntity(0):toWorld(ang(180,0,-70)))    
+ holoParent(15,E)   
+
+holoCreate(16)   
+holoModel(16,"hqcylinder")   
+holoPos(16,holoEntity(0):toWorld(vec(0,19,18)))    
+holoScale(16,vec(0.45,0.2,0.45))    
+holoAng(16,holoEntity(0):toWorld(ang(0,0,25)))    
+ holoParent(16,20) 
+
+holoCreate(17)   
+holoModel(17,"hqcylinder")   
+holoPos(17,holoEntity(0):toWorld(vec(5.5,16.5,19)))    
+holoScale(17,vec(0.2,0.2,0.83))    
+holoAng(17,holoEntity(0):toWorld(ang(90,0,25)))    
+ holoParent(17,20) 
+
+holoCreate(18)   
+holoModel(18,"hqcylinder")   
+holoPos(18,holoEntity(0):toWorld(vec(-5.5,16.5,19)))    
+holoScale(18,vec(0.2,0.2,0.83))    
+holoAng(18,holoEntity(0):toWorld(ang(90,0,-25)))    
+ holoParent(18,20)    
+
+
+holoAlpha(20,0)
+
+
+
+
+####colors
+holoColor(21,vec(30,30,30))
+holoColor(22,vec(255,100,0))
+holoMaterial(15,"phoenix_storms/mat/mat_phx_carbonfiber")
+holoMaterial(3,"phoenix_storms/metalbox")
+holoColor(4,Color)
+holoColor(5,Color)
+holoColor(6,Color)
+holoColor(7,Color)
+holoMaterial(8,"phoenix_storms/metalbox")
+holoMaterial(0,"phoenix_storms/metalbox")
+holoMaterial(13,"phoenix_storms/metalbox")
+holoMaterial(14,"phoenix_storms/metalbox")
+holoMaterial(16,"phoenix_storms/metalbox")
+holoMaterial(17,"phoenix_storms/car_tire")
+holoMaterial(18,"phoenix_storms/car_tire")
+holoColor(19,Color)
+holoColor(11,vec(10,10,10))
+holoColor(12,vec(10,10,10))
+holoMaterial(9,"phoenix_storms/metalbox")
+holoMaterial(10,"phoenix_storms/metalbox")
+holoColor(15,vec(100,100,100))
+ }
+runOnTick(1)
+if(E:isFrozen()==0) {
+######################
+Driver=E:driver()
+
+#rangers
+rangerFilter(E)
+Fr=rangerOffset(999,holoEntity(2):pos()+vec(0,0,30),vec(0,0,-999))
+rangerFilter(E)
+Br=rangerOffset(999,holoEntity(1):pos()+vec(0,0,30),vec(0,0,-999))
+rangerFilter(E)
+Er=rangerOffset(999,E:pos()+vec(0,0,30),vec(0,0,-999))
+####backwards ranger
+rangerFilter(E)
+Bkr=rangerOffset(350,E:pos(),-E:forward())
+if(Bkr:distance()<70 & Bkr:entity():isPlayer()==0) {Zpower=0} else{Zpower=1} 
+
+#positioning
+Pos=Er:position()+Er:hitNormal()*26+holoEntity(0):right()*-Rpm*Gearmul
+    
+#power if height is small
+if(Fr:distance()+Br:distance() <127) { 
+        E:applyForce(((Pos-E:pos())*7.5-E:vel())*E:mass()*vec(1,1,Zpower))  
+
+###finding the angle over the ground
+Angles=ang(-14,0,0)+((Er:position()+Er:hitNormal()*26)-(Fr:position()+Fr:hitNormal()*26)):toAngle()
+
+
+}else{Angles=E:angles()-ang(0,0,YY)}
+
+
+#angle
+Entity = E
+#separeting brake and thrust
+Left=Driver:keyAttack1() Right=Driver:keyAttack2()
+#finding eye directction
+   Eye = vec(Driver:eye():dot(E:right()),Driver:eye():dot(E:right()),0)
+    Eye = Eye:setY(-Eye:y())*(5-E:vel():length()*0.001)
+    
+
+#rpm
+if(Left==1) {Rpm+=(2-(Gearmul*1.6))} else{Rpm-=0.5} if(Rpm>350) {Rpm=348} if(Rpm<0) {Rpm=0} 
+if(Right==1) {Rpm-=2}
+###gears###
+if(Gear==0 & Left==1) {Gear+=1}
+if(Rpm>348 & Gear < 6) {Gear+=1 Rpm-=100} if(Gear>6) {Gear=6}
+if(Rpm< 150 & Gear>0 & Right==1 | Gear>0 & Rpm <40) {Gear-=1 Rpm+=50} if(Gear<0) {Gear=0}
+Gearmul=Gear*0.2
+
+if(Fr:distance() >75) {YZ+=(Left-Right)*0.05 YY+=YZ } else{YY=0 YZ=0}
+if(YZ>3) {YZ=3}
+if(YZ<-3) {YZ=-3} 
+
+##setting the angle
+Angle = ang(Eye:y()*-8,E:angles():yaw()+Eye:y(),Angles:pitch()+YY)
+Torque = Entity:toLocal(rotationVector(quat(Angle) / quat(Entity)) + Entity:pos())
+Entity:applyTorque((Torque*500-Entity:angVelVector()*20)*Entity:inertia())
+
+
+##tirerolling
+
+Vel=(entity():pos()+entity():vel():normalized()*100)
+
+
+if(Vel:distance(holoEntity(1):pos())>(Vel:distance(holoEntity(2):pos())) ) {F=-1} else{F=1}
+
+
+
+if(Br:distance()<56){Speed=entity():vel():length()*0.05*F}
+if(Br:distance()>56& Speed>0) {Speed-=0.3}
+if(Br:distance()>56& Speed<0) {Speed+=0.3}
+Mul+=Speed
+Ang=holoEntity(9):toWorld(ang(0,Mul,0))
+holoAng(1,Ang)
+Ang2=holoEntity(10):toWorld(ang(0,Mul,0))
+holoAng(2,Ang2)
+
+holoAng(20,holoEntity(0):toWorld(ang(0,Eye:y()*7,0)))
+
+####sounds
+if(Driver:isPlayer()==1) {Timer+=1 In+=1} else{Gear=0 Timer=0 In=0 soundStop(1)} if(Timer>200) {Timer=0}
+if(Timer==5) {E:soundPlay(1,0,"vehicles/airboat/fan_motor_fullthrottle_loop1.wav")}
+soundPitch(1,Rpm*0.6+20+(Timer*0.01))
+
+
+
+##failure consequences
+#rangerFilter(E)
+#Fail=rangerOffset(300,E:pos(),holoEntity(0):up())
+#if(Fail:distance()<70 & E:driver():isPlayer()==1) {E:ejectPod() Rpm=0 E:soundPlay(2,0,"physics/body/body_medium_impact_hard4.wav") }
+}
+
+if(dupefinished()) {reset()}  

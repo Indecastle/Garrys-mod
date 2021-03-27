@@ -1,0 +1,26 @@
+@name ShakBaum
+@inputs Run
+@outputs 
+@persist [Main Palka H H1]:entity I
+@trigger 
+
+if (first() | duped() | dupefinished()) {
+    #findByClass("prop_physics")
+    findByModel("models/sprops/cuboids/height06/size_3/cube_18x36x6.mdl")
+    Main = findClosest(entity():pos())
+    findByModel("models/sprops/rectangles_thin/size_1_5/rect_6x192x1_5.mdl")
+    Palka = findClosest(entity():pos())
+    
+    # Entity=holoCreate(number index,vector position,vector scale,angle ang,vector4 color,string model)
+    H = holoCreate(1, Main:toWorld(vec(-15, 0 ,7)), vec(0.2), Main:angles())
+    H1 = holoCreate(2, H:toWorld(vec(0,93,0)), vec(1), H:toWorld(ang(0,90,0)), vec(255), "models/sprops/rectangles_thin/size_1_5/rect_6x192x1_5.mdl")
+    holoMaterial(2, "phoenix_storms/stripes")
+    holoParent(2, 1)
+}
+
+I++
+holoAng(1, ang(0,0,-I*2))
+Palka:setPos(H1:pos())
+Palka:setAng(H1:angles())
+
+interval(100)

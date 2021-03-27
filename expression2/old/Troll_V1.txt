@@ -1,0 +1,36 @@
+@name Troll V1
+@persist 
+interval(500)
+if (first() | duped())
+{
+    entity():setAlpha(0)
+    holoCreate(1)
+    holoCreate(2)
+    holoCreate(3)
+    holoCreate(4)
+}
+    holoScale(1,vec(+300,300,300))
+    holoPos(1, entity():pos()+vec(0,0,300))
+    holoColor(1,vec(random(255),random(255),random(255)),255)
+    holoParent(1,entity())
+    holoModel(1,"hqtube")
+    
+    holoScale(2,vec(100,100,100))
+    holoPos(2, entity():pos()+vec(0,500,100))
+    holoColor(2,vec(random(255),random(255),random(255)),255)
+    holoParent(2,entity())
+    holoModel(2,"hqsphere2")
+    
+    holoScale(3,vec(+100,100,100))
+    holoPos(3, entity():pos()+vec(0,-500,100))
+    holoColor(3,vec(random(255),random(255),random(255)),255)
+    holoParent(3,entity())
+    holoModel(3,"hqsphere")
+    
+    holoScale(4,vec(+300,300,300))
+    holoPos(4, entity():pos()+vec(0,0,600))
+    holoColor(4,vec(random(255),random(255),random(255)),255)
+    holoParent(4,entity())
+    holoModel(4,"dome")
+
+

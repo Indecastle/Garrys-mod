@@ -1,0 +1,256 @@
+@name Teleport (Half-Life 2) dop #2
+@inputs Turn   DoorOn TP_ARRAY:array
+@outputs R1 R2 R3 R4    Z3 Z2 Z1   
+@persist T1 T2 T3 T4   B1 B2 B3 B4 SpeedUp SpeedDown   Speed [A11 A12 A13]:entity T33 T22 T11 B11 B22 B33
+@trigger Turn   DoorOn TP_ARRAY
+
+if(first() | dupefinished()) {
+    #R1 = -10
+    #R2 = -20
+    #R3 = -30
+    #R4 = -40
+    SpeedUp = 2
+    SpeedDown = 2
+    
+    ###_DOORS_###
+    Z1 = 30 Z2 = 50 Z3 = 70
+    Speed = 15
+    timer("set Array", 100)
+    ###
+}
+
+function void stoptimers_1() {
+    stoptimer("on")
+    stoptimer("off")
+    stoptimer("B1") stoptimer("B2") stoptimer("B3") stoptimer("B4")
+}
+
+
+if(~Turn & Turn) {
+    stoptimers_1()
+    timer("on",10)
+    #T1 = 0
+    B1 = B2 = B3 = B4 = 0
+    B1 = 1 timer("B2",700) timer("B3",1400) timer("B4",2100)
+}
+
+if(~Turn & !Turn) {
+    stoptimers_1()
+    timer("off",10)
+    B1 = B2 = B3 = B4 = 0
+    #B1 = B2 = B3 = B4 = 1
+    #B4 = 1 timer("B3",700) timer("B2",1400) timer("B1",2100)
+    B1 = 1 timer("B2",700) timer("B3",1400) timer("B4",2100)
+}
+
+function number heviside(Num) {
+    if(Num > 0) { return Num }
+    return 0
+}
+
+if(clk("B1")) { B1=1 }
+if(clk("B2")) { B2=1 }
+if(clk("B3")) { B3=1 }
+if(clk("B4")) { B4=1 }
+
+if(clk("on")) {
+    timer("on",100)
+    
+    if(B1) {
+        T1 = T1 + SpeedUp
+        if(T1 > 70) {
+            T1 = 70
+            B1 = 0
+        }
+    }
+    
+    if(B2) {
+        T2 = T2 + SpeedUp
+        if(T2 > 70) {
+            T2 = 70
+            B2 = 0
+        }
+    }
+    
+    if(B3) {
+        T3 = T3 + SpeedUp
+        if(T3 > 70) {
+            T3 = 70
+            B3 = 0
+        }
+    }
+    
+    if(B4) {
+        T4 = T4 + SpeedUp
+        if(T4 > 70) {
+            T4 = 70
+            B4 = 0
+        }
+    }
+    
+    R1 = (R1 + T1)%360
+    R2 = (R2 + T2)%360
+    R3 = (R3 + T3)%360
+    R4 = (R4 + T4)%360
+    
+    #if(!B1 & !B2 & !B3 & !B4) { stoptimer("on") }
+    
+}
+
+#[
+if(clk("off1")) {
+    stoptimer("on")
+    timer("off",10)
+    B1 = B2 = B3 = B4 = 1
+}
+]#
+
+if(clk("off")) {
+    timer("off",100)
+    
+    if(B1) {
+        T1 = T1 - SpeedDown
+        if(T1 < 5) {
+            T1 = 5
+            B1 = 0
+        }
+    }
+    elseif(T1==5){
+        if(inrange(R1,-6, 6)) {
+            R1 = 0
+            T1 = 0
+        }
+    }
+    
+    if(B2) {
+        T2 = T2 - SpeedDown
+        if(T2 < 5) {
+            T2 = 5
+            B2 = 0
+        }
+    }
+    elseif(T2==5){
+        if(inrange(R2,-6, 6)) {
+            R2 = 0
+            T2 = 0
+        }
+    }
+    
+    if(B3) {
+        T3 = T3 - SpeedDown
+        if(T3 < 5) {
+            T3 = 5
+            B3 = 0
+        }
+    }
+    elseif(T3==5){
+        if(inrange(R3,-6, 6)) {
+            R3 = 0
+            T3 = 0
+        }
+    }
+    
+    if(B4) {
+        T4 = T4 - SpeedDown
+        if(T4 < 5) {
+            T4 = 5
+            B4 = 0
+        }
+    }
+    elseif(T4==5){
+        if(inrange(R4,-6, 6)) {
+            R4 = 0
+            T4 = 0
+        }
+    }
+    
+    R1 = (R1 + T1)%360
+    R2 = (R2 + T2)%360
+    R3 = (R3 + T3)%360
+    R4 = (R4 + T4)%360
+    
+    
+    if(!T1 & !T2 & !T3 & !T4) { 
+        stoptimer("off") 
+    }
+}
+
+
+
+
+##########################_DOORS_#################################
+
+function void stoptimers_2() {
+    stoptimer("on2")
+    stoptimer("off2")
+    stoptimer("B1_2") stoptimer("B2_2") stoptimer("B3_2") stoptimer("B4_2")
+}
+
+if((~TP_ARRAY | clk("set Array"))) {
+    if(TP_ARRAY:exists(1)) {
+        A11 = TP_ARRAY:entity(3)
+        A12 = TP_ARRAY:entity(4)
+        A13 = TP_ARRAY:entity(5)
+    }
+    else {
+        A11 = A12 = A13 = noentity()
+    }
+}
+
+if(~DoorOn & DoorOn) {
+    stoptimers_2()
+    timer("on2",100)
+    B11 = B22 = B33 = 1
+    timer("B1_2",800) timer("B2_2",400) T33 = Speed
+    A11:soundPlay(1, 0.8, "doors/doormove7.wav")
+}
+
+if(~DoorOn & !DoorOn) {
+    stoptimers_2()
+    timer("off2",100)
+    B11 = B22 = B33 = 1
+    T11 = Speed timer("B2_2",400) timer("B3_2",800) 
+    A11:soundPlay(1, 0.8, "doors/doormove7.wav")
+}
+
+if(clk("B1_2")) { T11 = Speed }
+if(clk("B2_2")) { T22 = Speed A12:soundPlay(2, 0.8, "doors/doormove7.wav") }
+if(clk("B3_2")) { T33 = Speed }
+
+if(clk("on2")) {
+    timer("on2",100)
+    
+    
+    Z1 = (Z1 + T11)
+    Z2 = (Z2 + T22)
+    Z3 = (Z3 + T33)
+    
+    if(Z1 >= 110 & B11) { Z1 = 110 T11 = 0 B11 = 0}
+    if(Z2 >= 130 & B22) { Z2 = 130 T22 = 0 B22 = 0 A13:soundPlay(10, 0.4, "doors/door_metal_thin_close2.wav") timer("sound2", 500)}
+    if(Z3 >= 150 & B33) { Z3 = 150 T33 = 0 B33 = 0}
+    
+    if(Z1>=110 & Z2>=130 & Z3>=150) {
+        stoptimer("on2")
+    }
+}
+
+if(clk("off2")) {
+    timer("off2",100)
+    
+    Z1 = (Z1 - T11)
+    Z2 = (Z2 - T22)
+    Z3 = (Z3 - T33)
+    
+    if(Z1 <= 30 & B11) { Z1 = 30 T11 = 0 B11 = 0 }
+    if(Z2 <= 50 & B22) { Z2 = 50 T22 = 0 B22 = 0 A13:soundPlay(10, 0.4, "doors/door_metal_thin_close2.wav") timer("sound2", 500)}
+    if(Z3 <= 70 & B33) { Z3 = 70 T33 = 0 B33 = 0 }
+    
+    
+    if(Z1<=30 & Z2<=50 & Z3<=70) {
+        stoptimer("off2")
+    }
+}
+
+if(clk("sound2")) {
+    A13:soundPlay(11, 0.5, "doors/door_metal_thin_close2.wav")
+}

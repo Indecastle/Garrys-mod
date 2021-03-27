@@ -1,0 +1,119 @@
+@name SOUND_MING
+@inputs On
+@outputs [TrackStrings TrackSounds TrackVolume]:array I J Length Count
+@persist 
+
+if (first()) {
+    TrackSounds[1,string] = "synth/tri.wav"
+    TrackVolume[1,number] = 1
+    TrackStrings[1,string] =
+" 99ffaa==jjaannaa99ffaa==jjaannaa00ffaa==jjaannaa00ffaa==jjaannaa==ffaa==jjaannaa==ffaa==jjaannaa99ffaa==jjaannaa99ffaa==jjaannaa"+
+"99ffaa==jjaannaa99ffaa==jjaannaa00ffaa==jjaannaa00ffaa==jjaannaa==ffaa==jjaannaa==ffaa==jjaannaa99ffaa==jjaannaa99ffaa==jjaannaaf"+
+"fffffffffffffffffffffffffffffxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxssssssssssssssssssssssssffffffffffffffffjjjjnnnnffffffffffffffffffff"+
+"ffffffffffffffffffffffffffffxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxssssssssssssssssssssssssssffffffffffffffffffffffffffffffffffffffaacca"+
+"a00ffaassaa==ffaa==jjaannaa99ffaa==jjaannaa99ffaa==jjaannaaaaccaa00ffaassaa==ffaa==jjaannaa99ffaa==jjaanna a                     "
+
+
+    TrackSounds[2,string] = "synth/tri.wav"
+    TrackVolume[2,number] = 1
+    TrackStrings[2,string] =   
+" ff''kkjjjjkknnkkff''kkjjjjkknnkkgg''kkjjjjkknnkkgg''kkjjjjkknnkkjj''kkjjjjkknnkkjj''kkjjjjkknnkkff''kkjjjjkknnkkff''kkjjjjkknnkk"+
+"ff''kkjjjjkknnkkff''kkjjjjkknnkkgg''kkjjjjkknnkkgg''kkjjjjkknnkkjj''kkjjjjkknnkkjj''kkjjjjkknnkkff''kkjjjjkknnkkff''kkjjjjkknnkka"+
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaaa========================================================ssssssssaaaaaaaaaaaaaaaajjjjnnnnnnnnnnnnaaaa"+
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaa==========================================================ssssssssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaakk//k"+
+"kgg''kkllkkjj''kkjjjjkknnkkff''kkjjjjkknnkkff''kkjjjjkknnkkkk//kkgg''kkllkkjj''kkjjjjkknnkkff''kkjjjjkknnk k                     "
+
+
+    TrackSounds[3,string] = "synth/square.wav"
+    TrackVolume[3,number] = 0.4
+    TrackStrings[3,string] =
+"                                                                                                                                 "+
+"ffffffnnnnffnnjjkkkkllkkkknnffffxxxxxxjjjjjjjjffjjggggjjjjggxxff================jjjjjjjjjjjjjjjjjjffjjnnffjjjjnnffffffffffffffffk"+
+" k k kkkkkkj n jjjjkknnnnggffjjjjnnffjjjjj jjjjj jjnnggggg ffjjjjnnffjjjjnnffjjjjnnffjjj jjj jjjjnnnnnnnnnnnnnnnnnnnnnnnnnnnnk kk"+
+"k kkkkkkjjnnjjkkkknnnnnnkkkkjjnnffjjjjnnffffjjkkkkjjjjnnjjnnjjj jjnnjjjjffj j jjj jjjjkkkkjjjjnnnnnnnnnnnnllllkkkknnnnggggkkkkkkk"+
+"kkkkkkkllllkkj jjj jjj j jjjjnnnnnnnnnnnnnn                kkkkkkkkkkkkllllkkj jjj jjj j jjjjfffffffffffff f                     "
+
+    while( I<TrackStrings:count() ) {
+        I++
+        
+        String=TrackStrings[I,string]
+        
+        String=String:replace("7","temp")
+        String=String:replace("0",   "74>")
+        String=String:replace("6",   "67>")
+        String=String:replace("2",   "60>")
+        String=String:replace("3",   "62>")
+        String=String:replace("5",   "65>")
+        String=String:replace("9",   "72>")
+        String=String:replace("temp","69>")
+        String=String:replace(" ",   "00>")
+        String=String:replace("q",   "59>")
+        String=String:replace("w",   "61>")
+        String=String:replace("e",   "63>")
+        String=String:replace("r",   "64>")
+        String=String:replace("t",   "66>")
+        String=String:replace("y",   "68>")
+        String=String:replace("u",   "70>")
+        String=String:replace("i",   "71>")
+        String=String:replace("o",   "73>")
+        String=String:replace("p",   "75>")
+        String=String:replace("[",   "76>")
+        String=String:replace("]",   "78>")
+        String=String:replace("=",   "77>")
+        String=String:replace("a",   "79>")
+        String=String:replace("z",   "80>")
+        String=String:replace("s",   "81>")
+        String=String:replace("x",   "82>")
+        String=String:replace("c",   "83>")
+        String=String:replace("f",   "84>")
+        String=String:replace("v",   "85>")
+        String=String:replace("g",   "86>")
+        String=String:replace("b",   "87>")
+        String=String:replace("n",   "88>")
+        String=String:replace("j",   "89>")
+        String=String:replace("m",   "90>")
+        String=String:replace("k",   "91>")
+        String=String:replace(",",   "92>")
+        String=String:replace("l",   "93>")
+        String=String:replace(".",   "94>")
+        String=String:replace("/",   "95>")
+        String=String:replace("'",   "96>")
+        
+        TrackStrings[I,string] = String
+    }
+    Length=TrackStrings[1,string]:length()
+}
+
+if (On) {
+    interval(119)
+    
+    if (~On) {
+        I=J=0
+        Count=TrackStrings:count()
+        while( J<Count ) {
+            J++
+            holoCreate(J, entity():pos(), vec())
+            holoParent(J, entity())
+            holoEntity(J):soundPlay(J,0, TrackSounds[J,string] )
+            soundVolume(J, TrackVolume[J,number] )
+        }
+        
+    }
+    
+    I+=3
+    I=I%Length
+    
+    SubA=I-2
+    SubB=I-1
+    
+    J=0
+    while( J<Count ) {
+        J++
+        PV=TrackStrings:string(J):sub(SubA,SubB):toNumber()
+        soundPitch(J,2^(PV/12))
+    }
+}
+else {
+    soundPurge()
+    holoDeleteAll()
+}

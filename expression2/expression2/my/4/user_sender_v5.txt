@@ -1,0 +1,41 @@
+@name   User Sender V5
+@inputs EGP:wirelink
+@outputs 
+@persist 
+@trigger 
+#--------------------------------------
+runOnChat(1)
+
+
+if( first() ){
+    
+    dsJoinGroup("gg2") 
+    dsSetScope(2)
+    
+} 
+
+if(dsClk("tb")){
+
+    local A = dsGetArray()
+    local Msg = A[1,string] 
+    local Col = A[2,vector] ?: vec(0,255,255)
+    local ServersideMessage = A[2,vector] ? 0 : 1
+    local Sound = A[3,string] ?: ""
+    if(Sound){   soundURLload("<1>",Sound,0,0,owner())   }
+    local LT = Msg:explode("|")
+    local LTN = LT[1,string]
+    LT:removeString(1)
+    if(ServersideMessage){
+        printColor(Col,LTN,vec(225,255,255),LT:concat()  )
+    }else{
+        printColor(vec(),"[" ,vec(255), "LocaL" , vec(),"]",Col,LTN,vec(150,255,255),LT:concat()  )
+    }
+    owner():soundPlay("<>",3,"npc/dog/dog_idle1.wav")
+    soundVolume("<>",0.3)
+
+    }
+if(chatClk(owner())){
+  local  L = lastSaid()
+  local W = L:findRE("^!")
+  if(W){hideChat(1)}
+}

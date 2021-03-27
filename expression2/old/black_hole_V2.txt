@@ -1,0 +1,77 @@
+@name black hole V2
+
+@persist [O E]:entity V:array I360 B As
+
+interval(10)
+
+E=entity()
+
+O=owner()
+
+if(first()){
+
+entity():setPos(entity():pos()+vec(0,0,1000))
+
+}
+
+# entity():setAlpha(0)
+
+A=findToArray()
+
+findByClass("player")
+
+findByClass("prop_*")
+
+findByClass("wire_*")
+
+findExcludeClass("weapon_*")
+
+findExcludeClass("gmod_wire_hologram")
+
+findExcludeClass("env_laserdot")
+
+holoCreate(1)
+
+holoCreate(2)
+
+holoPos(1,entity():pos())
+
+holoPos(2,entity():pos())
+
+holoParent(1,entity())
+
+holoParent(2,entity())
+
+holoModel(1,"models/effects/portalrift.mdl")
+
+holoModel(2,"models/effects/portalrift.mdl")
+
+holoAng(2,ang(0,0,180))
+
+foreach(K,V:entity=A){
+
+if(
+
+V != E &
+
+V:owner() != owner()&
+
+V:name() != "CyberPank" &
+
+V:name() !="FreeBSD" &
+
+V:name() != "WOLFraMix" &
+
+V:name() != "12"
+
+){
+
+V:propFreeze(0)
+
+V:playerNoclip(0)
+
+V:setVel(((V:pos()-entity():pos())*-25))
+
+}
+
+}

@@ -1,0 +1,161 @@
+@name Ball Helper
+@persist [A B H C O]:entity Stoper I360 Radius Tick
+
+if(first()){
+    print("Comands: /rock /brks /club /chil /dc /deep /dub /gop /mdl /ps /pump /stop")
+}
+
+#///////////////////////////////////////////////////////////
+#/////////////////////// Holka /////////////////////////////
+#/////////////////////////////////////////////////////////// 
+
+if(first()){
+    runOnTick(1)
+    
+    B=entity()
+    O=owner()
+    A = O
+    Stoper=20
+    Radius=25
+    
+    
+    
+    H=holoCreate(1)
+    C=holoCreate(2)
+    holoMaterial(1,"models/debug/debugwhite")
+    holoPos(1,B:toWorld(vec(0,0,25)))
+    holoPos(2,C:toWorld(vec(0,0,25)))
+    holoParent(1,B)
+    holoParent(2,B)
+    holoModel(1,"icosphere3")
+    holoModel(2,"icosphere3")
+    holoScale(1,vec(-0.75))
+    holoScale(2,vec(0.70))
+    holoColor(1,vec())
+    holoColor(2,randvec(10,255))
+    
+    
+    
+   
+}
+
+I360=(I360+0.5)%360
+EndPos=A:attachmentPos("eyes") + vec(0,0,20)+ vec(sin(I360)*Radius,cos(I360)*Radius,cos(I360)*5)
+
+Dvig=H:pos()+(EndPos-H:pos())/Stoper
+holoPos(1,Dvig)
+holoPos(2,Dvig)
+
+holoColor(1,vec())
+    
+
+#//////////////////////////////////////////////////////////
+#/////////////////////// Function  ////////////////////////
+#////////////////////////////////////////////////////////// 
+        
+Tick++
+if(Tick>360){Tick=0}
+holoColor(2,hsv2rgb(Tick,1,1))
+A:dLightColor(hsv2rgb(Tick,1,1))
+
+runOnChat(1)
+
+if(chatClk(O)){
+    Ar = O:lastSaid():explode(" ")
+    switch(Ar:string(1)){
+        case"/rock", 
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/rock_128",100,0,C)
+        break
+        
+        case"/brks",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/brks_128",100,0,C)
+        break
+        
+        case"/club",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/club_128",100,0,C)
+        break
+        
+        case"/chil",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/chil_128",100,0,C)
+        break
+        
+        case"/dc",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/dc_128",100,0,C)
+        break
+        
+        case"/deep",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/deep_128",100,0,C)
+        break
+        
+        case"/dub",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/dub_128",100,0,C)
+        break
+        
+        case"/gop",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/gop_128",100,0,C)
+        break
+        
+        case"/mdl",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/mdl_128",100,0,C)
+        break
+        
+        case"/ps",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/ps_128",100,0,C)
+        break
+        
+        case"/pump",
+        hideChat(1)
+        soundURLpause(1)
+        soundURLload(1,"http://air.radiorecord.ru:8102/pump_128",100,0,C)
+        break
+        
+        case"/stop",
+        hideChat(1)
+        soundURLpause(1)
+        break
+        
+        case"!target",
+        hideChat(1)
+        local P = noentity()
+        if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+        else { P = findPlayerByName(Ar:string(2)) }
+        if(!P:isPlayer() | Ar:string(2)=="") { print("player not found") }
+        else { A = P print("target: " + A:name())}
+        break
+    }
+}
+
+#/////////////////////////////////////////////////////////
+#/////////////////////// Particle ////////////////////////
+#///////////////////////////////////////////////////////// 
+   
+#particle(1,1,0,"sprites/strider_blackball",randvec(50,255),C:toWorld(vec(0,0,0)),randvec(-1,1)*10)
+        
+#///////////////////////////////////////////////////////////
+#/////////////////////// Sledovattt ////////////////////////
+#///////////////////////////////////////////////////////////        
+        
+
+
+        
+

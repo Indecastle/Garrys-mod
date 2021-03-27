@@ -1,0 +1,58 @@
+@name Expression2 Table Socket
+@inputs Port1 Socket
+@persist [E O]:entity [T]:array [G]:wirelink 
+interval(1000)
+if(first()|dupefinished()){
+    runOnKeys(owner(),1)
+    E = entity()    O = owner()   #E:propNotSolid(1)
+    G = entity():isWeldedTo():wirelink()
+    
+    G:egpClear()
+    G:egpResolution(vec2(0),vec2(1000))
+    G:egpRoundedBox(1,vec2(500),vec2(2000,1000)) G:egpColor(1,vec4(100,100,100,100))
+    G:egpRoundedBox(2,vec2(500),vec2(1970,970)) G:egpColor(2,vec4(0,0,0,150))
+    G:egpText(3,"Expression2 Table",vec2(100,50)) G:egpFont(3,"Marlett",50) 
+    G:egpText(4,"Название чипа",vec2(-450,120)) G:egpFont(4,"Marlett",50) 
+    G:egpText(5,"Владелец",vec2(450,120)) G:egpFont(5,"Marlett",50) 
+    G:egpText(6,"OPS",vec2(1100,120)) G:egpFont(6,"Marlett",50) 
+    G:egpText(7,"CPU",vec2(1300,120)) G:egpFont(7,"Marlett",50) 
+    
+    
+    for(I=1,20){
+     G:egpRoundedBox(180 + I,vec2(500,195 + I * 35),vec2(1930,35) )  G:egpColor(180 + I,vec4(100,100,100,100)) 
+     G:egpText(100 + I,"",vec2(-450,170 + I * 35)) G:egpFont(100 + I,"Marlett",25)  
+     G:egpText(120 + I,"",vec2(450,170 + I * 35)) G:egpFont(120 + I,"Marlett",25)  
+     G:egpText(140 + I,"",vec2(1100,170 + I * 35)) G:egpFont(140 + I,"Marlett",25)  
+     G:egpText(160 + I,"",vec2(1300,170 + I * 35)) G:egpFont(160 + I,"Marlett",25) 
+    }
+}
+
+findByClass("gmod_wire_expression2")
+T = findToArray()
+if(!Socket | Port1){
+    for(I=1, 20){ 
+        local P = T[I,entity]
+        G:egpSetText(100 + I,P:getName():sub(1,40))
+        G:egpSetText(120 + I,P:owner():name())
+        G:egpSetText(140 + I,P:ops() > 0 ? P:ops():toString() : "")
+        G:egpSetText(160 + I,P:cpuUsage() > 0 ? round(P:cpuUsage()*1000000):toString() : "")
+    }
+}
+else {
+    for(I=1, 20){ 
+        local P = T[I,entity]
+        G:egpSetText(100 + I,"")
+        G:egpSetText(120 + I,"")
+        G:egpSetText(140 + I,"")
+        G:egpSetText(160 + I,"")
+    }
+}
+for(I=1,20){
+if(inrange(G:egpCursor(O),G:egpPos(180 + I)-G:egpSize(180 + I)/2, G:egpPos(180 + I)+G:egpSize(180 + I)/2)) { 
+    if(O:pos():distance(G:entity():pos()) < 200){
+    G:egpColor(180 + I,vec(100,0,0)) 
+if (owner():keyPressed("b")&&changed(owner():keyPressed("b"))) {  #T[I,entity]:remove() 
+    }}} 
+ else { G:egpColor(180 + I,vec(100))}
+
+}

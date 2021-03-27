@@ -1,0 +1,54 @@
+@name Trail
+@inputs Change Active
+@outputs 
+@persist [Switcher Switch]:entity Rev Force Who [Pos Dir]:vector
+@trigger all
+interval(10)
+if(first()) {
+    
+    Force = 1000
+    
+    findIncludeModel("models/props_phx/trains/tracks/track_switcher*")
+    findInSphere(entity():pos(), 1000)
+    Switcher = findClosest(entity():pos())
+    findClearWhiteModelList()
+    if(Switcher:model() == "models/props_phx/trains/tracks/track_switcher.mdl") {
+        #findByModel("models/props_phx/trains/tracks/track_switch.mdl")
+        findIncludeModel("models/props_phx/trains/tracks/track_switch.mdl")
+        findInSphere(entity():pos(), 1000)
+        Switch = findClosest(entity():pos())
+        Who = 1
+    }
+    elseif(Switcher:model() == "models/props_phx/trains/tracks/track_switcher2.mdl") {
+        #findByModel("models/props_phx/trains/tracks/track_switch2.mdl")
+        findIncludeModel("models/props_phx/trains/tracks/track_switch2.mdl")
+        findInSphere(entity():pos(), 1000)
+        Switch = findClosest(entity():pos())
+        Who = 2
+    }
+    #entity():noCollideAll(1)
+    print(Switcher)
+    print(Switch)
+}
+
+if((changed(Change) & Change) | changed(Active)) {
+    Rev=!Rev
+    local Pos = vec()
+    local Ang = ang()
+    switch(Who) {
+    case 1,
+        if (Rev) { Pos = vec(230,42,0) Ang = ang(0,-1.6,0)}
+        else { Pos = vec(230,38,0) Ang = ang(0,0.21,0)}
+        break
+    case 2,
+        if (Rev) { Pos = vec(230,-42,0) Ang = ang(0,1.6,0)}
+        else { Pos = vec(230,-38,0) Ang = ang(0,-0.21,0)}
+        break
+    }
+    Switcher:setPos(Switch:toWorld(Pos))
+    Switcher:setAng(Switch:toWorld(Ang))
+}
+
+#entity():applyForce(Dir*( Rev ? Force : -Force))
+
+

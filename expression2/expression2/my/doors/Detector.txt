@@ -1,0 +1,12 @@
+@name Detector
+@outputs Open Close
+
+findIncludeClass("player")
+findInSphere(entity():pos(), 200)
+
+Players = findToTable()
+
+if(Players:exists(1)) { Open = 1 Close = 0}
+else { Open = 0 Close = 1}
+    
+interval(100)

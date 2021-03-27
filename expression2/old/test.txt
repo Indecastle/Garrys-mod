@@ -1,0 +1,11 @@
+@name test
+@persist P:entity
+interval(1000)
+
+
+P = owner():aimEntity()
+
+if(P & changed(P))
+{
+    print(randint(100))
+}

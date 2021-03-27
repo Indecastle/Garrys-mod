@@ -1,0 +1,56 @@
+@name Combine Door
+@inputs Fade [Shield D1 D2]:entity
+@outputs
+@persist [Material Sound]:string
+@trigger Fade Shield
+
+if(first() | duped() | dupefinished()) {
+    #ifdef runOnLast(number)
+        runOnLast(1)
+    #endif
+    Sound = "ambient/machines/combine_shield_touch_loop1.wav"
+    Material = "effects/combineshield/comshieldwall2"
+    
+    function coll (State) {
+        #ifdef entity:propNotSolid(number)
+            Shield:propNotSolid(State)
+        #else
+            #ifdef entity:noCollideAll(number)
+                Shield:noCollideAll(State)
+            #endif
+            
+        #endif
+    }
+    function set_skin (State) {
+        D1:setSkin(State) D2:setSkin(State)
+    }
+    
+    Shield:setMaterial(Material)
+}
+
+if (~Shield) {
+    Shield:setMaterial(Material)
+    print(Shield)
+}
+
+if(Fade) {
+    soundStop("Shield")
+    Shield:setAlpha(0)
+    set_skin(1)
+    coll(1)
+}
+else {
+    Shield:soundPlay("Shield",100000,Sound) soundVolume("Shield",0.05)
+    Shield:setAlpha(255)
+    set_skin(0)
+    coll(0)
+}
+
+
+#ifdef last()
+if(last()) {
+    soundStop("Shield")
+    Shield:setAlpha(255)
+    coll(0)
+}
+#endif

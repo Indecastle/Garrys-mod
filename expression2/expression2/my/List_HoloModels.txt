@@ -1,0 +1,11 @@
+@persist Ar:array
+
+if(first())
+{
+    Ar = holoModelList()
+}
+
+for(I=1,Ar:count())
+{
+    print(Ar:string(I))
+}

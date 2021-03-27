@@ -1,0 +1,21 @@
+@name quat test 2
+@inputs 
+@outputs [V V1 V2 V3]:vector [An1 An2]:angle [Q1 Q2 Q Q3]:quaternion N:number
+@persist [H H2]:entity
+@trigger 
+
+interval(100)
+
+if(first()){
+    function quaternion myquat(W:number, V:vector) {
+        local Q = quat(cos(W/2), sin(W/2)*V:x(), sin(W/2)*V:y(), sin(W/2)*V:z())
+        return Q
+    }
+}
+
+Q1 = quat(entity())
+Q1 = myquat(42,vec(0,0,1):normalized())
+V = rotationAxis(Q1)
+V1 = rotationVector(Q1)
+N = rotationAngle(Q1)
+

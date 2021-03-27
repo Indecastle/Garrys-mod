@@ -1,0 +1,17 @@
+@name SUPER-RADIO_FFT
+if(first())
+{
+    
+    soundURLload("1","http://195.150.20.5:8000/rmf_dance",2,0,entity())
+}
+
+D = entity():soundFFT("1")
+for(I=1,D:count())
+{
+    holoCreate(I)
+    holoPos(I,entity():toWorld(vec(0,1*I,0)))
+    holoScale(I,vec(0.1,0.1,D:number(I)*0.1))    
+    holoParent(I,entity())
+}
+
+interval(100)

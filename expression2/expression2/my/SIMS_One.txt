@@ -1,0 +1,52 @@
+@name SIMS One
+@outputs
+@persist X Player:entity P
+if (first()) {
+    
+Player = findPlayerByName("Markiz")
+#Player = findPlayerBySteamID("")
+
+
+P=0 #Player variable
+holoCreate(1) #Create a holo
+holoModel(1,"cone") #Turn it into a cone
+P++ #Player variable
+
+
+holoPos(1,Player:pos() + vec(0,0,80)) #Height / position offset
+holoScale(1,vec(1.5,1.5,2.5)) #Size
+holoParent(1,Player) #Parent to player
+#holoParentAttachment(1,E,"chest")
+holoMaterial(1,"models/shiny")
+holoShadow(1,0)
+
+
+
+P=0 #Player variable
+holoCreate(2) #Create another holo
+holoModel(2,"cone") #Turn it into a cone
+P++ #Player variable
+
+
+holoPos(2,Player:pos() + vec(0,0,50)) #Height / position offset
+holoScale(2,vec(1.5,1.5,2.5)) #Size
+holoAng(2,ang(180,0,0)) #Angle (upside down)
+holoParent(2,2-1) #Parent to the other holo
+#holoParentAttachment(2,E,"chest")
+holoMaterial(2,"models/shiny")
+holoShadow(2,0)
+holoVisible(2,Player,1)
+holoVisible(1,Player,1)
+
+
+
+runOnTick(1) #Update E2
+}
+X++ #Counter
+if (X > 360) {X = 0} #Reset
+
+holoPos(1,Player:pos()+vec(0,0,150+sin(X)*20)) #Height offset
+holoAng(1,ang(0,X,0)) #Angle
+holoColor(1,vec(0,200-sin(X)*55,0)) #Color
+holoColor(1+1,vec(0,200-sin(X)*55,0)) #Color 2
+

@@ -1,0 +1,396 @@
+@name mini gauge
+@inputs A
+@outputs Ops
+@persist Range Needle Scale Mode Min Max Step Div Red Font Nums Smooth Value HMax
+@persist [Lbl LMin LMax]:string Self:entity
+@persist [NeedCol RingCol LblCol FaceCol BackCol]:vector
+@persist [NeedMat RingMat LblMat FaceMat BackMat]:string
+@trigger none
+@model models/beer/wiremod/watersensor.mdl
+
+# ultimate universal gauge by tweak
+
+# changelog:
+# v. 2 (12/09/2013)
+# - added an option for angled numbering
+#
+# v. 1 (12/06/2013)
+# - initial release
+
+interval( 100 )
+
+if( first() | duped() )
+{
+    #############################################
+    ###SETTINGS##################################
+    #############################################
+    
+    # visual
+    ###################
+    
+    Scale   = 0.8     # hologram size
+    Font    = 3     # font for numbering and labels (0-3)
+    Smooth  = 2     # smooth out needle movement - higher value is smoother
+    HMax    = 60    # max holos to create - with a lower value here the gauge will
+                    # spawn faster but will break if there are too many elements
+    
+    ## needle
+    NeedCol = vec( 0, 200, 0 )
+    NeedMat = "phoenix_storms/fender_white"
+    
+    ## tickmarks
+    #RingCol = vec( 25, 25, 25 )
+    RingCol = vec( 0, 0, 0 )
+    RingMat = "phoenix_storms/fender_white"
+    
+    ## labels
+    LblCol = vec( 0, 0, 0 )
+    LblMat = "phoenix_storms/fender_white"
+    
+    ## gauge face
+    FaceCol = vec( 255, 255, 255 )
+    #FaceCol = vec( 20, 20, 20 )
+    #FaceMat = "phoenix_storms/fender_white"
+    #FaceMat = "phoenix_storms/fender_wood"
+    FaceMat = "phoenix_storms/fender_white"
+    
+    ## gauge back
+    #BackCol = vec( 160, 160, 160 )
+    BackCol = vec( 20, 20, 20 )
+    BackMat = "phoenix_storms/fender_white"
+    #BackMat = "phoenix_storms/fender_wood"
+    
+    ## gauge profiles
+    ####################
+    ## uncomment only the one you want to use
+    ## modes (raw input will be used if unspecified)
+    ## 1: test mode - sweep gauge
+    ## 2: input (absolute)
+    ## 3: mph
+    ## 4: kmh
+    ## nums
+    ## 0: no numbering
+    ## 1: normal numbers
+    ## 2: angled numbers (oldschool mustang style)
+    
+    ## speedo
+    #Lbl  = "MPH"    # gauge label
+    #Mode = 3        # gauge mode
+    #Min  = 0        # lower bound
+    #Max  = 140      # upper bound
+    #Div  = 1        # tick label divider
+    #Step = 20       # tick interval
+    #Nums = 1        # enable numbering
+    #Red  = 0        # enable redline
+    
+    ## tach
+    Lbl  = "Km/h"
+    Mode = 4
+    Min  = 0
+    Max  = 80
+    Div  = 1
+    Step = 10
+    Nums = 1
+    Red  = 0
+    
+    ## fuel
+    #Lbl  = "Fuel"
+    #LMin = "E"
+    #LMax = "F"
+    #Mode = 2
+    #Min  = 0
+    #Max  = 10.9
+    #Step = Max / 8
+    
+    ## temp
+    #Lbl  = "Engine Temp"
+    #LMin = "L"
+    #LMax = "H"
+    #Mode = 2
+    #Min  = 140
+    #Max  = 260
+    #Step = 30
+    #Red  = 1
+    
+    ## boost/vac
+    #Lbl  = "psi"
+    #Min  = -10
+    #Max  = 30
+    #Step = 10
+    #Nums = 1
+    
+    ## some examples for custom gauges
+    #Lbl  = "Bullshit"
+    #Min  = 0
+    #Max  = 666
+    #Div  = 10    # the number labels will be divided by 10
+    #Step = 111   # one tick every 111 units
+    #Nums = 1     # number labels are enabled
+    
+    #Lbl = "Homometer"
+    #Min = 0
+    #Max = 10
+    #Step = Max / 8  # just a little shortcut to get exactly 8 ticks over any interval
+    #Nums = 0        # number labels are disabled here (this line can simply be left out)
+    #LMin = "0"      # you can put custom min and max labels here when numbering is disabled
+    #LMax = "Gay"
+    
+    #############################################
+    #############################################
+    #############################################
+    
+    Self = entity()
+    Self:setAlpha( 0 )
+    
+    Range = Max - Min
+    Step = Range / ( Step ) + 1
+    
+    if( !Div ){ Div = 1 }
+    Smooth = max( Smooth, 0 )
+    
+    # some helper functions
+    function void holoSet( Idx:number, Position:vector, Scale:vector, Angle:angle, 
+        Model:string, Material:string, Color:vector )
+    {
+        holoPos( Idx, Position )
+        holoScale( Idx, Scale )
+        holoAng( Idx, Angle )
+        holoModel( Idx, Model )
+        holoMaterial( Idx, Material )
+        holoColor( Idx, Color )
+    }
+    
+    function number createLabel( Idx:number, Position:vector, Angle:number, Label:string )
+    {
+        local Width = ( Label:length() - 1 ) * 0.3
+        
+        for( N = 0, Label:length() - 1 )
+        {
+            local Offset = vec( sin( Angle ), cos( Angle ), 0 ) * ( N * 0.3 - Width / 2 )
+            local Char = Label:index( N + 1 )
+            local Asc = toByte( Char )
+            
+            if( !inrange( Asc, 33, 126 ) | Asc == 92 | Asc == 96 )
+            { # nothing to do if it's a space or invalid char
+                continue
+            }
+            elseif( inrange( Asc, 33, 47 ) )
+            { # some symbols
+                Char = Char:replace( "!", "xmark" )
+                Char = Char:replace( "\"", "quote" )
+                Char = Char:replace( "#", "pdsign" )
+                Char = Char:replace( "$", "dlsign" )
+                Char = Char:replace( "%", "pcnt" )
+                Char = Char:replace( "&", "and" )
+                Char = Char:replace( "'", "apost" )
+                Char = Char:replace( "(", "lpar" )
+                Char = Char:replace( ")", "rpar" )
+                Char = Char:replace( "*", "ast" )
+                Char = Char:replace( "+", "plu" )
+                Char = Char:replace( ",", "com" )
+                Char = Char:replace( "-", "min" )
+                Char = Char:replace( ".", "prd" )
+                Char = Char:replace( "/", "div" )
+            } # 48-57 is numbers
+            elseif( inrange( Asc, 58, 64 ) )
+            { # some more symbols
+                
+                Char = Char:replace( ":", "colon" )
+                Char = Char:replace( ";", "scolon" )
+                Char = Char:replace( "<", "lessthan" )
+                Char = Char:replace( "=", "equal" )
+                Char = Char:replace( ">", "greaterthan" )
+                Char = Char:replace( "?", "qmark" )
+                Char = Char:replace( "@", "atsign" )
+                
+            } # 65-90 is uppercase letters
+            elseif( inrange( Asc, 91, 95 ) )
+            { # even more symbols
+                
+                Char = Char:replace( "[", "lbracket" )
+                Char = Char:replace( "]", "rbracket" )
+                Char = Char:replace( "^", "crt" )
+                Char = Char:replace( "_", "underscore" )
+            }
+            elseif( inrange( Asc, 97, 122 ) )
+            { # lowercase letters
+                Char = "l_" + Char
+            }
+            elseif( inrange( Asc, 123, 126 ) )
+            { # last of the symbols
+                Char = Char:replace( "{", "lcbracket" )
+                Char = Char:replace( "|", "bar" )
+                Char = Char:replace( "}", "rcbracket" )
+                Char = Char:replace( "~", "tilde" )
+            }
+            
+            holoSet( Idx, Self:toWorld( ( Position + Offset ) * Scale ),
+                vec( 0.03, 0.03, 0.03 ) * Scale, Self:toWorld( ang( 0, -90 - Angle, 90 ) ),
+                "models/sprops/misc/alphanum/alphanum_" + Char + ".mdl",
+                LblMat, LblCol )
+            holoDisableShading( Idx, 1 )
+            holoBodygroup( Idx, 0, Font )
+            holoParent( Idx, Self )
+            Idx++
+        }
+        
+        return Idx
+    }
+    
+    I = 0
+    timer( "spawn", 1 )
+}
+
+if( clk( "spawn" ) )
+{
+    while( perf() & holoCanCreate() & I < HMax )
+    {
+        I++
+        holoCreate( I )
+    }
+
+    if( I < HMax )
+    {
+        timer( "spawn", 1 )
+    }
+    else
+    {
+        timer( "set", 1 )
+    }
+}
+
+if( clk( "set" ) )
+{
+    I = 1
+    
+    # gauge body
+    holoSet( I, Self:toWorld( vec( 0, 0, 0.5 ) * Scale ), vec( 0.62, 0.62, 0.62 ) * Scale, 
+        Self:toWorld( ang( 0, 0, 180 ) ), "hq_hdome_thin", BackMat, BackCol )
+    holoParent( I, Self )
+    I++
+    
+    # gauge face
+    holoSet( I, Self:toWorld( vec( 0, 0, 0 ) * Scale ), vec( 0.6, 0.6, 0.01 ) * Scale, 
+        Self:toWorld( ang() ), "hq_cylinder", FaceMat, FaceCol )
+    holoDisableShading( I, 1 )
+    holoParent( I, Self )
+    I++
+    
+    # needle base
+    holoSet( I, Self:toWorld( vec( 0, 0, 0.5 ) * Scale ), vec( 0.06, 0.06, 0.01 ) * Scale,
+        Self:toWorld( ang() ), "hq_cylinder", NeedMat, NeedCol )
+    holoDisableShading(I, 1)
+    holoParent(I, Self)
+    Needle = I
+    I++
+    
+    # needle
+    holoSet( I, Self:toWorld( vec( -1.0, 0, 0.45 ) * Scale ), vec( 0.03, 0.01, 0.28 ) * Scale, 
+        Self:toWorld( ang( 0, -90, 90 ) ), "prism", NeedMat, NeedCol )
+    holoDisableShading( I, 1 )
+    holoParent( I, Needle )
+    I++
+    
+    # tick ring
+    holoSet( I, Self:toWorld( vec( 0, 0, 0.2 ) * Scale ), vec( 0.61, 0.61, 0.02 ) * Scale,
+        Self:toWorld( ang() ), "hq_tube_thin", RingMat, RingCol )
+    holoDisableShading( I, 1 )
+    holoClipEnabled( I, 1 )
+    holoClip( I, vec(), vec( cos( 210 ), sin( 210 ), 0 ), 0 )
+    holoParent( I, Self )
+    I++
+    
+    # tick ring (redline clip)
+    holoSet( I, Self:toWorld( vec( 0, 0, 0.2 ) * Scale ), vec( 0.61, 0.61, 0.02 ) * Scale, 
+        Self:toWorld( ang() ), "hq_tube_thin", RingMat, Red ? vec( 255, 0, 0 ) : RingCol )
+    holoDisableShading( I, 1 )
+    holoClipEnabled( I, 1, 1 )
+    holoClip( I, 1, vec(), vec( cos( 30 ), sin( 30 ), 0 ), 0 )
+    holoClipEnabled( I, 2, 1 )
+    holoClip( I, 2, vec(), vec( cos( 150 ), sin( 150 ), 0 ), 0 )
+    holoParent( I, Self )
+    I++
+    
+    N = Min / Div
+    NumStep = ( Range / Div ) / ( Step - 1 )
+    
+    for( Ang = -210, 30, 240 / ( Step - 1 ) )
+    {
+        # tickmark
+        holoSet( I, Self:toWorld( vec( sin( Ang ) * 3.2, cos( Ang ) * 3.2, 0.2 ) * Scale ),
+            vec( 0.03, 0.03, 0.01 ) * Scale, Self:toWorld( ang( 0, -Ang + 90, 0 ) ),
+            "models/sprops/rectangles_thin/size_1/rect_3x12x1_5.mdl",
+            RingMat, ( Red & Ang >= -30 ) ? vec( 255, 0, 0 ) : RingCol )
+        holoDisableShading( I, 1 )
+        holoParent( I, Self )
+        I++
+        
+        if( Nums == 1 )
+        { # numbering
+            I = createLabel( I, vec( sin( Ang ) * 2.7, cos( Ang ) * 2.7, 0.2 ), 0, round( N, 1 ):toString() )
+        }
+        elseif( Nums == 2 )
+        { # angly numbering
+            I = createLabel( I, vec( sin( Ang ) * 2.7, cos( Ang ) * 2.7, 0.2 ), Ang + 90, round( N, 1 ):toString() )
+        }
+        elseif( LMin & Ang == -210 )
+        { # custom min label
+            I = createLabel( I, vec( sin( Ang ) * 2.7, cos( Ang ) * 2.7, 0.2 ), 0, LMin )
+        }
+        elseif( LMax & Ang == 30 )
+        { # custom max label
+            I = createLabel( I, vec( sin( Ang ) * 2.7, cos( Ang ) * 2.7, 0.2 ), 0, LMax )
+        }
+        
+        N += NumStep
+    }
+    
+    if( Lbl )
+    { # lower center gauge label
+        I = createLabel( I, vec( 2, 0, 0.2 ), 0, Lbl )
+    }
+    
+    if( I > HMax )
+    {
+        hint( "Hologram max exceeded! Please increase HMax to at least " + I, 7 )
+    }
+    
+    for( Del = I, HMax )
+    {
+        holoDelete( Del ) # lazy ass
+    }
+    
+    setName( "mini gauge: " + I:toString() + " elements" )
+}
+
+if( Mode == 1 ) # gauge sweep
+{
+    A = sin( curtime() * 180 ) * ( Range / 2 ) + ( Range / 2 )
+    Smooth = 0
+}
+elseif( Mode == 2 ) # absolute value
+{
+    A = abs( A )
+}
+elseif( Mode == 3 ) # speedo mph
+{
+    A = toUnit( "mi/h", Self:vel():length() )
+}
+elseif( Mode == 4 ) # speedo kmh
+{
+    A = toUnit( "km/h", Self:vel():length() )
+}
+
+if( Smooth )
+{
+    Value = clamp( Value + ( A - Value ) / Smooth, Min, Max )
+}
+else
+{
+    Value = clamp( A, Min, Max )
+}
+
+Ang = ( Max - Value ) / Range * 240 - 120
+holoAng( Needle, Self:toWorld( ang( 0, Ang, 0 ) ) )
+
+Ops = ops()

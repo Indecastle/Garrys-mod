@@ -1,0 +1,57 @@
+@name GAY35
+@inputs 
+@outputs 
+@persist Vehicle:entity
+@trigger 
+
+if(first()) {
+    entity():setPos(owner():attachmentPos("eyes")+vec(0,0,20))
+    entity():setAng(owner():angles())
+    
+    EE=entity()
+    holoCreate(1)
+    holoModel(1,"models/pac/female_base.mdl")
+    holoAnim(1,"taunt_muscle")
+    timer("anim",9500)
+    
+    holoParent(1,EE)
+    interval(9500)
+    holoScale(1,vec(0.01,3,1))
+    holoColor(1,vec(225,255,225))
+    
+    holoCreate(2)
+    holoModel(2,"models/pac/female_base.mdl")
+    holoAnim(2,"taunt_muscle")
+    
+    holoParent(2,EE)
+    interval(9500)
+    holoScale(2,vec(3,0.01,1))
+    holoColor(2,vec(225,255,225))
+    
+    
+    #soundURLload(1,"",1,0,entity())
+    #soundURLvolume(1,1)
+    
+    findByClass("gmod_sent_vehicle_fphysics_base")
+    Vehicle = findClosest(entity():pos())
+    print(Vehicle)
+    timer("bass",100)
+    
+    entity():setMass(500)
+}
+
+if(clk("anim")) {
+    holoAnim(1,"taunt_dance")
+    holoAnim(2,"taunt_dance")
+    timer("anim",9500)
+}
+
+
+if(clk("bass")) {
+    applyForce(vec(0,0,-30000000))
+    timer("bass",400) # interval
+    entity():parentTo(owner())
+}
+
+
+

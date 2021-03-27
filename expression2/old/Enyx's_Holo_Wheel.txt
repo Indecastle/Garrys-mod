@@ -1,0 +1,19 @@
+@name Enyx's Holo Wheel
+@persist Turn F
+ 
+interval(100)
+ 
+if (first() | dupefinished()){
+    
+    holoCreate(1)
+    holoParent(1,entity())
+    holoModel(1,"models/props_c17/FurnitureShelf001b.mdl")
+    
+
+}
+ 
+F = (F + 20)%360
+Turn = (Turn + 1)%360 #CLAMPS TO THE MAX ANGLE YOU HAVE INPUTED, SLOWED DOWN BY THE STEERING RATE.
+ 
+#holoAng(1,entity():toWorld(ang(-90,Turn+180,0))) #THIS IS WHAT ACTUALLY CHANGES THE ANGLE OF THE WHEEL. BASED OF TURN, WE DEFINED 2 LINES UP.
+holoAng(1,entity():toWorld(ang(0,90/2*cos(F)+90,0)))

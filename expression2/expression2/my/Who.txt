@@ -1,0 +1,23 @@
+@name Who
+@persist 
+interval(10)
+runOnKeys(owner(),1)
+#entity():propNotSolid(1)
+
+if(changed(owner():keyPressed("e")) & owner():keyPressed("e") & owner():aimEntity())
+{
+    
+    print("owner: " + owner():name())
+    print("name: " + owner():aimEntity():getName())
+    #print("owner: " + owner():aimEntity():owner():toString())
+    print("entity: " + owner():aimEntity():toString())
+    print("class: " + owner():aimEntity():type())
+    print("model: " + owner():aimEntity():model())
+    #print("phys. mat.: " + owner():aimEntity():propPhysicalMaterial())
+    print("material: " + owner():aimEntity():getMaterials():concat(" | "))
+    print("materials: " + owner():aimEntity():getMaterial())
+    print("color: " + owner():aimEntity():getColor())
+    print(owner():aimBone())
+    #owner():aimEntity():propDelete()
+    #owner():aimEntity():propPhysicalMaterial("wood_crate")
+}

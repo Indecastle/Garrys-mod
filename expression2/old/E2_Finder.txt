@@ -1,0 +1,41 @@
+@name E2 Finder
+@persist E2Array:array
+
+
+interval(2000)
+
+if (first() | dupefinished()) {
+    entity():setAlpha(0)
+    findByClass("gmod_wire_expression2")
+
+}
+
+
+if (clk()) {
+    E2Array = findToArray()
+    if (changed(E2Array:concat())) {
+        for (I = 1,E2Array:count()) {
+            print(array("#",I," Name: ",E2Array[I,entity]:getName()):concat())
+            print(array("#",I," Owner: ",E2Array[I,entity]:owner():name()):concat())
+            print(array("#",I," Alpha: ",E2Array[I,entity]:getAlpha():toString()):concat())
+            print("") # This line is used to create a space
+            #Spreading hologram information over several lines looks so much nicer doesn't it?
+            holoCreate(I)
+            holoPos(I,E2Array[I,entity]:pos())
+            holoScale(I,vec(4,4,4))
+            holoColor(I,vec(255,0,0))
+            holoVisible(I,players(),0)
+            holoVisible(I,owner(),1)
+            holoParent(I,E2Array[I,entity])
+            holoModel(I,"hq_icosphere")
+            holoAlpha(I,125)
+            holoDisableShading(I,1)
+        }
+    }
+}
+runOnTick(1)
+
+if (changed(owner():aimEntity()) & owner():aimEntity():type() == "gmod_wire_expression2" & owner():aimEntity():getAlpha() == 0) {
+    print(array("Name: ",owner():aimEntity():getName()):concat())
+    print(array("Owner: ",owner():aimEntity():owner():name()):concat())
+}

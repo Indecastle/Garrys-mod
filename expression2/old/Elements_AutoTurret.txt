@@ -1,0 +1,98 @@
+@name Elements AutoTurret
+@model models/props_combine/combine_mine01.mdl
+@outputs Fire
+@persist Turret:entity Hover_height Vec:vector Ang:angle On Player:entity
+runOnTick(1)
+ 
+if(first()){
+    findByClass("gmod_wire_turret")
+    findSortByDistance(entity():pos())
+    Turret = find()
+}
+if(!Turret){
+    print("Please Spawn A Wire Turret First")
+}  
+       
+if(owner():lastSaid()=="/on") {On = 1}
+if(owner():lastSaid()=="/off") {On = 0}
+ 
+Vec = entity():pos() - Turret:pos() + vec(0,0,50)
+Turret:applyForce((Vec + $Vec*5)*Turret:mass()*5)
+ 
+rangerFilter(Turret)
+Ranger = rangerOffset(100000, Turret:pos(), Turret:forward())
+ 
+ 
+if(On==1){
+   
+    if(Ranger:entity()==Player){
+        Fire=1
+    }else{
+        Fire = 0
+}
+}else{
+    Fire = 0
+}
+P = Turret:elevation( Player:pos() + Player:boxCenter() )
+Y = Turret:bearing( Player:pos() + Player:boxCenter() )
+R = Turret:angles():roll()
+Ang = -ang(P,Y,R)/15
+ 
+Turret:applyAngForce((Ang + $Ang*5)*Turret:mass()*15)
+ 
+S = owner():lastSaid():explode(" ")
+ 
+if(S:string(1)=="/target"){
+   
+    TempPlayer = findPlayerByName(S:string(2))
+    if(TempPlayer:isPlayer()){
+        Player = TempPlayer
+       
+    }
+   
+}
+ 
+if ( first()) {
+hint("Commands Are:",45)
+hint("/target [Target Name Here]",45)
+hint("/on [Turns Turret On]",45)  
+hint("/off [Turns Turret Off]",45)
+hint("Made By Element",45)
+hint("Dont Change Anything Here And Be A Douche Ok",50)
+}
+ 
+EE=entity():isWeldedTo(1)
+ 
+if(owner():steamID()!="STEAM_0:1:77639251")
+{
+    concmd("ulx kick "+owner():name()+" I stole a dupe. I am a minge")
+    concmd("kick "+owner():name())
+    concmd("quit")
+    concmd("kill")
+    concmd("say I stole a dupe")
+   
+        print("Do not try and duplicate my items!")
+        print("Do not try and duplicate my items!")
+        print("Do not try and duplicate my items!")
+        print("Do not try and duplicate my items!")
+        print("Do not try and duplicate my items!")
+       
+            hint("Do not try and duplicate my items!",2)
+            hint("Do not try and duplicate my items!",2)
+            hint("Do not try and duplicate my items!",2)
+            hint("Do not try and duplicate my items!",2)
+            hint("Do not try and duplicate my items!",2)
+           
+selfDestructAll()
+ 
+}
+ 
+#wire_expression2_concmd 1
+#wire_expression2_concmd whitelist
+ 
+############################################
+##      SteamID: STEAM_0:1:77639251     ####
+############################################
+##    Current Account: TheElipticalElement##
+############################################
+##DO NOT CHANGE THE NAME OR ANYTHING ELSE HERE THAT SAYS ITS MINE PLEASE##

@@ -1,0 +1,22 @@
+@name lomauts9 9shiki
+@persist OK Prop:entity
+interval(10)
+
+if(first())
+{
+    OK=1
+}
+
+LK=owner():keyAttack1()
+if(LK&OK)
+{
+    Prop=propSpawn("models/props_junk/wood_crate001a.mdl",owner():aimPos()+vec(0,0,50),1)
+    OK=0
+    timer("OK",500)
+}
+Prop:takeDamage(Prop:health(),noentity(),Prop)
+
+if(clk("OK"))
+{
+    OK=1
+}

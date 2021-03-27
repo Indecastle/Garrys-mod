@@ -1,0 +1,21 @@
+@name Particle_spawn
+@inputs 
+@outputs 
+@persist  
+@trigger 
+
+
+interval(50)
+
+Color=vec(255,0,0)
+Hc=vec(217,213,201)
+
+
+
+if(first()){
+particleGravity(vec(0,0,0))
+}
+EE=entity()
+
+particle(4,8,0,"sprites/blueglow2",vec(0,191,255),EE:toWorld(vec(0,0,2)),EE:up()*10)
+

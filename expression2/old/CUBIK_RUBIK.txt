@@ -1,0 +1,676 @@
+@name 3d holo
+@inputs 
+@outputs Scrambled:array Dir:vector [Turn_Dir Direction]:string Rotate Turns Solving Scramble
+@persist [O E]:entity [Idx] [Cubes Colors Dirs Info]:table [Others Spin]:array [Box]:vector 
+@model models/hunter/blocks/cube05x05x05.mdl
+#@model models/sprops/cuboids/height36/size_1/cube_36x36x36.mdl
+#@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+
+if( duped() ){ reset() }
+
+
+if( first() )
+{
+    runOnChat(1)
+    
+    setName("OmicroN's Rubik's Cube")
+    
+    O = owner()
+    E = entity()
+    
+    function number getID( N )
+    {
+        Idx+=N
+        return Idx
+    }
+    function cubeUnparent()
+    {
+        foreach( K, V:number = Spin )
+        {
+            holoUnparent( V )
+            holoParent( V, E )
+        }
+        Spin:clear()
+    }
+    function cubeParent(S:string,D:vector)
+    {
+        foreach( K, V:number = Others )
+        {
+            local Index = Cubes[S,number]
+            local H = holoEntity(V)
+            if( round( E:toLocal(H:pos()):normalized() ):dot(D)==1 )
+            {
+                holoParent( V, Index )
+                Spin:pushNumber( V )
+            }
+        }
+    }
+    function setRotate( S:string, N )
+    {
+        cubeUnparent()
+        Rotate = 1
+        Info[S+"_result",number] = Info[S+"_result",number] + 90 * N
+        cubeParent(S,Dirs[S,vector])
+        soundPlay("rotate",0,"common/weapon_select.wav",0.2)
+        soundPitch("rotate",50)
+    }
+    function printHelp(N)
+    {
+        if( !N )
+        {
+            print( _HUD_PRINTCENTER, "Thank you for using OmicroN's Rubik's Cube" )
+            printColor(Colors["R",vector],"Rotate the sides by aiming at the center and pressing...")
+            printColor(Colors["F",vector],"Mouse1",Colors["D",vector]," to turn ",Colors["L",vector],"LEFT\n",Colors["F",vector],"Mouse2",Colors["D",vector]," to turn ",Colors["R",vector],"RIGHT")
+            printColor(Colors["D",vector],"Press ",Colors["B",vector],"RELOAD",Colors["D",vector]," to re-print the ",Colors["L",vector],"HELP.")
+        }
+        local Commands = "CHAT_COMMANDS: | scramble | solve | user \"playername\"| undo | solved | print | run \"U Ui D Di F Fi B Bi L Li R Ri\"":explode("|")
+        foreach( K, V:string = Commands )
+        {
+            hint( V, 20 )
+        }
+    }
+    
+    Colors["D",vector] = hsv2rgb( 240, 0.8, 0.75 )
+    Colors["F",vector] = hsv2rgb( 0, 0.8, 0.75 )
+    Colors["R",vector] = hsv2rgb( 0, 0, 0.75 )
+    Colors["L",vector] = hsv2rgb( 55-5, 0.8, 0.75 )
+    Colors["B",vector] = hsv2rgb( 30, 0.8, 0.75 )
+    Colors["U",vector] = hsv2rgb( 120, 0.8, 0.75 )
+    
+    Info["D_rotation",angle] = ang(0,1,0)
+    Info["F_rotation",angle] = ang(0,0,1)
+    Info["L_rotation",angle] = ang(1,0,0)
+    Info["R_rotation",angle] = ang(1,0,0)
+    Info["B_rotation",angle] = ang(0,0,1)
+    Info["U_rotation",angle] = ang(0,1,0)
+    
+    Dirs["F",vector] = vec(1,0,0)
+    Dirs["B",vector] = vec(-1,0,0)
+    Dirs["R",vector] = vec(0,1,0)
+    Dirs["L",vector] = vec(0,-1,0)
+    Dirs["U",vector] = vec(0,0,1)
+    Dirs["D",vector] = vec(0,0,-1)
+    
+    Info["turns",array] = array()
+    
+    E:setAlpha( 0 )
+    
+    Material = "models/debug/debugwhite"
+    Model = "hq_rcube_thin"
+    
+    Box = E:boxSize() - 0.5
+    Square = Box[1] / 3
+    Dist = 1/2
+    
+    Sizes = array( vec(Square-Square/10,Square-Square/10,Square/20), vec(Square-Square/10,Square/20,Square-Square/10), vec(Square/20,Square-Square/10,Square-Square/10) )
+    
+    # BOTTOM LAYER
+    
+    H = holoCreate( getID(1), E:toWorld(vec(0,0,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Cubes["D",number] = getID(0)
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(1,1,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+         holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(0,1,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,1,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,0,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,-1,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(0,-1,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(1,-1,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+         holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(1,0,-1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+    
+        holoCreate( getID(1), H:toWorld(vec(0,0,-Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["D",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    # CENTER LAYER
+    
+    H = holoCreate( getID(1), E:toWorld(vec(1,0,0)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Cubes["F",number] = getID(0)
+        
+        holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(1,1,0)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(0,1,0)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Cubes["R",number] = getID(0)
+        
+        holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,1,0)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,0,0)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Cubes["B",number] = getID(0)
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,-1,0)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(0,-1,0)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Cubes["L",number] = getID(0)
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(1,-1,0)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    # TOP LAYER
+    
+    H = holoCreate( getID(1), E:toWorld(vec(0,0,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Cubes["U",number] = getID(0)
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(1,0,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+         H = holoCreate( getID(1), E:toWorld(vec(1,1,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(0,1,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,1,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["R",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,0,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(-1,-1,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(-Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["B",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(0,-1,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+    
+    H = holoCreate( getID(1), E:toWorld(vec(1,-1,1)*Square), vec() + Square / 12, E:toWorld(ang(0,0,0)), vec() )
+    holoModel( getID(0), "hq_rcube_thin" )
+    holoParent( getID(0), E )
+    Others:pushNumber( getID(0) )
+        
+        holoCreate( getID(1), H:toWorld(vec(Dist,0,0)*Square), Sizes[3,vector] / 12, E:toWorld(ang(0,0,0)), Colors["F",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,-Dist,0)*Square), Sizes[2,vector] / 12, E:toWorld(ang(0,0,0)), Colors["L",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+        holoCreate( getID(1), H:toWorld(vec(0,0,Dist)*Square), Sizes[1,vector] / 12, E:toWorld(ang(0,0,0)), Colors["U",vector] )
+        holoModel( getID(0), Model )
+        holoMaterial( getID(0), Material )
+        holoParent( getID(0), H )
+        
+    printHelp(0)
+}
+
+interval(50)
+
+
+Aim = O:aimEntity() == E
+Turn = O:keyAttack1() - O:keyAttack2()
+
+
+if( Aim & !E:isPlayerHolding() & !Solving )
+{
+    Dir = round( E:toLocal(O:aimPos()):normalized() )
+    if( changed(Dir) & Dir )
+    {
+        foreach(K,V:vector=Dirs)
+        {
+            if( Dir == V )
+            {
+                Direction = K
+            }
+            local HSV = rgb2hsv(Colors[K,vector]):setZ( Dir == V ? 1 : 0.75 )
+            holoColor( Cubes[K,number] + 1, hsv2rgb(HSV) )
+        }
+    }
+    
+    if( !Rotate & Direction & changed(Turn) & Turn )
+    {
+        foreach(K,V:vector=Dirs)
+        {
+            if( Dir == V )
+            {
+                Turn_Dir = Direction
+                Info["turns",array]:unshiftString( Turn_Dir + ( Turn>0 ? "i" : "" ) )
+                break
+            }
+        }
+        setRotate(Turn_Dir,Turn)
+    }
+}
+
+
+if( Rotate )
+{
+    Rotate = clamp( Rotate - ( Solving | Scramble ? 1 : 1/3 ), 0, 1 )
+    Info[Turn_Dir+"_rotation",number] = Info[Turn_Dir+"_rotation",number] + (Info[Turn_Dir+"_result",number]-Info[Turn_Dir+"_rotation",number])*(1-Rotate)
+    holoAng( Cubes[Turn_Dir,number], E:toWorld( ang():rotateAroundAxis(Dirs[Turn_Dir,vector],Info[Turn_Dir+"_rotation",number]) ) )
+    if( !Rotate )
+    {
+        Turn_Dir = ""
+    }
+}
+elseif( Solving )
+{
+    if( Scramble )
+    {
+        local Str = Info["turns",array][1,string]
+        Scrambled:unshiftString( Str:find("i") ? Str[1] : Str+"i" )
+    }
+    Info["turns",array]:remove(1)
+    Turns = max( 0, Turns - 1 )
+    Movement = Info["turns",array][1,string]
+    Turn_Dir = Movement[1]
+    setRotate(Turn_Dir,Movement[2]=="i" ? -1 : 1)
+    Rotate = sign(Turns)
+    if( !Turns )
+    {
+        if( Scramble )
+        {
+            Info["turns",array] = Scrambled:add(Info["turns",array])
+            #printTable(Info["turns",array])
+            Scrambled:clear()
+        }
+        Solving = Scramble = 0
+    }
+}
+
+
+if( chatClk(O) )
+{
+    Lsx = O:lastSaid():lower():explode(" ")
+    Cmd = Lsx[1,string]
+    if( Cmd == "scramble" )
+    {
+        if( Info["turns",array]:count() )
+        {
+            hint("It cannot be scrambled at this time, data already exists.",4)
+            hint("Type \"solve\" in chat first before you scramble.",4)
+            hideChat(1)
+            exit()
+        }
+        hideChat(1)
+        for(I=1,30)
+        {
+            local Rnd = randint(1,12)
+            local Str = select( Rnd, "U", "Ui", "D", "Di", "R", "Ri", "L", "Li", "F", "Fi", "B", "Bi" )
+            Info["turns",array]:unshiftString( Str )
+        }
+        Solving = Rotate = Scramble = 1
+        Turns = Info["turns",array]:count()
+        Movement = Info["turns",array][1,string]
+        Turn_Dir = Movement[1]
+        setRotate(Turn_Dir,Movement[2]=="i" ? -1 : 1)
+    }
+    elseif( Cmd == "solve" )
+    {
+        hideChat(1)
+        Solving = Rotate = 1
+        Turns = Info["turns",array]:count()
+        Movement = Info["turns",array][1,string]
+        Turn_Dir = Movement[1]
+        setRotate(Turn_Dir,Movement[2]=="i" ? -1 : 1)
+    }
+    elseif( Cmd == "user" )
+    {
+        O = findPlayerByName(Lsx[2,string])
+    }
+    elseif( Cmd == "undo" )
+    {
+        hideChat(1)
+        Solving = Rotate = 1
+        Turns = min( 1, Lsx[2,string]:toNumber() )
+        Movement = Info["turns",array][1,string]
+        Turn_Dir = Movement[1]
+        setRotate(Turn_Dir,Movement[2]=="i" ? -1 : 1)
+    }
+    elseif( Cmd == "solved" )
+    {
+        Info["turns",array]:clear()
+    }
+    elseif( Cmd == "print" )
+    {
+        hideChat(1)
+        print( Info["turns",array]:concat(" ") )
+    }
+    elseif( Cmd == "run" )
+    {
+        Lsx:remove(1)
+        foreach( K, V:string = Lsx )
+        {
+            local Str = V:upper():replace("I","i")
+            Info["turns",array]:unshiftString( Str )
+            print(Str)
+        }
+        Solving = Rotate = Scramble = 1
+        Turns = Lsx:count()
+        Movement = Info["turns",array][1,string]
+        Turn_Dir = Movement[1]
+        setRotate(Turn_Dir,Movement[2]=="i" ? -1 : 1)
+    }
+    #F Li Ri B Fi Ri Bi B F R F L Ui L F L Bi Li D Fi B R L R L Li Ri L F Di
+}
+
+
+Reload = O:keyReload()
+
+
+if( changed(Reload) & Reload )
+{
+    printHelp(1)
+}
+
+

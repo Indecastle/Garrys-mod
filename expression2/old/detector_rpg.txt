@@ -1,0 +1,11 @@
+@name Detector RPG
+@outputs IgnoreEnt:array Count IsEnable
+
+interval(100)
+
+findIncludeClass("rpg_missile")
+findInSphere(entity():pos(),3000)
+
+Rockets = findToArray()
+Count = Rockets:count()
+IsEnable = Rockets:exists(1)

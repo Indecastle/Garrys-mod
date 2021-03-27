@@ -1,0 +1,23 @@
+@name Disco Lamp
+@inputs
+@outputs I J Lamp:entity Color:vector On
+@persist Speed Angle_1 Speed_Color
+
+if (first()) {
+    On = 1
+    runOnTick(1)
+    
+    findByClass("gmod_wire_lamp")
+    Lamp = findClosest(entity():pos())
+    
+    Speed_Color = 1 # SKOROSTb CVETA
+    Speed = 0.1 # SKOROSTb
+    Angle_1 = 0 # NAKLON LAMPbl
+}
+
+
+I = (I + Speed) % 360
+J = (J + Speed_Color) % 360
+
+Lamp:setAng(ang(90 - Angle_1, I, 0))
+Color = hsv2rgb(J, 1, 1)

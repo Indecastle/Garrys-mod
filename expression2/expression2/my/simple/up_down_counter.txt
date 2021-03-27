@@ -1,0 +1,39 @@
+@name up/down counter
+@inputs Up Down
+@outputs Out
+@persist TickValue Limit_Down Limit_Up Change_state
+
+if (first()) {
+    TickValue = 1
+    Limit_Down = 0
+    Limit_Up = 255
+}
+
+if (Up || Down) {
+    interval(50)
+}
+
+Out = Up&&Out<Limit_Up ? Out+TickValue : Out
+Out = Down&&Out>Limit_Down ? Out-TickValue : Out
+
+
+
+
+local New_Change_State = Up || Down
+
+if (Change_state != New_Change_State) {
+    Change_state = New_Change_State
+    
+    if (Change_state) {
+        timer("speed", 2000)
+    }
+    else {
+        stoptimer("speed")
+        TickValue = 1
+    }
+}
+
+
+if (clk("speed")) {
+    TickValue = 10
+}

@@ -1,0 +1,21 @@
+@name Generate 2d array
+@inputs 
+@outputs Ar:table
+@persist 
+@trigger 
+
+
+function table gen2dAr(M, N) {
+    local Ar = table()
+    for(I=1, M) {
+        local ArTemp = table()
+        for(J=1, N) {
+            ArTemp:pushNumber((I-1)*M + J-1)
+        }
+        Ar:pushTable(ArTemp)
+    }
+    return Ar
+}
+
+Ar = gen2dAr(5, 10)
+printTable(Ar)

@@ -1,0 +1,163 @@
+@name Propnado
+@inputs
+@outputs
+@persist Me:entity PropList:array AimPos:vector OriginalDestination:vector PropCount AveragePropRadius RotationAIndex RotationBIndex RotationCIndex Index ButtonFlag ReportFlag
+
+interval(1)
+
+# ================
+# Set up constants
+# ================
+AngularDeltaSmoother = 1
+AngularDeltaMultiplier = 1
+DeltaSmoother = 5
+DeltaMultiplier = 10
+Mass = 50000
+
+RotationARadius = 50
+RotationBRadius = 100
+RotationCRadius = 100
+
+
+# ====================
+# Initialize variables
+# ====================
+if (first()) {
+
+    # Set up the owner variable
+    Me = entity():owner()
+    
+    PropCount = 0
+    Index = 0
+    RotationAIndex = 0
+    RotationBIndex = 0
+    RotationCIndex = 0
+    
+    OriginalDestination = vec(0, 0, 0)
+}
+
+if (duped()) {
+    selfDestruct()
+}
+
+# Set a destination
+if (Me:keyUse()) {
+    OriginalDestination = Me:aimPos()
+    if (!ButtonFlag) {
+        ButtonFlag = 1
+        timer("ButtonFlag", 500)
+    }
+}
+
+if (clk("ButtonFlag")) {
+    ButtonFlag = 0
+}
+
+if (clk("ReportFlag")) {
+    ReportFlag = 0
+}
+
+# Find all of the props
+findIncludePlayerProps(owner())
+findByClass("prop_physics")
+findSortByDistance(OriginalDestination) 
+if(PropCount!=findToArray():count()){
+    PropList=findToArray()
+    PropCount=PropList:count()
+    I = 0
+    Total = 0
+    while (I < PropList:count()) {
+        Ent = PropList:entity(I)
+        Ent:setMass(Mass)
+        Total += Ent:radius()
+        I++
+    }
+    AveragePropRadius = Total / PropList:count()
+}
+
+while (opcounter() < maxquota()) {
+    
+    # Handle the rotation logic
+    if (RotationAIndex >= 360) {
+        RotationAIndex = 0
+    } else {
+        RotationAIndex += 0.02
+    }
+    if (RotationBIndex >= 360) {
+        RotationBIndex = 0
+    } else {
+        RotationBIndex += 0.04
+    }
+    if (RotationCIndex >= 360) {
+        RotationCIndex = 0
+    } else {
+        RotationCIndex += 0.55
+    }
+    
+    # Spice up the rotation rates to appear more random
+    RotationAOffset = 360 / PropList:count() * Index + RotationAIndex
+    RotationBOffset = 360 / PropList:count() * Index / 3 + RotationBIndex
+    RotationCOffset = 360 / PropList:count() * (Index * 5) * Index / 2 + RotationCIndex + random(0, 30)
+    
+    
+    # Increase the size of the rotation radius for each axis based off of prop size
+    RotationAVectorOffset = vec(sin(RotationAOffset), cos(RotationAOffset), 0) * AveragePropRadius * 0.5
+    RotationBVectorOffset = vec(sin(RotationBOffset), cos(RotationBOffset), 0) * AveragePropRadius * 2.5
+    RotationCVectorOffset = vec(sin(RotationCOffset), cos(RotationCOffset), 0) * AveragePropRadius * 3.5 * ((Index + 10) * 0.1)
+    
+    # Grab the current prop
+    CurrentProp = PropList:entity(Index+1)
+    
+    # Set the base destination
+    BaseDestination = OriginalDestination
+    
+    # Adjust the height of the props based on their position in the array
+    HeightOffset = (CurrentProp:radius()) * (Index) / 1.5
+    NegativeOffset = (CurrentProp:radius() * Index) * ( 1 - (Index / PropList:count()) / 1.2) + AveragePropRadius
+    HeightOffset = HeightOffset - (NegativeOffset / 4)
+    BaseDestination += vec(0, 0, HeightOffset)
+    
+    BaseDestination += RotationAVectorOffset
+    BaseDestination += RotationBVectorOffset
+    BaseDestination += RotationCVectorOffset
+    
+    # Increase the Rate variable to increase the random movement speed of the propnado
+    Rate = 5
+    OriginalDestination += vec(random(-Rate,Rate), random(-Rate,Rate), 0)
+
+
+    # =========================
+    # Thrust calculations
+    # =========================
+    
+    # Calculate the initial thrust vector
+    Thrust = (BaseDestination - CurrentProp:pos()) + CurrentProp:massCenterL()
+    
+    # Calculate the X/Y planar distance for trajectory arc
+    A = (BaseDestination:x() - CurrentProp:pos():x()) * (BaseDestination:x() - CurrentProp:pos():x())
+    B = (BaseDestination:y() - CurrentProp:pos():y()) * (BaseDestination:y() - CurrentProp:pos():y())
+    PlaneDistance = sqrt(A + B)    
+    
+    # Add vertical thrust based on planar distance to arc the projectile
+    Thrust = Thrust + vec(0, 0, PlaneDistance / 10)
+    
+    # Calculate the thrust delta and apply it to the thrust vector
+    Delta = CurrentProp:vel() / DeltaSmoother
+    Thrust = (Thrust - Delta) * DeltaMultiplier
+    
+    # Apply thrust multiplier based on calculated mass
+    Multiplier = CurrentProp:mass()/10
+    if (Multiplier < 1) {
+        Multiplier = 1
+    }
+    Thrust = Thrust * Multiplier
+    
+    # Apply the thrust final thrust to the chip
+    CurrentProp:applyForce(Thrust)
+
+    Index++
+    if (Index >= PropCount) {
+        Index = 0
+        break
+    }    
+}

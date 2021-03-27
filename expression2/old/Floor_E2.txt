@@ -1,0 +1,12 @@
+@name Floor E2
+# Got bored so yeah ~ Banter / Anti Brony Brotherhood ~
+
+holoCreate(1)
+holoParent(1,entity())
+holoMaterial(1,"models/debug/debugwhite")
+holoModel(1,"models/hunter/plates/plate32x32.mdl")
+holoScale(1,vec(1000,1000,1000))
+holoColor(1,vec(0,0,0))
+
+entity():setAlpha(0)
+entity():setPos(entity():pos()+vec(0,0,2))

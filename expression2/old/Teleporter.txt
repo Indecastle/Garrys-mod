@@ -1,0 +1,14 @@
+@name Teleporter
+@persist Ow:entity
+runOnTick(1)
+runOnKey(1)
+
+Ow=owner()
+if(owner():keyPressed("E")){
+Ow:setPos(Ow:aimPos())
+particle(1,100,0,"particle/warp1_warp",vec(255,255,255),Ow:toWorld(randvec(0,3)-vec(1.2,1.2,-5)),Ow:up()*20)
+particleGravity(vec(0))
+Ow:soundPlay(1,99999,"ambient/machines/thumper_hit.wav") soundVolume(1,99999)
+}
+#if(owner():keyPressed("O")){Ow:soundPlay(30,30,"npc/stalker/go_alert2a.wav")}
+#soundVolume(100,100)

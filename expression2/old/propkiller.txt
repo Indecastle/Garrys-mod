@@ -1,0 +1,19 @@
+@name propkiller
+@persist V:vector
+@model models/props_junk/sawblade001a.mdl
+interval(10)
+
+Me=owner():aimPos()+vec(0,0,10)
+Entpos=entity():pos()
+
+if(owner():keyAttack2()){
+    X=Me-Entpos
+    applyForce((X*50-entity():vel())+entity():mass())
+}
+
+if(owner():lastSaid() == "!invis") {
+    entity():setAlpha(0)
+}
+if(owner():lastSaid() == "!visible") {
+    entity():setAlpha(255)
+}

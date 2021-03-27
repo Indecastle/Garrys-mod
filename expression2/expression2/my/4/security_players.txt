@@ -1,0 +1,81 @@
+@name security players
+@inputs Damage Clk Attacker:entity [T1 T2 T3 T4 T5]:entity Friends:array
+@outputs ON 
+@persist [O E]:entity [Turrets WW]:array Timer Fire
+@trigger Clk
+
+#interval(1)
+if(first() | duped() | dupefinished()) { O = owner() E = entity()
+    runOnTick(1)
+    runOnKeys(owner(),1)
+    #runOnMouseKey(1)
+    
+    Timer = 1000
+    ON = 0
+    
+    Turrets = array(T1, T2, T3, T4, T5)
+    WW = array()
+    foreach(K,T:entity=Turrets) {
+        WW:pushWirelink(T:wirelink())
+    }
+    
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+}
+
+function void setfires(Turn:number) {
+    foreach(K,W:wirelink=WW) {
+        W["Fire",number] = Turn
+    }
+    if(Turn==0) {
+        foreach(K,T:entity=Turrets) {
+            T:setAng(ang(-90,0,0))
+        }
+    }
+}
+
+if(changed(Clk) & ON & Attacker!=owner() & !Friends:checkAr(Attacker)) {
+    setfires(1)
+    Fire = 1
+    stoptimer("stopfires")
+    timer("stopfires", 1000)
+}
+
+if(Fire & ON) {
+    foreach(K,T:entity=Turrets) {
+        T:setAng((Attacker:shootPos() - T:pos()+Attacker:vel() * tickInterval()*1.5):toAngle())
+    }
+    if(!Attacker:isAlive()) {
+        setfires(0) Fire = 0
+        stoptimer("stopfires")
+    }
+}
+
+if(changed(owner():keyPressed("m")) & owner():keyPressed("m")) { 
+    printColor(vec(255,255,0), "Secure Info:", vec(0,255,255), "- Secure ", vec(255,0,0), "Disabled")
+    setfires(0) ON = 0 Fire = 0
+    stoptimer("stopfires")
+}
+if(changed(owner():keyPressed("n")) & owner():keyPressed("n")) { 
+    printColor(vec(255,255,0), "Secure Info:", vec(0,255,255), "- Secure ", vec(0,255,0), "Enabled")
+    setfires(0) ON = 1 Fire = 0
+    stoptimer("stopfires") 
+    timer("stopfires", 1000)
+}
+if(changed(owner():keyPressed("l")) & owner():keyPressed("l") & ON & Attacker!=owner() & !Friends:checkAr(Attacker)) { 
+    if(Fire) {
+        setfires(0) Fire = 0
+    }
+    else {
+        setfires(1) Fire = 1
+    }
+    stoptimer("stopfires") 
+    timer("stopfires", 1000)
+}
+
+if(clk("stopfires")) { setfires(0) Fire = 0 }

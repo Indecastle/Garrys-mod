@@ -1,0 +1,56 @@
+@name Vehicle Lock All Alw
+@inputs 
+@outputs Lock Vehicle:entity
+@persist [Vehicles OP]:table W:wirelink I OK
+@trigger 
+if(first() & entity():isWeldedTo():type() == "gmod_wire_pod") {
+    W = entity():isWeldedTo():wirelink()
+    entity():isWeldedTo():createWire(entity(),"Lock","Lock")
+    entity():isWeldedTo():createWire(entity(),"Vehicle","Vehicle")
+    setName(randint(10000):toString())
+    timer("scan",10)
+}
+
+if (clk("scan")){
+    O = owner()
+    findByClass("prop_vehicle_*")
+    Vehicles=findToTable()
+    if (Vehicles:count() > OP:count()){
+        I=1
+        OK = 1 Lock = 0
+        timer("work",10)
+    }
+    OP=Vehicles
+    timer("scan",10)
+}
+
+if (clk("work") & I<=Vehicles:count()) {
+    
+    
+    if(OK == 1) {
+        Vehicle = Vehicles[I,entity] 
+        OK++
+        timer("work",50)
+    }
+    elseif(OK == 2) {
+        Lock = 0
+
+        OK++
+        timer("work",50)
+    }
+    else {
+        WW = Vehicles[I,entity]:wirelink()
+        WW["Brake",number] = 1
+        Lock = 1
+        I++
+        OK = 1
+        timer("work",50)
+    }
+    
+        
+
+
+    
+    
+
+}

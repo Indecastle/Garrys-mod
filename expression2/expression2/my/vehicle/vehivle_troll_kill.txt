@@ -1,0 +1,20 @@
+@name Vehicle Troll-Kill Auto
+@inputs 
+@outputs Eject
+@persist [Pod]:entity W:wirelink
+@trigger 
+
+if(first()) {
+    setName("generic")
+    findByClass("gmod_wire_pod")
+    Pod = findClosest(entity():pos())
+    print(Pod)
+    
+    W = Pod:wirelink()
+}
+
+if(W["Driver",entity]:isPlayer()) {
+    if(W["Driver",entity] != owner()) { W["Terminate",number] = 1 }
+}
+
+interval(200)

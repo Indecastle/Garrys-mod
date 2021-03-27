@@ -1,0 +1,81 @@
+@name Radio+Parc
+@persist [Command Name Request Artist Time Data]:string R P [T Target O E]:entity
+
+if (first()) {
+    O = owner()
+    E = entity()
+    Target = O
+    #noDuplications()
+    runOnTick(1)
+    runOnChat(1)
+}
+
+if(chatClk(O)){
+    Ar = O:lastSaid():explode(" ")
+    switch(Ar:string(1)){
+        case"!target",
+        hideChat(1)
+        local P = noentity()
+        if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+        else { P = findPlayerByName(Ar:string(2)) }
+        if(!P:isPlayer() | Ar:string(2)=="") { print("player not found") }
+        else { Target = P print("target: " + Target:name()) soundURLparent("1",Target)}
+        break
+    }
+}
+
+if(!T:isAlive()&T|owner():keyPressed("N")) {
+    holoColor(1,vec(0,255,0))
+    T=noentity()
+}
+
+
+if (chatClk(owner()) & owner():lastSaid():left(1) == "#"){
+    hideChat(1)
+    runOnHTTP(1)
+    Command = owner():lastSaid()
+    Name = Command:sub(2, Command:length())
+    print(Name)
+    R = 1
+     httpRequest("https://muzlo.me/search?q=" + httpUrlEncode(Name))
+    #httpRequest("https://mp3cc.biz/search/f/" + httpUrlEncode(Name))
+}
+
+if (httpClk()){
+Data = httpData()
+    switch (R){
+        case 1,
+        R = 2
+        Request = Data:matchFirst("https:\/\/muzlo\.me\/get\/music\/[0-9]+\/[^\>]*")
+        #Request = Data:matchFirst("https:\/\/storage.mp3cc.biz\/listen\/[0-9]+\/[/A-z0-9%-_%.,%(%)]+.mp3")
+        #Table=Data:gmatch("https:\/\/storage.mp3cc.biz\/listen\/[0-9]+\/[/A-z0-9%-_%.,%(%)]+.mp3")
+        #Time=Data:gmatch("[0-9][0-9]:[0-9][0-9]")
+        #Name=Data:gmatch(">[^\<]*<\/a><\/em>")
+        print(Time)
+        runOnTick(1)
+        break
+        
+        case 2,
+        R = 3
+        soundURLdelete("1")
+        soundPurge()
+        PlayModd=1
+        soundURLload("1",Data,1,0,O)
+        print(Data)
+        break
+    }
+}
+
+if (httpCanRequest()){
+    runOnTick(0)
+    if (R == 2){
+        httpRequest("http://cc.suka.lol/" + Request:left(Request:length()-1))
+    }
+}
+if(chatClk(O)&owner():lastSaid()=="stop") {
+    hideChat(1)
+    soundURLdelete("1")
+        R = 0 
+    holoScale(1,vec(1,1,1))
+    holoColor(1,vec(0,255,0))
+}

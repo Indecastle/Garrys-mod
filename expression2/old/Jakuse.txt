@@ -1,0 +1,122 @@
+@name Jakuse
+@inputs 
+@outputs 
+@persist [A B C  S1 S2]:array
+@trigger 
+
+EE=entity()
+EE:setAlpha(0)
+
+
+if(first()){
+    EE:soundPlay(1000,0,"coast.leech_water_churn_loop",0)
+    timer("bul",10)
+    
+    holoCreate(1)
+    holoParent(1,EE)
+    holoModel(1,"models/holograms/cplane.mdl")
+    holoScale(1,vec(14))
+    holoColor(1,vec(70,161,255))
+    
+    
+    holoCreate(2)
+    holoParent(2,EE)
+    holoModel(2,"models/holograms/hq_torus_thin.mdl")
+    holoScale(2,vec(15,15,1500))
+    holoColor(2,vec(10,255,10))
+    holoPos(2,EE:toWorld(vec(0,0,10)))
+    
+    holoCreate(3)
+    holoParent(3,EE)
+    holoModel(3,"models/holograms/hq_torus_thin.mdl")
+    holoScale(3,vec(15,15,1500))
+    holoPos(3,EE:toWorld(vec(0,0,20)))
+    holoColor(3,vec(255,255,0))
+    
+    holoCreate(4)
+    holoParent(4,EE)
+    holoModel(4,"models/holograms/hq_torus_thin.mdl")
+    holoScale(4,vec(15,15,1500))
+    holoPos(4,EE:toWorld(vec(0,0,30)))
+    holoColor(4,vec(10,255,10))
+    
+    holoCreate(5)
+    holoParent(5,EE)
+    holoModel(5,"models/holograms/cplane.mdl")
+    holoMaterial(5,"models/shadertest/predator")
+    holoScale(5,vec(14))
+    holoColor(5,vec(0,161,255))
+    holoPos(5,EE:toWorld(vec(0,0,35)))
+    holoAlpha(5,200)
+    
+    holoCreate(6)
+    holoParent(6,EE)
+    holoModel(6,"models/holograms/cplane.mdl")
+    holoMaterial(6,"models/shadertest/predator")
+    holoScale(6,vec(14))
+    holoColor(6,vec(0,181,255))
+    holoPos(6,EE:toWorld(vec(0,0,34)))
+    holoAlpha(6,150)
+    
+    holoCreate(7)
+    holoParent(7,EE)
+    holoModel(7,"models/holograms/hq_cylinder.mdl") 
+    #holoMaterial(7,"models/shadertest/predator")
+    holoScale(7,vec(-13.5,-13.5,-3))
+    holoColor(7,vec(0,181,255))
+    holoPos(7,EE:toWorld(vec(0,0,15)))
+    holoAlpha(7,230)
+    holoShadow(1,1)
+    holoShadow(2,1)
+    holoShadow(3,1)
+    holoShadow(4,1)
+    holoShadow(5,1)
+    holoShadow(6,1)
+}
+
+
+if(findCanQuery()) {
+findIncludeClass("player") findInSphere(entity():pos(),70)
+A = findToArray() }
+if(A:count() != B:count()) {
+    C:clear()
+    S2:clear()
+    for(I=1,A:count()) { 
+        C:pushVector(A[I,entity]:pos()) 
+        S2:setNumber(I,S1:number(I))
+    }
+    B = A 
+    S1 = S2
+    stopAllTimers() soundPurge() EE:soundPlay(1000,0,"coast.leech_water_churn_loop",0)
+    #print("azaz")
+    #for(J=1,A:count()) { timer(J:toString(),10) }
+}
+#print(C:count())
+
+for(I = 1,A:count()){
+    if(A:entity(I):pos() != C:vector(I)) {
+        if(clk(I:toString())) {
+            entity():soundPlay(I,0,"Water.BulletImpact",0) 
+            timer(I:toString(),400) 
+        }
+        C[I,vector] = A:entity(I):pos()
+    }
+    else
+    {
+        timer(I:toString(),10) 
+    }
+    
+    
+    if(A:entity(I):keyDuck() & A:entity(I):attachmentPos("chest"):z() < holoEntity(7):pos():z()+30) { 
+        if(S1:number(I) == 0) {
+            A:entity(I):soundPlay(100+I,0,"ambient/water/underwater.wav",0)
+            S1:setNumber(I,1)
+        }
+    }
+    else {
+        soundStop(100+I)
+        S1:setNumber(I,0)
+    }
+}
+
+interval(10)

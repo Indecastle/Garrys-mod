@@ -1,0 +1,43 @@
+@name TTS http
+@inputs 
+@outputs 
+@persist Target:entity
+@trigger 
+
+runOnKeys(owner(), 1)
+
+if(first()) { setName(randint(1000):toString())
+    soundURLload(1,"https://translate.google.com/translate_tts?ie=UTF-8&q={Hello%20world}&tl=en&client=tw-ob",10,0,owner():pos())
+    runOnChat(1)
+    runOnHTTP(1)
+    
+    Target = owner()
+    #Target = findPlayerByName("maybe")
+    #Target = findPlayerBySteamID("STEAM_0:1:193124162")
+    
+    if(Target:isPlayer()) { print(Target:name()) }
+    else { print("Player not found")}
+}
+
+if(chatClk(owner()))
+{
+    hideChat(1)
+    Str = owner():lastSaid()
+    if(httpCanRequest()) {
+        httpRequest("http://cc.suka.lol/"+"http://translate.google.com/translate_tts?ie=utf8&q="+httpUrlEncode(Str)+"&tl="+"ru"+"&client=tw-ob")
+    }
+}
+    
+if (httpClk()){
+        soundURLPurge()
+        soundURLload("1",httpData(),1,0,Target)
+        #soundURLload("2",httpData(),1,0,owner())
+}
+
+if(changed(owner():keyPressed("b")) & owner():keyPressed("b") & owner():aimEntity())
+{
+    if(owner():aimEntity():isPlayer()) {
+        Target = owner():aimEntity()
+        print(Target)
+    }
+}

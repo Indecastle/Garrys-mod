@@ -1,0 +1,68 @@
+@name VectorsLib
+@persist [V_Pitch V_DragF V_PitchD V_DragFD]:number [LocPosC]:vector
+function vector project(A:vector,B:vector){
+    return B:normalized()*A:dot(B:normalized())
+}
+function vector reject(A:vector,B:vector){
+    return A - project(A,B)
+}
+function vector reflect(A:vector,B:vector){
+    return 2*reject(A,B) - A
+}
+function angle getAngles(Start:vector,End:vector){
+    
+}
+function vector2 rotate2dv(A:vector2,B:number){  
+    X = A:x()
+    Y = A:y()
+    return vec2(X * cos(B) - Y * sin(B), X * sin(B) + Y * cos(B))
+}
+#ifdef entity:acfMuzzleVel()
+    function number elevation1(Gun:entity,AimPos:vector){
+        D = (Gun:acfCaliber()^2)*pi()/80
+        G = gravity()*1
+        MuzzleVelocity = Gun:acfMuzzleVel()*0.8
+        MuzzleWeight = Gun:acfProjectileMass()*1000
+        if(MuzzleVelocity == 0||MuzzleWeight == 0){
+            MuzzleVelocity = 80
+            MuzzleWeight = 100*1000
+        }
+        K_D = MuzzleWeight/D
+        LocPos = (AimPos - Gun:pos())*(AimPos:distance(Gun:pos()))#*(3.425*10^-5)
+        LocPosC = LocPos
+        P = vec2(LocPos):length()
+        HLim = acos(P/(K_D*MuzzleVelocity))
+        LLim = atan(LocPos:z(),P)
+        CTP = 100/MuzzleVelocity
+        V_Pitch = V_Pitch ? V_Pitch : 0
+        if(P < cos(V_Pitch)*K_D*MuzzleVelocity){
+            V_DragF = G*K_D^2*ln(1-P/(K_D*MuzzleVelocity*cos(V_Pitch))) + P*tan(V_Pitch) + P*K_D*G/(MuzzleVelocity*cos(V_Pitch)) - LocPos:z()
+        }
+        D_P = abs(V_Pitch - V_PitchD)
+        DD_F = abs(V_DragF - V_DragFD)
+        V_PitchD = V_Pitch
+        V_DragFD = V_DragF
+        AnalysF = max(abs(DD_F/D_P),2.5)
+        V_Pitch = clamp(V_Pitch - clamp(CTP*V_DragF/AnalysF,-1,1),LLim,(HLim + LLim)*0.5)
+        return V_Pitch
+    }
+    function number elevation2(Gun:entity,AimPos:vector){
+        ###local Speed = Gun:acfMuzzleVel()^2
+        ###a = arctan((V*V+-sqrt(V*V*V*V - G*G*X*X + 2*Y*V*V))/(G*X))
+        ###local Gravity = gravity()
+        ###local B = sqrt(Speed^2 - Gravity^2*
+        ###local A
+    }
+#endif
+function vector meetPoint(TargetPos:vector,TargetVel:vector,TorpedoPos:vector,TorpedoVel:number){
+   	local Direct = TargetPos - TorpedoPos
+    local Dir = Direct:normalized()
+   	local TargetOrth = project(TargetVel,Dir)
+   	local TargetTang = TargetVel - TargetOrth
+    local VelOrth = sqrt(TorpedoVel^2 - TargetTang:length2())
+    local AimDir = TargetTang + VelOrth*Dir
+    
+    
+    
+    return AimDir
+}

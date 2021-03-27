@@ -1,0 +1,192 @@
+@name Plane
+@inputs
+@outputs
+@persist T Vel Timer SoundFixTimer SoundFix
+@trigger
+
+##########################
+##########################
+#### Written by Raveo ####
+####     AKA Chey     ####
+##########################
+##########################
+
+E=entity():isWeldedTo()
+if(first())
+{   
+    runOnTick(1)
+    R=random(0,255)
+    G=random(0,255)
+    B=random(0,255)
+    Colour=vec(0,0,0)
+    E:setMass(50000)
+    entity():setMass(0)
+    E:setAlpha(255)
+
+    if(E:type()!="prop_vehicle_prisoner_pod") 
+    {
+        print("You must spawn the Chip on a seat")
+        selfDestructAll()
+    }    
+    function cHolo(Index, Model:string, Position:vector, Angle:angle, Scale:vector)
+    {
+        holoCreate(Index)
+        holoModel(Index,Model)
+        holoPos(Index,Position)
+        holoAng(Index,Angle)
+        holoScale(Index,Scale)
+        holoShadow(Index,1)
+        holoParent(Index,E)
+    }
+cHolo(1,"hq_sphere",E:toWorld(vec(0,20,0)),E:toWorld(ang(0,0,-90)),vec(4.5,3,27)) #Nose Cone
+cHolo(2,"hq_tube_thin",E:toWorld(vec(0,25,10)),E:toWorld(ang(0,0,0)),vec(3,10,2))#Cockpit
+cHolo(3,"hqsphere",E:toWorld(vec(0,25,18)),E:toWorld(ang(0,0,0)),vec(3,10,4))#WindSheild
+cHolo(4,"hq_cubinder",E:toWorld(vec(0,18,0)),E:toWorld(ang(0,0,-90)),vec(3,3,15))#BodyCylinder
+cHolo(5,"hq_stube",E:toWorld(vec(30,-60,-15)),E:toWorld(ang(110,0,-90)),vec(3,2,15))#AirIntakeRight
+cHolo(6,"hq_stube",E:toWorld(vec(-30,-60,-15)),E:toWorld(ang(-110,0,-90)),vec(3,2,15))#AirIntakeLeft
+cHolo(7,"hq_rcube",E:toWorld(vec(0,-110,-10)),E:toWorld(ang(0,0,0)),vec(9,15,3.5))#Big Body Thingy
+cHolo(8,"hq_stube",E:toWorld(vec(25,-205,-10)),E:toWorld(ang(0,0,90)),vec(3,2,2))#Right Thruster
+cHolo(9,"hq_stube",E:toWorld(vec(-25,-205,-10)),E:toWorld(ang(0,0,90)),vec(3,2,2))#Left Thruster
+cHolo(10,"hq_cylinder",E:toWorld(vec(25,-120,6)),E:toWorld(ang(0,0,90)),vec(2.2,2,5))#Right Thruster Cover
+cHolo(11,"hq_cylinder",E:toWorld(vec(-25,-120,6)),E:toWorld(ang(0,0,90)),vec(2.2,2,5))#Left Thruster Cover
+cHolo(12,"cube",E:toWorld(vec(115,-30,-10)),E:toWorld(ang(0,-20,0)),vec(20,1,0.2))#Right Wing Leading Edge
+cHolo(13,"cube",E:toWorld(vec(-115,-30,-10)),E:toWorld(ang(0,20,0)),vec(20,1,0.2))#Left Wing Leading Edge
+cHolo(14,"cube",E:toWorld(vec(225,-90,-10)),E:toWorld(ang(0,90,0)),vec(4,1,0.2))#Right Wing Leading Edge Side
+cHolo(15,"cube",E:toWorld(vec(-225,-90,-10)),E:toWorld(ang(0,90,0)),vec(4,1,0.2))#Left Wing Leading Edge Side
+cHolo(16,"cube",E:toWorld(vec(215,-128,-10)),E:toWorld(ang(0,-120,0)),vec(3.2,1,0.2))#Right Wing Trailing Edge Side
+cHolo(17,"cube",E:toWorld(vec(-215,-128,-10)),E:toWorld(ang(0,120,0)),vec(3.2,1,0.2))#Left Wing Trailing Edge Side
+cHolo(18,"cube",E:toWorld(vec(120,-150,-10)),E:toWorld(ang(0,5,0)),vec(15,1,0.2))#Right Wing Trailing Edge
+cHolo(19,"cube",E:toWorld(vec(-120,-150,-10)),E:toWorld(ang(0,-5,0)),vec(15,1,0.2))#Left Wing Trailing Edge
+cHolo(20,"cube",E:toWorld(vec(80,-60,-10)),E:toWorld(ang(0,-20,0)),vec(24,7,0.2))#Right Wing Body 1
+cHolo(21,"cube",E:toWorld(vec(-80,-60,-10)),E:toWorld(ang(0,20,0)),vec(24,7,0.2))#Left Wing Body 1
+cHolo(22,"cube",E:toWorld(vec(80,-120,-10)),E:toWorld(ang(0,5,0)),vec(22,5,0.2))#Right Wing Body 2
+cHolo(23,"cube",E:toWorld(vec(-80,-120,-10)),E:toWorld(ang(0,-5,0)),vec(22,5,0.2))#Left Wing Body 2
+cHolo(24,"cube",E:toWorld(vec(89,-110,-10)),E:toWorld(ang(0,0,0)),vec(22,2,0.2))#Right Wing Body 3
+cHolo(25,"cube",E:toWorld(vec(-89,-110,-10)),E:toWorld(ang(0,0,0)),vec(22,2,0.2))#Left Wing Body 3
+cHolo(26,"cube",E:toWorld(vec(60,-195,-10)),E:toWorld(ang(0,-50,0)),vec(9,4,0.2))#Right Tail Wing Body 1
+cHolo(27,"cube",E:toWorld(vec(-60,-195,-10)),E:toWorld(ang(0,50,0)),vec(9,4,0.2))#Left Tail Wing Body 1
+cHolo(28,"hq_sphere",E:toWorld(vec(50,-210,-10)),E:toWorld(ang(0,0,0)),vec(1.5,7,2))#Right Tail Connector
+cHolo(29,"hq_sphere",E:toWorld(vec(-50,-210,-10)),E:toWorld(ang(0,0,0)),vec(1.5,7,2))#Left Tail Connector
+cHolo(30,"cube",E:toWorld(vec(98,-234,-10)),E:toWorld(ang(0,0,0)),vec(2.5,2.2,0.2))#Right Tail Wing Body 2
+cHolo(31,"cube",E:toWorld(vec(-98,-234,-10)),E:toWorld(ang(0,0,0)),vec(2.5,2.2,0.2))#Left Tail Wing Body 2
+cHolo(32,"cube",E:toWorld(vec(94,-244,-10)),E:toWorld(ang(0,9,0)),vec(3,1,0.2))#Right Tail Wing Body 3
+cHolo(33,"cube",E:toWorld(vec(-94,-244,-10)),E:toWorld(ang(0,-9,0)),vec(3,1,0.2))#Left Tail Wing Body 3
+cHolo(34,"cube",E:toWorld(vec(70,-150,15)),E:toWorld(ang(35,0,20)),vec(0.2,2,7))#Right Tail Rudder Body 1
+cHolo(35,"cube",E:toWorld(vec(-70,-150,15)),E:toWorld(ang(-35,0,20)),vec(0.2,2,7))#Left Tail Rudder Body 1
+cHolo(36,"cube",E:toWorld(vec(70,-190,15)),E:toWorld(ang(35,0,-20)),vec(0.2,2,7))#Right Tail Rudder Body 2
+cHolo(37,"cube",E:toWorld(vec(-70,-190,15)),E:toWorld(ang(-35,0,-20)),vec(0.2,2,7))#Left Tail Rudder Body 2
+cHolo(38,"cube",E:toWorld(vec(70,-170,16)),E:toWorld(ang(35,0,0)),vec(0.2,3,7))#Right Tail Rudder Body 3
+cHolo(39,"cube",E:toWorld(vec(-70,-170,16)),E:toWorld(ang(-35,0,0)),vec(0.2,3,7))#Left Tail Rudder Body 3
+cHolo(40,"hq_cylinder",E:toWorld(vec(0,20,-30)),E:toWorld(ang(0,0,20)),vec(0.5,0.5,2))#Front Landing Gear
+cHolo(41,"hq_cylinder",E:toWorld(vec(5,25,-40)),E:toWorld(ang(90,0,0)),vec(0.5,0.5,1))#Right Front Landing Gear Connector 1
+cHolo(42,"hq_cylinder",E:toWorld(vec(-5,25,-40)),E:toWorld(ang(90,0,0)),vec(0.5,0.5,1))#Left Front Landing Gear Connector 1
+cHolo(43,"hq_cylinder",E:toWorld(vec(10,25,-46)),E:toWorld(ang(0,0,0)),vec(0.2,0.2,1.5))#Right Front Landing Gear Connector 2
+cHolo(44,"hq_cylinder",E:toWorld(vec(-10,25,-46)),E:toWorld(ang(0,0,0)),vec(0.2,0.2,1.5))#Left Front Landing Gear Connector 2
+cHolo(45,"hq_cylinder",E:toWorld(vec(0,25,-55)),E:toWorld(ang(90,0,0)),vec(0.2,0.2,1.9))#Front Landing Gear Connector 3
+cHolo(46,"models/XQM/airplanewheel1.mdl",E:toWorld(vec(0,25,-55)),E:toWorld(ang(0,0,20)),vec(1,1,1))#Front Landing Wheel
+cHolo(47,"hq_cylinder",E:toWorld(vec(30,-120,-30)),E:toWorld(ang(-30,0,0)),vec(0.5,0.5,3))#Rear Right Landing Gear 1
+cHolo(48,"hq_cylinder",E:toWorld(vec(-30,-120,-30)),E:toWorld(ang(30,0,0)),vec(0.5,0.5,3))#Rear Left Landing Gear 1
+cHolo(49,"hq_cylinder",E:toWorld(vec(42,-120,-48)),E:toWorld(ang(-40,0,0)),vec(0.3,0.3,1.2))#Rear Right Landing Gear 2
+cHolo(50,"hq_cylinder",E:toWorld(vec(-42,-120,-48)),E:toWorld(ang(40,0,0)),vec(0.3,0.3,1.2))#Rear Left Landing Gear 2
+cHolo(51,"models/XQM/airplanewheel1.mdl",E:toWorld(vec(50,-120,-55)),E:toWorld(ang(0,0,0)),vec(1,1,1))#Right Rear Landing Gear Wheel
+cHolo(52,"models/XQM/airplanewheel1.mdl",E:toWorld(vec(-50,-120,-55)),E:toWorld(ang(0,0,0)),vec(1,1,1))#Left Reare Landing Gear WHeel
+cHolo(53,"models/props_phx/amraam.mdl",E:toWorld(vec(220,-100,-30)),E:toWorld(ang(0,90,0)),vec(1,1,1))#Rightile
+cHolo(54,"models/props_phx/amraam.mdl",E:toWorld(vec(-220,-100,-30)),E:toWorld(ang(0,90,0)),vec(1,1,1))#Leftile
+cHolo(55,"cube",E:toWorld(vec(220,-100,-15)),E:toWorld(ang(0,90,0)),vec(2,0.2,1))#Right Missile Connector
+cHolo(56,"cube",E:toWorld(vec(-220,-100,-15)),E:toWorld(ang(0,90,0)),vec(2,0.2,1))#Left Missile Connector
+cHolo(57,"cube",E:toWorld(vec(25,-210,-10)),E:toWorld(ang(0,90,0)),vec(1,1,1))#Right Thruster Partical Effects
+cHolo(58,"cube",E:toWorld(vec(-25,-210,-10)),E:toWorld(ang(0,90,0)),vec(1,1,1))#Right Thruster Partical Effects
+cHolo(59,"hq_sphere",E:toWorld(vec(25,-110,6)),E:toWorld(ang(0,0,90)),vec(2.2,2,15))#Right Thruster Cover 2
+cHolo(60,"hq_sphere",E:toWorld(vec(-25,-110,6)),E:toWorld(ang(0,0,90)),vec(2.2,2,15))#Left Thruster Cover 2        
+    holoAlpha(57,1)
+    holoAlpha(58,1)
+    for(I=1,39)
+    {    
+        holoColor(I,Colour)
+    }             
+    holoColor(59,Colour)
+    holoColor(60,Colour)
+    holoColor(4,clamp(Colour-vec(50,50,50),vec(0,0,0),vec(255,255,255)))
+    holoColor(1,clamp(Colour-vec(50,50,50),vec(0,0,0),vec(255,255,255)))
+    holoColor(5,vec(0,0,0))
+    holoColor(6,vec(0,0,0))
+    holoColor(8,vec(0,0,0))
+    holoColor(9,vec(0,0,0))
+    for(I=36,39)
+    {
+        holoColor(I,clamp(Colour-vec(50,50,50),vec(0,0,0),vec(255,255,255)))   
+    }        
+    holoEntity(58):setTrails(50,1,0.05,"trails/smoke",vec(255,50,0), 255)
+    holoEntity(57):setTrails(50,1,0.05,"trails/smoke",vec(255,50,0), 255)
+    holoMaterial(3,"phoenix_storms/glass")
+}
+Chair=entity():isWeldedTo()
+Driver=Chair:driver()
+W=Driver:keyForward()
+S=Driver:keyBack()
+Rvel=E:angVel():roll()
+Pvel=E:angVel():pitch()
+Yvel=E:angVel():yaw()
+Pd=E:angles():pitch()/100
+R1=E:angles():roll()/100
+Range=rangerOffset(100,E:pos()+vec(0,0,-8),-E:up())
+Height=Range:distance()
+E:applyForce(-E:vel()*E:mass())
+E:applyAngForce(ang(Rvel,-Yvel,-Pvel)*E:mass())
+E:applyForce(vec(0,0,1)*E:mass()*7.511255)
+if(Height<57.5|!Driver)
+{
+    E:applyForce(vec(0,0,1)*E:mass()*(57.5-Height))
+    E:applyForce(-vec(0,0,1)*E:mass()*5*(Height-57.5))
+}
+E:applyAngForce(ang(R1,0,-Pd)*E:mass()*100)
+if(Driver)
+{
+    if(Height>57.5)
+    {
+        Y=vec(Driver:eye():dot(Chair:right()),Driver:eye():dot(Chair:right()),0):y()
+    }
+    else{Y=0}
+    if(Vel>750)
+    {
+        P=vec(0,Driver:eye():dot(Chair:up()),Driver:eye():dot(Chair:up())):z()    
+    }
+    else{P=0}
+    E:applyAngForce(ang(-P,-Y,Y)*E:mass()*100)
+    
+    SoundFixTimer++
+    SoundFix=sin(SoundFixTimer)*2+2
+    Speed=E:vel():length()
+    Timer+=1 
+    if(Timer>500)
+    {Timer=0}
+    if(Timer==5){entity():soundPlay(1,0,"ambient/outdoors_well.wav")}
+    soundPitch(1,Speed*T*6+SoundFix)
+}
+else{soundStop(1)}
+Forward=E:forward()*E:mass()*150
+E:applyForce((Forward+$Forward)*T)
+if(W){T+=0.01}
+if(S|!Driver){T-=0.01}
+elseif(S&Height<40){T-=0.005}
+if(T<0){T=0}
+if(T>5){T=5}
+Vel=E:vel():length()
+if(Driver&T<2&Height>60)
+{
+    E:applyForce(-vec(0,0,1)*E:mass()*100)    
+    T=2
+}
+if(E:driver())
+{
+    Active=1
+}
+else{Active=0}
+
+if(changed(Active)&Active)
+{
+    E:hintDriver("Made by Raveo",7)
+    E:hintDriver("W:S Accelerate",5)
+    E:hintDriver("Mouse aim to steer",5)
+    E:hintDriver("Enjoy!",5)
+}

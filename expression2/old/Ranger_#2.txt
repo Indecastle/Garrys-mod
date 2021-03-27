@@ -1,0 +1,44 @@
+@name Ranger #2
+@persist [O EE B]:entity
+@outputs Dist
+@trigger 
+
+interval(100)
+
+if(first())
+{
+    EE = entity() #EE:propNotSolid(1)
+    O = owner()
+    
+    B = holoCreate(0,EE:toWorld(vec(0)), vec(1), EE:toWorld(ang(0)),vec(255), "")
+    
+    holoCreate(1, B:toWorld(vec(0,0,10)), vec(1), B:toWorld(ang(0)),vec(0,255,255), "")
+    
+    holoParent(0,EE)
+    holoParent(1,EE)
+    
+    holoCreate(101, B:toWorld(vec(100,0,0)), vec(1), B:toWorld(ang(0)),vec(255,0,0), "")
+    holoCreate(102, B:toWorld(vec(-100,0,0)), vec(1), B:toWorld(ang(0)),vec(255,0,0), "")
+    holoCreate(103, B:toWorld(vec(100,100,0)), vec(1), B:toWorld(ang(0)),vec(255,0,0), "")
+    holoCreate(104, B:toWorld(vec(-100,100,0)), vec(1), B:toWorld(ang(0)),vec(255,0,0), "")
+    
+    for(I=101,104) { holoParent(I,B) }
+    
+    
+}
+else
+{
+    Ranger = rangerOffsetHull(B:toWorld(vec(0,0,0)),B:toWorld(vec(0,100,0)),vec(-100,0,0),vec(100,0,0))
+     #Ranger = rangerOffset(holoEntity(0):pos(),holoEntity(0):pos()+vec(0,200,10))
+    
+
+    holoPos(1,Ranger:pos())
+    
+    if(Ranger:hit()) {
+        holoPos(1,holoEntity(1):toWorld(vec(0,-1,0)))
+        Dist = B:pos():distance(holoEntity(1):pos())
+    }
+}
+
+
+if(dupefinished()) {reset()}

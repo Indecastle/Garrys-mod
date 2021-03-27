@@ -1,0 +1,67 @@
+@name Bio_Button
+@inputs Button:entity Friends:array
+@outputs Player:entity Out
+@persist Toggle_V Button_V Distance [OP Players]:array W:wirelink Real_Friends:array Mode Interval
+@trigger all
+
+if (first() || duped() || dupefinished()) {
+    Distance = 100
+    Mode = 1  # 1 = nonToggle-mode, 2 = toggle-mode
+    Interval = 300 # ms
+    
+    W = Button:wirelink()
+    
+    function update_friends() {
+        Real_Friends = array(owner())
+        Real_Friends = Real_Friends:add(Friends)
+    }
+    update_friends()
+    timer("scan_players", 100)
+}
+
+if (clk("scan_players")){
+    findByClass("player")
+    Players = findToArray()
+    if (Players:count() != OP:count()){
+        runOnKeys(OP, 0)
+        runOnKeys(Players, 1)
+    }
+    OP = Players
+    timer("scan_players", 1000)
+}
+
+if (~Friends) {
+    update_friends()
+}
+
+Who = keyClk()
+if (Who) {
+    if (changed(Who:keyPressed("e")) && Who:keyPressed("e") && Who:aimEntity() == Button && Who:shootPos():distance(Button:pos()) < Distance) {
+        local IsPressed = 0
+        foreach (I, P:entity = Real_Friends) {
+            if (P == Who) {
+                IsPressed = 1
+                break
+            }
+        }
+        if (IsPressed) {
+            Player = Who
+            switch (Mode) {
+                case 1,
+                    Out = 1
+                    stoptimer("off")
+                    timer("off", Interval)
+                break
+                case 2,
+                    Out = !Out
+                break
+                default,
+                    printColor(vec(255,0,0), "Mode is invalid")
+            }            
+        }
+    }
+}
+
+if (clk("off")){
+    Out = 0
+}

@@ -1,0 +1,49 @@
+@name Turret Rocket Test #2
+@inputs Active Pos:vector
+@outputs [T Dir]:vector
+@persist [Ent Def]:entity AngG:angle A Rev Gradus
+@trigger none
+interval(100)
+if(first()) {
+    Def = holoCreate(0,entity():pos()+vec(0,0,20), vec(0.1))
+    Ent = holoCreate(1,entity():pos()+vec(0,0,20), vec(1), ang(-40,0,0), vec(255), "models/props_c17/metalPot002a.mdl")
+    holoParent(0,entity())
+    holoParent(1,entity())
+    
+    A1 = ang(0,1,0)
+    A2 = ang(0,0,0)
+    V1 = A1:forward()
+    V2 = A2:forward()
+    Gradus = V1:distance(V2)
+}
+
+
+
+
+if(!Active) { 
+    if(A<=-45|A>=45) { Rev=!Rev }
+    A += Rev ? 3 : -3
+    Dir = Def:toWorld(ang(-40,A,0)):forward()
+}
+else {
+    Dir = (Pos-Ent:pos()):normalized()
+}
+
+#local A = Ent:toWorld(vec(10,0,0))
+#local Tar = (A - Ent:pos()):normalized()
+
+Tar = Ent:angles():forward()
+local Vec = (Tar-Dir)
+T= Vec
+local Dir2 = Tar+Vec
+if(Dir2:distance(Tar) < 0.00001 & 0) {
+    An = Dir:toAngle()
+    print(1)
+}
+else {
+    An = (Dir2):toAngle()
+}
+Ent:setAng(An)
+
+
+

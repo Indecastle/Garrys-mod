@@ -1,0 +1,7 @@
+@name SetKillPod
+
+Target = entity():isConstrainedTo()  
+Target:killPod()
+Target:setMass(10)
+#entity():deparent()
+#selfDestruct()

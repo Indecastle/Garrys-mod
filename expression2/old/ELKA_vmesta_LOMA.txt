@@ -1,0 +1,45 @@
+@name ELKA vmesta LOMA
+@persist [O E Base]:entity Just N Table:table
+ 
+interval(100)
+if(first()){
+    E=entity()
+    O=owner()
+    O = findPlayerByName("Markiz")
+    print(O)
+    List = "sprops/textures/sprops_metal3"
+    Base = holoCreate(0,E:toWorld(vec(0,0,0)),vec(0.001),E:toWorld(ang(0,0,0)),vec(255),"cube")
+    Table:pushArray(array(Base:toWorld(vec(0,0,0)),vec(1,1,3),Base:toWorld(ang(0,0,0)),vec(127,95,0),"hq_tube","sprops/textures/sprops_wood1"))
+    Table:pushArray(array(Base:toWorld(vec(0,0,30)),vec(5,5,2),Base:toWorld(ang(0,0,0)),vec(0,255,0),"hq_cone",List))
+    Table:pushArray(array(Base:toWorld(vec(0,0,40)),vec(4.5,4.5,1.6),Base:toWorld(ang(0,0,0)),vec(0,255,0),"hq_cone",List))
+    Table:pushArray(array(Base:toWorld(vec(0,0,50)),vec(4,4,1.4),Base:toWorld(ang(0,0,0)),vec(0,255,0),"hq_cone",List))
+    Table:pushArray(array(Base:toWorld(vec(0,0,60)),vec(3.5,3.5,1.2),Base:toWorld(ang(0,0,0)),vec(0,255,0),"hq_cone",List))
+    Table:pushArray(array(Base:toWorld(vec(0,0,70)),vec(3,3,1.4),Base:toWorld(ang(0,0,0)),vec(0,255,0),"hq_cone",List))
+    Table:pushArray(array(Base:toWorld(vec(0,0,80)),vec(2.5,2.5,1.8),Base:toWorld(ang(0,0,0)),vec(0,255,0),"hq_cone",List))
+    Table:pushArray(array(Base:toWorld(vec(0,0,90)),vec(2,2,1.6),Base:toWorld(ang(0,0,0)),vec(0,255,0),"hq_cone",List))
+}
+if(Table:count() > N) {
+    while(holoCanCreate() & perf()) {
+        N++
+        local Holo = Table[N, array]
+        holoCreate(N, Holo:vector(1), Holo:vector(2), Holo:angle(3), Holo:vector(4), Holo:string(5))
+        holoMaterial(N, Holo:string(6))
+        holoParent(N, Base)
+    }
+} else {
+if(O:weapon():type() == "weapon_crowbar") { Just = 1 O:weapon():setAlpha(0) } else { Just = 0 }    
+ 
+     if(changed(Just)&Just) {      
+            holoPos(0,O:attachmentPos("anim_attachment_rh"))
+            holoAng(0,O:attachmentAng("anim_attachment_rh"))
+            holoParentAttachment(0,O,"anim_attachment_rh")  
+    }
+    elseif(!Just) {
+        if(!first()){
+            holoUnparent(0)
+            holoPos(0,E:pos())
+            holoAng(0,E:angles())
+            holoParent(0,E)
+        }        
+    }
+}

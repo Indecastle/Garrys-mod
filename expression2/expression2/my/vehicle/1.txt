@@ -1,0 +1,35 @@
+@name Vehicle 1
+@inputs 
+@outputs E:entity Vec:vector
+@persist [Vehicles OP]:table W:wirelink I
+@trigger 
+if(first()) {
+    W = entity():isWeldedTo():wirelink()
+    setName(randint(10000):toString())
+    timer("scan",10)
+}
+
+if (clk("scan")){
+    O = owner()
+    findByClass("prop_vehicle_*")
+    Vehicles=findToTable()
+    if (Vehicles:count()!=OP:count()){
+        I=1
+        timer("egp",10)
+    }
+    OP=Vehicles
+    timer("scan",10)
+}
+
+if (clk("egp")){
+    P=Vehicles[I,entity]
+    if(Vehicles[I,entity]:owner() == owner()) {
+        W["Terminate",number] = 1
+        W["Vehicle",entity] = Vehicles[I,entity]
+    
+    }
+
+    timer("egp",10)
+    I++
+    if(I>Vehicles:count()) { I=1 }
+}

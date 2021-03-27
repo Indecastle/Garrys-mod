@@ -1,0 +1,14 @@
+@name nps dance
+EE=entity()
+holoCreate(1)
+holoModel(1,"models/pac/female_base.mdl")
+holoAnim(1,"taunt_dance")
+
+holoParent(1,EE)
+interval(9500)
+holoScale(1,vec(2,4,1))
+holoColor(1,vec(225,255,225))
+
+
+soundURLload(1,"https://www.dropbox.com/s/snwsn874sgmy2m6/GONE.Fludd%20-%20%D0%9A%D0%A3%D0%91%D0%98%D0%9A%20%D0%9B%D0%AC%D0%94%D0%90.mp3?dl=1",1,1,entity())
+soundURLvolume(1,1)

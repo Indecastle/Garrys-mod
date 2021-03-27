@@ -1,0 +1,42 @@
+@name Vehicle Lock All Alw Dop
+@inputs 
+@outputs Lock Vehicle:entity G:entity
+@persist [Vehicles OP]:table W:wirelink I OK
+@trigger 
+if(first()) {
+    setName(randint(10000):toString())
+    timer("scan",10)
+}
+
+if (clk("scan")){
+    O = owner()
+    findByClass("gmod_sent_vehicle_fphysics_base")
+    Vehicles=findToTable()
+    if (Vehicles:count() > OP:count()){
+        I=1
+        OK = 1 Lock = 0
+        timer("work",10)
+    }
+    OP=Vehicles
+    timer("scan",10)
+}
+
+if (clk("work") & I<=Vehicles:count()) {
+    
+    
+
+    #Vehicles[I,entity]:createWire(entity(),"Lock","Lock")
+    #Lock = 1
+    W = Vehicles[I,entity]:wirelink()
+    W["Lock",number] = 1
+
+    I++
+    
+    timer("work",200)
+    
+        
+
+
+
+
+}

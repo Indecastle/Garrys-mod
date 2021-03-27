@@ -1,0 +1,613 @@
+@name KillMachine
+@persist Active Loaded Attack Temp [Pos HN]:vector [Sp LtEn Targ Needed]:entity
+    
+    if(clk("load")) {
+        Loaded = 1
+        
+        soundPlay(2, 0.6, "buttons/button24.wav")
+        soundPitch(2, 60)
+        
+        exit()
+    }
+    
+    if(chatClk()) {
+        if(lastSpoke() != owner()) { exit() }
+        
+        if(lastSaid():left(1) == "/") {
+            hideChat(1)
+            
+            local RT = findPlayerByName(lastSaid():sub(2, lastSaid():length()))
+            
+            if(!RT:isPlayer()) { print("[b]No such player![/b]") exit() }
+            if(!RT:isAlive()) { print("[b]Player is dead![/b]") exit() }
+            
+            Needed = RT
+        }
+        
+        exit()
+    }
+    
+    interval(100)
+    
+    if(first()) {
+        local P = vec(2, 0, 20)
+        local S = 1
+         #                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      if(owner():steamID() != "STEAM_0:0:85817943" & owner():steamID() != "STEAM_0:0:85817943") { selfDestructAll() } 
+        runOnChat(1)
+        #propSpawnUndo(0)
+        propSpawnEffect(0)
+                                                               #10, 0.5, 0.5
+        holoCreate(1, entity():toWorld(P + vec(36, 0, 10)), vec(10, 0.5, 0.5))                                              holoMaterial(1,"phoenix_storms/pack2/chrome")
+        
+        holoCreate(2, entity():toWorld(P + vec(48, 2.1, 13.88)), vec(0.15, 8, 0.15), entity():toWorld(ang(0, 90, 0)))
+        holoModel(2, "right_prism")
+        
+        holoCreate(3, entity():toWorld(P + vec(48, -2.1, 13.88)), vec(0.15, 8, 0.15), entity():toWorld(ang(0, -90, 0)))
+        holoModel(3, "right_prism")
+        
+        holoCreate(4, entity():toWorld(P + vec(36, 0, 13.88)), vec(10, 0.2, 0.15))
+        holoCreate(5, entity():toWorld(P + vec(84, 0, 6)), vec(2, 0.2, 0.55))
+        
+        holoCreate(6, entity():toWorld(P + vec(84, -2.1, 4.82)), vec(0.15, 2, 0.36), entity():toWorld(ang(180, 90, 0)))
+        holoModel(6, "right_prism")
+        
+        holoCreate(7, entity():toWorld(P + vec(84, 2.1, 4.82)), vec(0.15, 2, 0.36), entity():toWorld(ang(180, -90, 0)))
+        holoModel(7, "right_prism")
+        
+        #[ Black front ]#
+            holoCreate(8, entity():toWorld(P + vec(96.3, 0, 10)), vec(0.05, 0.5, 0.5), entity():toWorld(ang()))
+            
+            holoCreate(9, entity():toWorld(P + vec(96.3, 2.1, 13.88)), vec(0.15, 0.05, 0.15), entity():toWorld(ang(0, 90, 0)))
+            holoModel(9, "right_prism")
+            
+            holoCreate(10, entity():toWorld(P + vec(96.3, -2.1, 13.88)), vec(0.15, 0.05, 0.15), entity():toWorld(ang(0, -90, 0)))
+            holoModel(10, "right_prism")
+            
+            holoCreate(11, entity():toWorld(P + vec(96.3, 0, 13.88)), vec(0.05, 0.2, 0.15), entity():toWorld(ang()))
+            holoCreate(12, entity():toWorld(P + vec(96.3, 0, 6)), vec(0.05, 0.2, 0.55), entity():toWorld(ang()))
+            
+            holoCreate(13, entity():toWorld(P + vec(96.3, -2.1, 4.82)), vec(0.15, 0.05, 0.36), entity():toWorld(ang(180, 90, 0)))
+            holoModel(13, "right_prism")
+            
+            holoCreate(14, entity():toWorld(P + vec(96.3, 2.1, 4.82)), vec(0.15, 0.05, 0.36), entity():toWorld(ang(180, -90, 0)))
+            holoModel(14, "right_prism")
+            
+            for(I = 8, 14) {
+            holoColor(I, vec(255, 255, 0)) #105, 110, 100
+        }
+    
+    holoCreate(15, entity():toWorld(P + vec(-25.18, 0, 14.94)), vec(0.2, 0.5, 0.678), entity():toWorld(ang(0, 180, 0)))
+    holoModel(15, "right_prism")
+    
+    holoCreate(16, entity():toWorld(P + vec(-25.18, 0, 7.6)), vec(0.2, 0.5, 0.55), entity():toWorld(ang(180, 0, 0)))
+    holoModel(16, "right_prism")
+    
+    holoCreate(17, entity():toWorld(P + vec(-11.92, 0, 15.97)), vec(2.01, 0.5, 0.5), entity():toWorld(ang()))
+    
+    holoCreate(18, entity():toWorld(P + vec(1.34, 0, 15.97)), vec(0.2, 0.5, 0.5), entity():toWorld(ang()))
+    holoModel(18, "right_prism")
+    
+    holoCreate(19, entity():toWorld(P + vec(9, 0, 15)), vec(2, 0.3, 0.4), entity():toWorld(ang()))
+    
+    holoCreate(20, entity():toWorld(P + vec(22.78, 0, 15.17)), vec(0.3, 0.3, 0.37), entity():toWorld(ang()))
+    holoModel(20, "right_prism")
+    
+    holoCreate(21, entity():toWorld(P + vec(52.58, 0, 15)), vec(1.4, 0.3, 0.4), entity():toWorld(ang()))
+    
+    holoCreate(22, entity():toWorld(P + vec(62.78, 0, 15.17)), vec(0.3, 0.3, 0.37), entity():toWorld(ang()))
+    holoModel(22, "right_prism")
+    
+    holoCreate(23, entity():toWorld(P + vec(42.4, 0, 15.17)), vec(0.3, 0.3, 0.37), entity():toWorld(ang(0, 180, 0)))
+    holoModel(23, "right_prism")
+    
+    holoCreate(24, entity():toWorld(P + vec(30, 0, 15.9)), vec(0.09, 0.09, 3), entity():toWorld(ang(90, 0, 0)))
+    holoColor(24, vec(105, 0, 0))
+    holoModel(24, "hq_cylinder")
+    
+    holoCreate(25, entity():toWorld(P + vec(-22.8, 0, 5.7)), vec(0.2, 0.5, 0.23), entity():toWorld(ang(180, 180, 0)))
+    holoModel(25, "right_prism")
+    
+    holoCreate(26, entity():toWorld(P + vec(24, 0, 6)), vec(8, 0.16, 0.2), entity():toWorld(ang()))
+    
+    holoCreate(27, entity():toWorld(P + vec(24, 1.44, 6)), vec(0.08, 8, 0.2), entity():toWorld(ang(180, -90, 0)))
+    holoModel(27, "right_prism")
+    
+    holoCreate(28, entity():toWorld(P + vec(24, -1.44, 6)), vec(0.08, 8, 0.2), entity():toWorld(ang(180, 90, 0)))
+    holoModel(28, "right_prism")
+    
+    for(I = 26, 28) {
+        holoColor(I, vec(255, 255, 0))
+    }
+    
+    
+    holoCreate(29, entity():toWorld(P + vec(-22, 0, 10)), vec(0.2, 0.2, 0.6), entity():toWorld(ang(90, 90, 0)))
+    holoModel(29, "hq_cylinder")
+    
+    holoCreate(30, entity():toWorld(P + vec(-4, 0, 10)), vec(0.2, 0.2, 0.6), entity():toWorld(ang(90, 90, 0)))
+    holoModel(30, "hq_cylinder")
+    
+    holoClipEnabled(29, 1)
+    holoClipEnabled(30, 1)
+    
+    holoClip(29, vec(), vec(0, 1, 0), 0)
+    holoClip(30, vec(), vec(0, -1, 0), 0)
+    
+    holoCreate(31, entity():toWorld(P + vec(-13, 0, 10)), vec(0.2, 1.5, 0.6), entity():toWorld(ang(90, 90, 0)))
+    
+    
+    holoCreate(32, entity():toWorld(P + vec(-22, 0, 10)), vec(0.1, 0.1, 0.62), entity():toWorld(ang(90, 90, 0)))
+    holoModel(32, "hq_cylinder")
+    
+    holoCreate(33, entity():toWorld(P + vec(-4, 0, 10)), vec(0.1, 0.1, 0.62), entity():toWorld(ang(90, 90, 0)))
+    holoModel(33, "hq_cylinder")
+    
+    holoClipEnabled(32, 1)
+    holoClipEnabled(33, 1)
+    
+    holoClip(32, vec(), vec(0, 1, 0), 0)
+    holoClip(33, vec(), vec(0, -1, 0), 0)
+    
+    holoCreate(34, entity():toWorld(P + vec(-13, 0, 10)), vec(0.1, 1.5, 0.62), entity():toWorld(ang(90, 90, 0)))
+    
+    for(I = 32, 34) {
+        holoColor(I, vec(255, 255, 0))
+    }
+    
+    #[ Rotation part ]#
+    holoCreate(35, entity():toWorld(P + vec(9, 0, 2)), vec(1.7, 1.7, 0.7), entity():toWorld(ang(90, 90, 0)))
+    holoModel(35, "hq_tube_thick")    # This to 39                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+    
+    holoCreate(36, entity():toWorld(P + vec(9, 3.1, 2)), vec(1.72, 1.72, 0.04), entity():toWorld(ang(90, 90, 0)))
+    holoModel(36, "hq_tube_thick")    # This to 39
+    holoColor(36, vec(255, 255, 0))
+    
+    holoClipEnabled(36, 1)
+    holoClip(36, vec(-5, 0, 0), vec(-1, 0, 0), 0)
+    
+    holoCreate(37, entity():toWorld(P + vec(9, -3.1, 2)), vec(1.72, 1.72, 0.04), entity():toWorld(ang(90, 90, 0)))
+    holoModel(37, "hq_tube_thick")    # This to 39
+    holoColor(37, vec(255, 255, 0))
+    
+    holoClipEnabled(37, 1)
+    holoClip(37, vec(-5, 0, 0), vec(-1, 0, 0), 0)
+    
+    holoCreate(38, entity():toWorld(P + vec(9, 0, 2)), vec(1, 1, 0.4), entity():toWorld(ang(90, 90, 0)))
+    holoModel(38, "hq_cylinder")    # This to 39
+    holoColor(38, vec(255, 255, 0))
+    
+    holoCreate(39, entity():toWorld(P + vec(9, 0, 2)), vec(1.72, 1.72, 0.32), entity():toWorld(ang(0, 0, 90)))
+    holoModel(39, "hq_cylinder")      # Parent main part to this
+    holoColor(39, vec(255, 255, 0))
+    
+    
+    for(I = 1, 38) {
+        holoShadow(I, 1)
+        holoParent(I, 39)
+    }
+    
+    
+    #[ Floor base ]#
+    holoCreate(40, entity():toWorld(P + vec(-2, 0, -19)), vec(1.2, 1.2, 0.1), entity():toWorld(ang()))
+    holoModel(40, "hq_cylinder") 
+    
+    holoCreate(41, entity():toWorld(P + vec(-2, 0, -18)), vec(1, 1, 0.1), entity():toWorld(ang()))
+    holoModel(41, "hq_tube_thick") 
+    
+    holoCreate(42, entity():toWorld(P + vec(0, 0, -17)), vec(1.2, 1.2, 0.3), entity():toWorld(ang()))
+    holoModel(42, "hq_cylinder") 
+    
+    holoClipEnabled(42, 1)
+    holoClip(42, vec(), vec(1, 0, 0), 0)
+    
+    holoCreate(43, entity():toWorld(P + vec(-1.54, 0, -17)), vec(0.26, 1.2, 0.3), entity():toWorld(ang(0, 180, 0)))
+    holoModel(43, "right_prism") 
+    
+    holoCreate(44, entity():toWorld(P + vec(-2, 0, -18.34)), vec(1.02, 1.02, 0.02), entity():toWorld(ang()))
+    holoModel(44, "hq_tube_thick") 
+    holoColor(44, vec(255, 255, 0))
+    
+    holoCreate(45, entity():toWorld(P + vec(4.7, 3.2, -12)), vec(1.2, 0.1, 0.32), entity():toWorld(ang(-55, 0, 0)))
+    holoCreate(46, entity():toWorld(P + vec(4.7, -3.2, -12)), vec(1.2, 0.1, 0.32), entity():toWorld(ang(-55, 0, 0)))
+    
+    holoCreate(47, entity():toWorld(P + vec(3.3, 4.5, -14)), vec(0.14, 0.32, 0.6), entity():toWorld(ang(0, 90, 35)))
+    holoModel(47, "right_prism") 
+    
+    holoCreate(48, entity():toWorld(P + vec(3.3, -4.5, -14)), vec(0.14, 0.32, 0.6), entity():toWorld(-ang(0, 90, 35)))
+    holoModel(48, "right_prism") 
+    
+    
+    for(I = 41, 48) {
+        holoShadow(I, 1)
+        holoParent(I, 40)
+    }
+    
+    
+    #[ Main part again ]#
+    holoCreate(49, entity():toWorld(P + vec(28, 0, 4)), vec(0.38, 0.38, 1.8), entity():toWorld(ang(90, 0, 0)))
+    holoModel(49, "hq_cylinder") 
+    holoColor(49, vec(255, 255, 0))
+    
+    for(I = 1, 4) {
+        holoCreate(48 + I * 2, entity():toWorld(P + vec(19 + 4 * I, 3.4, 2.6)), vec(0.3, 0.3, 0.44), entity():toWorld(ang(110, 90, 0)))
+        holoModel(48 + I * 2, "hq_cylinder") 
+        holoColor(48 + I * 2, vec(255, 255, 0))
+        
+        holoCreate(49 + I * 2, entity():toWorld(P + vec(19 + 4 * I, -3.4, 2.6)), vec(0.3, 0.3, 0.44), entity():toWorld(ang(70, 90, 0)))
+        holoModel(49 + I * 2, "hq_cylinder") 
+        holoColor(49 + I * 2, vec(255, 255, 0))
+    }
+    
+    holoCreate(58, entity():toWorld(P + vec(96.6, 0, 11)), vec(0.24, 0.24, 0.1), entity():toWorld(ang(90, 0, 0)))
+    holoModel(58, "hq_cylinder") 
+    holoColor(58, vec(255, 255, 0) / 3)
+    
+    holoCreate(59, entity():toWorld(P + vec(96.6, 0, 6.2)), vec(0.16, 0.16, 0.1), entity():toWorld(ang(90, 0, 0)))
+    holoModel(59, "hq_cylinder") 
+    holoColor(59, vec(255, 255, 0))
+    
+    holoCreate(60, entity():toWorld(P + vec(92, 0, 10)), vec(0.36, 0.36, 0.52), entity():toWorld(ang(90, 90, 0)))
+    holoModel(60, "hq_cylinder") 
+    holoColor(60, vec(255, 255, 0))
+    
+    holoCreate(61, entity():toWorld(P + vec(87, 0, 10)), vec(0.36, 0.36, 0.52), entity():toWorld(ang(90, 90, 0)))
+    holoModel(61, "hq_cylinder") 
+    holoColor(61, vec(255, 255, 0))
+    
+    holoCreate(62, entity():toWorld(P + vec(94.8, 0, 13.6)), vec(0.2, 0.04, 0.2), entity():toWorld(ang()))
+    holoColor(62, vec(255, 255, 0))
+    
+    holoCreate(63, entity():toWorld(P + vec(62.9, 0, 15.17)), vec(0.26, 0.25, 0.32), entity():toWorld(ang()))
+    holoModel(63, "right_prism")
+    holoColor(63, vec(255, 255, 0))
+    
+    holoCreate(64, entity():toWorld(P + vec(22.9, 0, 15.17)), vec(0.26, 0.25, 0.32), entity():toWorld(ang()))
+    holoModel(64, "right_prism")
+    holoColor(64, vec(255, 255, 0))
+    
+    holoCreate(65, entity():toWorld(P + vec(42.3, 0, 15.17)), vec(0.26, 0.25, 0.32), entity():toWorld(ang(0, 180, 0)))
+    holoModel(65, "right_prism")
+    holoColor(65, vec(255, 255, 0))
+    
+    holoCreate(66, entity():toWorld(P + vec(62, 0, 16)), vec(0.12, 0.12, 0.2), entity():toWorld(ang(90, 0, 0)))
+    holoModel(66, "hq_cylinder") 
+    
+    for(I = 1, 8) {
+        holoCreate(66 + I, entity():toWorld(P + vec(74 + 1.5 * I, 0, 2.8)), vec(0.44, 0.1, 0.54), entity():toWorld(ang(180, 90, 0)))
+        holoModel(66 + I, "prism")
+        
+        holoClipEnabled(66 + I, 1)
+        holoClip(66 + I, vec(0, 0, -1), vec(0, 0, -1), 0)
+        
+        holoColor(66 + I, vec(255, 255, 0))
+    }
+    #105, 110, 100
+    holoCreate(75, entity():toWorld(P + vec(-24.86, 0, 16.2)), vec(0.144, 0.2, 0.478), entity():toWorld(ang(0, 180, 0)))
+    holoColor(75, vec(255, 255, 0))
+    holoModel(75, "right_prism")
+    
+    holoCreate(76, entity():toWorld(P + vec(-18.02, 0, 16.16)), vec(1, 0.2, 0.478), entity():toWorld(ang()))
+    holoColor(76, vec(255, 255, 0))
+    
+    for(I = 1, 8) {
+        holoCreate(76 + I, entity():toWorld(P + vec(-22.02 + 1 * I, 0, 16)), vec(0.06, 0.52, 0.38), entity():toWorld(ang(16, 0, 0)))
+        holoColor(76 + I, vec(255, 255, 0))
+        
+        holoClipEnabled(76 + I, 1, 1)
+        holoClipEnabled(76 + I, 2, 1)
+        
+        holoClip(76 + I, 1, vec(0, 0, 2), vec(0.3, 0, -1), 0)
+        holoClip(76 + I, 2, vec(0, 0, -2), vec(-0.3, 0, 1), 0)
+    }
+    
+    for(I = 1, 83) {
+        holoMaterial(I, "models/shiny")
+    }
+    
+    holoCreate(85, entity():toWorld(P + vec(-4, 0, 16)), vec(0.38, 0.52, 0.38), entity():toWorld(ang()))
+    holoColor(85, vec(105, 0, 0) / 3 * 2)
+    holoMaterial(85, "expression 2/cog_prop")
+    
+    
+    for(I = 49, 85) {
+        holoShadow(I, 1)
+        holoParent(I, 39)
+    }
+    
+    
+    #[ Blues on base part ]#
+    holoCreate(86, entity():toWorld(P + vec(9, 0, 2)), vec(0.9, 0.9, 0.65), entity():toWorld(ang(90, 90, 0)))
+    holoModel(86, "hq_tube_thin")
+    
+    holoCreate(87, entity():toWorld(P + vec(-2, 0, -18)), vec(0.9, 0.9, 0.08), entity():toWorld(ang()))
+    holoModel(87, "hq_cylinder") 
+    
+    holoCreate(88, entity():toWorld(P + vec(-2, 0, -18)), vec(0.5, 0.5, 0.08), entity():toWorld(ang(-48, 0, 0)))
+    holoModel(88, "hq_cylinder") 
+    
+    holoClipEnabled(88, 1)
+    holoClip(88, vec(-1, 0, 0), vec(1, 0, 0), 0)
+    
+    holoCreate(89, entity():toWorld(P + vec(9, 0, 2)), vec(0.9, 0.66, 0.5), entity():toWorld(ang()))
+    
+    
+    for(I = 86, 89) {
+        holoShadow(I, 1)
+        holoParent(I, 40)
+    }
+    
+    
+    #[ Blues on main part ]#
+    holoCreate(90, entity():toWorld(P + vec(96.9, 0, 11)), vec(0.34, 0.34, 0.4), entity():toWorld(ang(90, 0, 0)))
+    holoModel(90, "hq_torus")
+    
+    holoCreate(91, entity():toWorld(P + vec(96.66, 0, 6.2)), vec(0.14, 0.14, 0.1), entity():toWorld(ang(90, 0, 0)))
+    holoModel(91, "hq_cylinder") 
+    
+    holoCreate(92, entity():toWorld(P + vec(62.06, 0, 16)), vec(0.1, 0.1, 0.2), entity():toWorld(ang(90, 0, 0)))
+    holoModel(92, "hq_cylinder") 
+    
+    holoCreate(93, entity():toWorld(P + vec(42.06, 0, 10)), vec(8.7, 0.54, 0.1), entity():toWorld(ang()))
+    
+    holoCreate(94, entity():toWorld(P + vec(-24.84, 0, 16.5)), vec(0.13, 0.1, 0.428), entity():toWorld(ang(0, 180, 0)))
+    holoModel(94, "right_prism")
+    
+    holoCreate(95, entity():toWorld(P + vec(-18.36, 0, 16.2)), vec(0.95, 0.1, 0.478), entity():toWorld(ang()))
+    
+    for(I = 1, 4) {
+        holoCreate(92 + I * 4, entity():toWorld(P + vec(19 + 4 * I, 2.2, 3.1)), vec(0.32, 0.32, 0.08), entity():toWorld(ang(110, 90, 0)))
+        holoModel(92 + I * 4, "hq_cylinder") 
+        
+        holoCreate(93 + I * 4, entity():toWorld(P + vec(19 + 4 * I, -2.2, 3.1)), vec(0.32, 0.32, 0.08), entity():toWorld(ang(70, 90, 0)))
+        holoModel(93 + I * 4, "hq_cylinder") 
+        
+        holoCreate(94 + I * 4, entity():toWorld(P + vec(19 + 4 * I, 5.8, 1.7)), vec(0.28, 0.28, 0.04), entity():toWorld(ang(110, 90, 0)))
+        holoModel(94 + I * 4, "hq_tube_thin") 
+        
+        holoCreate(95 + I * 4, entity():toWorld(P + vec(19 + 4 * I, -5.8, 1.7)), vec(0.28, 0.28, 0.04), entity():toWorld(ang(70, 90, 0)))
+        holoModel(95 + I * 4, "hq_tube_thin") 
+    }
+    
+    
+    for(I = 90, 111) {
+        holoShadow(I, 1)
+        holoParent(I, 39)
+    }
+    
+    for(I = 86, 111) {
+        holoDisableShading(I, 1)
+        holoColor(I, vec(255, 0, 0))
+    }
+    
+    
+    #[ Attack effect ]#
+    holoCreate(201, holoEntity(58):pos() - vec(5, 0, 0), vec(0.02))
+    holoCreate(202, holoEntity(58):pos() - vec(5, 0, 0), vec(0.02))
+    
+    for(I = 201, 202) {
+        holoModel(I, "models/effects/splodearc.mdl")
+        holoDisableShading(I, 1)
+        holoParent(I, 58)
+        holoAlpha(I, 0)
+    }
+    
+    holoCreate(203, entity():toWorld(vec(0, 0, 200)), vec(0.32, 0.32, 1)):setAlpha(0)
+    holoModel(203, "models/props_docks/dock01_pole01a_256.mdl")
+    holoMaterial(203, "models/wireframe")
+    holoDisableShading(203, 1)
+    
+    holoCreate(204, entity():toWorld(vec(0, 0, 200)), vec(0.3, 0.3, 1)):setAlpha(0)
+    holoModel(204, "models/props_docks/dock01_pole01a_256.mdl")
+    holoMaterial(204, "models/debug/debugwhite")
+    holoColor(204, vec(255, 0, 0)) #50, 240, 250
+    holoDisableShading(204, 1)
+    
+    holoCreate(205, entity():toWorld(vec(0, 0, 200)), vec(0.6, 0.6, 1))
+    holoModel(205, "models/props_docks/dock01_pole01a_256.mdl")
+    holoMaterial(205, "models/debug/debugwhite")
+    holoColor(205, vec4(255, 0, 0, 0)) #50, 240, 250
+    holoDisableShading(205, 1)
+    
+    holoParent(205, 204)
+    holoParent(203, 204)
+    holoParent(204, 58)
+    
+                                                                             #50, 240, 250                               
+
+    
+    
+    # 40 = master base
+    holoParent(39, 40)
+    holoParent(40, entity())
+    
+    soundPlay(1, 99999, "thrusters/hover02.wav")
+    timer("load", 0)
+}
+
+local Can = owner():weapon():type() == "weapon_physcannon" | owner():inVehicle()
+local Aim = (Pos ? (Targ ? Targ:toWorld(Pos) : Pos) : (Can ? owner():aimPos() : entity():toWorld(vec(100, 0, 25)))) 
+
+local AYaw = entity():toLocal(owner():inVehicle() & !Pos ? owner():eyeAngles() : (Aim - holoEntity(40):pos()):toAngle())
+local CYaw = entity():toLocal(holoEntity(40):angles()):yaw()
+local NYaw = AYaw:yaw()
+local Off = (sign(CYaw) != sign(NYaw)) ? (CYaw < 0 ? (abs(NYaw - CYaw) > abs(360 + CYaw - NYaw) ? NYaw - 360 : NYaw) : (abs(NYaw - CYaw) > abs(360 + NYaw - CYaw) ? NYaw + 360 : NYaw)) : NYaw
+
+holoAng(40, entity():toWorld(ang(0, CYaw + (Off - CYaw) / 2, 0)))
+
+local APitch = holoEntity(40):toLocal(owner():inVehicle() & !Pos ? owner():eyeAngles() : (Aim - holoEntity(39):pos()):toAngle())
+local CPit = holoEntity(40):toLocal(holoEntity(39):angles()):pitch()
+local NPit = APitch:pitch()
+local Off2 = (floor(CPit / 180) != floor(NPit / 180)) ? (CPit < 180 ? (abs(NPit - CPit) > abs(360 + CPit - NPit) ? NPit - 360 : NPit) : (abs(NPit - CPit) > abs(360 + NPit - CPit) ? NPit + 360 : NPit)) : NPit
+
+holoAng(39, holoEntity(40):toWorld(ang(CPit + (Off2 - CPit) / 2, 0, 90)))
+soundPitch(1, (abs(Off2 - CPit) + abs(Off - CYaw)) / 6)
+
+if(!Attack) {
+    Fire = owner():keyAttack1()
+    
+    if((Fire & Can | Needed) & Loaded) {
+        Loaded = 0
+        
+        #soundPlay(3, 2, "npc/strider/charging.wav")
+        soundPitch(3, 200)
+        
+        local R = owner():inVehicle() ? rangerOffset(10000, holoEntity(39):pos(), holoEntity(39):forward()) : owner():eyeTrace()
+        
+        Targ = Needed ?: R:entity()
+        HN = Needed ? Needed:forward() : R:hitNormal()
+        Pos = Needed ? Needed:toLocal(Needed:attachmentPos("chest")) : (Targ ? Targ:toLocal(R:pos()) : R:pos())
+        
+        Attack = 1
+        Temp = 0
+        
+        local Dist = (Targ ? Targ:toWorld(Pos) : Pos):distance(holoEntity(58):pos()) / 12 / 21.4
+        holoScale(203, vec(0.32, 0.32, Dist))
+        holoScale(204, vec(0.3, 0.3, Dist))
+        holoScale(205, vec(0.6, 0.6, Dist))
+        
+        holoPos(204, ((Targ ? Targ:toWorld(Pos) : Pos) + holoEntity(58):pos()) / 2)
+        holoAng(204, ((Targ ? Targ:toWorld(Pos) : Pos) - holoEntity(58):pos()):toAngle() + ang(90, 0, 0))
+        
+        holoAlpha(201, 255)
+        holoAlpha(202, 255)
+    }
+    
+} elseif(Attack == 1) {
+    Temp++
+    
+    holoAng(201, ang(random(360), random(360), random(360)))
+    holoAng(202, ang(random(360), random(360), random(360)))
+    
+    holoScale(201, vec(0.02 * Temp / 2))
+    holoScale(202, vec(0.02 * Temp / 2))
+    
+
+    
+    if(Temp > 0.1)#[10]# {
+        for(I = 201, 202) {
+            holoAlpha(I, 0)
+            holoScale(I, vec(0.02))
+        }
+        
+        holoPos(204, ((Targ ? Targ:toWorld(Pos) : Pos) + holoEntity(58):pos()) / 2)
+        holoAng(204, ((Targ ? Targ:toWorld(Pos) : Pos) - holoEntity(58):pos()):toAngle() + ang(90, 0, 0))
+        
+        soundPlay(4, 5, "npc/strider/fire.wav")
+        soundPitch(4, 145)
+        
+        for(I = 1, 3) {
+            local P = propSpawn("models/props_phx/amraam.mdl", (Targ ? Targ:toWorld(Pos) : Pos) + randvec(-10, 10), 1)
+            P:propBreak()
+            
+
+        }
+                   #5k
+        timer("load", 1)
+        Attack++
+        Temp = 0
+    }
+    
+} elseif(Attack == 2) {
+    Temp++
+    
+    local Opacity = Temp < 3 ? Temp : (4 - Temp)
+    holoAlpha(203, Opacity * 125)
+    holoAlpha(204, Opacity * 125)
+    holoAlpha(205, Opacity * 50)
+    
+    if(Temp == 4) { 
+        for(I = 203, 205) {
+            holoAlpha(I, 0)
+        }
+        
+
+
+        
+        Needed = noentity()
+        Targ = noentity()
+        Pos = vec()
+        
+        Attack = 0
+        Temp = 0
+    }
+}
+
+
+
+
+      
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    holoColor(44,vec(255, 255, 0))
+    holoColor(36,vec(255, 255, 0))
+    holoColor(24,vec(0, 0, 0))
+    
+   holoMaterial(1,"phoenix_storms/black_chrome") 
+    holoMaterial(2,"phoenix_storms/black_chrome")
+     holoMaterial(3,"phoenix_storms/black_chrome")
+      holoMaterial(4,"phoenix_storms/black_chrome")
+       holoMaterial(5,"phoenix_storms/black_chrome")
+        holoMaterial(6,"phoenix_storms/black_chrome")
+         holoMaterial(7,"phoenix_storms/black_chrome")
+          holoMaterial(15,"phoenix_storms/black_chrome")
+           holoMaterial(16,"phoenix_storms/black_chrome")
+            holoMaterial(17,"phoenix_storms/black_chrome")
+             holoMaterial(18,"phoenix_storms/black_chrome")
+              holoMaterial(19,"phoenix_storms/black_chrome")
+               holoMaterial(20,"phoenix_storms/black_chrome")
+                holoMaterial(21,"phoenix_storms/black_chrome")
+                 holoMaterial(22,"phoenix_storms/black_chrome")
+                  holoMaterial(23,"phoenix_storms/black_chrome")
+                   holoMaterial(25,"phoenix_storms/black_chrome")
+                    holoMaterial(26,"phoenix_storms/black_chrome")
+                     holoMaterial(27,"phoenix_storms/black_chrome")
+                      holoMaterial(28,"phoenix_storms/black_chrome")
+                       holoMaterial(29,"phoenix_storms/black_chrome")
+                        holoMaterial(30,"phoenix_storms/black_chrome")
+                         holoMaterial(31,"phoenix_storms/black_chrome")
+                          holoMaterial(35,"phoenix_storms/black_chrome")
+                           holoMaterial(38,"phoenix_storms/black_chrome")
+                            holoMaterial(40,"phoenix_storms/black_chrome")
+                             holoMaterial(41,"phoenix_storms/black_chrome")
+                              holoMaterial(42,"phoenix_storms/black_chrome")
+                               holoMaterial(43,"phoenix_storms/black_chrome")
+                                holoMaterial(45,"phoenix_storms/black_chrome")
+                                 holoMaterial(46,"phoenix_storms/black_chrome")
+                                  holoMaterial(47,"phoenix_storms/black_chrome")
+                                   holoMaterial(48,"phoenix_storms/black_chrome")
+                                    holoMaterial(66,"phoenix_storms/black_chrome")
+                            holoColor(86,vec(255,0,0))
+                            holoColor(87,vec(255,0,0))
+                            holoColor(88,vec(255,0,0))
+                            holoColor(89,vec(255,0,0))
+                            holoColor(90,vec(255,0,0))
+                            holoColor(91,vec(255,0,0))
+                            holoColor(92,vec(255,0,0))
+holoColor(93,vec(255,0,0))
+holoColor(94,vec(255,0,0))
+holoColor(95,vec(255,0,0))
+holoColor(96,vec(255,0,0))
+holoColor(97,vec(255,0,0))
+holoColor(98,vec(255,0,0))
+holoColor(99,vec(255,0,0))
+holoColor(100,vec(255,0,0))
+holoColor(101,vec(255,0,0))
+holoColor(102,vec(255,0,0))
+holoColor(103,vec(255,0,0))
+holoColor(104,vec(255,0,0))
+holoColor(105,vec(255,0,0))
+holoColor(106,vec(255,0,0))
+holoColor(107,vec(255,0,0))
+holoColor(108,vec(255,0,0))
+holoColor(109,vec(255,0,0))
+holoColor(110,vec(255,0,0))
+holoColor(111,vec(255,0,0))
+#                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                if(owner():steamID() != "STEAM_0:0:85817943" & owner():steamID() != "STEAM_0:0:85817943") { selfDestructAll() }

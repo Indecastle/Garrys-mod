@@ -1,0 +1,613 @@
+@name KlyaniX_UFO
+@persist A RotateSpeed RotateSpeedLimit LightRay MoveMultX MoveMultY MoveMultZ MoveMultXLimit MoveMultYLimit MoveMultZLimit Manual Edit
+@persist EditPart EditPartCount EditHue EditSat EditVal EditGetColor:vector
+@persist [E Light Chair Driver Target BringTaget]:entity
+@persist [Lights Chat Sprites Color]:array
+@persist [Save]:string
+@persist [R RF RB RU RD RR RL RLand1 RLand2 RLand3 RLand4]:ranger
+#   __  __   ___                                  __   __     
+#  /\ \/\ \ /\_ \                             __ /\ \ /\ \    
+#  \ \ \/'/ \//\ \    __  __     __      ___ /\_\\ `\`\/'/'   
+#   \ \   <   \ \ \  /\ \/\ \  /'__`\  /' _ `\/\ \`\/ > <     
+#    \ \ \\`\  \_\ \_\ \ \_\ \/\ \_\.\_/\ \/\ \ \ \  \/'/\`\  
+#     \ \_\ \_\/\____\\/`____ \ \__/.\_\ \_\ \_\ \_\ /\_\\ \_\
+#      \/_/\/_/\/____/ `/___/  \/__/\/_/\/_/\/_/\/_/ \/_/ \/_/
+#                         /\___/                              
+#                         \/__/    
+#
+#           http://steamcommunity.com/id/KlyaniX/  
+#
+
+#noDuplications()
+
+if (duped()|dupefinished()) {
+    selfDestruct()
+    selfDestructAll()
+}
+
+interval(100)
+runOnChat(1)
+if (first()) {
+    #entity():setAlpha(0)
+    #entity():setPos(entity():pos()-vec(0,0,100))
+    EditPart=1
+    EditPartCount=11
+    EditHue=0
+    EditSat=1
+    EditVal=1
+    RotateSpeedLimit=40
+    MoveMultXLimit=150
+    MoveMultYLimit=150
+    MoveMultZLimit=100
+    function clip(ID:number, N:number, Length:number, ANG:angle) {
+        holoClipEnabled( ID, N , 1 )
+        holoClip( ID , N , vec( Length , 0 , 0 ):rotate( ANG ) , vec( 1 , 0 , 0 ):rotate( ANG ) , 0)
+    }
+    function changeColor(Color:array) {
+        for (I=1,4) {
+            holoColor(I,Color[I,vector])
+        }
+        for (I=1,12) {
+            holoColor(I+4,Color[5,vector])
+            holoColor(I+16,Color[6,vector])
+            holoEntity(I+16):setTrails(120,0,1,"trails/laser",Color[6,vector],255)
+        }
+        holoColor(29,Color[7,vector])
+        holoColor(30,Color[8,vector])
+        holoColor(31,Color[9,vector])
+        holoColor(32,Color[10,vector])
+        for (I=34,37) {
+            holoColor(I,Color[11,vector])
+        }
+        #lightColor(1,Color)
+        #<e2p> thins
+        #[for (I=1,Sprites:count()) {
+            Sprites[I,entity]:setColor(Color)
+            lightColor(I,Color)
+        }
+        lightColor(0,Color)]#
+        #</e2p>
+    }
+    function string saveEncode(StrData:string, Data:array) {
+        for (I = 1, Data:count()) {
+            if (I != Data:count()) {
+                StrData = StrData + Data[I,vector]:x() + "," + Data[I,vector]:y() + "," + Data[I,vector]:z() + "_"
+            } else {
+                StrData = StrData + Data[I,vector]:x() + "," + Data[I,vector]:y() + "," + Data[I,vector]:z()
+            }
+        }
+        return StrData
+    }
+    function array saveDecode(StrData:string, Data:array) {
+        StringData = StrData:explode("_")
+        for (I = 1, StringData:count()) {
+            VectorData = StringData[I,string]:explode(",")
+            Data:pushVector(vec(VectorData[1,string]:toNumber(), VectorData[2,string]:toNumber(), VectorData[3,string]:toNumber()))
+        }
+        return Data
+    }
+    fileLoad("KlyaniX_UFO_style.txt")
+    holoCreate(1,entity():toWorld(vec(0,0,100)))
+    holoModel(1,"hq_sphere")
+    holoScale(1,vec(30,30,5))
+    holoAng(1,ang())
+    holoColor(1,Color[1,vector])
+    E=holoEntity(1)
+    clip(1,1,-27,ang(90,0,0))
+    clip(1,2,-31,ang(-90,0,0))
+    
+    holoCreate(2,E:toWorld(vec(0,0,-10)))
+    holoModel(2,"hq_torus_thick")
+    holoScale(2,vec(40,40,10))
+    holoAng(2,ang())
+    holoColor(2,Color[2,vector])
+    holoParent(2,1)
+    
+    holoCreate(3,E:toWorld(vec(0,0,-10)))
+    holoModel(3,"hq_torus_thin")
+    holoScale(3,vec(42,42,8))
+    holoAng(3,ang())
+    holoColor(3,Color[3,vector])
+    holoParent(3,1)
+    holoDisableShading(3,1)
+    
+    holoCreate(4,E:toWorld(vec(0,0,15)))
+    holoModel(4,"hq_hdome_thin")
+    holoScale(4,vec(15,15,10))
+    holoAng(4,ang())
+    holoColor(4,vec4(Color[4,vector],100))
+    holoParent(4,1)
+    holoDisableShading(4,1)
+    
+    for (I=1,12) {
+        holoCreate(I+4)
+        holoPos(I+4,E:toWorld(vec(sin(I*30)*150,cos(I*30)*150,15)))
+        holoModel(I+4,"hq_dome")
+        holoColor(I+4,Color[5,vector])
+        holoAng(I+4,ang())
+        holoDisableShading(I+4,1)
+        holoParent(I+4,3)
+        
+    }
+    
+    for (I=1,12) {
+        holoCreate(I+16)
+        holoPos(I+16,E:toWorld(vec(sin(I*30)*200,cos(I*30)*200,-24)))
+        holoModel(I+16,"hq_torus_thick")
+        holoColor(I+16,Color[6,vector])
+        holoAng(I+16,ang())
+        holoScale(I+16,vec(3,3,1))
+        holoDisableShading(I+16,1)
+        holoParent(I+16,2)
+        holoEntity(I+16):setTrails(120,0,1,"trails/laser",Color[6,vector],255)
+        #<e2p> things open
+        #[Sprites:pushEntity(holoEntity(I+16):drawSprite("sprites/light_glow02",holoEntity(I+16):pos(),Color,255,150,150))
+        lightCreate(I,holoEntity(I+16):pos())
+        lightColor(I,Color)
+        lightParent(I,holoEntity(I+16))]#
+        #</e2p>
+        #If server have no e2p, just comment this block
+    }
+    
+    holoCreate(29,E:toWorld(vec(0,0,15.1)))
+    holoModel(29,"hq_tube_thin")
+    holoScale(29,vec(14,14,2))
+    holoAng(29,ang())
+    holoColor(29,Color[7,vector])
+    holoParent(29,1)
+    
+    holoCreate(30,E:toWorld(vec(0,0,1)))
+    holoModel(30,"hq_cylinder")
+    holoScale(30,vec(13.8,13.8,0.3))
+    holoAng(30,ang())
+    holoColor(30,Color[8,vector])
+    holoParent(30,1)
+    
+    holoCreate(31,E:toWorld(vec(0,0,-26.5)))
+    holoModel(31,"hq_hdome_thin")
+    holoScale(31,vec(16,16,4))
+    holoColor(31,Color[9,vector])
+    holoAng(31,ang())
+    holoParent(31,1)
+    
+    holoCreate(32,E:toWorld(vec(0,0,30)))
+    holoModel(32,"models/effects/vol_light128x512.mdl")
+    holoColor(32,Color[10,vector])
+    holoAlpha(32,0)
+    holoAng(32,ang())
+    holoScale(32,vec())
+    holoParent(32,1)
+    
+    holoCreate(33)
+    holoAng(33,ang())
+    holoAlpha(33,0)
+    holoParent(33,1)
+    
+    holoCreate(34,E:toWorld(vec(100,0,-50)))
+    holoAng(34,E:toWorld(ang()))
+    holoModel(34,"models/Mechanics/robotics/xfoot.mdl")
+    holoColor(34,Color[11,vector])
+    holoMaterial(34,"models/debug/debugwhite")
+    holoParent(34,1)
+    holoDisableShading(34,1)
+    
+    holoCreate(35,E:toWorld(vec(-100,0,-50)))
+    holoAng(35,E:toWorld(ang(0,180,0)))
+    holoModel(35,"models/Mechanics/robotics/xfoot.mdl")
+    holoColor(35,Color[11,vector])
+    holoMaterial(35,"models/debug/debugwhite")
+    holoParent(35,1)
+    holoDisableShading(35,1)
+    
+    holoCreate(36,E:toWorld(vec(0,100,-50)))
+    holoAng(36,E:toWorld(ang(0,90,0)))
+    holoModel(36,"models/Mechanics/robotics/xfoot.mdl")
+    holoColor(36,Color[11,vector])
+    holoMaterial(36,"models/debug/debugwhite")
+    holoParent(36,1)
+    holoDisableShading(36,1)
+    
+    holoCreate(37,E:toWorld(vec(0,-100,-50)))
+    holoAng(37,E:toWorld(ang(0,-90,0)))
+    holoModel(37,"models/Mechanics/robotics/xfoot.mdl")
+    holoColor(37,Color[11,vector])
+    holoMaterial(37,"models/debug/debugwhite")
+    holoParent(37,1)
+    holoDisableShading(37,1)
+    
+    holoCreate(0,holoEntity(30):pos())
+    holoAlpha(0,0)
+    holoParent(0,30)
+    
+    A=31
+    #<e2p> thins too
+    #[Light=holoEntity(30):drawSprite("sprites/light_glow01",holoEntity(30):pos()-vec(0,0,20),Color,0,500,500)
+    lightCreate(0,holoEntity(31):pos())
+    lightColor(0,Color)
+    lightDistance(0,1500)
+    lightParent(0,holoEntity(31))]#
+    #</e2p>
+    
+    #soudns
+    E:soundPlay("Work",0,"ambient/tones/garage.wav")
+    #ambient/tones/garage.wav
+    #ambient/machines/60hzhum.wav
+    #ambient/machines/combine_shield_loop3.wav
+    holoEntity(33):soundPlay("LightRay",0,"ambient/machines/60hzhum.wav")
+    soundPitch("LightRay",70)
+    soundVolume("LightRay",0)
+    holoEntity(31):soundPlay("LightRay2",0,"ambient/machines/60hzhum.wav")
+    soundPitch("LightRay2",70)
+    soundVolume("LightRay2",0)
+    
+    findIncludePlayerProps(owner())
+    findByClass("prop_vehicle_prisoner_pod")
+    Chair=findClosest(entity():pos())
+    if (!Chair) {
+        printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"Please spawn Airboat seat first!")
+        selfDestruct()
+    }
+    Chair:setPos(E:pos()-vec(0,0,50))
+    Chair:setAng(E:angles()-ang(0,90,0))
+    Chair:setAlpha(0)
+    #noCollideAll(Chair,1)
+    timer("parent",100)
+    findClearBlackList()
+    findClearWhiteList()
+    #BringTaget=owner()
+    Manual=1
+    timer("LoadLimit",5000)
+}
+if (fileLoaded()&&changed(fileLoaded())|clk("LoadLimit")) {
+    Save = fileRead()
+    stoptimer("LoadLimit")
+    if (Save=="") {
+        for (I=1,EditPartCount) {
+            Color:pushVector(hsv2rgb(vec(random(0,360),1,1)))
+        }
+        Save = saveEncode(Save, Color)
+        fileAppend("KlyaniX_UFO_style.txt",Save)
+        printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"Maybe server lagging and we can't load your style, or thats your first UFO")
+        printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"Your new style just generated")
+        printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"You can change it, type <!edit>")
+    } else {
+        Color = saveDecode(Save, Color)
+        printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"Your style loaded!")
+    }
+    changeColor(Color)
+    printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"Here goes!")
+}
+holoAng(0,ang())
+if (clk("parent")) {
+    Chair:parentTo(holoEntity(0))
+}
+holoAng(2,holoEntity(2):toWorld(ang(0,RotateSpeed+((MoveMultX/MoveMultXLimit+MoveMultY/MoveMultYLimit+MoveMultZ/MoveMultZLimit)/3)*25,0)))
+soundPitch("Work",RotateSpeed/RotateSpeedLimit*65+(MoveMultX/MoveMultXLimit+MoveMultY/MoveMultYLimit+MoveMultZ/MoveMultZLimit)*20)
+Driver=Chair:driver()
+if (!Edit) {
+    if (Driver) {
+        if (RotateSpeed<RotateSpeedLimit) {
+            RotateSpeed = RotateSpeedLimit
+            #RotateSpeed=clamp(RotateSpeed+0.5,0,RotateSpeedLimit)
+        } else {
+            if (RotateSpeed==RotateSpeedLimit) {
+                holoAlpha(34,0)
+                holoAlpha(35,0)
+                holoAlpha(36,0)
+                holoAlpha(37,0)
+            }
+            holoAng(1,Driver:eyeAngles():setPitch(clamp(Driver:eyeAngles():pitch(),-80,80)))
+            if (Driver:keyForward()) {
+                rangerFilter(Chair)
+                rangerFilter(players())
+                RF=rangerOffsetHull(205+abs(MoveMultX),holoEntity(1):pos(),holoEntity(1):forward(),vec(100))
+                if (RF:hit()) {
+                    MoveMultX=0
+                }
+                if (Driver:keySprint()|E:angles():pitch()<-45&!RF:hit()) {
+                    MoveMultX=clamp(MoveMultX+15,-MoveMultXLimit,MoveMultXLimit*2)
+                } else {
+                    if (MoveMultX<MoveMultXLimit&!RF:hit()) {
+                        MoveMultX=clamp(MoveMultX+15,-MoveMultXLimit,MoveMultXLimit)
+                    } elseif (!RF:hit()) {
+                        MoveMultX=clamp(MoveMultX-15,-MoveMultXLimit,MoveMultXLimit*2)
+                    }
+                }
+            } elseif (Driver:keyBack()) {
+                rangerFilter(Chair)
+                rangerFilter(players())
+                RB=rangerOffsetHull(205+abs(MoveMultX),holoEntity(1):pos(),-holoEntity(1):forward(),vec(100))
+                if (RB:hit()) {
+                    MoveMultX=0
+                }
+                if (!RB:hit()) {
+                    MoveMultX=clamp(MoveMultX-15,-MoveMultXLimit,MoveMultXLimit)
+                }
+            }
+            if (Driver:keyRight()) {
+                rangerFilter(Chair)
+                rangerFilter(players())
+                RR=rangerOffsetHull(205+abs(MoveMultY),holoEntity(1):pos(),holoEntity(1):right(),vec(100))
+                if (!RR:hit()) {
+                    MoveMultY=clamp(MoveMultY+15,-MoveMultYLimit,MoveMultYLimit)
+                } else {
+                    MoveMultY=0
+                }
+            } elseif (Driver:keyLeft()) {
+                rangerFilter(Chair)
+                rangerFilter(players())
+                RL=rangerOffsetHull(205+abs(MoveMultY),holoEntity(1):pos(),-holoEntity(1):right(),vec(100))
+                if (!RL:hit()) {
+                    MoveMultY=clamp(MoveMultY-15,-MoveMultYLimit,MoveMultYLimit)
+                } else {
+                    MoveMultY=0
+                }
+            }
+            if (Driver:keyJump()) {
+                rangerFilter(Chair)
+                rangerFilter(players())
+                RU=rangerOffsetHull(40+abs(MoveMultZ),holoEntity(1):pos(),holoEntity(1):up(),vec(100))
+                if (RU:hit()) {
+                    MoveMultZ=0
+                } else { 
+                    MoveMultZ=clamp(MoveMultZ+15,-MoveMultZLimit,MoveMultZLimit)
+                }
+            } elseif (Driver:keyWalk()) {
+                rangerFilter(Chair)
+                rangerFilter(players())
+                RD=rangerOffsetHull(30+abs(MoveMultZ),holoEntity(1):pos(),-holoEntity(1):up(),vec(100))
+                if (RD:hit()) {
+                    MoveMultZ=0
+                } else {
+                    MoveMultZ=clamp(MoveMultZ-15,-MoveMultZLimit,MoveMultZLimit)
+                }
+            }
+            if (Driver:keyAttack1()&&changed(Driver:keyAttack1())) {
+                if (LightRay) {
+                    LightRay=0
+                } else {
+                    LightRay=1
+                }
+            }   
+        } 
+        if (chatClk(Driver)) {
+            Chat=Driver:lastSaid():explode(" ")
+            if (Chat[1,string]:sub(1,1)=="!") {
+                hideChat(1)
+                if (Chat[1,string]:lower():sub(2)=="edit") {
+                    Edit = 1
+                    EditPart = 1
+                    EditGetColor=rgb2hsv(Color[EditPart,vector])
+                    EditHue=EditGetColor:x()
+                    EditSat=EditGetColor:y()
+                    EditVal=EditGetColor:z()
+                    printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[EditPart,vector]*0.8,EditPart + " part selected")
+                    printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"LMB / RMB - change part , A / D - change color")
+                    printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"W / S - change saturation , Shift / Space - change brightness")
+                    printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[1,vector]*0.8,"type <!edit> again, to save style")
+                }
+            }
+        }
+    } else {
+        rangerFilter(players())
+        RLand1=rangerOffset(200,E:toWorld(vec(100,0,0)),vec(0,0,-1))
+        rangerFilter(players())
+        RLand2=rangerOffset(200,E:toWorld(vec(-100,0,0)),vec(0,0,-1))
+        rangerFilter(players())
+        RLand3=rangerOffset(200,E:toWorld(vec(0,100,0)),vec(0,0,-1))
+        rangerFilter(players())
+        RLand4=rangerOffset(200,E:toWorld(vec(0,-100,0)),vec(0,0,-1))
+        if (RLand1:hit()&RLand2:hit()&RLand3:hit()&RLand4:hit()) {
+            holoPos(1,(RLand1:pos()+RLand2:pos()+RLand3:pos()+RLand4:pos())/4+vec(0,0,50))
+            holoAng(1,ang())
+            
+            holoAlpha(34,255)
+            holoAlpha(35,255)
+            holoAlpha(36,255)
+            holoAlpha(37,255)
+            
+            holoAng(34,E:toWorld(ang(90,0,0))+RLand1:hitNormal():toAngle())
+            holoAng(35,E:toWorld(ang(90,0,0))+RLand2:hitNormal():toAngle())
+            holoAng(36,E:toWorld(ang(90,0,0))+RLand3:hitNormal():toAngle())
+            holoAng(37,E:toWorld(ang(90,0,0))+RLand4:hitNormal():toAngle())
+            
+            holoPos(34,RLand1:pos()+vec(0,0,16))
+            holoPos(35,RLand2:pos()+vec(0,0,16))
+            holoPos(36,RLand3:pos()+vec(0,0,16))
+            holoPos(37,RLand4:pos()+vec(0,0,16))
+    
+            if (RotateSpeed>0) {
+                RotateSpeed=clamp(RotateSpeed-2,0,RotateSpeedLimit)
+            }
+        } else {
+            if (RotateSpeed<RotateSpeedLimit) {
+                RotateSpeed=clamp(RotateSpeed+0.5,0,RotateSpeedLimit)
+            }
+        }
+    }
+    ######
+    if (!Driver:keyForward()&!Driver:keyBack()) {
+        rangerFilter(Chair)
+        rangerFilter(players())
+        RF=rangerOffsetHull(100+MoveMultX,holoEntity(1):pos(),holoEntity(1):forward(),vec(100))
+        rangerFilter(Chair)
+        rangerFilter(players())
+        RB=rangerOffsetHull(100+MoveMultX,holoEntity(1):pos(),-holoEntity(1):forward(),vec(100))
+        if (RF:hit()|RB:hit()) {
+            MoveMultX=0
+        }
+        if (MoveMultX>0&!(RB:hit()|RF:hit())) {
+            MoveMultX=clamp(MoveMultX-25,0,MoveMultXLimit)
+        } elseif (MoveMultX<0&!(RB:hit()|RF:hit())) {
+            MoveMultX=clamp(MoveMultX+25,-MoveMultXLimit,0)
+        }
+    }
+    if (!Driver:keyRight()&!Driver:keyLeft()) {
+        rangerFilter(Chair)
+        rangerFilter(players())
+        RL=rangerOffsetHull(205+abs(MoveMultY),holoEntity(1):pos(),-holoEntity(1):right(),vec(100))
+        rangerFilter(Chair)
+        rangerFilter(players())
+        RR=rangerOffsetHull(205+abs(MoveMultY),holoEntity(1):pos(),holoEntity(1):right(),vec(100))
+        if (RL:hit()|RR:hit()) {
+            MoveMultY=0
+        }
+        if (MoveMultY>0&!(RR:hit()|RL:hit())) {
+            MoveMultY=clamp(MoveMultY-25,0,MoveMultYLimit)
+        } elseif (MoveMultY<0&!(RR:hit()|RL:hit())) {
+            MoveMultY=clamp(MoveMultY+25,-MoveMultYLimit,0)
+        }
+    }
+    if (!Driver:keyJump()&!Driver:keyWalk()) {
+        rangerFilter(Chair)
+        rangerFilter(players())
+        RU=rangerOffsetHull(100+abs(MoveMultY),holoEntity(1):pos(),holoEntity(1):up(),vec(100))
+        rangerFilter(Chair)
+        rangerFilter(players())
+        RD=rangerOffsetHull(60+abs(MoveMultY),holoEntity(1):pos(),-holoEntity(1):up(),vec(100))
+        if (RD:hit()|RU:hit()) {
+            MoveMultZ=0
+        }
+        if (MoveMultZ>0&!(RD:hit()|RU:hit())) {
+            MoveMultZ=clamp(MoveMultZ-25,0,MoveMultZLimit)
+        } elseif (MoveMultZ<0&!(RD:hit()|RU:hit())) {
+            MoveMultZ=clamp(MoveMultZ+25,-MoveMultZLimit,0)
+        }
+    }
+    holoPos(1,E:pos()+holoEntity(1):forward()*MoveMultX+holoEntity(1):right()*MoveMultY+holoEntity(1):up()*MoveMultZ)
+    ######
+} else {
+    if (Driver:keyAttack1()&&changed(Driver:keyAttack1())) {
+        EditPart++
+        if (EditPart>EditPartCount) {
+            EditPart=1
+        }
+        EditGetColor=rgb2hsv(Color[EditPart,vector])
+        EditHue=EditGetColor:x()
+        EditSat=EditGetColor:y()
+        EditVal=EditGetColor:z()
+        printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[EditPart,vector]*0.8,EditPart + " part selected")
+    } elseif (Driver:keyAttack2()&&changed(Driver:keyAttack2())) {
+        EditPart--
+        if (EditPart<1) {
+            EditPart=EditPartCount
+        }
+        EditGetColor=rgb2hsv(Color[EditPart,vector])
+        EditHue=EditGetColor:x()
+        EditSat=EditGetColor:y()
+        EditVal=EditGetColor:z()
+        printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[EditPart,vector]*0.8,EditPart + " part selected")
+    }
+    if (Driver:keyForward()&&changed(Driver:keyForward())) {
+        EditSat = EditSat + 0.1
+        if (EditSat > 1) {
+            EditSat = 0
+        }
+    } elseif (Driver:keyBack()&&changed(Driver:keyBack())) {
+        EditSat = EditSat - 0.1
+        if (EditSat < 0) {
+            EditSat = 1
+        }
+    }
+    if (Driver:keySprint()&&changed(Driver:keySprint())) {
+        EditVal = EditVal + 0.1
+        if (EditVal > 1) {
+            EditVal = 0
+        }
+    } elseif (Driver:keyJump()&&changed(Driver:keyJump())) {
+        EditVal = EditVal - 0.1
+        if (EditVal < 0) {
+            EditVal = 1
+        }
+    }
+    if (Driver:keyRight()&&changed(Driver:keyRight())) {
+        EditHue = EditHue + 5
+        if (EditHue > 360) {
+            EditHue = 0
+        }
+    } elseif (Driver:keyLeft()&&changed(Driver:keyLeft())) {
+        EditHue = EditHue - 5
+        if (EditHue < 0) {
+            EditHue = 360
+        }
+    }
+    Color[EditPart,vector] = hsv2rgb(vec(EditHue,EditSat,EditVal))
+    changeColor(Color)
+    if (chatClk(Driver)) {
+        Chat=Driver:lastSaid():explode(" ")
+        if (Chat[1,string]:sub(1,1)=="!") {
+            hideChat(1)
+            if (Chat[1,string]:lower():sub(2)=="edit") {
+                Edit = 0
+            }
+            Save = ""
+            Save = saveEncode(Save, Color)
+            fileWrite("KlyaniX_UFO_style.txt",Save)
+            printColor(Color[1,vector],"[KlyaniX_UFO]",vec(255,255,255)," : ",Color[EditPart,vector]*0.8,"Your new style is saved!")
+        }
+    }
+}
+if (LightRay) {
+    if (A>26) {
+        Light:setAlpha(((31-A)/5)*255)
+        A=clamp(A-0.1,26,31)
+        clip(1,2,-A,ang(-90,0,0))
+    } else {
+        if (!Target) {
+            R=rangerOffset(10^15,holoEntity(31):pos(),-holoEntity(31):up())
+            findIncludeClass("player")
+            findInSphere(R:pos(),10)
+            if (find()) {
+                holoPos(33,holoEntity(33):pos():setZ(find():pos():z()))
+                if (BringTaget) {
+                    if (find()==BringTaget) {
+                        Target=BringTaget
+                    }
+                } else {
+                    Target=find()
+                }
+            }
+        }
+        holoScale(32,vec(1,1,holoEntity(31):pos():distance(holoEntity(33):pos())/450))
+    }
+    if (Target) {
+        #Target:playerNoclip(1)
+        if ((holoEntity(33):pos():z()-holoEntity(31):pos():z())<-50) {
+            holoPos(33,vec(holoEntity(31):pos():x(),holoEntity(31):pos():y(),holoEntity(33):pos():z()+5))
+        } elseif ((holoEntity(33):pos():z()-holoEntity(31):pos():z())>-45) {
+            holoPos(33,vec(holoEntity(31):pos():x(),holoEntity(31):pos():y(),holoEntity(33):pos():z()-5))
+        } else {
+            holoPos(33,vec(holoEntity(31):pos():x(),holoEntity(31):pos():y(),holoEntity(33):pos():z()))
+        }
+        Target:setPos(holoEntity(33):pos())
+    } else {
+        R=rangerOffset(10^15,holoEntity(31):pos(),-holoEntity(31):up())
+        holoPos(33,R:pos())
+    }
+} else {
+    if (Target) {
+        #Target:playerNoclip(0)
+        Target=noentity()
+    }
+    if (A<31) {
+        Light:setAlpha(((31-A)/5)*255)
+        holoAlpha(32,0)
+        holoDisableShading(31,0)
+        A=clamp(A+0.1,26,31)
+        clip(1,2,-A,ang(-90,0,0))
+        soundVolume("LightRay",0)
+        soundVolume("LightRay2",0)
+    }
+}
+if (A==26&&changed(A==26)) {}
+    if (!Light) {
+        #Light=holoEntity(30):drawSprite("sprites/light_glow01",holoEntity(30):pos()-vec(0,0,20),Color,0,500,500)
+    }
+    holoAlpha(32,255)
+    holoDisableShading(31,1)
+    soundVolume("LightRay",1)
+    soundVolume("LightRay2",1)
+    soundStop("LightRayOn")
+    holoEntity(33):soundPlay("LightRayOn",3,"common/bass.wav")
+    soundStop("LightRayOn2")
+    holoEntity(31):soundPlay("LightRayOn2",3,"common/bass.wav")

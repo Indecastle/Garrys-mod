@@ -1,0 +1,58 @@
+@name Shoot inSphere auto
+@persist [O EE]:entity I Radius PosE:vector
+
+interval(1500)
+if(first())
+{   
+    I = 1
+    Radius = 290/I
+    O = owner()
+    EE = entity()
+    EE:setAlpha(0)
+    PosE = EE:pos()
+    EE:setPos(EE:toWorld(vec(0,0,1000)))
+    EE:propFreeze(1)
+
+    holoCreate(1)
+    holoCreate(2)
+    holoScale(1,vec(50/I))
+    holoScale(2,vec(-50/I))
+    holoPos(1, PosE)
+    holoPos(2, PosE)
+    #holoColor(1,vec(random(255),random(255),random(255)),255)
+    #holoAlpha(1,255)
+    #holoParent(1,EE)
+    holoModel(1,"hqsphere2")
+    holoModel(2,"hqsphere2")
+    holoMaterial(1, "models/shadertest/shader3")
+    holoMaterial(2, "models/wireframe")
+
+
+
+
+}
+    
+findIncludeClass("player")
+findExcludeEntity(O)
+#findExcludePlayer("Lem")
+#findExcludePlayer("Len")
+findInSphere(PosE, Radius)
+F = findToArray()
+
+propDeleteAll()
+foreach(J, Ee:entity = F)
+{
+    if(Ee:isAlive())
+    {    
+        P = propSpawn("models/hunter/blocks/cube05x05x025.mdl", Ee:toWorld(vec(0,0,150)), 0)
+        
+        P:setMass(2)
+        P:setAlpha(0)
+        P:propFreeze(0)
+        P:propSetVelocity((Ee:pos()-P:pos())*100)
+        #P:propNotSolid(0)
+        noCollideAll(P,0)
+        #timer("wait",500)
+        print(Ee:name())
+    }
+}

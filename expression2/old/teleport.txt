@@ -1,0 +1,25 @@
+@name TELEPORT
+
+@persist Player:entity SS:array
+
+runOnTick(1)
+
+SS=owner():lastSaid():explode(" ")
+
+if(SS:string(1)=="/t"){
+
+hideChat(1)
+
+Player=findPlayerByName(SS:string(2))
+
+if(Player:isPlayer()){
+
+if(owner():keyPressed("t")){
+
+owner():setPos(Player:pos()+vec(0,100,20))
+
+}
+
+}
+
+}

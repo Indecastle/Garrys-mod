@@ -1,0 +1,69 @@
+@name Bass on the Car
+@inputs 
+@outputs 
+@persist Vehicle:entity Color:vector I Scale Speed  Delay Force IsTetka Interval Animation:string
+@trigger 
+
+interval(50)
+
+if(first()) {
+    Scale = 1
+    Speed = 1
+    
+    Delay = 400
+    Force = 100000
+    
+    Muscle = 0
+    
+    if(Muscle) {
+        Animation = "taunt_muscle"
+        Interval = 11500
+    }
+    else {
+        Animation = "taunt_dance"
+        Interval = 8500
+    }
+    
+    IsTetka = 1
+    
+    if(IsTetka) {
+        EE=entity()
+        holoCreate(1)
+        holoModel(1,"models/pac/female_base.mdl")
+        #holoModel(1,"models/player/skeleton.mdl")
+        #holoMaterial(1,"Models/effects/splodearc_sheet")
+        holoAnim(1,Animation)
+        timer("anim",9500)
+        
+        holoParent(1,EE)
+        interval(9500)
+        holoScale(1,vec(1)*Scale)
+        holoColor(1,vec(225,0,225))
+    }
+    
+    
+    #soundURLload(1,"https://www.dropbox.com/s/snwsn874sgmy2m6/GONE.Fludd%20-%20%D0%9A%D0%A3%D0%91%D0%98%D0%9A%20%D0%9B%D0%AC%D0%94%D0%90.mp3?dl=1",1,0,entity())
+    #soundURLvolume(1,1)
+    
+    findByClass("gmod_sent_vehicle_fphysics_base")
+    Vehicle = findClosest(entity():pos())
+    print(Vehicle)
+    timer("bass",100)
+    
+    entity():setMass(20)
+}
+
+if(clk("anim")) {
+    holoAnim(1,Animation)
+    timer("anim",Interval)
+}
+
+
+if(clk("bass")) {
+    applyForce(vec(0,0,-1)*Force)
+    timer("bass",Delay) # interval
+}
+
+I = (I+Speed)%360
+Color = hsv2rgb(I, 1, 1)
+holoColor(1, Color)

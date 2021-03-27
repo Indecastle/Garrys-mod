@@ -1,0 +1,51 @@
+@name Haxx Gun
+@persist Prop:entity Player:entity Props:array Sounds:array Prop2:array
+@model models/hunter/plates/plate.mdl
+#Hints
+if (first()){entity():setMaterial("models/props_c17/frostedglass_01a")
+    entity():setColor(random(255),random(255),random(255))
+    hint("[!reset] to reset.",10)
+    hint("[keyAttack2] shoot computers freely.",10)
+    hint("[!E2help] to see this menu again.",10)
+    hint("Made By XninjazXxx.",20)
+    entity():setAlpha(0) 
+} 
+#Sounds
+    Sounds[0, string] = "vo/npc/male01/hacks01.wav"
+    Sounds[1, string] = "vo/npc/male01/hacks02.wav"
+    Sounds[2, string] = "vo/npc/male01/thehacks01.wav"
+    Sounds[3, string] = "vo/npc/male01/thehacks02.wav"
+#Computers
+    Prop2[0, string] = "models/props_lab/monitor02.mdl"
+    Prop2[1, string] = "models/props_lab/monitor01b.mdl"
+    Prop2[2, string] = "models/props_lab/monitor02.mdl"
+    Prop2[3, string] = "models/props_lab/harddrive02.mdl"
+#PropCore + ApplyForce + Sounds + Delete Mechinism
+timer("delete",10000)
+LastSaid = lastSaid()
+interval(1)    E = entity()
+    P = owner()
+    if(changed(P:keyAttack2())& P:keyAttack2() ){Prop = propSpawn(Prop2:string(round(random(3))), P:pos()+(vec(0,0,60)), P:eyeAngles(), 0)
+, P:soundPlay(0,0,Sounds:string(round(random(3))))
+    Prop:setTrails(50,1,0.5, "trails/laser", vec(random(255),random(255),random(255)),250)
+    Prop:setAlpha(255)
+    Prop:propNotSolid(0)
+    Props:pushEntity(Prop)
+    Prop:propGravity(0)
+    }
+
+if(clk("delete") & Props:count()) {
+    Props:shiftEntity():propDelete()
+    Props:propDelete()
+}
+Prop:applyForce(Prop:forward()*9999999999) 
+#HelP + Anti-Dupe Coding
+if(duped()){selfDestruct(),hint("You cannot duplicate this",10)}
+if((LastSaid=="!E2help" & changed(LastSaid=="!E2help"))){
+print("[!reset] to reset")
+print("[Attack2] shoot computers freely")
+print("[!E2help] to see this menu again")
+}
+
+
+

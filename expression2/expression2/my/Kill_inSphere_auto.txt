@@ -1,0 +1,54 @@
+@name kill inSphere auto
+@persist [O EE P]:entity I Radius PosE:vector
+
+interval(500)
+if(first())
+{   
+    I = 3
+    Radius = 290/I
+    O = owner()
+    EE = entity()
+    EE:setAlpha(0)
+    PosE = EE:pos()
+    EE:setPos(EE:toWorld(vec(0,0,1000)))
+    EE:propFreeze(1)
+
+    holoCreate(1)
+    holoScale(1,vec(50/I))
+    holoPos(1, PosE)
+    holoColor(1,vec(random(255),random(255),random(255)),255)
+    holoAlpha(1,230)
+    #holoParent(1,EE)
+    holoModel(1,"hqsphere2")
+
+
+
+
+}
+    
+findIncludeClass("player")
+findExcludeEntity(O)
+#findExcludePlayer("Trigg")
+#findExcludePlayer("Garik")
+#findExcludePlayer("Odin")
+
+findInSphere(PosE, Radius)
+F = findToArray()
+
+propDeleteAll()
+
+foreach(J, Ee:entity = F)
+{
+    if(Ee:isAlive())
+    {    
+        P = propSpawn("models/hunter/blocks/cube025x025x025.mdl", Ee:toWorld(vec(0,0,150)), 0)
+        P:setMass(1000)
+        P:setAlpha(0)
+        P:propFreeze(0)
+        P:propSetVelocity((Ee:pos()-P:pos())*1000)
+        #P:propNotSolid(0)
+        noCollideAll(P,0)
+        #timer("wait",500)
+        print(Ee:name())
+    }
+}

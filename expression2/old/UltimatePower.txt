@@ -1,0 +1,48 @@
+@name UltimatePower
+@inputs 
+@outputs 
+@persist P:entity God Noclip JS [Vec H]:vector
+@trigger 
+
+interval(10)
+if(first()){
+entity():propNotSolid(1)
+
+}
+
+if(changed(owner():keyPressed("v"))&owner():keyPressed("v")){
+    Noclip = !Noclip
+    owner():plyNoclip(Noclip)
+}
+
+if(changed(owner():keyPressed("g"))&owner():keyPressed("g")){
+God = !God
+owner():plyGod(God) 
+print("GOD:"+God)  
+}
+
+if(changed(owner():keyPressed("f"))&owner():keyPressed("f")){
+ JS = !JS
+ if(JS == 1){owner():plySetRunSpeed(10000) owner():plySetJumpPower(10000) owner():plySetMass(0) owner():propNotSolid(1)
+    }else{
+    owner():plySetRunSpeed(450) owner():plySetJumpPower(300) owner():plySetMass(1) owner():propNotSolid(0)
+ }
+print("JS:"+JS)      
+}
+
+if(owner():keyUse())
+{
+    if(owner():aimEntity():isPlayer()) { P = owner():aimEntity() H = P:pos()}
+}
+#Vec = H + (P:pos()-H)/100
+#H = Vec
+#V = Vec - owner():pos() + vec(0,0,-10)
+
+V = P:pos() - owner():pos() + vec(0,0,-10)
+
+if(owner():keyWalk())
+{
+    
+    owner():plySetAng(V:toAngle())
+}
+

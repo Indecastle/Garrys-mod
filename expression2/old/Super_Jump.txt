@@ -1,0 +1,18 @@
+@name Super Jump
+@persist [O E]:entity
+@model models/props_phx/construct/metal_plate1.mdl
+if (first()) {
+    E = entity()
+    O = owner()
+    E:setAlpha(0)
+    E:propNotSolid(0)
+    E:setMaterial("models/debug/debugwhite")
+    noCollideAll(E,0)
+    runOnKeys(O,1)
+}
+
+if(O:keyJump()) {
+    interval(50)
+    E:setPos(O:pos()+vec(0,0,-3.3))
+    E:applyForce(vec(0,0,5000))
+}

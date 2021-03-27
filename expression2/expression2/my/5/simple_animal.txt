@@ -1,0 +1,42 @@
+@name haha look at him go
+@persist [Ba Mo]:entity B
+if(first()|duped())
+{   
+    entity():setAlpha(0)
+    Ba = holoCreate(0, entity():toWorld(vec(0,0,17)), vec(1,1,1), entity():toWorld(ang(0,90,0)), vec()) holoAlpha(0,0)
+    
+    Mo = holoCreate(1, Ba:toWorld(vec(0,0,0)), vec(1,1,1), Ba:toWorld(ang(0,0,0)), vec()) holoAlpha(1,0) holoParent(1,Ba)
+    
+    holoCreate(2,Ba:toWorld(vec(0,-1,0)),vec(2,1.6,3),Ba:toWorld(ang(0,0,90)),vec(255,255,255), "hq_sphere") holoParent(2,Mo)
+    #Face
+    holoCreate(3, Ba:toWorld(vec(0,0,0)),vec(0.1,0.1,0.1), Ba:toWorld(ang(0,0,0)), vec(255,255,255), "cube") holoParent(3,Mo)
+    holoCreate(4,Ba:toWorld(vec(0,1,0)),vec(2,1.6,3),Ba:toWorld(ang(0,0,90)),vec(255,255,255), "hq_sphere") holoParent(4,3)
+    holoCreate(5,Ba:toWorld(vec(0,20,1.5)),vec(1.54,1,1.5),Ba:toWorld(ang(0,0,-91)),vec(255,255,255), "hq_cone") holoParent(5,3)
+    holoClipEnabled(5,1,1)
+    holoClip(5,1, vec(0,0,7),vec(0,0,-1),0)
+    holoCreate(6,Ba:toWorld(vec(0,28,1.37)),vec(0.18,0.12,0.19),Ba:toWorld(ang(0,0,-91)),vec(0,0,0), "hq_cone") holoParent(6,3)
+    holoCreate(7,Ba:toWorld(vec(3.5,17,4.5)),vec(0.1,0.1,0.1),Ba:toWorld(ang(0,0,90)),vec(0,0,0), "hq_sphere") holoParent(7,3)
+    holoCreate(8,Ba:toWorld(vec(-3.5,17,4.5)),vec(0.1,0.1,0.1),Ba:toWorld(ang(0,0,90)),vec(0,0,0), "hq_sphere") holoParent(8,3)
+    holoCreate(9,Ba:toWorld(vec(5.5,11.5,5)),vec(0.5,0.5,0.1),Ba:toWorld(ang(-35,0,0)),vec(255,255,255), "hq_sphere") holoParent(9,3)
+    holoCreate(10,Ba:toWorld(vec(-5.5,11.5,5)),vec(0.5,0.5,0.1),Ba:toWorld(ang(35,0,0)),vec(255,255,255), "hq_sphere") holoParent(10,3)
+    holoCreate(11, Ba:toWorld(vec(-4,10,-3)),vec(0.1,0.1,0.1), Ba:toWorld(ang(0,0,0)), vec(255,255,255), "cube") holoParent(11,3)
+    holoCreate(12, Ba:toWorld(vec(4,10,-3)),vec(0.1,0.1,0.1), Ba:toWorld(ang(0,0,0)), vec(255,255,255), "cube") holoParent(12,3)
+    holoCreate(13,Ba:toWorld(vec(-4,10,-13)),vec(0.8,0.7,1.7),Ba:toWorld(ang(0,0,180)),vec(255,255,255), "hq_cone") holoParent(13,11)
+    holoCreate(14,Ba:toWorld(vec(4,10,-13)),vec(0.8,0.7,1.7),Ba:toWorld(ang(0,0,180)),vec(255,255,255), "hq_cone") holoParent(14,12)
+    holoCreate(15, Ba:toWorld(vec(-4,-10,-3)),vec(0.1,0.1,0.1), Ba:toWorld(ang(0,0,0)), vec(255,255,255), "cube") holoParent(15,Mo)
+    holoCreate(16, Ba:toWorld(vec(4,-10,-3)),vec(0.1,0.1,0.1), Ba:toWorld(ang(0,0,0)), vec(255,255,255), "cube") holoParent(16,Mo)
+    holoCreate(17,Ba:toWorld(vec(-4,-10,-13)),vec(0.8,0.7,1.7),Ba:toWorld(ang(0,0,180)),vec(255,255,255), "hq_cone") holoParent(17,15)
+    holoCreate(18,Ba:toWorld(vec(4,-10,-13)),vec(0.8,0.7,1.7),Ba:toWorld(ang(0,0,180)),vec(255,255,255), "hq_cone") holoParent(18,16)
+    Ba:soundPlay(0,100, "music/hl2_song17.mp3")
+    
+    timer("reset1",1000)
+    reset()
+}
+interval(50)
+B+=38
+holoAng(3, Ba:toWorld(ang(0,(4*sin(B)),0)))
+holoAng(11, Ba:toWorld(ang(0,0,(20*sin(B)))))
+holoAng(12, Ba:toWorld(ang(0,0,(-20*sin(B)))))
+holoAng(15, Ba:toWorld(ang(0,0,(-20*sin(B)))))
+holoAng(16, Ba:toWorld(ang(0,0,(20*sin(B)))))
+holoPos(0, (holoEntity(0):pos()+holoEntity(0):right()*-4+vec(0,0,0)))

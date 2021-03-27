@@ -1,0 +1,20 @@
+@name GearBox DDOS
+@inputs 
+@outputs 
+@persist D
+@trigger 
+#--------------------------------------
+interval(25)
+A=randint(500000000000)
+B=A:toString()
+setName(B)
+D+=2
+
+for(I=1,60){
+ holoCreate(I)
+ holoPos(I,entity():toWorld(vec(sin(D*curtime())*I%360,0,5*I)))   
+ holoScale(I,vec(0.2))
+ holoEntity(I):setTrails(10,10,50,"trails/laser",hsv2rgb((curtime()*I)%360,1,1),255)
+}
+
+

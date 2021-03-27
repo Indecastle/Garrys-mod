@@ -1,0 +1,69 @@
+@name Bio_Button Wire
+@inputs Button:entity Friends:array
+@outputs Player:entity Out
+@persist Toggle_V Button_V Distance [OP Players]:array W:wirelink Real_Friends:array
+@trigger all
+
+if (first() || duped() || dupefinished()) {
+    Distance = 100
+    Toggle_V = 0
+    runOnKeys(players(), 1)
+    timer("scan_players",100)
+    W = Button:wirelink()
+    Real_Friends = array(owner())
+    Real_Friends = Real_Friends:add(Friends)
+}
+
+if (clk("scan_players")){
+    findByClass("player")
+    Players=findToArray()
+    if (Players:count()!=OP:count()){
+        runOnKeys(Players, 1)
+        #foreach (I, P:entity = Players) {
+        #    if (P:shootPos():distance(Keypad:pos()) < 500 || P == O) {
+        #        runOnKeys(P,1)
+        #    }
+        #    else {
+        #        runOnKeys(P,0)
+        #    }
+        #}
+    }
+    OP=Players
+    timer("scan_players",1000)
+}
+
+if (~Button) {
+    W = Button:wirelink()
+}
+
+if (~Friends) {
+    Real_Friends = array(owner())
+    Real_Friends = Real_Friends:add(Friends)
+}
+
+local Who = keyClk()
+if (Who) {
+    if (changed(Who:keyPressed("e")) && Who:keyPressed("e") && Who:aimEntity() == Button && Who:shootPos():distance(Button:pos()) < Distance) {
+        local IsPressed = 0
+        foreach (I, P:entity = Real_Friends) {
+            if (P == Who) {
+                IsPressed = 1
+                break
+            }
+        }
+        if (IsPressed) {
+            Player = Who
+            timer("scan_button", 100)
+        }
+    }
+}
+
+if (clk("scan_button")){
+    Button_V = W["Out", number]
+    if (Button_V) {
+        timer("scan_button", 100)
+    }
+    if (changed(Button_V)) {
+        Out = Button_V
+    }
+}

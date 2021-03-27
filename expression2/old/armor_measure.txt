@@ -1,0 +1,34 @@
+@name Armor Measure
+@inputs 
+@outputs Armor [DirVec RR]:vector R:ranger RangerLength 
+@persist 
+@trigger 
+#include "VectorsLib"
+#Made by Plin
+if(first()){
+    RangerLength=250
+    holoCreate(0)
+    holoCreate(1)
+    holoDisableShading(0,1)
+    holoDisableShading(1,1)
+    holoParent(0,entity())
+    holoParent(1,entity())
+    function angle toAng(Start:vector,End:vector){
+        return (End-Start):toAngle(vec(1,0,End:z()))
+    }
+    
+}
+interval(100)
+
+R=rangerOffset(entity():pos(),entity():pos()+entity():up()*RangerLength) 
+DirVec=(R:pos()-entity():pos()):normalized()
+holoPos(0,entity():pos()+entity():up()*R:distance()/2)
+
+holoScaleUnits(0,vec(0.5,0.5,R:distance()))
+
+RN = R:hitNormal()
+RV = DirVec - 2 * RN * RN:dot(DirVec)
+
+holoPos(1,R:pos() + RV*R:distance()/2) #perpendicular. Need to make a reflected beam
+holoAng(1,RV:toAngle())
+holoScaleUnits(1,vec(R:distance(),0.5,0.5))

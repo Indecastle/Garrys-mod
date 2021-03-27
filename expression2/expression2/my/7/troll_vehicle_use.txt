@@ -1,0 +1,90 @@
+@name troll vehicle use-kill
+@persist [E O Vehicle Target]:entity W:wirelink
+@persist IsEnabled StartPos:vector StartAng:angle
+
+if(dupefinished() | duped()) { selfDestructAll() }
+if (first()) {
+    E=entity() O=owner()
+    runOnKeys(O, 1)
+    runOnTick(1)
+    runOnChat(1)
+    setName("generic")
+    
+    findByClass("prop_vehicle_prisoner_pod")
+    Vehicle = findClosest(E:pos())
+    StartPos = Vehicle:pos()
+    StartAng = Vehicle:angles()
+    
+    Target = owner()
+    #Target = findPlayerByName("Dan")
+    #Target = findPlayerBySteamID("STEAM_0:0:513687777")
+    print(Target)
+    
+    findByClass("gmod_wire_pod")
+    local Pod = findClosest(E:pos())
+    W = Pod:wirelink()
+    W["Vehicle", entity] = Vehicle
+    Pod:createWire(Pod, "Terminate", "Active")
+    
+    Vehicle:setAlpha(0)
+    Vehicle:setMaterial("Models/effects/vol_light001")
+    Vehicle:propFreeze(1)
+    #Vehicle:noCollideAll(1)
+    #Vehicle:propNotSolid(0)
+    Vehicle:propStatic(1)
+    
+    function show_help() {
+        printColor(vec(255,255,0), "key '", vec(0,255,255), "l", vec(255,255,0), "' - ", vec(0,255,0), "ON", vec(200,200,200), "/", vec(255,0,0), "OFF")
+        printColor(vec(255,255,0), "command ", vec(255,0,255), "!tr ", vec(0,255,255), "[nickname]")
+        printColor(vec(255,255,0), "aim to a player and press ", vec(0,255,255), "k")
+    }
+    
+    show_help()
+}
+
+
+if(chatClk()) {
+    Pla = lastSpoke() 
+    local Message = Pla:lastSaid()
+    if (Message:index(1) == "!") {
+        local Ar = Message:explode(" ")
+        if (Pla == owner()) {
+            switch(Ar:string(1))
+            {
+                case "!tr", 
+                    hideChat(1)
+                    local P = noentity()
+                    if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                    else { P = findPlayerByName(Ar:string(2)) }
+                    if(!P:isPlayer() | Ar:string(2)=="") { printColor(vec(150,150,0), "player ", vec(150,0,0), "not found") }
+                    else { Target = P printColor(vec(255,255,0), "target: ", vec(0,255,0), Target:name())}
+                default,
+            }
+        }
+    }
+}
+
+if(changed(O:keyPressed("k")) && O:keyPressed("k")) {
+    local NewTarget = O:aimEntity()
+    if (NewTarget:isPlayer()) {
+        Target = NewTarget
+        printColor(vec(255,255,0), "target: ", vec(0,255,0), Target:name())
+    }
+}
+
+if(changed(O:keyPressed("l")) && O:keyPressed("l")) {
+    IsEnabled = !IsEnabled
+    if (IsEnabled) {
+        printColor(vec(255,255,0), "Troll-Vehicle: ", vec(0,255,0), "ON")
+    }
+    else {
+        Vehicle:setPos(StartPos)
+        Vehicle:setAng(StartAng)
+        printColor(vec(255,255,0), "Troll-Vehicle: ", vec(255,0,0), "OFF")
+    }
+}
+
+if (IsEnabled) {
+    Vehicle:setPos(Target:shootPos() + vec(0, 0, 20) - Target:forward()*10 + Target:right()*20 )
+    Vehicle:setAng(Target:eye():toAngle() + ang(90,60,90))
+}

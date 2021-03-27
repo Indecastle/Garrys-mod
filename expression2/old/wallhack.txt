@@ -1,0 +1,11 @@
+hook.Add( "HUDPaint", "Wallhack", function()
+
+for k, v in pairs ( player.GetAll() ) do
+
+Pos = ( v:GetPos() + Vector( 0, 0, v:OBBMaxs().z ) ):ToScreen()
+
+draw.DrawText( v:Name().." HP:"..v:Health(),"Default",Pos.x,Pos.y, Color( 0, 175, 255, 235 ), TEXT_ALIGN_LEFT )
+
+end
+
+end )

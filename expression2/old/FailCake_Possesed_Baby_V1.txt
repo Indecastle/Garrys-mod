@@ -1,0 +1,79 @@
+@name Baby V1
+@inputs 
+@outputs On Co Co2 Possesed P P2
+@persist [HapN HapE Plys]:array Timer Vector:vector Rng:ranger
+@trigger all 
+@model models/props_c17/doll01.mdl
+runOnTick(1)
+
+E = entity()
+
+if(first() | duped()){   
+On = 0 
+Possesed = 1
+}
+
+if(E:isFrozen()){
+On = 0    
+}else{
+On = 1  
+}
+
+HapE[1,string] = "vo/ravenholm/madlaugh01.wav"
+HapE[2,string] = "vo/ravenholm/madlaugh02.wav"
+HapE[3,string] = "vo/ravenholm/madlaugh03.wav"
+HapE[4,string] = "vo/ravenholm/madlaugh04.wav"
+HapE[5,string] = "npc/zombie/zombie_pain1.wav"
+HapE[6,string] = "npc/zombie/zombie_die3.wav"
+HapE[7,string] = "npc/zombie/zombie_pain2.wav"
+HapE[8,string] = "npc/zombie/zombie_die2.wav"
+HapE[9,string] = "npc/zombie/zombie_voice_idle1.wav"
+HapE[10,string] = "npc/zombie/moan_loop4.wav"
+
+HapN[1,string] = "vo/ravenholm/madlaugh01.wav"
+HapN[2,string] = "vo/ravenholm/madlaugh02.wav"
+HapN[3,string] = "vo/ravenholm/madlaugh03.wav"
+HapN[4,string] = "vo/ravenholm/madlaugh04.wav"
+
+rangerHitWater(0)
+rangerFilter(E)
+Rng = rangerOffset(E:pos(),E:pos()-vec(0,0,100))
+
+if(On){
+Timer+=1
+
+
+if(Possesed){
+R = randint(1,100)
+
+Co = cos(Timer*1)*R
+Co2 = sin(Timer*1)*R
+
+timer("Ha",1200)
+
+if(clk("Ha")){
+P = randint(1,10)
+P2 = randint(70,255)
+
+E:soundPlay(100,100,HapE[P,string])
+soundPitch(100,P2) 
+}
+}else{
+Co = 0
+Co2 = 0
+}
+
+if(Rng:hit()){
+    
+Diff = 24-Rng:distance()
+E:applyForce((vec(0,0,Diff)*3-E:vel()/30)*E:mass())
+
+TarQ = quat(ang(Co,Co2,0))
+CurQ = quat(E)
+Q = TarQ/CurQ
+V = E:toLocal(rotationVector(Q)+E:pos())
+E:applyTorque((800*V - 12*E:angVelVector())*E:inertia()) 
+
+}
+}
+

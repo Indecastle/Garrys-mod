@@ -1,0 +1,56 @@
+@name Help_Holo
+@persist [E O Base]:entity
+@persist Table:table N White:array
+ 
+interval(100)
+ 
+if(first()){
+       
+    if(duped()) { selfDestruct() }
+   
+    E = entity()
+    O = owner()
+    Base = holoCreate(0, E:toWorld(vec(0,0,0)), vec(1), ang(0,0,0), vec(255), "")
+   
+    #Holo
+    Table:pushArray(array(Base:toWorld(vec(0,0,50)), vec(1,1,1), Base:toWorld(ang(0,0,0)), vec(255), ""))
+    
+    
+    #Syda Holki
+   
+   
+}
+if(Table:count() > N) {
+   
+    while(holoCanCreate() & perf(1)) {
+       
+        N++
+        local Holo = Table[N, array]
+        holoCreate(N, Holo:vector(1), Holo:vector(2), Holo:angle(3), Holo:vector(4), Holo:string(5))
+        holoMaterial(N, Holo:string(6))
+        holoAlpha(N,255)
+       
+        holoParent(N,0)
+       
+        #alibHoloSolid(N)
+        
+ 
+    }  
+ 
+} else {
+   
+   
+    if(changed(O:keyPressed("B"))&O:keyPressed("B")){
+        L=toChar(34) #"
+        Pos = round(Base:pos() - O:aimEntity():pos())
+        FixPos = vec(-Pos:x(), -Pos:y(), -Pos:z())
+        Ang = round(O:aimEntity():angles())
+        #FixAng = ang(Ang:pitch(),Ang:yaw(),Ang:roll())
+        Model = L+O:aimEntity():model()+L
+        Material = L+O:aimEntity():getMaterial()+L
+        StPos = toString(FixPos):replace("[",""):replace("]","")
+        StAng = toString(Ang):replace("[",""):replace("]","")
+        print("Table:pushArray(array(Base:toWorld(vec("+StPos+")),vec(1),Base:toWorld(ang("+StAng+")),vec(255),"+Model+","+Material+"))")
+    }
+     
+}

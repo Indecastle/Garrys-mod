@@ -1,0 +1,187 @@
+@name Fly Anything
+@inputs  Pod:wirelink 
+@outputs Fire [Cam ResV]:vector [CamAng An]:angle
+@persist Acc T [Z H] Str [Angle Gat] Rotation Spin SpinningDown
+@persist [TarPos Colour Colour2]:vector TarAng:angle [Chair Driver E]:entity Props:array
+@persist W A S D R Shift Alt Space Active M1 M2
+@model 
+runOnTick(1)
+Podd = 0
+if(duped()|dupefinished()){reset()}
+E = entity():isWeldedTo()
+Props=E:getConstraints()
+if (first()) {
+    
+
+    T = 0
+    O = owner()
+    Z = entity():pos():z() + 5
+    Colour = vec(255,255,0)
+    Colour2 = vec()
+    Rotation = random(360)
+
+                                                                                                                                                        hint("Made by Mee, help from gabe2k2",5)
+
+    E = entity():isWeldedTo()
+    Props=E:getConstraints()
+    for (I=1,30) {
+
+    }
+
+    
+    #Colours/Alphas/Cam
+
+
+    findByModel("models/nova/airboat_seat.mdl")
+
+    Chair = findClosest(E:pos())
+
+
+}
+
+
+Poss = entity():isWeldedTo():pos()
+
+
+### Pod Controller ##################################################################################
+if(!Pod){
+User = E:driver()
+M1 = User:keyPressed("W")
+A = User:keyPressed("A")
+M2 = User:keyPressed("S")
+D = User:keyPressed("D")
+Shift = User:keySprint()
+Space = User:keyPressed("Space")
+Alt = User:keyWalk()
+Active = User:inVehicle()}
+
+if(Pod){
+M1           = Pod["W",          number]
+A           = Pod["A",          number]
+M2           = Pod["S",          number]
+D           = Pod["D",          number]
+R           = Pod["R",          number]
+Shift       = Pod["Shift",      number]
+Alt         = Pod["Alt",        number]
+Space       = Pod["Space",      number]
+Active      = Pod["Active",     number]
+W          = Pod["Mouse1",     number]
+S          = Pod["Mouse2",     number]
+}
+
+Driver = Chair:driver()
+if (changed(Driver)&Driver!=noentity()) {
+    Chair:hintDriver("Hello " + Driver:name() + "! The controls are:", 15000)
+    Chair:hintDriver("WASD - Forward/Back and Yaw", 15000)
+    Chair:hintDriver("Space - Ascend", 15000)
+    Chair:hintDriver("Alt - Descend", 15000)
+    Chair:hintDriver("Shift - Move Fast", 15000)
+
+}
+
+### Sound ###########################################################################################
+if (changed(Active)) {
+    if (Active) {
+
+    } 
+    else        {
+        soundPurge()
+        E:soundPlay(1,0,"buttons/button16.wav")
+    }
+}
+if (!Active & Spin!=0) {SpinningDown = 1} else {SpinningDown=0}
+if (changed(SpinningDown)) {
+    if (SpinningDown)   {E:soundPlay(2,0,"level/loud/climber.wav"), soundVolume(2, 0.2)} 
+    else                {soundStop(2)}
+}
+soundPitch(0, Spin + sqrt(E:vel():length()/2))
+soundPitch(2, sqrt(Spin)*45)
+soundPitch(3, 250)
+soundPitch(4, Gat)
+
+if (changed(Gat>25)) {
+    if (Gat>25) {
+        E:soundPlay(3,0,"passtime/horn_big.wav")
+        Fire = 1
+    } else {
+        soundStop(3)
+        Fire = 0
+    }
+}
+
+### Rangers #########################################################################################
+rangerPersist(1)
+rangerFilter(E)
+rangerFilter(entity())
+rangerFilter(Props)
+    
+rangerHitWater(1)
+RD1 = rangerOffset(E:pos(), E:pos():setZ(-100000))
+RD2 = rangerOffset(E:toWorld(vec(0,-30,0)), E:pos():setZ(10000))
+
+### Smoothers #######################################################################################
+#Guns
+if     (R) {Gat += 0.3}
+else       {Gat -= Gat/40}
+Gat = clamp(Gat, 0, 30)
+
+#Turning
+if     (A) {T += 0.1}
+elseif (D) {T -= 0.1}
+else       {T -= T/20}
+T = clamp(T, -3, 3)
+ 
+#Accelerating
+if     (W & !S)                 {Acc += Shift ? 0.1 : 0.05}
+elseif (S & !W & Acc>0.7)       {Acc -= Acc/5}
+elseif (S & !W)                 {Acc -= 0.04}
+else                            {Acc -= Acc/50}
+if (!Shift & Acc>3.5)       {Acc -= 0.1} 
+Acc = clamp(Acc, -5 , 10)
+
+#Strafing
+if     (M1 & !M2)               {Str += Shift ? 0.1 : 0.05}
+elseif (M2 & !M1)               {Str -= Shift ? 0.1 : 0.05}
+else                            {Str -= Str/30}
+if (!Shift & abs(Str)>3.5)  {Str -= Str/25} 
+Str = clamp(Str, -10 , 10)
+
+#Height
+if     (Space & !Alt)           {Z += Shift ? 0.4 : 0.15}
+elseif (Alt & !Space)           {Z -= Shift ? 0.4 : 0.15}
+else                            {Z -= Z/15}
+if (!Shift & Z>3.5)         {Z -= 0.2} 
+Z = clamp(Z, -15 , 15)
+if (Active) {H += Z} else {H -= clamp((20-Spin), 0, 20)}
+H = clamp(H, RD1:pos():z() + (Active ? 40 : 22), RD2:hit() ? RD2:pos():z()-0 : 10000)
+
+### Position and Angle ##############################################################################
+if (!E:isUnderWater()) {
+    TarPos = E:pos():setZ(H) + E:right():setZ(0):normalized()*Acc*30 + E:forward():setZ(0):normalized()*Str*20
+    TarAng = ang(0, E:angles():yaw() + (3+(E:vel():length()/4000))*T, Acc*1.8)
+    
+       E:applyForce(((TarPos - E:pos())    * 9  - E:vel())    * E:mass())
+    #E:applyAngForce(((TarAng - E:angles()) * 40 - E:angVel()) * E:mass()*4)
+    Turn = TarAng
+}
+
+holoCreate(234)
+holoPos(234,RD2:position())
+holoAlpha(234,0)
+
+
+### Stablizers #####################################################################################
+
+TarQ = quat(Turn)
+CurQ = quat(E)
+Q = TarQ / CurQ
+ResV = rotationVector(Q)
+Sr = E:toLocalAxis(rotationVector(Q))
+E:applyTorque((150*Sr - 12*E:angVelVector())*E:inertia())
+
+### Camera #########################################################################################
+Cam = entity():pos() + vec(0,0,10)
+CamAng= entity():angles() + ang(0,180,0)
+
+
+

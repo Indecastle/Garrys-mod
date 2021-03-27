@@ -1,0 +1,165 @@
+@name Teleport (Half-Life 2) dop1
+@inputs Turn
+@outputs R1 R2 R3 R4 #T1 T2 T3 T4
+@persist T1 T2 T3 T4   B1 B2 B3 B4 SpeedUp SpeedDown
+@trigger Turn
+
+if(first() | dupefinished()) {
+    #R1 = -10
+    #R2 = -20
+    #R3 = -30
+    #R4 = -40
+    SpeedUp = 2
+    SpeedDown = 2
+}
+
+
+if(~Turn & Turn) {
+    stopAllTimers()
+    timer("on",10)
+    #T1 = 0
+    B1 = B2 = B3 = B4 = 0
+    B1 = 1 timer("B2",700) timer("B3",1400) timer("B4",2100)
+}
+
+if(~Turn & !Turn) {
+    stopAllTimers()
+    timer("off",10)
+    B1 = B2 = B3 = B4 = 0
+    #B1 = B2 = B3 = B4 = 1
+    #B4 = 1 timer("B3",700) timer("B2",1400) timer("B1",2100)
+    B1 = 1 timer("B2",700) timer("B3",1400) timer("B4",2100)
+}
+
+function number heviside(Num) {
+    if(Num > 0) { return Num }
+    return 0
+}
+
+if(clk("B1")) { B1=1 }
+if(clk("B2")) { B2=1 }
+if(clk("B3")) { B3=1 }
+if(clk("B4")) { B4=1 }
+
+if(clk("on")) {
+    timer("on",100)
+    
+    if(B1) {
+        T1 = T1 + SpeedUp
+        if(T1 > 70) {
+            T1 = 70
+            B1 = 0
+        }
+    }
+    
+    if(B2) {
+        T2 = T2 + SpeedUp
+        if(T2 > 70) {
+            T2 = 70
+            B2 = 0
+        }
+    }
+    
+    if(B3) {
+        T3 = T3 + SpeedUp
+        if(T3 > 70) {
+            T3 = 70
+            B3 = 0
+        }
+    }
+    
+    if(B4) {
+        T4 = T4 + SpeedUp
+        if(T4 > 70) {
+            T4 = 70
+            B4 = 0
+        }
+    }
+    
+    R1 = (R1 + T1)%360
+    R2 = (R2 + T2)%360
+    R3 = (R3 + T3)%360
+    R4 = (R4 + T4)%360
+    
+    #if(!B1 & !B2 & !B3 & !B4) { stoptimer("on") }
+    
+}
+
+#[
+if(clk("off1")) {
+    stoptimer("on")
+    timer("off",10)
+    B1 = B2 = B3 = B4 = 1
+}
+]#
+
+if(clk("off")) {
+    timer("off",100)
+    
+    if(B1) {
+        T1 = T1 - SpeedDown
+        if(T1 < 5) {
+            T1 = 5
+            B1 = 0
+        }
+    }
+    elseif(T1==5){
+        if(inrange(R1,-6, 6)) {
+            R1 = 0
+            T1 = 0
+        }
+    }
+    
+    if(B2) {
+        T2 = T2 - SpeedDown
+        if(T2 < 5) {
+            T2 = 5
+            B2 = 0
+        }
+    }
+    elseif(T2==5){
+        if(inrange(R2,-6, 6)) {
+            R2 = 0
+            T2 = 0
+        }
+    }
+    
+    if(B3) {
+        T3 = T3 - SpeedDown
+        if(T3 < 5) {
+            T3 = 5
+            B3 = 0
+        }
+    }
+    elseif(T3==5){
+        if(inrange(R3,-6, 6)) {
+            R3 = 0
+            T3 = 0
+        }
+    }
+    
+    if(B4) {
+        T4 = T4 - SpeedDown
+        if(T4 < 5) {
+            T4 = 5
+            B4 = 0
+        }
+    }
+    elseif(T4==5){
+        if(inrange(R4,-6, 6)) {
+            R4 = 0
+            T4 = 0
+        }
+    }
+    
+    R1 = (R1 + T1)%360
+    R2 = (R2 + T2)%360
+    R3 = (R3 + T3)%360
+    R4 = (R4 + T4)%360
+    
+    
+    if(!T1 & !T2 & !T3 & !T4) { 
+        stoptimer("off") 
+    }
+}
+

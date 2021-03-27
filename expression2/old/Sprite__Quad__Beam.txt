@@ -1,0 +1,21 @@
+@name Sprite | Quad | Beam
+@inputs 
+@outputs 
+@persist [S Q B]:entity
+@trigger 
+interval(1000)
+
+
+Dir = owner():aimPos() - owner():attachmentPos("eyes")
+Dir = owner():attachmentPos("eyes") + Dir:normalized()*200
+
+
+#effectSpawn("Explosion", Dir, 10)
+S:remove()
+Q:remove()
+B:remove()
+
+S = drawSprite("gm_construct/scenic_1_alpha",Dir,vec(255),255,100,100)
+#Q = drawQuad("sprites/combineball_trail_blue_1",owner():attachmentPos("eyes"),Dir:toAngle(),vec(255),255,1,10000)
+
+#B=drawBeam("effects/alyxmonitor_talk",owner():attachmentPos("eyes"),Dir,vec(255),255,100)

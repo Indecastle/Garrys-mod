@@ -1,0 +1,10 @@
+@name KILL_ME_PRIKOL
+@inputs 
+@outputs 
+@persist 
+@trigger 
+runOnTick(1)
+if(changed(owner():keyReload())&owner():keyReload()){
+#owner():playerRagdoll():ragdollGravity(100)
+print("aza")
+}

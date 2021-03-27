@@ -1,0 +1,36 @@
+@name 3d cube
+@inputs A1 A2 WW:wirelink
+@outputs Fade 
+@persist 
+@trigger all
+@persist W:wirelink Ar:array K
+if(first()) {
+    setName("KEK")
+    W = entity():isWeldedTo():wirelink()
+    W:egpClear()
+    timer("scan", 100)
+    Ar = array(vec(100,100,100), vec(100,200,100), vec(200,200,100), vec(200,100,100), 1)
+    Ar = Ar:add(array(vec(100,100,200), vec(100,200,200), vec(200,200,200), vec(200,100,200), 2))
+    
+    Ar = Ar:add(array(vec(100,100,200), vec(100,100,200), vec(100,200,200), vec(100,200,100), 3))
+    Ar = Ar:add(array(vec(200,100,200), vec(200,100,200), vec(200,200,200), vec(200,200,100), 4))
+    
+    Ar = Ar:add(array(vec(100,100,100), vec(100,100,200), vec(200,100,200), vec(200,100,100), 5))
+    Ar = Ar:add(array(vec(100,200,100), vec(100,200,200), vec(200,200,200), vec(200,200,100), 6))
+    
+    K = 50
+}
+
+function number getCodeX(V:vector, K:number) {
+    return K*V:x()/(V:z()+K)
+}
+function number getCodeY(V:vector, K:number) {
+    return K*V:y()/(V:z()+K)
+}
+
+if(clk("scan")) {
+    W:egpPoly(1, array(vec2(100, 100), vec2(100, 200), vec2(200, 200), vec2(200, 100)))
+    W:egpColor(2,vec4(255,0,0,100))
+    
+    
+}

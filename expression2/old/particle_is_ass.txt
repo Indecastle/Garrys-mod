@@ -1,0 +1,17 @@
+@name particle is ass
+
+@inputs
+
+@outputs
+
+@persist EE:entity
+
+@trigger
+
+interval(1)
+
+EE=entity()
+
+particleGravity(vec(0))
+
+particle(10,10,15,"sprites/gmdm_pickups/light",randvec(50,255),entity():toWorld(vec(0,0,5)),randvec(-1,1)*20)

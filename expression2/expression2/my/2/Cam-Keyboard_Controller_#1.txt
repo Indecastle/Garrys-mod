@@ -1,0 +1,52 @@
+@name Cam-Keyboard Controller #1
+@inputs Ar:array
+@outputs 
+@persist Tabl:table C:entity L M
+@trigger 
+interval(100)
+if(first()) { L = 50 M = 10
+    Tabl["forward",number] = 119
+    Tabl["left",number] = 97
+    Tabl["back",number] = 115
+    Tabl["right",number] = 100
+    
+    Tabl["bearingUp",number] = 17
+    Tabl["bearingDown",number] = 18
+    Tabl["elevationLeft",number] = 19
+    Tabl["elevationRight",number] = 20
+    
+    #findIncludePlayerProps(owner())
+    findByClass("gmod_rtcameraprop")
+    C = findClosest(entity():pos())
+}
+
+C:setAng(C:angles():setRoll(0)) 
+CC = C:angles():roll()
+function mforward() { C:setPos(C:toWorld(vec(L,0,0))) }
+function mback() { C:setPos(C:toWorld(vec(-L,0,0))) }
+function mleft() { C:setPos(C:toWorld(vec(0,-L,0))) }
+function mright() { C:setPos(C:toWorld(vec(0,L,0))) }
+
+function bUp() { C:setAng(C:toWorld(ang(-M,0,0))) }
+function bDown() { C:setAng(C:toWorld(ang(M,0,0))) }
+function eLeft() { C:setAng(C:toWorld(ang(0,-M,0))+ang(0,0,-CC)) }
+function eRight() { C:setAng(C:toWorld(ang(0,M,0))+ang(0,0,-CC)) }
+
+
+for(I=1, 4) {
+    if(Ar:exists(I)) {
+        if(Ar[I,number] == Tabl["forward",number]) { mforward() }
+        if(Ar[I,number] == Tabl["back",number]) { mback() }
+        if(Ar[I,number] == Tabl["left",number]) { mleft() }
+        if(Ar[I,number] == Tabl["right",number]) { mright() }
+        
+        if(Ar[I,number] == Tabl["bearingUp",number]) { bUp() }
+        if(Ar[I,number] == Tabl["bearingDown",number]) { bDown() }
+        if(Ar[I,number] == Tabl["elevationLeft",number]) { eLeft() }
+        if(Ar[I,number] == Tabl["elevationRight",number]) { eRight() }
+    }
+    else { break }
+
+}
+
+

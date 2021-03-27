@@ -1,0 +1,8 @@
+@name Key_print
+
+runOnKeys(owner(),1)
+
+if(changed(keyClkPressed()))
+{
+    print(keyClkPressed())
+}

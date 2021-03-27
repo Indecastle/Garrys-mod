@@ -1,0 +1,440 @@
+@name SNEGOVIK Nappy The Snowman
+@outputs Player:entity Belt Mouth Hat Scarf Buttons Arms Sing Rave Test No Yes Dunno Closest:entity Array:array
+interval(40)
+runOnChat(1)
+
+if (first()|duped()) {
+    print("Hi there! I'm Nappy the snowman!")
+    Player  = owner()
+    Belt    = 1
+    Mouth   = 1
+    Hat     = 1
+    Scarf   = 1
+    Buttons = 1
+    Arms    = 1
+    
+    findByClass("player")
+    Array = findToArray()
+    
+    ############################################################
+    # Setting Up Holos
+    ### 
+    holoCreate(1, entity():pos())
+    holoModel(1, "hqicosphere2")
+    holoColor(1, vec(255,255,255))
+    holoScale(1, vec(2,2,2))
+    
+    holoCreate(2)
+    holoModel(2, "hqicosphere2")
+    holoColor(2, vec(255,255,255))
+    holoScale(2, vec(1.4,1.4,1.4))
+    
+    holoCreate(3)
+    holoModel(3, "hqcone")
+    holoColor(3, vec(255,100,50))
+    holoScale(3, vec(0.4,0.4,0.8))
+    
+    holoCreate(4)
+    holoModel(4, "hqicosphere2")
+    holoColor(4, vec())
+    holoScale(4, vec(0.15,0.15,0.15))
+    
+    holoCreate(5)
+    holoModel(5, "hqicosphere2")
+    holoColor(5, vec())
+    holoScale(5, vec(0.15,0.15,0.15))
+    
+    holoCreate(6)
+    holoModel(6, "hqcylinder")
+    holoColor(6, vec(139,69,19))
+    holoScale(6, vec(0.15,0.15,1))
+    
+    holoCreate(7)
+    holoModel(7, "hqcylinder")
+    holoColor(7, vec(139,69,19))
+    holoScale(7, vec(0.15,0.15,1))
+    
+    holoCreate(8)
+    holoModel(8, "hqcylinder")
+    holoColor(8, vec())
+    holoScale(8, vec(1.6,1.6,0.1))
+    
+    holoCreate(9)
+    holoModel(9, "hqcylinder")
+    holoColor(9, vec())
+    holoScale(9, vec(0.9,0.9,0.8))
+    
+    holoCreate(10)
+    holoModel(10, "hqicosphere2")
+    holoColor(10, vec())
+    holoScale(10, vec(0.15,0.15,0.15))
+    
+    holoCreate(11)
+    holoModel(11, "hqicosphere2")
+    holoColor(11, vec())
+    holoScale(11, vec(0.15,0.15,0.15))
+    
+    holoCreate(12)
+    holoModel(12, "hqicosphere2")
+    holoColor(12, vec())
+    holoScale(12, vec(0.15,0.15,0.15))
+    
+    holoCreate(13)
+    holoModel(13, "hqcylinder")
+    holoColor(13, vec(255,0,0))
+    holoScale(13, vec(0.92,0.92,0.2))
+    
+    holoCreate(14)
+    holoModel(14, "hqtorus2")
+    holoColor(14, vec(0,150,0))
+    holoScale(14, vec(1.1,1.1,1.1))
+    
+    holoCreate(15)
+    holoModel(15, "hqcylinder")
+    holoColor(15, vec(0,150,0))
+    holoScale(15, vec(0.15,0.15,0.7))
+    
+    holoCreate(16)
+    holoModel(16, "hqcylinder")
+    holoColor(16, vec(0,150,0))
+    holoScale(16, vec(0.15,0.15,0.7))
+    
+    holoCreate(17)
+    holoModel(17, "hqcylinder")
+    holoColor(17, vec(139,69,19))
+    holoScale(17, vec(0.1,0.1,0.4))
+    
+    holoCreate(18)
+    holoModel(18, "hqcylinder")
+    holoColor(18, vec(139,69,19))
+    holoScale(18, vec(0.1,0.1,0.4))
+    
+    holoCreate(19)
+    holoModel(19, "hqcylinder")
+    holoColor(19, vec(139,69,19))
+    holoScale(19, vec(0.1,0.1,0.4))
+    
+    holoCreate(20)
+    holoModel(20, "hqcylinder")
+    holoColor(20, vec(139,69,19))
+    holoScale(20, vec(0.1,0.1,0.4))
+
+    holoCreate(21)
+    holoModel(21, "hqicosphere2")
+    holoColor(21, vec())
+    holoScale(21, vec(0.1,0.1,0.1))
+
+    holoCreate(22)
+    holoModel(22, "hqicosphere2")
+    holoColor(22, vec())
+    holoScale(22, vec(0.1,0.1,0.1))
+    
+    holoCreate(23)
+    holoModel(23, "hqicosphere2")
+    holoColor(23, vec())
+    holoScale(23, vec(0.1,0.1,0.1))
+    
+    holoCreate(24)
+    holoModel(24, "hqicosphere2")
+    holoColor(24, vec())
+    holoScale(24, vec(0.1,0.1,0.1))
+    
+    holoCreate(25)
+    holoModel(25, "hqicosphere2")
+    holoColor(25, vec())
+    holoScale(25, vec(0.1,0.1,0.1))
+
+    holoCreate(26)
+    holoModel(26, "hqtorus2")
+    holoColor(26, vec(99,39,9))
+    holoScale(26, vec(1.6,1.6,1))
+    
+    holoCreate(27)
+    holoModel(27, "hqicosphere2")
+    holoColor(27, vec(150,150,0))
+    holoScale(27, vec(0.08,0.3,0.3))
+        
+    holoEntity(1):setTrails(20,0,1,"trails/smoke",vec(255,255,255), 220)
+    
+    ############################################################
+    # Decoration
+    ###
+    holoAng(3, holoEntity(2):angles() + ang(-90,0,0))
+    holoPos(3, holoEntity(2):toWorld(vec(-10,0,0)))
+    
+    holoAng(4, holoEntity(2):angles())
+    holoPos(4, holoEntity(2):toWorld(vec(-7,2.5,3)))
+    
+    holoAng(5, holoEntity(2):angles())
+    holoPos(5, holoEntity(2):toWorld(vec(-7,-2.5,3)))
+    
+    holoAng(6, holoEntity(1):angles() + ang(-45,60,0))
+    holoPos(6, holoEntity(1):pos() + holoEntity(6):up()*17)
+    
+    holoAng(7, holoEntity(1):angles() + ang(-45,-60,0))
+    holoPos(7, holoEntity(1):pos() + holoEntity(7):up()*17)
+    
+    holoAng(8, holoEntity(2):angles())
+    holoPos(8, holoEntity(2):toWorld(vec(0,0,6.5)))
+    
+    holoAng(9, holoEntity(2):angles())
+    holoPos(9, holoEntity(2):toWorld(vec(0,0,10)))
+    
+    holoAng(10, holoEntity(1):angles() + ang(5,0,0))
+    holoPos(10, holoEntity(1):pos() - holoEntity(10):forward()*12)
+    
+    holoAng(11, holoEntity(1):angles() + ang(20,0,0))
+    holoPos(11, holoEntity(1):pos() - holoEntity(11):forward()*12)
+    
+    holoAng(12, holoEntity(1):angles() + ang(35,0,0))
+    holoPos(12, holoEntity(1):pos() - holoEntity(12):forward()*12)
+    
+    holoAng(13, holoEntity(2):angles())
+    holoPos(13, holoEntity(2):toWorld(vec(0,0,9)))
+    
+    holoAng(14, holoEntity(1):angles() + ang(0,0,0))
+    holoPos(14, holoEntity(1):pos() + holoEntity(10):up()*10)
+    
+    holoAng(15, holoEntity(14):angles() + ang(35,0,-30))
+    holoPos(15, holoEntity(14):pos() - holoEntity(14):forward()*9.3 - holoEntity(14):up()*2.5 + holoEntity(14):right()*2)
+    
+    holoAng(16, holoEntity(14):angles() + ang(35,0,-45))
+    holoPos(16, holoEntity(14):pos() - holoEntity(14):forward()*9 - holoEntity(14):up()*2 + holoEntity(14):right()*4)
+    
+    holoAng(17, holoEntity(7):angles() + ang(30,0,0))
+    holoPos(17, holoEntity(7):pos() + holoEntity(7):up()*3 + holoEntity(17):up()*2)
+    
+    holoAng(18, holoEntity(7):angles() + ang(-20,20,0))
+    holoPos(18, holoEntity(7):pos() + holoEntity(7):up()*1 + holoEntity(18):up()*2)
+    
+    holoAng(19, holoEntity(6):angles() + ang(-30,0,0))
+    holoPos(19, holoEntity(6):pos() + holoEntity(6):up()*3 + holoEntity(19):up()*2)
+    
+    holoAng(20, holoEntity(6):angles() + ang(30,20,0))
+    holoPos(20, holoEntity(6):pos() + holoEntity(6):up()*1 + holoEntity(20):up()*2)
+    
+    holoAng(21, holoEntity(2):angles() + ang(-25,0,0))
+    holoPos(21, holoEntity(2):pos() - holoEntity(21):forward()*8.5)
+    
+    holoAng(22, holoEntity(2):angles() + ang(-23,10,0))
+    holoPos(22, holoEntity(2):pos() - holoEntity(22):forward()*8.5)
+      holoAng(23, holoEntity(2):angles() + ang(-23,-10,0))
+    holoPos(23, holoEntity(2):pos() - holoEntity(23):forward()*8.5)
+    
+    holoAng(24, holoEntity(2):angles() + ang(-19,20,0))
+    holoPos(24, holoEntity(2):pos() - holoEntity(24):forward()*8.5)
+    
+    holoAng(25, holoEntity(2):angles() + ang(-19,-20,0))
+    holoPos(25, holoEntity(2):pos() - holoEntity(25):forward()*8.5)
+    
+    holoAng(26, holoEntity(1):angles() + ang(0,0,0))
+    holoPos(26, holoEntity(1):pos() + holoEntity(10):up()*-3.5)
+    
+    holoAng(27, holoEntity(1):angles() + ang(-15,0,0))
+    holoPos(27, holoEntity(1):pos() - holoEntity(27):forward()*13)
+    
+    ############################################################
+    # Parenting
+    ###
+    holoParent(2, 1)
+    holoParent(3, 2)
+    holoParent(4, 2)
+    holoParent(5, 2)
+    holoParent(6, 1)
+    holoParent(7, 1)
+    holoParent(8, 2)
+    holoParent(9, 2)
+    holoParent(10, 1)
+    holoParent(11, 1)
+    holoParent(12, 1)
+    holoParent(13, 2)
+    holoParent(14, 1)
+    holoParent(15, 1)
+    holoParent(16, 1)
+    holoParent(17, 1)
+    holoParent(18, 1)
+    holoParent(19, 1)
+    holoParent(20, 1)
+    holoParent(21, 2)
+    holoParent(22, 2)
+    holoParent(23, 2)
+    holoParent(24, 2)
+    holoParent(25, 2)
+    holoParent(26, 1)
+    holoParent(27, 1)
+}
+
+############################################################
+# Chat Commands
+###
+
+if (chatClk(owner())) {
+    M = owner():lastSaid():explode(" ")
+    if (M:string(1) == "!follow") {hideChat(1)
+        Player = findPlayerByName(M:string(2))
+        if (Player==noentity()) {
+            Player = owner()
+            print("No Player Found!")
+        }
+        else {
+            print("Following " + Player:name() + "!")
+        }
+    }
+    elseif (M:string(1) == "!mouth") {hideChat(1)
+        Mouth = !Mouth
+        holoAlpha(21, 255*Mouth)
+        holoAlpha(22, 255*Mouth)
+        holoAlpha(23, 255*Mouth)
+        holoAlpha(24, 255*Mouth)
+        holoAlpha(25, 255*Mouth)
+    }
+    elseif (M:string(1) == "!belt") {hideChat(1)
+        Belt = !Belt
+        holoAlpha(26, 255*Belt)
+        holoAlpha(27, 255*Belt)
+    }
+    elseif (M:string(1) == "!hat") {hideChat(1)
+        Hat = !Hat
+        holoAlpha(8 , 255*Hat)
+        holoAlpha(9 , 255*Hat)
+        holoAlpha(13, 255*Hat)
+    }
+    elseif (M:string(1) == "!scarf") {hideChat(1)
+        Scarf = !Scarf
+        holoAlpha(14, 255*Scarf)
+        holoAlpha(15, 255*Scarf)
+        holoAlpha(16, 255*Scarf)
+    }
+    elseif (M:string(1) == "!buttons") {hideChat(1)
+        Buttons = !Buttons
+        holoAlpha(10, 255*Buttons)
+        holoAlpha(11, 255*Buttons)
+        holoAlpha(12, 255*Buttons)
+    }
+    elseif (M:string(1) == "!arms") {hideChat(1)
+        Arms = !Arms
+        holoAlpha(6,  255*Arms)
+        holoAlpha(7,  255*Arms)
+        holoAlpha(17, 255*Arms)
+        holoAlpha(18, 255*Arms)
+        holoAlpha(19, 255*Arms)
+        holoAlpha(20, 255*Arms)
+    }
+    elseif (M:string(1) == "!sing") {hideChat(1)
+        Rave = 0
+        Sing = !Sing
+        if (Sing==1) {
+            holoEntity(1):soundPlay(0,0,"music/portal_still_alive.mp3")
+            timer("sing", 176000)   
+        }
+    }
+    elseif (M:string(1) == "!rave") {hideChat(1)
+        Sing = 0
+        Rave = !Rave
+        if (Rave==1) {
+            holoEntity(1):soundPlay(1,0,"ravebreak.mp3")
+            timer("rave", 26000)   
+        }
+    }
+    elseif (M:string(1) == "!shutup") {hideChat(1)
+        Sing = 0, Rave = 0
+    }
+    elseif (M:string(1) == "!yes") {hideChat(1)
+        Yes = 1
+        timer("yes", 2000)
+    }
+    elseif (M:string(1) == "!no") {hideChat(1)
+        No = 1
+        timer("no", 2000)
+    }
+    elseif (M:string(1) == "!dunno") {hideChat(1)
+        Dunno = 1
+        timer("dunno",2000)
+    }
+    elseif (M:string(1) == "!reset") {hideChat(1)
+        holoPos(1, Player:pos() + Player:forward()*80)
+    }
+} 
+
+if (changed(numPlayers())) {
+    findByClass("player")
+    Array = findToArray()
+}
+
+if (clk("sing") | Sing==0) {
+    soundStop(0)
+    Sing = 0
+}
+if (clk("rave") | Rave==0) {
+    soundStop(1)
+    Rave = 0
+}
+if (clk("yes")) {
+    Yes = 0
+}
+if (clk("no")) {
+    No = 0
+}
+if (clk("dunno")) {
+    Dunno = 0
+}
+
+############################################################
+# Assign Variables
+###
+O           = Player
+Owner       = O:pos() 
+Holo        = holoEntity(1)
+Vector      = Holo:pos() - (Owner + vec(0,0,50)) 
+Distance    = Vector:setZ(0):length()
+Angle       = Vector:setZ(0):toAngle()
+
+############################################################
+# Snowman Manipulation
+###
+
+if (O:isAlive()) {holoAng(1, Angle)}
+else             {holoAng(1, Angle + ang(90,0,0))}
+    
+if (O:isAlive()) {
+    if     (Distance>100) {holoPos(1, Holo:toWorld(vec(-Distance/20,0,0)))}
+    elseif (Distance<50)  {holoPos(1, Holo:toWorld(vec(5-Distance/20,0,0)))}
+    
+    rangerFilter(Array)
+    RD = rangerOffset(100000, Holo:pos() + vec(0,0,80), vec(0,0,-1))
+    Test = RD:distance()
+    if     (RD:distance()<1)  {holoPos(1, Holo:toWorld(vec(0,0, 200)))}
+    elseif (RD:distance()<85) {holoPos(1, Holo:toWorld(vec(0,0,RD:distance()/5+holoEntity(1):vel():length()*5)))}
+    elseif (RD:distance()>94) {holoPos(1, Holo:toWorld(vec(0,0,5-(RD:distance()/10+holoEntity(1):vel():length()*5))))}
+}
+
+if (O:isAlive()) {
+    if (Rave) {
+        Nod = sin(curtime()*1000)*20
+        holoAng(2, Angle + ang(Nod+20,0,0))
+    }
+    elseif (Sing) {
+        Nod = sin(curtime()*120)*15
+        holoAng(2, (Holo:pos() - (Owner + (O:isCrouch() ? vec(0,0,15) : vec(0,0,50)))):toAngle() + ang(0,0,Nod))
+    }
+    elseif(Yes) {
+        Nod = sin(curtime()*1000)*15
+        holoAng(2, Angle + ang(Nod+20,0,0))
+    }
+    elseif(No) {
+        Nod = sin(curtime()*1000)*20
+        holoAng(2, (Holo:pos() - (Owner + (O:isCrouch() ? vec(0,0,15) : vec(0,0,50)))):toAngle() + ang(0,Nod,0))
+    }
+    elseif(Dunno) {
+        holoAng(2, (Holo:pos() - (Owner + (O:isCrouch() ? vec(0,0,15) : vec(0,0,50)))):toAngle() + ang(0,0,10))
+    }
+    else {
+        holoAng(2, (Holo:pos() - (Owner + (O:isCrouch() ? vec(0,0,15) : vec(0,0,50)))):toAngle())
+    }
+}
+else {
+    holoAng(2, Angle + ang(90,0,0))
+}
+    
+holoPos(2, holoEntity(1):pos() + holoEntity(1):up()*15)
+holoColor(13, Rave ? randvec(0,255) : vec(255,0,0))

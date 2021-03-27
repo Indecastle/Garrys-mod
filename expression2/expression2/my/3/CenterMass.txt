@@ -1,0 +1,34 @@
+@name CenterMass
+@inputs 
+@outputs VCenterMass:vector
+@persist Props:array X Y Z Mass I
+if(first()) {
+    findIncludeClass("prop*")	
+    findIncludeClass("acf*")
+    findIncludeClass("wire*")
+    findInSphere(entity():pos(),1000)
+    Props = findToArray()
+    timer("yes",200)
+}
+
+if(clk("yes") & (I<Props:count()) ) {
+    I++
+    #holoCreate(I,Props:entity(I):pos())
+    X += Props:entity(I):mass()*Props:entity(I):pos():x()
+    Y += Props:entity(I):mass()*Props:entity(I):pos():y()
+    Z += Props:entity(I):mass()*Props:entity(I):pos():z()
+    Mass += Props:entity(I):mass() 
+    timer("yes",10)
+    if(I>=Props:count()) { timer("yes2",100) }
+}
+
+if(clk("yes2")) {
+    X /= Mass
+    Y /= Mass
+    Z /= Mass
+    
+    VCenterMass = vec(X,Y,Z)
+    holoCreate(0,VCenterMass)
+    #holoScale(0,vec(0.3))
+    print(VCenterMass)
+}

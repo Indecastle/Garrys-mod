@@ -1,0 +1,35 @@
+@name INVIS #1
+@persist [P O]:entity Invis
+#runOnTick(1)
+
+
+entity():setAlpha(0)
+if(first()) {
+    owner():setColor(0,0,0)
+    O = owner()
+    runOnKeys(O,1)
+    P = findPlayerByName(O:name())
+    print(P:name())
+}
+
+#owner():setModel("models/weapons/shell.mdl") 
+P:weapon():setAlpha(0)
+
+
+if(changed(O:keyPressed("P"))&O:keyPressed("P")){
+    owner():setColor(255,255,255)
+    P:setMaterial("")
+    print("you visible")
+}
+if(changed(O:keyPressed("lbracket"))&O:keyPressed("lbracket")){
+    owner():setColor(0,0,0)
+    P:setMaterial("")
+    print("you visible in black")
+}
+elseif(changed(O:keyPressed("O"))&O:keyPressed("O")) {
+    owner():setColor(0,0,0)
+    P:setMaterial("Models/effects/vol_light001")
+    print("you invisible")
+}
+
+

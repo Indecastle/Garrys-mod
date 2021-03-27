@@ -1,0 +1,7 @@
+@name Print
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+concmd("say привет пишу с блокнота")

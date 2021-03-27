@@ -1,0 +1,35 @@
+@name podnimator2
+@inputs 
+@outputs E:entity P:entity
+@persist EV:vector
+@trigger 
+interval(0)
+if(first()){
+P = propSpawn("models/hunter/misc/shell2x2.mdl",1)
+P:setAlpha(0)
+holoCreate(1)
+holoParent(1,P)
+holoMaterial(1,"models/wireframe")
+holoAlpha(1,0)
+holoColor(1,vec(143,228,255))
+holoModel(1,"models/hunter/misc/shell2x2.mdl")
+holoPos(1,P:toWorld(vec()))
+P:setMaterial("lights/white")
+P:setColor(vec(30,30,30),100)
+}
+PV = P:pos()
+EVV = entity():pos()
+E = owner():aimEntity()
+EV = owner():aimEntity():pos()+vec(0,0,35)
+propSpawnUndo(1)
+if(owner():weapon():type() == "weapon_physgun"){
+
+if(owner():keyAttack1()){
+if(E == P){}
+else{
+if(PV == EVV){
+if(E:isPlayer() | E:isValid()){P:setPos(EV)}
+}}}else{
+P:setPos(entity():pos())
+P:propFreeze(1)}
+}

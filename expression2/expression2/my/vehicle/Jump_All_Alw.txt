@@ -1,0 +1,23 @@
+@name Vehicle Jump All Alw
+@inputs 
+@outputs Vec:vector 
+@persist [Vehicles OP]:array W:wirelink
+@trigger 
+if(first() & entity():isWeldedTo():type() == "gmod_wire_exit_point" ) {
+    W = entity():isWeldedTo():wirelink()
+    Vec = vec(0,0,100000)
+    W["Local Position",vector] = Vec
+    setName(randint(10000):toString())
+    timer("scan",10)
+}
+
+if (clk("scan")){
+    O = owner()
+    findByClass("prop_vehicle_*")
+    Vehicles=findToArray()
+    if (Vehicles:count()!=OP:count()){
+        W["Entities",array] = Vehicles
+    }
+    OP=Vehicles
+    timer("scan",10)
+}

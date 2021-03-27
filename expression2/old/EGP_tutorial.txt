@@ -1,0 +1,13 @@
+@name EGP tutorial
+@inputs EGP:wirelink A:wirelink
+@outputs 
+#This is the main thing of EGP
+EGP:egpBox(1, vec2(100,100), vec2(100,100))
+#This is how you do text
+EGP:egpText(2, "How you do it", vec2(250,250))
+#This is color
+EGP:egpColor(3, vec(0,255,0))
+#                    ^^ goes on the base of RGB red green blue
+#This is how you do egp emitter (The EGP:wirelink is screen A:wirelink is emitter
+A:egpBox(4, vec2(500,500), vec2(200,200)) 
+#The emitter is the same as EGP screen

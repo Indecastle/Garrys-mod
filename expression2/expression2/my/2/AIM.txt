@@ -1,0 +1,50 @@
+@name AIM
+@outputs [Pos Pos0]:vector Ang:angle Acos Target:entity Name:string
+@persist Active
+#interval(10)
+if(first()) {
+    setName("pristavka")
+    runOnKeys(owner(),1)
+    #runOnMouseKey(1)
+    runOnTick(1)
+    #Target = findPlayerBySteamID("STEAM_0:0:222495838")
+}
+
+if(changed(owner():keyPressed("g")) & owner():keyPressed("g")) {
+    findByClass("player")
+    Players = findToArray()
+    
+    local T = table()
+    for(I=1,Players:count()) {
+        Pos = (owner():aimPos() - owner():attachmentPos("eyes")):normalized()
+        Pos0 = (Players:entity(I):pos() - owner():attachmentPos("eyes")):normalized()
+        Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+        Acos = acos(Cos)
+        if(Acos < 50) {
+            T:pushArray(array(Acos, Players:entity(I)))
+        }
+        if(Players:entity(I):steamID() == "STEAM_0:0:222495838") { print(1) }
+    }
+    local Closest = T[1,array]
+    for(I=2,T:count()) {
+        if(T[I,array][1,number] < Closest[1,number]) {
+            Closest = T[I,array]
+        }
+    }
+    Target = Closest[2,entity]
+    Acos = Closest[1,number]
+    Name = Target:name()
+    
+}
+
+if(changed(owner():keyPressed("b")) & owner():keyPressed("b")) {
+    Active = !Active
+    print("Aim " + (Active ? "Activated" : "didn't active"))
+}
+
+if(owner():keyPressed("e") & Active) {
+    Dir = Target:shootPos()  - owner():shootPos()  - Target:vel()*tickInterval()*10
+    Ang = Dir:toAngle()
+    owner():setEyeAngles(Dir:toAngle())
+}
+

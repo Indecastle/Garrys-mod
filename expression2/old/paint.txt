@@ -1,0 +1,106 @@
+@name paint
+@outputs Time Meh:string On
+@persist [O,E]:entity [A,Pos]:array Inc [Vec1,Vec2,Curpos]:vector Cn Time T Rand Dist
+@model models/hunter/plates/plate075x075.mdl
+
+if(first()) {
+runOnTick(1)
+runOnChat(1)
+E=entity()
+O=owner()
+Pos:pushVector(E:pos())
+E:setColor(vec4(0,0,255,200))
+Curpos=E:pos()
+Cn=1
+}
+#ifdef players()
+A=players()
+#else
+if(findCanQuery()) {
+findByClass("player")
+A=findToArray()
+}
+#endif
+
+Meh=owner():lastSaid()
+if(chatClk(O)) {
+M=O:lastSaid():explode(" ")
+if(M[1,string]=="-random") {
+if(M[2,string]:toNumber()>0&M[3,string]:toNumber()>0&M[2,string]:toNumber()<100) {
+Num=M[2,string]:toNumber()
+Rand=1
+Dist=M[3,string]:toNumber()
+T=0
+for(I=1,100) {
+holoDelete(I)
+Pos:removeVector(I)
+}
+Pos:pushVector(E:pos())
+Curpos=E:pos()
+}
+else {
+hint("Something went wrong!",6)
+}
+}
+}
+if(Rand) {
+while(T<Num&perf()) {
+T++
+Pos:pushVector(E:toWorld(vec(randint(-Dist,Dist),randint(-Dist,Dist),0)))
+holoCreate(T)
+Vec1=Pos[Pos:count(),vector]
+Vec2=Pos[Pos:count()-1,vector]
+holoPos(T,vec((Vec2:x()+Vec1:x())/2,(Vec1:y()+Vec2:y())/2,(Vec2:z()+Vec1:z())/2))
+holoScaleUnits(T,vec(Vec2:distance(Vec1),30,1))
+holoMaterial(T,"models/shiny")
+holoColor(T,vec(255,0,0))
+holoAng(T,(Vec2-Vec1):toAngle())
+if(T==Num-1) {
+Rand=0
+}
+}
+}
+
+#Entity=holoCreate(number index,vector position,vector scale,angle ang,vector color,string model)
+if(changed(O:keyUse())&O:keyUse()) {
+Inc++
+Pos:pushVector(O:aimPos())
+holoCreate(Inc)
+Vec1=Pos[Pos:count(),vector]
+Vec2=Pos[Pos:count()-1,vector]
+holoPos(Inc,vec((Vec2:x()+Vec1:x())/2,(Vec1:y()+Vec2:y())/2,(Vec2:z()+Vec1:z())/2))
+holoScaleUnits(Inc,vec(Vec2:distance(Vec1),30,1))
+holoMaterial(Inc,"models/shiny")
+holoColor(Inc,vec(255,0,0))
+holoAng(Inc,(Vec2-Vec1):toAngle())
+}
+for(I=1,A:count()) {
+if(A[I,entity]:pos():distance(Curpos)<50&Pos:count()>1&!A[I,entity]:inNoclip()) {
+Cn++
+Curpos=Pos[Cn,vector]
+if(Cn==2) {
+E:setColor(vec4(0,255,0,200))
+On=1
+}
+holoColor(Cn-1,vec(0,255,0))
+if(Cn>Pos:count()) {
+concmd("say [LG] You won in "+Time:toString():left(Time:toString():length()-1)+"."+Time:toString():right(1)+" seconds")
+for(I=1,Cn) {
+holoColor(I,vec(255,0,0))
+# Pos:removeVector(I)
+}
+Cn=1
+Curpos=E:pos()
+Time=0
+On=0
+E:setColor(vec4(0,0,255,200))
+}
+}
+}
+if(changed(On)&On) {
+timer("delay",100)
+}
+if(clk("delay")&On) {
+Time++
+timer("delay",100)
+}

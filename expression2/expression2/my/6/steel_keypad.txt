@@ -1,0 +1,160 @@
+@name stealer of keypad
+@persist [O E Keypad]:entity [Players OP]:array [Button_tupples Button_tupples2]:table Distance Pressed_buttons:array
+@outputs Current_Key:string
+
+if(first() | dupefinished()) {
+    #ifdef noDuplications()
+        noDuplications()
+    #endif
+    
+    #runOnTick(1)  
+    setName("generic")
+    timer("scan",100)
+    O = owner()
+    E = entity()
+    Pressed_buttons = array()
+    Distance = 80#70
+    #runOnKey(1) runOnKeys(O, 1)
+    Button_tupples = table(
+        array("1", vec2(-2.271484, -1.260742), vec2(-0.993408, 0.012695)),
+        array("2", vec2(-0.620117, -1.257812), vec2(0.651611, 0.009766)),
+        array("3", vec2(0.958740, -1.250000), vec2(2.240723, 0.022461)),
+        array("4", vec2(-2.261475, -2.843750), vec2(-1.011475, -1.591797)),
+        array("5", vec2(-0.570679, -2.868164), vec2(0.678406, -1.623047)),
+        array("6", vec2(1.030273, -2.859375), vec2(2.272888, -1.616211)),
+        array("7", vec2(-2.188049, -4.471680), vec2(-0.995728, -3.278320)),
+        array("8", vec2(-0.552856, -4.514648), vec2(0.678955, -3.270508)),
+        array("9", vec2(1.045227, -4.498047), vec2(2.279358, -3.283203)),
+        array("ABORT", vec2(-2.284424, 0.368164), vec2(-0.233093, 1.663086)),
+        array("OK", vec2(0.319092, 0.375977), vec2(2.280090, 1.553711))
+    )
+    Button_tupples2 = table(
+        array("1", vec2(-2.826904, -1.206055), vec2(-1.183350, 0.285156)),
+        array("2", vec2(-0.847168, -1.237305), vec2(0.797852, 0.282227)),
+        array("3", vec2(1.122314, -1.232422), vec2(2.760498, 0.307617)),
+        array("4", vec2(-2.820068, -3.158203), vec2(-1.173828, -1.615234)),
+        array("5", vec2(-0.844482, -3.144531), vec2(0.799072, -1.630859)),
+        array("6", vec2(1.102783, -3.141602), vec2(2.769775, -1.644531)),
+        array("7", vec2(-2.810739, -5.092773), vec2(-1.158079, -3.578125)),
+        array("8", vec2(-0.851318, -5.084961), vec2(0.817383, -3.566406)),
+        array("9", vec2(1.110594, -5.077149), vec2(2.789794, -3.511719)),
+        array("ABORT", vec2(-2.741455, 0.615235), vec2(0.233399, 2.072266)),
+        array("OK", vec2(0.427246, 0.643555), vec2(2.768066, 2.098633))
+    )
+
+    function vector2 vec3_to_vec2(Vec:vector) {
+        return vec2(Vec:y(), Vec:z())
+    }
+    function void log_vec(Vec:vector) {
+        print(format("%.6f, %.6f", Vec:y(), Vec:z()))
+    }
+    function void update_current_key()
+    {
+        Current_Key = Pressed_buttons:concat("")
+    }
+    function number get_type() {
+        local Type = Keypad:type()
+        if (Type == "gmod_wire_keypad") { return 1 }
+        elseif (Type == "keypad" || Type == "keypad_wire") { return 2 }
+        else { return -1 }
+    }
+    
+    function void event_handler(Type:string, Type_enum:number) {
+        switch(Type)
+        {
+            case "1", 
+            case "2",
+            case "3", 
+            case "4", 
+            case "5", 
+            case "6", 
+            case "7", 
+            case "8", 
+            case "9", 
+                if (Pressed_buttons:count() == 4) {
+                    if (Type_enum == 1) {
+                        Pressed_buttons:clear()
+                    }
+                    else {
+                        # nothing
+                    }
+                    
+                }
+                else {
+                    Pressed_buttons:pushString(Type)
+                    update_current_key()
+                }
+                
+            break
+            case "OK", 
+                printColor(vec(255,255,0), "Key: ", vec(0,255,255), Pressed_buttons:concat(""))
+            case "ABORT",
+                Pressed_buttons:clear()
+                update_current_key()
+            break
+        }
+    }
+}
+
+
+
+if (clk("scan")){
+    findByClass("player")
+    Players=findToArray()
+    if (Players:count()!=OP:count()){
+        runOnKeys(Players, 1)
+        #foreach (I, P:entity = Players) {
+        #    if (P:shootPos():distance(Keypad:pos()) < 500 || P == O) {
+        #        runOnKeys(P,1)
+        #    }
+        #    else {
+        #        runOnKeys(P,0)
+        #    }
+        #}
+    }
+    OP=Players
+    timer("scan",1000)
+}
+
+if(changed(O:keyPressed("t")) & O:keyPressed("t"))
+{
+    local P = owner():aimEntity()
+    if (P:type() == "gmod_wire_keypad" || P:type() == "keypad" || P:type() == "keypad_wire" ) {
+        Keypad = P
+        print(Keypad)
+        Pressed_buttons:clear()
+        update_current_key()
+    }
+}
+
+local Who = keyClk()
+
+if (Who) {
+    if (changed(Who:keyPressed("e")) && Who:keyPressed("e") && Who:aimEntity() == Keypad && Who:shootPos():distance(Keypad:pos()) < Distance) {
+        local AimPos = keyClk():aimPos()
+        local LocalAimPos = Keypad:toLocal(AimPos)
+        local Vec2 = vec3_to_vec2(LocalAimPos)
+        #log_vec(LocalAimPos)
+        
+        local Type_enum = get_type()
+        local Buttons = (Type_enum == 1 ? Button_tupples : Button_tupples2)
+        for(I=1, Buttons:count()) {
+            local Tup = Buttons[I, array]
+            if (inrange(Vec2, Tup[2, vector2], Tup[3, vector2])) {
+                event_handler(Tup[1, string], Type_enum)
+                break
+            }
+        }
+        
+        #[
+        foreach (I, Tup:array = Button_tupples) {
+            print(123)
+            if (inrange(LocalAimPos, Tup:vector(3), Tup:vector(2))) {
+                print(Tup:string(1))
+                break
+            }
+        }
+        ]#
+    }
+}
+

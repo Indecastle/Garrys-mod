@@ -1,0 +1,144 @@
+@name Sperm Pod 
+@persist MaxEnts [Ar ID]:array [E Seat]:entity Tmr N Ang:angle Speed ChairOn
+@model models/hunter/blocks/cube1x1x025.mdl
+
+#[
+--CONTROLS
+-Shift = Reduce Forwards Speed
+-W = Forwards
+-S = Backwards
+-A = Turn Left
+-D = Turn Right
+-Space = Pitch Up
+-Alt = Pitch Down
+]#
+
+if(first())
+{
+    holoCreate(23000,entity():toWorld(vec(0,0,12)))
+    holoModel(23000,"models/nova/airboat_seat.mdl")
+    holoAng(23000,entity():toWorld(ang(0,90,0)))
+    holoParent(23000,entity())
+
+    entity():setMass(50000)
+    entity():propFreeze(0)
+    entity():propGravity(0)
+    entity():setColor(0,0,0,0)
+
+    runOnTick(1)
+
+    function entity:goto(Vector:vector)
+    {
+        This:applyForce(((Vector-This:pos())*10-This:vel())*This:mass())   
+    }
+
+    E = holoCreate(9001,entity():toWorld(vec(125,0,12)))
+
+    MaxEnts = 75
+    for(I=1,MaxEnts)
+    {
+        holoCreate(I,E:toWorld(vec(10+(I-1)*20,0,0)))
+        holoModel(I,"hq_sphere")
+        holoScale(I,vec(20/8,((MaxEnts+1)-I)/MaxEnts,((MaxEnts+1)-I)/MaxEnts)*3.6) 
+        holoParent(I,I-1)
+        holoColor(I,vec(255))
+        holoDisableShading(I,1)
+    }
+    Tmr = 20
+    timer("update",Tmr)
+
+    holoAlpha(9001,0)
+    holoParent(9001,entity())
+    holoCreate(9000,entity():toWorld(vec(0,0,12)))
+    holoModel(9000,"hq_sphere")
+    holoScale(9000,vec((72/6)*1.3,72/6,72/6))
+    holoAlpha(9000,55)
+    holoParent(9000,entity())
+    holoCreate(9002,holoEntity(9001):toWorld(vec(-25,0,0)))
+    holoModel(9002,"hq_rcylinder_thick")
+    holoAng(9002,holoEntity(9001):toWorld(ang(90,0,0))  )
+    holoScale(9002,vec(4.25,4.25,5))
+    holoParent(9002,entity())
+    holoDisableShading(9000,1)
+    holoDisableShading(9001,1)
+    holoDisableShading(9002,1)
+    holoUnparent(1)
+    holoParent(1,E)
+}
+
+N+=3
+holoAng(9001,entity():toWorld(ang(0,cos(N)*7,0)))
+
+if(clk("update"))
+{
+    stoptimer("update")
+    timer("update",Tmr)
+    
+    Ar:unshiftAngle(E:angles())
+    
+    for(I=1,MaxEnts)
+    {
+        holoAng(I,Ar[I,angle])
+    }
+    
+    if(Ar:count()>MaxEnts)
+    {
+        Ar:remove(MaxEnts+1)
+    }
+}
+
+if(ChairOn)
+{
+    Driver = Seat:driver()
+    W = Driver:keyForward()
+    S = Driver:keyBack()
+    A = Driver:keyLeft()
+    D = Driver:keyRight()
+    Space = Driver:keyJump()
+    Alt = Driver:keyWalk()
+    Shift = Driver:keySprint()
+
+    Ang = (ang((Space-Alt)*25,(A-D)*45 ,0))
+    applyAngForce((Ang-entity():angVel()*0.5-(entity():angles():setPitch(0):setYaw(0)*3))*entity():mass())
+
+    if(W||S)
+    {
+        Speed += (W-S)*1
+    }else
+    {
+        if(Speed>0)
+        {
+            Speed--
+        }
+        if(Speed<0)
+        {
+            Speed++
+        }
+    }
+    Speed = clamp(Speed,-7,80*(1+!Shift))
+    entity():goto(entity():pos()-entity():forward()*Speed)
+}else
+{
+    findByClass("prop_vehicle_prisoner_pod")
+    findSortByDistance(entity():pos())
+    if(find():pos():distance(entity():pos())<175&&find():owner()==owner()&&find():model()=="models/nova/airboat_seat.mdl")
+    {
+        Seat = find()
+        Seat:setPos(holoEntity(23000):pos())
+        Seat:setAng(holoEntity(23000):toWorld(ang()))
+        Seat:propFreeze(1)
+        timer("parent",100)
+    }
+    if(clk("parent"))
+    {
+        stoptimer("parent")
+        Seat:parentTo(entity())
+        holoDelete(23000)
+        ChairOn = 1
+    }
+}
+
+if(duped()||dupefinished())
+{
+    reset()
+}

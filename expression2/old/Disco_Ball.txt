@@ -1,0 +1,34 @@
+@name Disco Ball
+@persist Holo Rot Holos:array Timers:array
+runOnTick(1)
+if(first()){
+    Holo = 1
+    holoCreate(1)
+    holoModel(1,"sphere")
+    holoScale(1,vec(4,4,4))
+    holoParent(1,entity())
+    holoDisableShading(1,1)
+    holoMaterial(1,"phoenix_storms/gear")
+}
+if(int(curtime()/0.5) == curtime()/0.5){
+    Holo++
+    holoCreate(Holo)
+    holoAlpha(Holo,1)
+    holoEntity(Holo):setTrails(5,5,10,"effects/beam_generic01",vec(randint(0,255),randint(0,255),randint(0,255)),155)
+    holoAng(Holo,ang(randint(0,360),randint(0,360),randint(0,360)))
+    Holos:pushEntity(holoEntity(Holo))
+    Timers:pushNumber(500)
+}
+for(I = 0, Holos:count()){
+    Index = holoIndex(Holos[I,entity])
+    holoPos(Index,Holos[I,entity]:toWorld(vec(1,0,0)))
+    Timers[I,number] = Timers[I,number]-1
+    if(rangerOffset(1,Holos[I,entity]:pos(),Holos[I,entity]:eye()):startSolid() || Timers[I,number] < 1){
+        holoDelete(Index)
+        Holos:remove(I)
+        Timers:remove(I)
+        I--
+    }
+}
+holoAng(1,ang(0,Rot,0))
+Rot++

@@ -1,0 +1,1092 @@
+@name Propcore-HouseBuilder
+@inputs Butent
+@outputs Debug
+@persist [P0 Dragvec Drag Lastdrag Position Gstart Lookinterface Toolcolour Cen]:vector [Angle Ang]:angle [Model Toolmaterial Filename Filedesc Author]:string [Doors Doorsnear Doorsalpha Doorsopen Playerlist LibMats LibCols LibMods LibModOffset LibModAngs Holomodes LibToolsmodels LibToolsangs LibTools Lifts Liftstart Liftfloor Liftpos Liftang Proplist Shapelist Propmodel Proppos Propang Propmat Propcol]:array [Shapes Liftids Proptable]:table [Ent Player]:entity Gsize Use M1 M2 Click Maxheight Maxwidth Dragmode Dx Dy Clicker Editmode Floor Numparts Numdoors Numplayers Scanmode Doorproximity Near Interfacenum Interfacewidth Icol Dnum Dist Row Currentrow Drawrow Slot Nummaterials Clicky Reload C4 Lasteditmode Lastrow Click1 Numlifts Mass Speedlifts Maxliftfloors Nummodels Editdetail Drawtime Drawdelay Numprops Matdoor Matglass Matwall Matfloor Toolmat Spawnmode Spawnnum Spawntime Order
+@model models/props_combine/breenbust.mdl
+
+#Author: Playzr 
+#Youtube: https://youtu.be/dn1uvH_prfA
+
+interval(20)
+runOnChat(1)
+runOnLast(1)
+runOnFile(1)
+
+if(Butent>0){
+    Player = entity(Butent)
+}
+
+if(Drawtime>0){ Drawtime-=1 }
+
+if(first())
+{
+    print("PCORE-HouseBuilder by Playzr - Make houses like in The Sims!")
+    print("INSTRUCTIONS: Select either Gravity Gun, Crowbar or Blank Hands Weapon.")
+    print("Draw walls by dragging Left Mouse Button. Hold E to open up the Menu.")
+    print("Look down to see the tools, Look up to see the furniture, materials and colours.")
+    print("Click on a tool to select it. Alternatively, say 'floor' to select floor tool.")
+    print("Commands: Saveas NAME, Load NAME, Maxheight 3, Floor 2")
+    print("To use a lift, first enter the lift and then say a number.")
+    
+    # 47.95  3.5
+    Gsize = 47.95 - (1.45)
+    Rescale = 0.98
+    Maxheight = 3
+    Maxwidth = 8
+    # Matglass = "models/props_lab/monitorface"
+    # Matwall = "models/props_debris/building_template010a"
+    # Matfloor = "models/props_canal/metalwall005b"
+    # Matdoor = "models/map12a_hangar/woodfloor005a"
+    Matglass = 9
+    Matwall = 1         
+    Matfloor =6
+    Matdoor = 7
+    Doorproximity = 100
+    Interfacewidth = 15
+    Mass=5000
+    Speedlifts=3
+    Maxliftfloors=20
+    Drawdelay = 5
+    
+    Player=owner()
+ 
+    propSpawnEffect(0)
+    Player=owner()
+    Floor = 1
+    Toolcolour = vec(255, 0, 0)
+    Toolmaterial = ""
+    Editmode=1
+    
+    Cen = entity():pos() + vec(0, 0, -15)
+    
+    holoCreate(1)
+    holoColor(1, vec(255, 255, 255), 255)
+    holoModel(1, "tetra")
+    holoMaterial(1,"debug/debugdrawflat")
+    holoCreate(2)
+    holoColor(2, vec(0, 255, 0), 255)
+    holoScaleUnits(2, vec(Gsize*4, 1, 1) )
+    holoMaterial(2,"debug/debugdrawflat")
+    holoCreate(3)
+    holoColor(3, vec(0, 255, 0), 255)
+    holoScaleUnits(3, vec(1, Gsize*4, 1) )
+    holoMaterial(3,"debug/debugdrawflat")
+
+    holoCreate(4)
+    holoColor(4, vec(0, 255, 0), 180)
+    holoScale(4, vec(4, 4, 1)*Rescale )
+    
+    holoModel(4, "models/hunter/plates/plate4x4.mdl")
+    holoDisableShading(4,1)
+    holoCreate(5)
+    holoCreate(6)
+    # holoColor(6, vec(255, 0, 0))
+    holoCreate(7)
+    holoCreate(8)
+    holoCreate(9)
+    # holoColor(7, vec(0, 0, 255))
+    holoAlpha(5, 0)
+    holoAlpha(6, 0)
+    holoAlpha(7, 0)
+    holoAlpha(8, 0)
+    holoAlpha(9, 0)
+    
+    I=1
+    while(I<=Interfacewidth){
+        holoCreate(50+I)
+        holoScale(50+I, vec(0.05, 0, 0) + (vec(0, 0.9, 0.9)*(1.5-(Interfacewidth/15)) ) )
+        I+=1
+    }
+    
+    Y=0 X=1
+    I=1
+    while(X<32){
+        Y+=1
+        if(Y>32){ X+=1 Y=X }
+        if(Y==9){ Y=16 }
+        elseif(Y==17){ Y=24 }
+        elseif(Y==25){ Y=32 }
+        
+        if(X==9){ X=16 }
+        elseif(X==17){ X=24 }
+        elseif(X==25){ X=32 }
+        
+        if(X<=32){ 
+            Str = X:toString()+"x"+Y:toString()
+            Shapes[Str, number] = I 
+            Shapelist[I, string] = Str
+            # print(X:toString()+"x"+Y:toString())
+        }
+        I+=1
+    }
+    # print(I+" models added")
+    
+    X=1
+    Y=1
+    I=1
+    while(Y<=3){
+        # V = vec(X, 0, 0)
+        if(Y==1){ V = vec((15-X)*15, X*15, 0) }
+        if(Y==2){ V = vec(0, (15-X)*15, X*15) }
+        if(Y==3){ V = vec(X*15, 0, (15-X)*15) }
+        V = V:normalized()*255
+        LibCols[(Y*15)+X, vector] = V
+        
+        X+=1
+        if(X>15){ X=1 Y+=1 }
+        I+=1
+    }
+    
+    LibMats[1, string] = "models/props_debris/building_template010a"
+    LibMats[2, string] = "models/props_buildings/plasterwall021a"
+    LibMats[3, string] = "models/props_debris/concretewall019a" 
+    LibMats[4, string] = "models/props_c17/furniturefabric001a"
+    LibMats[5, string] = "models/props_c17/furniturefabric002a"
+    LibMats[6, string] = "models/props_canal/metalwall005b"
+    LibMats[7, string] = "models/map12a_hangar/woodfloor005a"
+    LibMats[8, string] = "models/gibs/woodgibs/woodgibs01"
+    LibMats[9, string] = "models/props_lab/monitorface"
+    
+    Nummaterials=9
+    
+    LibToolsmodels[1, string] = "models/cheeze/buttons2/up.mdl"
+    LibToolsangs[1, angle] = ang(90, 90, -90)
+    LibTools[1, vector] = vec(0, 0, 0)
+    LibToolsmodels[2, string] = "models/cheeze/buttons2/down.mdl"
+    LibToolsangs[2, angle] = ang(90, 90, -90)
+    LibTools[2, vector] = vec(0, 0, 0)
+    
+    LibToolsmodels[3, string] = "models/hunter/triangles/1x1.mdl"
+    LibToolsangs[3, angle] = ang(0, 90, 90)
+    LibTools[3, vector] = vec(5, 0, 0)
+    LibToolsmodels[5, string] = "models/props_phx/construct/wood/wood_wire1x2b.mdl"
+    LibToolsangs[5, angle] = ang(0, 90, 90)
+    LibTools[5, vector] = vec(2, 0, 0)
+    LibToolsmodels[6, string] = "models/props_c17/door01_left.mdl"
+    LibToolsangs[6, angle] = ang(0, 0, 0)
+    LibTools[6, vector] = vec(9, 0, 0)
+    LibToolsmodels[7, string] = "models/props_phx/construct/glass/glass_plate1x2.mdl"
+    LibToolsangs[7, angle] = ang(90, 0, 0)
+    LibTools[7, vector] = vec(3, 0, 0)
+    LibToolsmodels[8, string] = "models/hunter/plates/plate1x3.mdl"
+    LibToolsangs[8, angle] = ang(0, 90, 90)
+    LibTools[8, vector] = vec(1, 0, 0)
+    LibToolsmodels[9, string] = "models/hunter/blocks/cube1x1x025.mdl"
+    LibToolsangs[9, angle] = ang(-15, 0, 0)
+    LibTools[9, vector] = vec(4, 0, 0)
+    LibToolsmodels[10, string] = "models/hunter/plates/plate1x1.mdl"
+    LibToolsangs[10, angle] = ang(0, 90, 90)
+    LibTools[10, vector] = vec(7, 0, 0)
+    LibToolsmodels[11, string] = "models/hunter/plates/plate1x2.mdl"
+    LibToolsangs[11, angle] = ang(0, 90, 90)
+    LibTools[11, vector] = vec(8, 0, 0)
+    LibToolsmodels[12, string] = "models/hunter/misc/stair1x1.mdl"
+    LibToolsangs[12, angle] = ang(-90, 0, 90)
+    LibTools[12, vector] = vec(6, 0, 0)
+    LibToolsmodels[13, string] = "models/hunter/misc/lift2x2.mdl"
+    LibToolsangs[13, angle] = ang(0, 180, 0)
+    LibTools[13, vector] = vec(10, 0, 0)
+    
+    LibMods[1, string] = "models/props_c17/FurnitureToilet001a.mdl"
+    LibModOffset[1, vector] = vec(12, 0, 50)
+    LibModAngs[1, angle] = ang(0, 0, 0)
+    LibMods[2, string] = "models/props_c17/FurnitureSink001a.mdl"
+    LibModOffset[2, vector] = vec(12, 0, 22)
+    LibModAngs[2, angle] = ang(0, 0, 0)
+    LibMods[3, string] = "models/props_interiors/BathTub01a.mdl"
+    LibModOffset[3, vector] = vec(28, 0, 12)
+    LibModAngs[3, angle] = ang(0, 90, 0)
+    LibMods[4, string] = "models/props_c17/FurnitureCouch001a.mdl"
+    LibModOffset[4, vector] = vec(22, 0, 20)
+    LibModAngs[4, angle] = ang(0, 0, 0)
+    LibMods[5, string] = "models/props_c17/FurnitureChair001a.mdl"
+    LibModOffset[5, vector] = vec(12, 0, 22)
+    LibModAngs[5, angle] = ang(0, 0, 0)
+    LibMods[6, string] = "models/props_c17/FurnitureTable002a.mdl"
+    LibModOffset[6, vector] = vec(22, 0, 21)
+    LibModAngs[6, angle] = ang(0, 0, 0)
+    LibMods[7, string] = "models/props_c17/FurnitureDrawer001a.mdl"
+    LibModOffset[7, vector] = vec(16, 0, 22)
+    LibModAngs[7, angle] = ang(0, 0, 0)
+    
+    Nummodels=LibMods:count()
+}
+
+if(chatClk()){
+    Spoke = lastSpoke()
+    Said = lastSaid():lower()
+    Words = Said:explode(" ")
+    First=Words[1, string]
+    Second=Words[2, string]
+    Third=Words[3, string]
+    Parameter = Second:toNumber()
+    Cmd=0
+    if(Spoke==Player){
+        if(Said=="wall"){ Editmode=1 Cmd=1 }
+        if(Said=="arch"){ Editmode=2 Cmd=1 }
+        if(Said=="window"){ Editmode=3 Cmd=1 }
+        if(Said=="floor"){ Editmode=4 Cmd=1 }
+        if(Said=="roof"){ Editmode=5 Cmd=1 }
+        if(Said=="stairs"){ Editmode=6 Cmd=1 }
+        if(Said=="fence"){ Editmode=7 Cmd=1 }
+        if(Said=="highfence"){ Editmode=8 Cmd=1 }
+        if(Said=="door"){ Editmode=9 Cmd=1 }
+        if(Said=="colour" | Said=="color"){ Editmode=30 Cmd=1 }
+        if(Said=="material"){ Editmode=31 Cmd=1 }
+        if(Said=="lift"){ Editmode=10 Cmd=1 }
+        
+        if(Said=="switch"){ 
+            E=owner():aimEntity()
+            if(E:pos():length()>0){
+                Player=E
+            }
+        }
+        if(Said=="return"){
+            Player=owner()
+        }
+        
+        if(Said=="rebuild"){
+            Cmd=1
+            Proplist:propDelete()
+            Proplist = array()
+            Proptable = table()
+            
+            Spawnmode=1
+            Spawnnum=1
+            entity():setColor(vec(0,0,255), 255)
+        }
+        
+        if(First=="maxheight" & Parameter>0){ Maxheight = Parameter Cmd=1 }
+        if(First=="floor" & Parameter>0){ Floor = Parameter Cmd=1 }
+        if(First=="saveas" & Second:length()>0){
+            Glon=  Player:name()+"|"
+            Glon+= glonEncode(Proppos)+"|"
+            Glon+= glonEncode(Propang)+"|"
+            Glon+= glonEncode(Propmat)+"|"
+            Glon+= glonEncode(Propmodel)+"|"
+            Glon+= glonEncode(Propcol)+"|"
+            Glon+= Numprops:toString()
+            Filename = "housebuilder/"+Second+".txt"
+            Filedesc = Second
+            fileWrite(Filename, Glon)
+            print("Saved file "+Filename+" size: "+ceil(Glon:length()/1000)+"KB")
+            Numprops-=1
+        }
+        if(First=="load" & Second:length()>0){
+            Filename = "housebuilder/"+Second+".txt"
+            Filedesc = Second
+            fileLoad(Filename)
+            entity():setColor(vec(255,0,0), 255)
+        }
+        if(Cmd==1 & Spoke==owner()){ hideChat(1) }
+    }
+    Var = First:toNumber()
+    if((Var>0 | First=="0") & (Var<Maxliftfloors | Var==9001)){
+        rangerFilter(Spoke)
+        RD = rangerOffset(Spoke:pos()+vec(0, 0, 20), Spoke:pos()+vec(0, 0, -30))
+        Ent = RD:entity()
+        if(Ent:model()=="models/hunter/misc/lift2x2.mdl" & Ent:owner()==owner()){
+            Slot = Liftids[Ent:id():toString(), number]
+            if(Slot>0){
+                Liftfloor[Slot, number] = Var
+                if(Spoke==owner()){ hideChat(1) }
+                if(Var==9001){ 
+                    # Maxliftfloors=9001 
+                    Ent:setColor(vec(255,0,0)) Ent:soundPlay(6, 30, "music/hl2_song4.mp3")
+                }
+            }
+        }
+    }
+}
+elseif(fileClk()){
+    if(fileLoaded()){
+        Contents = fileRead()
+        Words = Contents:explode("|")
+        if(Words:count()>=7){
+            Proplist:propDelete()
+            Proplist = array()
+            Proptable = table()
+            
+            Author = Words[1, string]
+            Proppos = glonDecode(Words[2, string])
+            Propang = glonDecode(Words[3, string])
+            Propmat = glonDecode(Words[4, string])
+            Propmodel = glonDecode(Words[5, string])
+            Propcol = glonDecode(Words[6, string])
+            Numprops = Words[7, string]:toNumber()
+            print("Loaded file "+Filedesc+" Author: "+Author+" Pieces: "+Numprops)
+            Spawnmode=1
+            Spawnnum=1
+            entity():setColor(vec(0,0,255), 255)
+        }
+    }
+}
+else{
+    P0 = entity():pos() + vec(0, 0, ((Floor-1)*3*Gsize) - 15)
+    Cen = entity():pos() + vec(0, 0, -15)
+
+    if(Numdoors>0){
+        if(Numplayers!=numPlayers()){
+            Playerlist = players()
+            Numplayers = Playerlist:count()
+            Scanmode=1
+            Doorsnear=array()
+        }
+        
+        if(Scanmode>0){
+            Ent = Playerlist[Scanmode, entity]
+            V2 = Ent:shootPos()
+            I=1
+            while(I<=Numdoors){
+                Doorent = Doors[I, entity]
+                V = Doorent:pos()
+                
+                Near = Doorsnear[I, number]
+                Distance = V:distance(V2)
+                if(Distance<=Doorproximity){ Near=1 Doorsnear[I, number]=1 }
+                
+                if(Scanmode==Numplayers){
+                    if(Doorsopen[I, number]==0 & Near==1){
+                        Doorsopen[I, number]=1
+                        Doorsalpha[I, number]=255
+                        Doorent:soundPlay(1, 0, "doors/door1_move.wav")
+                        Doorent:propNotSolid(1)
+                    }
+                    if(Doorsopen[I, number]==1 & Near==0){
+                        Doorsopen[I, number]=0
+                        Doorsalpha[I, number]=0
+                        Doorent:soundPlay(1, 0, "doors/wood_stop1.wav")
+                        Doorent:propNotSolid(0)
+                    }
+                }
+                
+                if(Doorsopen[I, number]==1){
+                    Alpha = Doorsalpha[I, number]
+                    if(Alpha>0){
+                        Alpha-=30
+                        if(Alpha<0){ Alpha=0 }
+                        Doorsalpha[I, number]=Alpha
+                        Doorent:setAlpha(Alpha)
+                    }
+                }
+                else{
+                    Alpha = Doorsalpha[I, number]
+                    if(Alpha<255){
+                        Alpha+=30
+                        if(Alpha>255){ Alpha=255 }
+                        Doorsalpha[I, number]=Alpha
+                        Doorent:setAlpha(Alpha)
+                    }
+                }
+                
+                I+=1
+            }
+            Scanmode+=1
+            if(Scanmode>Numplayers){
+                Scanmode=1
+                Doorsnear=array()
+            }
+        }
+    }
+    
+    if(Numlifts>0){
+        I=1
+        while(I<=Numlifts){
+            Ent = Lifts[I, entity]
+            Lpos = Liftpos[I, vector]
+            Lang = Liftang[I, angle]
+            Lstart = Liftstart[I, vector]
+            Lfloor = Liftfloor[I, number]
+            Lheight = Lfloor*Gsize*3
+            Lz = Lpos:z()
+            Lfrozen = Ent:isFrozen()
+            Sp = Speedlifts
+            if(Lfloor==9001){
+                Sp = 8
+                Ent:setColor( vec(randint(0,255),randint(0,255),randint(0,255)) )
+                if(Lz>(20*Gsize*3)){ Lpos = Lstart Liftfloor[I, number]=0}
+            }
+            if(Lz<Lstart:z()+Lheight){ Lz+=Sp }
+            if(Lz>Lstart:z()+Lheight){ Lz-=Sp }
+            Lpos = Lpos:setZ(Lz)
+            
+            Liftpos[I, vector] = Lpos
+            
+            V = (Cen+Lpos) - Ent:pos()
+            if(V:length()>3){
+                if(Lfrozen==1){ Ent:propFreeze(0) }
+                Ent:applyForce( ( (V*5) + (Ent:vel()*-1) ) * Mass )
+                
+                Ang = Ent:toLocal( Lang )
+                
+                Ent:applyAngForce( ( (Ang*190) + (Ent:angVel()*-25) ) * Mass )
+            }
+            else{
+                if(Lfrozen==0){ Ent:propFreeze(1) }
+            }
+            
+            I+=1
+        }
+    }
+    
+    Weapon = Player:weapon():type()
+    if(Weapon=="weapon_blank_hands" | Weapon=="weapon_crowbar" | Weapon=="weapon_physcannon"){
+        Use = Player:keyUse()
+        M1 = Player:keyAttack1()
+        M2 = Player:keyAttack2()
+        Reload = Player:keyReload()
+        C1 = 0
+        C2 = 0
+        C3 = 0
+        C4 = 0
+        
+        if(Editmode==1 | Editmode==2){ Numparts = 1}
+        elseif(Editmode==3){ Numparts=3 }
+        elseif(Editmode==4){ Numparts=1 }
+        elseif(Editmode==5){ Numparts=4 }
+        elseif(Editmode==6){ Numparts=3 }    
+        elseif(Editmode==7){ Numparts=1 }
+        elseif(Editmode==8){ Numparts=1 }
+        elseif(Editmode==9){ Numparts=2 }
+        elseif(Editmode==10){ Numparts=1 }
+        L0 = Player:shootPos()
+        L = Player:eye()
+        N = vec(0,0,1)
+        
+        D = ((P0 - L0):dot(N)) / (L:dot(N))
+        
+        if(M1==1 & Click1==0){
+            C1=1
+            Click1=1
+        }
+        
+        if(M1==0 & Click1==1){
+            C1=2
+            Click1=0
+        }
+        
+        if(Use==1 & Clicky==0){
+            Clicky=1
+            C4=1
+        }
+        if(Use==0 & Clicky==1){
+            Clicky=0
+            C4=2
+        }
+        
+        if(Reload==1 & Clicker==0){
+            Clicker=1
+            C3=1
+        }
+        if(Reload==0 & Clicker==1){
+            Clicker=0
+            C3=2
+        }
+    
+        if(C3==1 & Order==0){
+            Ent = Player:aimEntity()
+            Ids = Ent:id():toString()
+            Slot = Proptable[Ids, number]
+            if(Slot>0){
+                Ent = Proplist[Slot, entity]
+                Ent:propDelete()
+                Proplist:remove(Slot)
+                Proptable[Ids, number]=0
+                Proppos:remove(Slot)
+                Propang:remove(Slot)
+                Propmodel:remove(Slot)
+                Propmat:remove(Slot)
+                Propcol:remove(Slot)
+                Numprops-=1
+                Order=Slot
+            }
+        }
+        
+        if(C4==1){
+            Lasteditmode = Editmode
+            Editmode=20 Lookinterface=Player:eye() Dist=0.2 Icol=0 Dnum=0
+        }
+        
+        
+        if(Editmode==20){
+            Ang=Player:eyeAngles()
+            V = Player:shootPos()
+            Veye = Player:eye()
+            if(M2==1){ Lookinterface = Player:eye() }
+            else{ Lookinterface = Lookinterface:setZ( Player:eye():z() ):normalized() }
+            V2 = Lookinterface
+            I=1
+            while(I<=5){
+                V3 = V2:rotate(ang(0, (95/Interfacewidth)*(Interfacenum-(Interfacewidth*0.5)-0.5), 0)*-1)
+                Distance = V3:distance(Veye)
+                if(Distance<Dist){ Dist=Distance Dnum=Interfacenum }
+                T = 60
+                if(Icol==Interfacenum){ T=T*0.7 }
+                holoAlpha(50+Interfacenum, 255)
+                holoPos(50+Interfacenum, V + (V3*T))
+                if(Currentrow>=8){
+                    holoAng(50+Interfacenum, V3:setZ(0):toAngle() + LibToolsangs[Interfacenum, angle])
+                }
+                else{
+                    holoAng(50+Interfacenum, V3:setZ(0):toAngle())
+                }
+                Interfacenum+=1
+                if(Interfacenum>Interfacewidth){ 
+                    Interfacenum=1 
+                    I=9000 
+                }
+                I+=1
+            }
+            if(Dnum>0 & Interfacenum==1){ 
+                if(Icol!=Dnum){
+                    Icol=Dnum
+                }
+                Dnum=0
+                Dist=0.2
+                
+                Var = Player:eyeAngles():pitch() + 45
+                Row = round(Var/8)
+                
+                if(Row!=Currentrow & Drawrow<=1){
+                    Drawrow=1
+                    Currentrow=Row
+                }
+                Debug = Row
+            }
+            
+            if(C1==1){
+                if(Currentrow<=3){
+                    Toolcolour = LibCols[(Currentrow*15)+Icol, vector]
+                    Editmode=30
+                }
+                
+                if(Currentrow>=6 & Currentrow<=7){
+                    Slot = ((Currentrow-6)*15)+Icol
+                    # Debug = Slot
+                    if(Slot<=Nummodels){ 
+                        Editmode=22
+                        Editdetail=Slot
+                        holoModel(5, LibMods[Editdetail, string])
+                        holoAng(5, LibModAngs[Editdetail, angle])
+                        print("model "+LibMods[Editdetail, string]+"  num: "+Editdetail)
+                        holoColor(5, vec(255,255,255), 255)
+                        holoMaterial(5, "")
+                    }
+                }
+                else{
+                    holoAlpha(5, 0)
+                }
+                
+                if(Currentrow>=4 & Currentrow<=5){
+                    Slot = ((Currentrow-4)*15)+Icol
+                    if(Slot<=Nummaterials){
+                        Toolmaterial = LibMats[Slot, string]
+                        Toolmat = Slot
+                    }
+                    Editmode=31
+                }
+                if(Currentrow>=8){
+                    if(Icol==1){ Floor += 1 Editmode=Lasteditmode }
+                    elseif(Icol==2){ 
+                        Floor -= 1 
+                        Editmode=Lasteditmode
+                        if(Floor<1){ Floor=1 } 
+                    }
+                    Var = LibTools[Icol, vector]:x()
+                    if(Var>0){ Editmode = Var }
+                }
+            }
+            
+            if(C4==2 | C1==1){
+                if(C4==2){ Editmode=Lasteditmode }
+                I=1
+                while(I<=Interfacewidth){
+                    holoAlpha(50+I, 0)
+                    I+=1
+                }
+            }
+            
+            if(Drawrow>0 & Drawtime==0){
+                if(Currentrow<=3){
+                    holoModel(50+Drawrow, "cube")
+                    holoScale(50+Drawrow, vec(0.05, 0, 0) + (vec(0, 0.9, 0.9)*(1.5-(Interfacewidth/15)) ) )
+                    holoColor(50+Drawrow, LibCols[(Currentrow*15)+Drawrow, vector]) 
+                    holoMaterial(50+Drawrow, "debug/drawflat") 
+                    Drawdelay=2
+                }
+                
+                if(Currentrow>=4 & Currentrow<=5){
+                    Slot = ((Currentrow-4)*15)+Drawrow
+                    # Debug = Slot
+                    holoModel(50+Drawrow, "cube")
+                    holoScale(50+Drawrow, vec(0.05, 0, 0) + (vec(0, 0.9, 0.9)*(1.5-(Interfacewidth/15)) ) )
+                    if(Slot<=Nummaterials){ holoMaterial(50+Drawrow, LibMats[Slot, string]) }
+                    else{ holoMaterial(50+Drawrow, "debug/drawflat") }
+                    holoColor(50+Drawrow, vec(255, 255, 255)) 
+                    holoModel(50+Drawrow, "cube")
+                    Drawdelay=5
+                }
+                
+                if(Currentrow>=6 & Currentrow<=7){
+                    Slot = ((Currentrow-6)*15)+Drawrow
+                    # Debug = Slot
+                    if(Slot<=Nummodels){ 
+                        holoModel(50+Drawrow, LibMods[Slot, string]) 
+                        holoScale(50+Drawrow, vec(1, 1, 1)*0.1)
+                    }
+                    else{ 
+                        holoModel(50+Drawrow, "cube") 
+                        holoScale(50+Drawrow, vec(0.05, 0, 0) + (vec(0, 0.9, 0.9)*(1.5-(Interfacewidth/15)) ) )
+                    }
+                    holoColor(50+Drawrow, vec(255, 255, 255)) 
+                    Drawdelay=3
+                }
+                
+                if(Currentrow>=8){
+                    holoModel(50+Drawrow, LibToolsmodels[Drawrow, string])
+                    if(Drawrow<=2){ holoScale(50+Drawrow, vec(1, 1, 1)*0.6) }
+                    elseif(Drawrow==13){ holoScale(50+Drawrow, vec(1, 1, 1)*0.05) }
+                    else{ holoScale(50+Drawrow, vec(1, 1, 1)*0.08) }
+                    Drawdelay=2
+                    holoColor(50+Drawrow, vec(255, 255, 255)) 
+                    holoMaterial(50+Drawrow, "") 
+                }
+                
+                if(Lastrow>=6 & Lastrow<=7 & Currentrow<6){
+                    holoModel(50+Drawrow, "cube")
+                    holoScale(50+Drawrow, vec(0.05, 0, 0) + (vec(0, 0.9, 0.9)*(1.5-(Interfacewidth/15)) ) )
+                }
+                
+                Drawrow+=1
+                if(Drawrow > Interfacewidth){ Drawrow=0 Lastrow = Currentrow}
+                Drawtime=Drawdelay
+            }
+        }
+        
+        if(Editmode==30 | Editmode==31){
+            if(C1==1 & Use==0){
+                Ent = Player:aimEntity()
+                Pnum = Proptable[Ent:id():toString(), number]
+                if(Pnum>0){
+                    if(Editmode==30){ 
+                        V = Ent:getColor()
+                        V = round(V*0.75) + round(Toolcolour*0.25)
+                        Ent:setColor(V)
+                        Col = V
+                        if(Col==vec(255,255,255)){ Col=vec(0,0,0) }
+                        Propcol[Pnum, vector]=Col
+                    }
+                    if(Editmode==31){ 
+                        Ent:setMaterial(Toolmaterial) 
+                        Propmat[Pnum, number]=Toolmat
+                    }
+                }
+            }
+        }
+        
+    
+        if(D > 0 & (Editmode<20 | Editmode==22))
+        {
+            Pos = L0 + (L * D)
+            
+            if(Editmode==22){
+                Gs = Gsize*0.5
+                Center = entity():pos():setZ(0)
+                Center = vec((round(Center:x()/Gs)), (round(Center:y()/Gs)), 0)
+                Grid = vec((round(Pos:x()/Gs)), (round(Pos:y()/Gs)), 0) - Center
+                Gpos = vec((round(Pos:x()/Gs))*Gs, (round(Pos:y()/Gs))*Gs, Pos:z())
+            }
+            else{
+                Center = entity():pos():setZ(0)
+                Center = vec((round(Center:x()/Gsize)), (round(Center:y()/Gsize)), 0)
+                Grid = vec((round(Pos:x()/Gsize)), (round(Pos:y()/Gsize)), 0) - Center
+                Gpos = vec((round(Pos:x()/Gsize))*Gsize, (round(Pos:y()/Gsize))*Gsize, Pos:z())
+            }
+                
+        
+            if(M2==1 & Click==0){
+                Click=1
+                C2=1
+            }
+            if(M2==0 & Click==1){
+                Click=0
+                C2=2
+            }
+            
+            
+            if(C2==1 & Dragmode==0){
+                Dragmode=1
+                Dragvec = Grid
+                Lastdrag = Grid - Dragvec
+                Gstart = Gpos
+            }
+            
+            # Details tool (chairs etc)
+            if(Editmode==22){
+                Drag = Grid - Dragvec
+                V = LibModOffset[Editdetail, vector]
+                Ang2 = LibModAngs[Editdetail, angle]
+                Model = LibMods[Editdetail, string]
+                
+                if(Dragmode==1){
+                    V2 = Drag:normalized()
+                    Angle = V2:toAngle() + Ang2
+                    if(Drag:length()==0){ Angle =Ang2 }
+                    Position = Gpos + (Drag*Gsize*-0.5) + (V2*V:x()) + vec(0, 0, V:z())
+                    holoAng(5, Angle)
+                    
+                    holoPos(5, Position)
+                    
+                    if(C2==2){
+                        Dragmode=0
+                        Ent = propSpawn(Model, Position, Angle, 1)
+                        if(Ent!=noentity()){
+                            Numprops+=1
+                            Proplist[Numprops, entity] = Ent
+                            Proptable[Ent:id():toString(), number] = Numprops
+                            Propmodel[Numprops, string] = (100 + Editdetail):toString()
+                            Propmat[Numprops, number] = 0
+                            Propcol[Numprops, vector] = vec(0,0,0)
+                            Proppos[Numprops, vector] = Position - Cen
+                            Propang[Numprops, angle] = Angle
+                        }
+                        # holoAlpha(5, 0)
+                    }
+                }
+                else{
+                    Position = Gpos + V
+                    holoAng(5, Ang2)
+                    holoPos(5, Position)
+                }
+            }
+            
+            if(Dragmode==1 & Editmode!=22){
+                Drag = Grid - Dragvec
+                Draglength = Drag:length()
+                Dragd = floor(Draglength)
+                Dragabsx = abs(Drag:x())
+                Dragabsy = abs(Drag:y())
+                if(Dragd>8 & Dragd<16){ Dragd=8 }
+                if(Dragd>16 & Dragd<24){ Dragd=16 }
+                if(Dragd>24 & Dragd<32){ Dragd=24 }
+                if(Dragd>=32){ Dragd=32 }
+                Dx = Drag:x()
+                Dy = Drag:y()
+                if(Dx>=0){ T=1 }
+                else{ T=-1 }
+                if(Dragabsx>8 & Dragabsx<16){ Dx=8*T }
+                if(Dragabsx>16 & Dragabsx<24){ Dx=16*T }
+                if(Dragabsx>24 & Dragabsx<32){ Dx=24*T }
+                if(Dragabsx>=32){ Dx=32*T }
+                if(Dragabsx>8 & Editmode==5){ Dx=8*T }
+                if(Dy>=0){ T=1 }
+                else{ T=-1 }
+                if(Dragabsy>8 & Dragabsy<16){ Dy=8*T }
+                if(Dragabsy>16 & Dragabsy<24){ Dy=16*T }
+                if(Dragabsy>24 & Dragabsy<32){ Dy=24*T }
+                if(Dragabsy>=32){ Dy=32*T }
+                if(Dragabsy>8 & Editmode==5){ Dy=8*T }
+                Dragabsx = abs(Dx)
+                Dragabsy = abs(Dy)
+                
+                if((Editmode==1 | Editmode==2) & (Dragabsx>0 & Dragabsy>0)){ Numparts = 2 }
+                
+                if(Drag!=Lastdrag | C2==2){
+                    I=1
+                    while(I<=Numparts){
+                        # -----------------------------------------
+                        if(Editmode==1 | Editmode==2){
+                            Y=Maxheight
+                            if(I==1){
+                                X = Dragd
+                            }
+                            if(I==2){
+                                X = round( floor(Draglength/2.5)+1 )
+                            }
+                            if(Editmode==2){ Y=Maxheight-2 }
+                        }
+                        if(Editmode==3){
+                            if(I==1){
+                                X = Dragd
+                                Y=1
+                            }
+                            if(I==2){
+                                X = Dragd
+                                Y=1
+                            }
+                            if(I==3){
+                                X=Dragd
+                                Y=Maxheight-2
+                            }
+                        }
+                        if(Editmode==4){
+                            X = Dragabsx
+                            Y = Dragabsy
+                            if(Dragabsx==0 | Dragabsy==0){ X=0 Y=0 }
+                        }
+                        if(Editmode==5){
+                            Y = Dragabsy
+                            if(I==1){
+                                X = Dragabsx
+                            }
+                            if(I==2){
+                                X = round( floor(Dragabsx/2.5)+1 )
+                            }
+                            if(Dragabsx==0 | Dragabsy==0){ X=0 Y=0 }
+                        }
+                        if(Editmode==6 | Editmode==10){ X=1 Y=1 Dx=1 Dy=1 }
+                        
+                        if(Editmode==7){ X = Dragd Y=1 }
+                        if(Editmode==8){ X = Dragd Y=2 }
+                        if(Editmode==9){
+                            X = Dragd
+                            if(I==1){ Y=2 }
+                            if(I==2){ Y=Maxheight-2 }
+                        }
+                        
+                        # ---------------------------------------
+                        Sx=0
+                        Sy=0
+                        if(Editmode!=6 & Editmode!=10 & Draglength>0 & (X>0 | Y>0)){
+                            if(Shapes[X:toString()+"x"+Y:toString(), number]>0){
+                                Switch=0
+                                Sx = X
+                                Sy = Y
+                            }
+                            elseif(Shapes[Y:toString()+"x"+X:toString(), number]>0){
+                                Switch=1
+                                Sx = Y
+                                Sy = X
+                            }
+                            else{
+                                # hint("error", 3)
+                            }
+                        }
+                        
+                        if(((Draglength>0 & Editmode!=4) | (Drag:x()!=0 & Drag:y()!=0 & Editmode==4)) & (X>0 | Y>0 & Editmode!=6)){
+                            Mat=Matwall
+                            Model = "models/hunter/plates/plate"+Sx+"x"+Sy+".mdl"
+                            if(Switch==0){ Angle = Drag:normalized():toAngle() + ang(0, 0, 90) }
+                            else{ Angle = Drag:normalized():toAngle() + ang(90, 0, 90) }
+                                    
+                            Position = Gstart + (Drag:normalized()*Dragd*Gsize*0.5)
+                            if((Editmode==1 | Editmode==2) & I==2){
+                                Position = Gpos + (Drag:normalized()*X*Gsize*-0.5) + vec(0.05, 0, 0.05)
+                            }
+                            if(Editmode==1){ Position += vec(0, 0, Gsize*Maxheight*0.5) }
+                            if(Editmode==2){ Position += vec(0, 0, (Gsize*(4+Y)*0.5) + (0.95)) }
+                            if(Editmode==3){ 
+                                if(I==1){ Position += vec(0, 0, Gsize*1*0.5 - (0.95)) }
+                                if(I==2){ Position += vec(0, 0, Gsize*3*0.5) Mat=Matglass}
+                                if(I==3){ Position += vec(0, 0, (Gsize*(4+Y)*0.5) + (0.95)) }
+                            }
+                            if(Editmode==4){
+                                if(Switch==1){ Angle = ang(0, 90, 0) }
+                                else{ Angle = ang(0, 0, 0) }
+                                Position = Gstart + (vec(Dx,Dy,0)*Gsize*0.5)
+                                Mat=Matfloor
+                            }
+                            if(Editmode==5){
+                                if(I<=2){
+                                    V = vec(Dx, Dy, 0):setY(0):normalized()
+                                    if(Dx<0){
+                                        V = V:rotate(ang(45, 0, 0))
+                                        if(Switch==1){ Angle = ang(0, 90, 45) }
+                                        else{ Angle = ang(45, 0, 0) }
+                                    }
+                                    else{ 
+                                        V = V:rotate(ang(-45, 0, 0)) 
+                                        if(Switch==1){ Angle = ang(0, 90, -45) }
+                                        else{ Angle = ang(-45, 0, 0) }
+                                    }
+                                }
+                                if(I==1){
+                                    Position = Gstart + vec(0, Dy*Gsize*0.5, 0) + (V*X*Gsize*0.5)
+                                    Mat=Matfloor
+                                }
+                                if(I==2){
+                                    Position = Gstart + vec((Dx*Gsize*1)-0.02, Dy*Gsize*0.5, Dragabsx*Gsize*1) + (V*X*Gsize*-0.5)
+                                    Mat=Matfloor
+                                }
+                                if(I==3 | I==4){
+                                    if(Drag:x()<0){ Angle = ang(90, 0, 90) }
+                                    else{ Angle = ang(90, 0, -90) }
+                                    Dragx = Dragabsx
+                                    Position = Gstart + vec(Dx*Gsize*0.5, 0, Dragx*Gsize*0.5)
+                                    if(I==4){ Position += vec(0, Dy*Gsize, 0) }
+                                    Model = "models/hunter/triangles/"+Dragx+"x"+Dragx+".mdl"
+                                    # Mat=Matfloor
+                                }
+                            }
+                            if(Editmode==6){
+                                Model = "models/hunter/misc/stair1x1.mdl"
+                                Angle = Drag:normalized():toAngle() + ang(0, 180, 0)
+                                if(I==1){ Position = Gstart + ((Gpos-Gstart):normalized()*Gsize*0.5) }
+                                else{ Position = Gstart + ((Gpos-Gstart):normalized()*Gsize*(I-0.5)) + vec(0, 0, Gsize*(I-1)) }
+                                Position+= (Drag):normalized():rotate(ang(0, 90, 0))*Gsize*0.5
+                            }
+                            if(Editmode==10){
+                                if(I==1){
+                                    Model = "models/hunter/misc/lift2x2.mdl"
+                                    Angle = Drag:normalized():toAngle() + ang(0, 180, 0)
+                                    Position = Gstart + (Drag:normalized()*Gsize*1.1) + (Drag:normalized():rotate( ang(0,90,0) )*Gsize*0.5) + vec(0,0, 5)
+                                }
+                            }
+                            if(Editmode==7){ Position += vec(0, 0, Gsize*1*0.5) }
+                            if(Editmode==8){ Position += vec(0, 0, Gsize*2*0.5) }
+                            if(Editmode==9){ 
+                                if(I==1){                                     
+                                    if(floor(Drag:length())==1){
+                                        Model = "models/props_c17/door01_left.mdl"
+                                        Mat = 0
+                                        Angle = Drag:toAngle() + ang(0, -90, 0)
+                                        Position += vec(0, 0, (Gsize*(2)*0.5) + (0.95)) + (Drag:normalized()*Gsize*-0.5)
+                                    }
+                                    else{ Mat=Matdoor Position += vec(0, 0, (Gsize*(2)*0.5) + (0.95)) }
+                                }
+                                if(I==2){ Position += vec(0, 0, (Gsize*(4+Y)*0.5) + (0.95)) }
+                            }
+                            
+                            holoModel(4+I, Model)
+                            if(Mat>0){ holoMaterial(4+I, LibMats[Mat, string] ) }
+                            else{ holoMaterial(4+I, "" ) }
+                                
+                            holoPos(4+I, Position)
+                            holoAng(4+I, Angle )
+                            holoAlpha(4+I, 255)
+                            if((Editmode==1 | Editmode==2) & Numparts==1){ holoAlpha(4+2, 0) }
+                        }
+                        else{
+                            holoAlpha(4+I, 0)
+                        }
+                        
+                        if(C2==2){
+                            Dragmode=0
+                            if(Draglength>0 & Dragd<=32 & (X>0 | Y>0)){
+                                # Ent:propManipulate( Position, Angle, 1, 1, 0 )
+                                Ent = propSpawn(Model, Position, Angle, 1)
+                                if(Ent!=noentity()){
+                                    Numprops+=1
+                                    Proplist[Numprops, entity] = Ent
+                                    Proptable[Ent:id():toString(), number] = Numprops
+                                    # Mat=Matwall
+                                    if(Editmode==3 & I==2){ Mat = Matglass }
+                                    if(Editmode==9 & I==1){
+                                        Numdoors+=1
+                                        Doors[Numdoors, entity] = Ent
+                                        Doorsopen[Numdoors, number] = 0
+                                        Doorsalpha[Numdoors, number]=255
+                                    }
+                                    if(Editmode==10 & I==1){
+                                        Numlifts+=1
+                                        Lifts[Numlifts, entity] = Ent
+                                        V = Ent:pos() - Cen
+                                        Liftstart[Numlifts, vector] = V
+                                        Liftpos[Numlifts, vector] = V
+                                        Liftang[Numlifts, angle] = Ent:angles()
+                                        Liftids[Ent:id():toString(), number] = Numlifts
+                                        Liftfloor[Numlifts, number] = 0
+                                        Ent:propFreeze(0)
+                                        Ent:setMass(Mass)
+                                    }
+                                    Ent:setMaterial(LibMats[Mat, string])
+                                    
+                                    if(Model:left(26)=="models/hunter/plates/plate"){
+                                        Modstr = Shapes[Sx:toString()+"x"+Sy:toString(), number]:toString()
+                                    }
+                                    else{ Modstr = Model }
+                                    Propmodel[Numprops, string] = Modstr
+                                    Propmat[Numprops, number] = Mat
+                                    Proppos[Numprops, vector] = Position - Cen
+                                    Propang[Numprops, angle] = Angle
+                                }
+                                else{
+                                    print("error spawning prop "+Numprops)
+                                }
+                                
+ 
+                                holoAlpha(4+I, 0)
+                            }
+                        }            
+                        
+                        I+=1
+                    }
+                }
+                
+                Lastdrag = Drag
+            }
+    
+    
+            holoPos(1, Pos + vec(0, 0, 5) + (Player:eye():setZ(0):normalized()*5))
+            holoAng(1, Player:eyeAngles() + ang(0, 0, 180))
+            holoPos(2, Gpos + vec(0, 0, 0.8))
+            holoPos(3, Gpos + vec(0, 0, 0.8))
+            Var = Gsize*8
+            holoPos(4, vec((round(Pos:x()/Var))*Var, (round(Pos:y()/Var))*Var, Pos:z()+0.8))
+        }
+    }
+    
+    if(Spawnmode==1 & Spawntime==0){
+        Spawntime=10
+        Position = Proppos[Spawnnum, vector]
+        Angle = Propang[Spawnnum, angle]
+        Modstr = Propmodel[Spawnnum, string]
+        Mat = Propmat[Spawnnum, number]
+        Modnum = Modstr:toNumber()
+        if(Modnum>0){
+            if(Modnum>100){ Model = LibMods[Modstr:toNumber()-100, string] }
+            else{ Model = "models/hunter/plates/plate"+Shapelist[Modnum, string]+".mdl" }
+        }
+        elseif(Modstr=="0" | Modstr==""){
+            Model=""
+            Proptable[Ids, number]=0
+            Proppos:remove(Spawnnum)
+            Propang:remove(Spawnnum)
+            Propmodel:remove(Spawnnum)
+            Propmat:remove(Spawnnum)
+            Propcol:remove(Spawnnum)
+            Numprops-=1
+            print("#"+Spawnnum+" model error", 5)
+        }
+        else{ Model = Modstr }
+        
+        Material = LibMats[Mat, string]
+        
+        Ent = propSpawn(Model, Cen + Position, Angle, 1)
+        if(Ent!=noentity()){
+            Ent:setMaterial(Material)
+            Col = Propcol[Spawnnum, vector]
+            if(Col:length()==0){ Col=vec(255,255,255) }
+            Ent:setColor(Col)
+            Proplist[Spawnnum, entity] = Ent
+            Proptable[Ent:id():toString(), number] = Spawnnum
+            Spawnnum+=1
+            if(Spawnnum>Numprops){
+                Spawnmode=0
+                print("Finished building "+Filedesc)
+                setName("propcore-housebuilder by Playzr")
+                entity():setColor(vec(255,255,255), 255)
+            }
+            else{
+                setName("building "+Filedesc+" "+floor((Spawnnum/Numprops)*100)+"%")
+            }
+        }
+    }
+    elseif(Spawntime>0){ Spawntime-= 1 }
+    
+    if(Order>0){
+        I=1
+        while(I<=30){
+            Proptable[Proplist[Order, entity]:id():toString(), number] = Order
+            Order+=1
+            if(Order>Numprops){ Order=0 I=9000 }
+            I+=1
+        }
+    }
+}
+
+if(last()){
+    Proplist:propDelete()
+}
+
+Debug = Currentrow

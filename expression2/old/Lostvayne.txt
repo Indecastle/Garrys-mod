@@ -1,0 +1,381 @@
+@name Lostvayne
+@persist [Clones CPos CAng CVel Dir]:array Attack:entity
+@persist Hide
+@trigger all
+interval(10)
+
+O = owner()
+Make_Clone = O:keyPressed("H")
+K1 = O:keyAttack1()
+
+if(first()){
+    E = entity()
+    Size = 0.5
+    I = 0 holoCreate(I,E:toWorld(vec(0,0,-1)) * Size,vec(0.2,0.15,2) * Size,E:toWorld(ang(0,0,0)),vec(255,255,255),"hqcylinder") holoMaterial(I,"phoenix_storms/metalset_1-2") holoParent(I,E)
+    I = 1 holoCreate(I,E:toWorld(vec(0,0,0)) * Size,vec(0.3,0.2,2) * Size,E:toWorld(ang(0,0,0)),vec(255,255,255),"hqcone") holoMaterial(I,"phoenix_storms/metalset_1-2") holoParent(I,0)
+    I = 2 holoCreate(I,E:toWorld(vec(0,0,0)) * Size,vec(0.3,0.2,2) * Size,E:toWorld(ang(0,0,180)),vec(255,255,255),"hqcone") holoMaterial(I,"phoenix_storms/metalset_1-2") holoParent(I,0)
+    I = 3 holoCreate(I,E:toWorld(vec(0,0,-13.5)) * Size,vec(0.4,0.25,0.15) * Size,E:toWorld(ang(0,0,0)),vec(0,80,30),"hqsphere") holoMaterial(I,"models/shiny") holoParent(I,0)
+    I = 4 holoCreate(I,E:toWorld(vec(2.6,0,-13.5)) * Size,vec(0.13,0.23,0.25) * Size,E:toWorld(ang(90,0,0)),vec(0,80,30),"hqcone") holoMaterial(I,"models/shiny") holoParent(I,0)
+    I = 5 holoCreate(I,E:toWorld(vec(0,0,7)) * Size,vec(0.55,0.25,1) * Size,E:toWorld(ang(0,0,180)),vec(0,80,30),"hqcone") holoMaterial(I,"models/shiny") holoParent(I,0)
+    I = 6 holoCreate(I,E:toWorld(vec(0,0,9.5)) * Size,vec(0.8,0.3,0.65) * Size,E:toWorld(ang(0,0,180)),vec(0,80,30),"hqcone") holoMaterial(I,"models/shiny") holoParent(I,0)
+    I = 7 holoCreate(I,E:toWorld(vec(0,0,15.5)) * Size,vec(0.2,0.2,0.4) * Size,E:toWorld(ang(0,45,0)),vec(255),"pyramid") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+
+    I = 8 holoCreate(I,E:toWorld(vec(-2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,4) * Size,vec(1,0,-1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,7.5) * Size,vec(0,0,-1),0)
+ I = 9 holoCreate(I,E:toWorld(vec(-2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,11) * Size,vec(1,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,7.5) * Size,vec(0,0,1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,9) * Size,vec(1,0,-1),0)
+    I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,12.5) * Size,vec(0,0,-1),0)
+
+    I = 10 holoCreate(I,E:toWorld(vec(-2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,16) * Size,vec(1,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,17.5) * Size,vec(0,0,-1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,14) * Size,vec(1,0,-1),0)
+
+    I = 11 holoCreate(I,E:toWorld(vec(-2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,21) * Size,vec(1,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,17.5) * Size,vec(0,0,1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,19) * Size,vec(1,0,-1),0)
+    I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,22.5) * Size,vec(0,0,-1),0)
+
+    I = 12 holoCreate(I,E:toWorld(vec(-2.21,0,32)) * Size,vec(1,0.13,4) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0.1),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,0.4) * Size,vec(0,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,0.2) * Size,vec(1,0,-1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,0.2) * Size,vec(0,0,-1),0)
+
+I = 13 holoCreate(I,E:toWorld(vec(-2.21,0,32)) * Size,vec(1,0.13,4) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0.1),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,3.8) * Size,vec(0,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,7.4) * Size,vec(1,0,1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,6.2) * Size,vec(1.2,0,-1),0)
+    I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,9) * Size,vec(0.15,0,-1),0)
+
+    I = 14 holoCreate(I,E:toWorld(vec(-2.21,0,32)) * Size,vec(1,0.13,4) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0.1),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,9) * Size,vec(-0.15,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,11.8) * Size,vec(0.9,0,1),0)
+
+    I = 15 holoCreate(I,E:toWorld(vec(-4.55,0,50)) * Size,vec(1,0.09,2) * Size,E:toWorld(ang(-20,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,25) * Size,vec(0,0,-1),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2.6,0,0) * Size,vec(1,0,0.1),0)
+
+    I = 16 holoCreate(I,E:toWorld(vec(2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2,0,0) * Size,vec(-1,0,0),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,4) * Size,vec(-1,0,-1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,12) * Size,vec(1,0,-1),0)
+
+    I = 17 holoCreate(I,E:toWorld(vec(2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2,0,0) * Size,vec(-1,0,0),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,3) * Size,vec(1,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,11) * Size,vec(-1,0,1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,9) * Size,vec(-1,0,-1),0)
+    I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,17) * Size,vec(1,0,-1),0)
+    
+    I = 18 holoCreate(I,E:toWorld(vec(2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2,0,0) * Size,vec(-1,0,0),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,8) * Size,vec(1,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,16) * Size,vec(-1,0,1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,14) * Size,vec(-1,0,-1),0)
+    I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,22) * Size,vec(1,0,-1),0)
+
+    I = 19 holoCreate(I,E:toWorld(vec(2,0,13.4)) * Size,vec(1.02,0.155,12) * Size,E:toWorld(ang(0,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2,0,0) * Size,vec(-1,0,0),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,13) * Size,vec(1,0,1),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,21) * Size,vec(-1,0,1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,19) * Size,vec(-1,0,-1),0)
+    I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,27) * Size,vec(1,0,-1),0)
+
+    I = 20 holoCreate(I,E:toWorld(vec(2.2,0,32)) * Size,vec(1,0.14,6) * Size,E:toWorld(ang(-4,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,18) * Size,vec(0,0,-1),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2.2,0,6) * Size,vec(-1,0,-0.05),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,7.5) * Size,vec(-1,0,1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,0) * Size,vec(1,0,1),0)
+    I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,6) * Size,vec(-1,0,-1),0)
+    I2 = 6 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,14) * Size,vec(1,0,-1),0)
+
+
+ I = 21 holoCreate(I,E:toWorld(vec(2.2,0,32)) * Size,vec(1,0.14,6) * Size,E:toWorld(ang(-4,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,18) * Size,vec(0,0,-1),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2.2,0,6) * Size,vec(-1,0,-0.05),0)
+    I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,13) * Size,vec(-1,0,1),0)
+    I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,5) * Size,vec(1,0,1),0)
+
+    I = 22 holoCreate(I,E:toWorld(vec(-4.6,0,54.73)) * Size,vec(0.32,0.10,1.2) * Size,E:toWorld(ang(-21,0,0)),vec(100),"tetra") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,-8) * Size,vec(-1,0,0.3),0)
+    
+    I = 23 holoCreate(I,E:toWorld(vec(-1,0,51.1)) * Size,vec(0.2,0.1,2) * Size,E:toWorld(ang(31,180,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,0)
+    I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,25) * Size,vec(0,0,-1),0)
+    I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(1,0,0) * Size,vec(1,0,0.1),0)
+}
+
+holoPos(0,O:attachmentPos("anim_attachment_lh"))
+holoPos(0,holoEntity(0):toWorld(vec(0,-1,0)))
+holoAng(0,O:attachmentAng("anim_attachment_lh"))
+holoAng(0,holoEntity(0):toWorld(ang(0,0,180)))
+holoParentAttachment(0,O,"anim_attachment_lh")
+
+OaE = O:aimEntity()
+if(O:weapon():type() == "weapon_fists"){
+    if(Hide){Hide = 0 for(I = 0,23){holoAlpha(I,255)}}
+    if(OaE:isAlive() & OaE:pos():distance(O:shootPos()) < 500 & !OaE:mass() & changed(K1) & K1){Attack = OaE}
+    if(OaE:type() == "prop_ragdoll" & changed(Make_Clone) & Make_Clone & Clones:count() < 2){
+        
+         Okey = 1
+        for(I = 1,Clones:count()){
+            if(OaE == Clones[I,entity]){Okey = 0}
+        }
+        if(Okey){
+            Clones[Clones:count() + 1,entity] = OaE
+            CPos[Clones:count(),vector] = OaE:pos() + vec(0,0,20)
+            CAng[Clones:count(),angle] = ang(0,OaE:angles():yaw(),0)
+            
+            E = entity()
+            Size = 0.5
+            I = Clones:count() * 25 holoCreate(I,E:toWorld(vec(0,0,-1)) * Size,vec(0.2,0.15,2) * Size,E:toWorld(ang(0,0,0)),vec(255,255,255),"hqcylinder") holoMaterial(I,"phoenix_storms/metalset_1-2") holoParent(I,entity())
+            I = Clones:count() * 25 + 1 holoCreate(I,E:toWorld(vec(0,0,0)) * Size,vec(0.3,0.2,2) * Size,E:toWorld(ang(0,0,0)),vec(255,255,255),"hqcone") holoMaterial(I,"phoenix_storms/metalset_1-2") holoParent(I,Clones:count() * 25)
+            I = Clones:count() * 25 + 2 holoCreate(I,E:toWorld(vec(0,0,0)) * Size,vec(0.3,0.2,2) * Size,E:toWorld(ang(0,0,180)),vec(255,255,255),"hqcone") holoMaterial(I,"phoenix_storms/metalset_1-2") holoParent(I,Clones:count() * 25)
+            I = Clones:count() * 25 + 3 holoCreate(I,E:toWorld(vec(0,0,-13.5)) * Size,vec(0.4,0.25,0.15) * Size,E:toWorld(ang(0,0,0)),vec(0,80,30),"hqsphere") holoMaterial(I,"models/shiny") holoParent(I,Clones:count() * 25)
+            I = Clones:count() * 25 + 4 holoCreate(I,E:toWorld(vec(2.6,0,-13.5)) * Size,vec(0.13,0.23,0.25) * Size,E:toWorld(ang(90,0,0)),vec(0,80,30),"hqcone") holoMaterial(I,"models/shiny") holoParent(I,Clones:count() * 25)
+            I = Clones:count() * 25 + 5 holoCreate(I,E:toWorld(vec(0,0,7)) * Size,vec(0.55,0.25,1) * Size,E:toWorld(ang(0,0,180)),vec(0,80,30),"hqcone") holoMaterial(I,"models/shiny") holoParent(I,Clones:count() * 25)
+            I = Clones:count() * 25 + 6 holoCreate(I,E:toWorld(vec(0,0,9.5)) * Size,vec(0.8,0.3,0.65) * Size,E:toWorld(ang(0,0,180)),vec(0,80,30),"hqcone") holoMaterial(I,"models/shiny") holoParent(I,Clones:count() * 25)
+            I = Clones:count() * 25 + 7 holoCreate(I,E:toWorld(vec(0,0,15.5)) * Size,vec(0.2,0.2,0.4) * Size,E:toWorld(ang(0,45,0)),vec(255),"pyramid") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            
+            I = Clones:count() * 25 + 8 holoCreate(I,E:toWorld(vec(-2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,4) * Size,vec(1,0,-1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,7.5) * Size,vec(0,0,-1),0)
+            
+            I = Clones:count() * 25 + 9 holoCreate(I,E:toWorld(vec(-2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,11) * Size,vec(1,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,7.5) * Size,vec(0,0,1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,9) * Size,vec(1,0,-1),0)
+            I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,12.5) * Size,vec(0,0,-1),0)
+            
+            I = Clones:count() * 25 + 10 holoCreate(I,E:toWorld(vec(-2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,16) * Size,vec(1,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,17.5) * Size,vec(0,0,-1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,14) * Size,vec(1,0,-1),0)
+            
+            I = Clones:count() * 25 + 11 holoCreate(I,E:toWorld(vec(-2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,21) * Size,vec(1,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,17.5) * Size,vec(0,0,1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,19) * Size,vec(1,0,-1),0)
+            I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,22.5) * Size,vec(0,0,-1),0)
+            
+             I = Clones:count() * 25 + 12 holoCreate(I,E:toWorld(vec(-2.21,0,32)) * Size,vec(1,0.13,4) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0.1),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,0.4) * Size,vec(0,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,0.2) * Size,vec(1,0,-1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,0.2) * Size,vec(0,0,-1),0)
+            
+            I = Clones:count() * 25 + 13 holoCreate(I,E:toWorld(vec(-2.21,0,32)) * Size,vec(1,0.13,4) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0.1),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,3.8) * Size,vec(0,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,7.4) * Size,vec(1,0,1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,6.2) * Size,vec(1.2,0,-1),0)
+            I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,9) * Size,vec(0.15,0,-1),0)
+            
+            I = Clones:count() * 25 + 14 holoCreate(I,E:toWorld(vec(-2.21,0,32)) * Size,vec(1,0.13,4) * Size,E:toWorld(ang(0,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2,0,0) * Size,vec(1,0,0.1),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,9) * Size,vec(-0.15,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,11.8) * Size,vec(0.9,0,1),0)
+            
+            I = Clones:count() * 25 + 15 holoCreate(I,E:toWorld(vec(-4.55,0,50)) * Size,vec(1,0.09,2) * Size,E:toWorld(ang(-20,0,0)),vec(200),"hq_dome") holoMaterial(I,"phoenix_storms/Fender_white") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,25) * Size,vec(0,0,-1),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(2.6,0,0) * Size,vec(1,0,0.1),0)
+            
+            I = Clones:count() * 25 + 16 holoCreate(I,E:toWorld(vec(2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2,0,0) * Size,vec(-1,0,0),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,4) * Size,vec(-1,0,-1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,12) * Size,vec(1,0,-1),0)
+            
+            I = Clones:count() * 25 + 17 holoCreate(I,E:toWorld(vec(2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2,0,0) * Size,vec(-1,0,0),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,3) * Size,vec(1,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,11) * Size,vec(-1,0,1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,9) * Size,vec(-1,0,-1),0)
+            I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,17) * Size,vec(1,0,-1),0)
+            
+            I = Clones:count() * 25 + 18 holoCreate(I,E:toWorld(vec(2,0,13.4)) * Size,vec(1,0.15,12) * Size,E:toWorld(ang(0,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2,0,0) * Size,vec(-1,0,0),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,8) * Size,vec(1,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,16) * Size,vec(-1,0,1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,14) * Size,vec(-1,0,-1),0)
+            I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,22) * Size,vec(1,0,-1),0)
+            
+            I = Clones:count() * 25 + 19 holoCreate(I,E:toWorld(vec(2,0,13.4)) * Size,vec(1.02,0.155,12) * Size,E:toWorld(ang(0,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2,0,0) * Size,vec(-1,0,0),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,13) * Size,vec(1,0,1),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,21) * Size,vec(-1,0,1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,19) * Size,vec(-1,0,-1),0)
+            I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,27) * Size,vec(1,0,-1),0)
+            
+            I = Clones:count() * 25 + 20 holoCreate(I,E:toWorld(vec(2.2,0,32)) * Size,vec(1,0.14,6) * Size,E:toWorld(ang(-4,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,18) * Size,vec(0,0,-1),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2.2,0,6) * Size,vec(-1,0,-0.05),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,7.5) * Size,vec(-1,0,1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,0) * Size,vec(1,0,1),0)
+            I2 = 5 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,6) * Size,vec(-1,0,-1),0)
+            I2 = 6 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,14) * Size,vec(1,0,-1),0)
+            
+            I = Clones:count() * 25 + 21 holoCreate(I,E:toWorld(vec(2.2,0,32)) * Size,vec(1,0.14,6) * Size,E:toWorld(ang(-4,0,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,18) * Size,vec(0,0,-1),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(-2.2,0,6) * Size,vec(-1,0,-0.05),0)
+            I2 = 3 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,13) * Size,vec(-1,0,1),0)
+            I2 = 4 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,5) * Size,vec(1,0,1),0)
+            
+            I = Clones:count() * 25 + 22 holoCreate(I,E:toWorld(vec(-4.6,0,54.73)) * Size,vec(0.32,0.10,1.2) * Size,E:toWorld(ang(-21,0,0)),vec(100),"tetra") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,-8) * Size,vec(-1,0,0.3),0)
+    
+            I = Clones:count() * 25 + 23 holoCreate(I,E:toWorld(vec(-1,0,51.1)) * Size,vec(0.2,0.1,2) * Size,E:toWorld(ang(31,180,0)),vec(100),"hq_dome") holoMaterial(I,"phoenix_storms/wire/pcb_green") holoParent(I,Clones:count() * 25)
+            I2 = 1 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(0,0,25) * Size,vec(0,0,-1),0)
+            I2 = 2 holoClipEnabled(I,I2,1) holoClip(I,I2,vec(1,0,0) * Size,vec(1,0,0.1),0)
+    
+            I = Clones:count() * 25 + 24 holoCreate(I,vec(),vec(),ang(),vec(),"")
+            I = Clones:count() * 25 + 25 holoCreate(I,vec(),vec(),ang(),vec(),"")
+        }
+    }
+}
+
+else{
+    if(!Hide){Hide = 1 for(I = 0,23){holoAlpha(I,0)}}
+}
+for(I = 1,Clones:count()){
+
+    En = Clones[I,entity]
+    Vn = CVel[I,vector]
+    Pn = CPos[I,vector]
+    DIR = Dir[I,number]
+
+    Cos = cos(curtime() * 500 + I * 100)
+    Sin = sin(curtime() * 500 + I * 100)
+
+    LH = En:bone(5)
+    RH = En:bone(7)
+    FaL = En:bone(4)
+    FaR = En:bone(6)
+    FL = En:bone(13)
+    FR = En:bone(14)
+    CL = En:bone(12)
+    CR = En:bone(9)
+    Head = En:bone(10)
+    Spine = En:bone(1)
+    Main = En:bone(0)
+    
+    
+    Anim = vec(Cos,Sin,Cos) * 5
+    
+    rangerFilter(En)
+    rangerFilter(Attack)
+    RF = rangerOffset(60,Main:pos(),vec(0,0,-1))
+
+    GoTo = O:boxCenterW()
+    if(Attack:isValid()){GoTo = Attack:boxCenterW()}
+    
+    if(En:pos():distance(O:boxCenterW()) > 200 | GoTo != O:boxCenterW()){
+        rangerFilter(En)
+        RI1 = rangerOffset(60,Main:pos(),ang(0,DIR - 80,0):forward()):distance()
+        rangerFilter(En)
+        RI2 = rangerOffset(60,Main:pos(),ang(0,DIR + 80,0):forward()):distance()
+        
+        rangerFilter(En)
+        RI3 = rangerOffset(60,Main:pos(),ang(0,DIR - 40,0):forward()):distance()
+        rangerFilter(En)
+        RI4 = rangerOffset(60,Main:pos(),ang(0,DIR + 40,0):forward()):distance()
+
+        Dir[I,number] = DIR + sin((GoTo - Main:pos()):toAngle():yaw() - DIR) * 40 + (-RI1 + RI2) / 2
+        DIR = Dir[I,number]
+        Dir[I,number] = DIR + sin((GoTo - Main:pos()):toAngle():yaw() - DIR) * 40 + (-RI3 + RI4) / 2
+        if(RI1 + RI2 < 60 | RI3 + RI4 < 60){
+            Dir[I,number] = Dir[I,number] + 180
+            DIR = Dir[I,number]
+        }
+    
+        CAng[I,angle] = ang(0,DIR,0)
+
+        if(RF:hit()){
+            holoEntity(I * 25 + 15):removeTrails()
+            if(En:boxCenterW():distance(Attack:boxCenterW()) < 400 & Attack:isValid()){
+                CVel[I,vector] = vec(0,0,30)
+                holoEntity(I * 25 + 15):setTrails(20,0,0.4,"trails/laser",vec(255),255)
+            }
+            else{CVel[I,vector] = vec()}
+        }else{
+            CVel[I,vector] = Vn + vec(0,0,-0.5)
+        }
+        
+        Main_pos = RF:position() + vec(0,0,25) + ang(0,DIR,0):forward() * 15 + vec(0,0,Vn:z()) + CVel[I,vector]    
+
+        An = CAng[I,angle] + ang(0,90,0)
+        holoAng(I * 25 + 24,ang(0,Main:angles():yaw(),0))
+        
+        if(RF:hit()){
+            LH:applyForce((Main_pos + vec(10,Cos * 25,(Cos * -10 + 10)):rotate(An) - LH:pos()) * LH:mass() * 40 - LH:vel() * LH:mass() * 2 + Anim)
+            FaL:applyForce((Main_pos + vec(15,10,15):rotate(An) - FaL:pos()) * FaL:mass() * 40 - FaL:vel() * FaL:mass() * 2 + Anim)
+            
+            RH:applyForce((Main_pos + vec(-10,Cos * -25,(Cos * 10 + 10)):rotate(An) - RH:pos()) * RH:mass() * 40 - RH:vel() * RH:mass() * 2 + Anim)
+            FaR:applyForce((Main_pos + vec(-15,10,15):rotate(An) - FaR:pos()) * FaR:mass() * 40 - FaR:vel() * FaR:mass() * 2 + Anim)
+            
+            FL:applyForce((Main_pos + vec(5,Cos * -25 + 5,-28 + (Cos * -10 + 10)):rotate(An) - FL:pos()) * FL:mass() * 40 - FL:vel() * FL:mass() * 2 + Anim)
+            FR:applyForce((Main_pos + vec(-5,Cos * 25 + 5,-28 + (Cos * 10 + 10)):rotate(An) - FR:pos()) * FR:mass() * 40 - FR:vel() * FR:mass() * 2 + Anim)
+        }
+        else{
+            LH:applyForce((Main_pos + vec(0,-20,60):rotate(An) - LH:pos()) * LH:mass() * 20 - LH:vel() * LH:mass() * 2 + Anim)
+            #FaL:applyForce((Main_pos + vec(0,0,15):rotate(An) - FaL:pos()) * FaL:mass() * 20 - FaL:vel() * FaL:mass() * 2 + Anim)
+            RH:applyForce((Main_pos + vec(0,-20,60):rotate(An) - RH:pos()) * RH:mass() * 20 - RH:vel() * RH:mass() * 2 + Anim)
+            #FaR:applyForce((Main_pos + vec(0,0,20):rotate(An) - FaR:pos()) * FaR:mass() * 20 - FaR:vel() * FaR:mass() * 2 + Anim)
+            
+            FL:applyForce((Main_pos + vec(10,-5,-28):rotate(An) - FL:pos()) * FL:mass() * 20 - FL:vel() * FL:mass() * 2 + Anim)
+            FR:applyForce((Main_pos + vec(-10,-5,-28):rotate(An) - FR:pos()) * FR:mass() * 20 - FR:vel() * FR:mass() * 2 + Anim)            
+        }
+        CPos[I,vector] = Main_pos
+    }
+    else{
+        if(!RF:hit()){
+            Main_pos = RF:position() + vec(0,0,25) + Vn
+            CPos[I,vector] = Main_pos
+        }
+        else{
+            holoEntity(I * 25 + 15):removeTrails()
+            CVel[I,vector] = vec()
+            Main_pos = Pn
+        }
+        holoAng(I * 25 + 24,ang(0,Main:angles():yaw(),0))
+        An = ang(0,(O:shootPos() - En:pos()):toAngle():yaw() + 90,0)
+
+        LH:applyForce((Main_pos + vec(12,-15,20):rotate(An) - LH:pos()) * LH:mass() * 20 - LH:vel() * LH:mass() * 2 + Anim)
+        FaL:applyForce((Main_pos + vec(15,10,15):rotate(An) - FaL:pos()) * FaL:mass() * 20 - FaL:vel() * FaL:mass() * 2 + Anim)
+        RH:applyForce((Main_pos + vec(-5,-20,30):rotate(An) - RH:pos()) * RH:mass() * 20 - RH:vel() * RH:mass() * 2 + Anim)
+        FaR:applyForce((Main_pos + vec(-10,-10,20):rotate(An) - FaR:pos()) * FaR:mass() * 20 - FaR:vel() * FaR:mass() * 2 + Anim)
+        
+        FL:applyForce((Main_pos + vec(10,-10,-28):rotate(An) - FL:pos()) * FL:mass() * 20 - FL:vel() * FL:mass() * 2 + Anim)
+        FR:applyForce((Main_pos + vec(-10,15,-28):rotate(An) - FR:pos()) * FR:mass() * 20 - FR:vel() * FR:mass() * 2 + Anim)
+    }
+    if(Main:pos():distance(Attack:boxCenterW()) < 100 & Attack:health() <= 0){En:soundPlay(I,0,"ambient/machines/slicer" + randint(1,4) + ".wav")}
+    
+    Spine:applyForce((Main_pos + vec(0,0,35):rotate(An + ang(0,0,0)) - Spine:pos()) * Spine:mass() * 40 - Spine:vel() * Spine:mass() * 2 + Anim)
+    Head:applyForce((Main_pos + vec(0,0,35):rotate(An) - Head:pos()) * Head:mass() * 40 - Head:vel() * Head:mass() * 2 + Anim)
+
+    holoAng(I * 25 + 25,Head:angles())
+    
+    An_2 = (GoTo - Head:pos()):toAngle()
+
+    Head:applyAngForce(holoEntity(I * 25 + 25):toLocal(An_2 + ang(-90 - An_2:pitch(),90,0)) * Head:mass() * 40 - Head:angVel() * Head:mass())
+    En:applyForce((Main_pos - En:pos()) * En:mass() * 40 - En:vel() * En:mass() * 2)
+    En:applyAngForce(holoEntity(I * 25 + 24):toLocal(An) * En:mass() * 40 - En:angVel() * En:mass() / 2)
+
+    holoPos(I * 25,LH:toWorld(vec(4,-1.5,0)))
+    holoAng(I * 25,LH:angles())
+    holoAng(I * 25,holoEntity(I * 25):toWorld(ang(0,0,180)))
+}
+if(Attack:health() <= 0){Attack = noentity()}

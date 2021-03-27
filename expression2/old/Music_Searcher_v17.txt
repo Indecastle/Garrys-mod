@@ -1,0 +1,623 @@
+@name Music Searcher v17
+@inputs S:wirelink K:wirelink
+@outputs Private
+@persist W H ID StationID Reg SoundID LastPlayed LastPlayedText LastSelected LastSelectedText CurrentPlaying CurrentTime TotalPages CurrentPage PlayingPage CurrentSeconds
+@persist Mode Key BackspaceTime DelayTime PrivateKeyboard FooterPanel FooterOutline1 FooterOutline2 FooterOutline3 NPButton PageText PPButton PrivateUse PauseButton PauseButton2
+@persist SearchBarText SearchBar ResultPanel FoundText LanguageText TimeText CBtn CText Streaming Scrolling StartTime RH Version Paused Running
+@persist [SearchStr UrlPrefix CStr Station]:string
+@persist [SongArray UrlsArray TimeArray RuLayout RuLayout2 Results ResultsText ResultsTextTime]:array  [RadioStations RadioStationNames]:table
+@persist M:vector2 Ply:entity
+@model models/bull/various/speaker.mdl
+ 
+if(!Running | first()) {
+    # YOU CAN CHANGE THAT FOR YOURSELF
+    PrivateKeyboard = 0
+    PrivateUse = 0
+    # UPDATE: http://pastebin.com/vq76aneJ
+    # Changes:
+    #   Added radiostations with different genres (for example: progressive)
+    #   Fast chars removing (backspace)
+    #   Fixed pause/play
+    #   Autorun when wired
+    # ================================
+   
+    if(->S) {
+        Running = 1  
+    } else {
+        reset()
+    }
+   
+    runOnHTTP(1)
+    runOnTick(1)
+ 
+    #ifdef soundURLload(number, string, number, number, entity)
+        Mode = 1
+    #else
+        Mode = 0
+    #endif
+   
+    if(Mode != 1) {
+        #ifdef soundPlayURL(number, number, string)
+            Mode = 2
+        #else
+            Mode = 0
+        #endif
+    }
+       
+    if(Mode == 0) {
+        printColor(vec(0, 150, 255), "Install ", vec(255, 50, 0), "E2P", vec(0, 150, 255), ", for properly work.")
+        selfDestruct()  
+    }
+     
+    # Here you can add your music streams
+    function addStation(Names:array, URL:string) {
+        StationID++
+        for(I = 1, Names:count()) {
+            #RadioStationNames[Names[I, string], number] = StationID
+            RadioStations[Names[I, string], number] = StationID
+        }
+        RadioStations[StationID, string] = URL
+    }
+   
+    function addStation(Name:string, URL:string) {
+        StationID++
+        #RadioStationNames[Name, number] = StationID
+        RadioStations[Name, number] = StationID
+        RadioStations[StationID, string] = URL
+    }
+   
+    Prefix = "http://pub6.di.fm:80/di_"
+    addStation(array("electro house", "electro"), Prefix + "electrohouse")
+    addStation(array("progressive", "progressive house"), Prefix + "progressive")
+    addStation(array("dubstep", "brostep"), Prefix + "dubstep")
+    addStation("ambient", Prefix + "ambient")
+    addStation("chillstep", Prefix + "chillstep")
+    addStation(array("chiptune", "chiptunes"), Prefix + "chiptunes")
+    addStation("club", Prefix + "club")
+    addStation(array("mixes", "dj mixes"), Prefix + "djmixes")
+    addStation(array("deep house", "deep"), Prefix + "deephouse")
+    addStation(array("drum and bass", "drum 'n bass", "dnb"), Prefix + "drumandbass")
+    addStation(array("hardstyle", "hard style"), Prefix + "hardstyle")
+    addStation(array("hardcore", "hard core"), Prefix + "hardcore")
+    addStation("house", Prefix + "house")
+    addStation("minimal", Prefix + "minimal")
+    addStation("techno", Prefix + "techno")
+    addStation("trance", Prefix + "trance")
+    addStation("trap", Prefix + "trap")
+    addStation(array("uk garage", "ukgarage"), Prefix + "ukgarage")
+   
+    W = 512
+    H = W
+    Reg = 1
+    SoundID = owner():id()
+   
+    RuLayout = array(0x445, 92, 0x44A, 0x0, 0x0, 0x44D, 0x444, 0x438, 0x441, 0x432, 0x443, 0x430, 0x43F, 0x440, 0x448, 0x43E, 0x43B, 0x434, 0x44C, 0x442, 0x449, 0x437, 0x439, 0x43A, 0x44B, 0x435, 0x433, 0x43C, 0x446, 0x447, 0x43D, 0x44F)
+   
+    # Fuck that cyrillic unicode...
+    RuLayout2[39, number] = 0x44D
+    RuLayout2[44, number] = 0x431
+    RuLayout2[46, number] = 0x44E
+    RuLayout2[59, number] = 0x436
+   
+    function number addBox([Pos Size]:vector2) {
+        ID++
+        S:egpBox(ID, Pos, Size)
+        return ID
+    }
+   
+    function number addTriangle([P1 P2 P3]:vector2) {
+        ID++
+        S:egpTriangle(ID, P1, P2, P3)
+        return ID
+    }
+   
+    function number addBoxOutline([Pos Size]:vector2) {
+        ID++
+        S:egpBoxOutline(ID, Pos, Size)
+        return ID
+    }
+   
+    function number addRoundedBox([Pos Size]:vector2) {
+        ID++
+        S:egpRoundedBox(ID, Pos, Size)
+        return ID
+    }
+   
+    function number addText(Str:string, Pos:vector2, Size) {
+        ID++
+        S:egpText(ID, Str, Pos)
+        #S:egpSize(ID, Size)
+        S:egpFont(ID, "fixedsys", Size)
+        return ID
+    }
+   
+    function number addMultiLine(Args:array) {
+        ID++
+        #S:egpLine(ID, Pos1, Pos2)
+        S:egpPoly(ID, Args)
+        S:egpSize(ID, 1)
+        return ID
+    }
+   
+    function number addTextLayout(Str:string, Pos:vector2, Size) {
+        ID++
+        S:egpTextLayout(ID, Str, Pos, vec2(Size))
+        return ID
+    }
+   
+    function string timeToText(Time) {
+        Mins = floor(Time / 60)
+        Seconds = Time - Mins * 60
+        SSeconds = Seconds + ""
+        if(Seconds < 10) { SSeconds = "0" + Seconds }
+        return Mins + ":" + SSeconds
+    }
+   
+    function pausePlayClick() {
+        if(Paused) {
+            S:egpTriangle(PauseButton, vec2(129, H - 35), vec2(155, H - 20), vec2(129, H - 5))
+            S:egpColor(PauseButton, vec(0, 75, 150))
+            S:egpAlpha(PauseButton2, 0)
+        } else {
+            S:egpBox(PauseButton, vec2(129, H - 35), vec2(8, 30))
+            S:egpColor(PauseButton, vec(0, 75, 150))
+            S:egpAlpha(PauseButton2, 255)
+            #PauseButton2 = addBox(vec2(143, H - 35), vec2(8, 30))
+            #S:egpColor(PauseButton2, vec(0, 75, 150))  
+        }
+    }
+   
+    function play(URL:string) {
+        if(Mode == 1) {
+            #ifdef soundURLload(number, string, number, number, entity)
+                soundURLload(SoundID, URL, 1, 0, entity())
+            #endif
+        } else {
+            #ifdef soundPlayURL(number, number, string)
+                soundPlayURL(SoundID, 100000, URL)
+            #endif
+        }
+        Paused = 0
+        pausePlayClick()
+    }
+   
+    function drawResults(From) {
+        J = 1
+        for(I = From, From + 9) {
+            Count = 0
+            Str = SongArray[I, string]
+           
+            ResultTextId = ResultsText[J, number]
+            ResultTexTimetId = ResultsTextTime[J, number]
+            # TODO: mb removed
+            if(Str == "") {
+                S:egpSetText(ResultTextId, "")
+                S:egpSetText(ResultTexTimetId, "")
+                J++
+                continue
+            }
+           
+            Count = Str:length() - Str:replace(toChar(208), ""):replace(toChar(209), ""):length()
+            FinalStr = Str:replace("~", " - "):left((Streaming ? 55 : 45) + Count)
+            S:egpSetText(ResultTextId, FinalStr)
+            #print(ResultTextId)
+            S:egpColor(ResultTextId, Streaming ? vec(130, 0, 255) : vec(0, 150, 255))
+            S:egpSetText(ResultTexTimetId, Streaming ? "" : timeToText(TimeArray[I, number]))
+            J++
+        }
+    }
+   
+    function switchLanguage() {
+        Reg = !Reg
+       
+        if(Reg) {
+            S:egpSetText(LanguageText, "EN")
+        } else {
+            S:egpSetText(LanguageText, "RU")
+        }  
+    }
+ 
+    function buttonClick() {
+        if(inrange(M, vec2(120, H - 40), vec2(120, H - 40) + vec2(40, 40))) {
+            #ifdef soundURLpause(number)
+            Paused = !Paused
+            if(Paused) {
+                soundURLpause(SoundID)
+                stoptimer("timeChange")
+            } else {
+                soundURLplay(SoundID)
+                if(!Streaming) {
+                    timer("timeChange", 1000)
+                }
+            }
+            
+              pausePlayClick()
+            return
+            #endif
+        } elseif(inrange(M, vec2(354, H - 35), vec2(354, H - 35) + vec2(30, 30))) {
+            CurrentPage++
+        } elseif(inrange(M, vec2(264, H - 35),  vec2(264, H - 35) + vec2(30, 30))) {
+            CurrentPage--
+        }
+       
+        if(CurrentPage > TotalPages) {
+            CurrentPage = TotalPages
+        } elseif(CurrentPage < 1) {
+            CurrentPage = 1
+        } else {
+            S:egpSetText(PageText, CurrentPage + "/" + TotalPages)
+            drawResults((CurrentPage - 1) * 10 + 1)
+            if(CurrentPage == PlayingPage) {
+                S:egpColor(Results[CurrentPlaying, number], vec(100, 90, 100))
+            } else {
+                S:egpColor(Results[CurrentPlaying, number], vec(50))
+            }
+        }      
+    }
+   
+    function removeLastChar() {
+        C = 1
+        if(toByte(SearchStr[SearchStr:length()]) > 126) {
+           C = 2
+        }
+        SearchStr = SearchStr:left(SearchStr:length() - C)
+        S:egpSetText(SearchBarText, SearchStr)  
+    }
+   
+    if(Mode == 1) {
+        #ifdef soundURLpause(number)  
+        #soundURLpause(SoundID)  
+        #endif
+    }
+ 
+    S:egpClear()
+    S:egpDrawTopLeft(1)
+   
+    SearchBar = addBox(vec2(5, 5), vec2(512 - 10, 26))
+    S:egpColor(SearchBar, vec(50))
+   
+    SearchBar = addBoxOutline(vec2(5, 5), vec2(512 - 10, 26))
+    S:egpColor(SearchBar, vec(160))
+   
+    SearchBarText = addText("Enter song name...", vec2(10, 5), 20)
+    S:egpColor(SearchBarText, vec(200))
+   
+    FooterPanel = addBox(vec2(0, H - 40), vec2(W, 40))
+    S:egpColor(FooterPanel, vec(25))
+   
+    NPButton = addBox(vec2(354, H - 35), vec2(30, 30))
+    S:egpColor(NPButton, vec(0, 75, 150))
+    NPText = addText(">", vec2(364, H - 30), 18)
+   
+    PageText = addText("0/0", vec2(324, H - 30), 20)
+    S:egpColor(PageText, vec(200))
+    S:egpAlign(PageText, 1)
+   
+    PPButton = addBox(vec2(264, H - 35), vec2(30, 30))
+    S:egpColor(PPButton, vec(0, 75, 150))
+    NPText = addText("<", vec2(274, H - 30), 18)
+   
+    TimeText = addText("0:00/0:00", vec2(209, H - 30), 20)
+    S:egpColor(TimeText, vec(200))
+    S:egpAlign(TimeText, 1)  
+   
+    PauseButton = addTriangle(vec2(129, H - 35), vec2(155, H - 20), vec2(129, H - 5))
+    S:egpColor(PauseButton, vec(0, 75, 150))
+   
+    PauseButton2 = addBox(vec2(143, H - 35), vec2(8, 30))
+    S:egpColor(PauseButton2, vec(0, 75, 150))
+    S:egpAlpha(PauseButton2, 0)
+   
+    FooterOutline1 = addBoxOutline(vec2(159, H - 40), vec2(100, 40))
+    S:egpColor(FooterOutline1, vec(100))
+   
+    FooterOutline2 = addBoxOutline(vec2(258, H - 40), vec2(132, 40))
+    S:egpColor(FooterOutline2, vec(100))
+   
+    FooterOutline3 = addBoxOutline(vec2(120, H - 40), vec2(40, 40))
+    S:egpColor(FooterOutline3, vec(100))
+   
+    Arr = array(0x42, 0x79, 0x20, 0x2D, 0x4E, 0x45, 0x47, 0x49, 0x2D, 0x20, 0x28, 0x63, 0x29, 0x20, 0x32, 0x30, 0x31, 0x33) for(I = 1, Arr:count() - (PrivateUse ? 9 : 0)) { CStr += toChar(Arr[I, number]) }
+     
+    RH = 41
+    for(I = 1, 10) {
+        Results[I, number] = addRoundedBox(vec2(7, I * (RH + 1) + 2), vec2(512 - 14, RH))
+        S:egpColor(Results[I, number], vec(50, 50, 50))
+       
+        ResultsText[I, number] = addText("", vec2(10, I * (RH + 1) + 10), 20)
+        S:egpColor(ResultsText[I, number], vec(0, 150, 255))
+       
+        ResultsTextTime[I, number] = addText("", vec2(W - 15, I * (RH + 1) + 12), 18)
+        S:egpAlign(ResultsTextTime[I, number], 2)
+        S:egpColor(ResultsTextTime[I, number], vec(200))
+    }
+    
+    LanguagePanel = addBox(vec2(W - 30, 7), vec2(25, 22))
+    S:egpColor(LanguagePanel, vec(50))
+   
+    LanguageText = addText("EN", vec2(W - 29, 8), 18)
+    S:egpColor(LanguageText, vec(250))
+   
+    CBtn = addBox(vec2(W - 20, H - 20), vec2(20, 20))
+    S:egpColor(CBtn, vec(60))
+   
+    CText = addText("?", vec2(W - 5, H - 19), 18)
+    S:egpColor(CText, vec(250))
+    S:egpAlign(CText, 2)
+   
+    Cursor = addMultiLine(array(vec2(0, 0), vec2(0, 20), vec2(4, 11), vec2(16, 16)))
+    S:egpColor(Cursor, vec4(0, 148, 255, 150))
+    S:egpParentToCursor(Cursor)
+   
+    LastSelected = Results[1, number]
+    LastSelectedText = ResultsText[1, number]
+    LastPlayed = 1
+    Paused = 1
+   
+    Ply = owner()
+    findIncludeClass("player")
+   
+    Version = 17
+}
+ 
+if(findCanQuery()) {
+    if(PrivateUse == 0) {
+        findInSphere(entity():pos(), 500)
+        findSortByDistance(entity():pos())
+        Ply = find()
+    }
+}
+ 
+M = S:egpCursor(Ply)
+S:egpColor(LastSelectedText, Streaming ? vec(130, 0, 255) : vec(0, 150, 255))
+#if(PlayingPage == CurrentPage) {
+    if(PlayingPage == CurrentPage & LastSelected == Results[CurrentPlaying, number]) {
+        S:egpColor(LastSelected, vec(100, 90, 100))
+    } else {
+        S:egpColor(LastSelected, vec(50, 50, 50))
+    }
+#}
+ 
+S:egpBox(CBtn, vec2(W - 20, H - 20), vec2(20, 20))
+S:egpSetText(CText, "?")
+S:egpColor(CText, vec(200))
+OKey = Ply:keyUse() | Ply:keyAttack2()
+ 
+if(M:y() < 462) {
+    Num = round((M:y() - 23) / (RH + 1))
+    if(Num >= 1 & Num <= 10) {
+        Pick = Num + ((CurrentPage - 1) * 10)
+       
+        if(CurrentPage == PlayingPage & Num == CurrentPlaying) {
+            S:egpColor(Results[Num, number], vec(120, 110, 120))
+        } else {
+            S:egpColor(Results[Num, number], vec(150))
+        }
+        S:egpColor(ResultsText[Num, number], vec(255))
+        LastSelected = Results[Num, number]
+        LastSelectedText = ResultsText[Num, number]
+       
+        if(changed(OKey) & OKey) {
+            if(Streaming) {
+                httpRequest("http://negi.sytes.net/gmod/search.php?stream=" + Station)
+            } else {
+                play("http://vk-music.ru" + UrlsArray[Pick, string])
+            }
+            CurrentPlaying = Num
+            S:egpColor(Results[LastPlayed, number], vec(50))
+            LastPlayed = Num
+            PlayingPage = CurrentPage
+            if(!Streaming) {
+                StartTime = curtime()
+                CurrentSeconds = 0
+                timer("timeChange", 1000)
+            }
+        }
+    }
+} elseif(changed(OKey) & OKey) {
+    buttonClick()
+}
+if(PrivateUse | inrange(M, vec2(W - 20, H - 20), vec2(W - 20, H - 20) + vec2(20, 20))) {
+    X = PrivateUse ? 85 : 153
+    S:egpBox(CBtn, vec2(W - X + 1, H - 20), vec2(X, 20))
+    S:egpSetText(CText, CStr)
+    S:egpColor(CText, vec(0, 110, 255))
+}
+#print(Num + " " + Results[Num, number] + " " + LastSelected + " " + randint(10000))
+
+#[
+if(Streaming) {
+    Scrolling += 0.1
+    if(Scrolling % 10 == 0) {
+        Str = SongArray[1, string]
+        Count = Str:length() - Str:replace(toChar(208), ""):replace(toChar(209), ""):length()
+        #FinalStr = Str:left(55 + Count - floor(Scrolling))
+        #Push = Str[1]
+        #Str:pushString(Push + "")
+        #Str:removeArray(1)
+        Str = Str:left(-(Count - 1))
+        #SongArray[1, string] = Str
+        #S:egpSetText(ResultsText[1, number], FinalStr)
+    }
+}
+]#
+ 
+if(changed(OKey) & OKey) {
+    if(inrange(M, vec2(W - 30, 7), vec2(W - 30, 7) + vec2(25, 22))) {
+        switchLanguage()
+    }
+}
+ 
+if(clk("timeChange")) {
+    #CurrentTime = floor(curtime() - StartTime)
+    SongTime = TimeArray[CurrentPlaying + ((PlayingPage - 1) * 10), number]
+    #print(CurrentPlaying + ((PlayingPage - 1) * 10))
+    S:egpSetText(TimeText, timeToText(CurrentSeconds) + "/" + timeToText(SongTime))
+    CurrentSeconds++
+   
+    if(CurrentSeconds == SongTime) {
+        CurrentPlaying++
+        if(CurrentPlaying > 10) {
+            CurrentPlaying = 1
+            if(PlayingPage < TotalPages) {
+                PlayingPage++
+            }
+        }
+        N = CurrentPlaying + ((CurrentPage - 1) * 10)
+        play("http://vk-music.ru" + UrlsArray[N, string])
+        S:egpColor(Results[N, number], vec(120, 110, 120))
+        S:egpColor(Results[LastPlayed, number], vec(50))
+        LastPlayed = CurrentPlaying
+        CurrentSeconds = 0
+    }
+    timer("timeChange", 1000)
+}
+ 
+Key = K["Memory", number]
+Private = 0
+ 
+if(K["InUse", number]) {
+    if(PrivateKeyboard & K["User", entity]:name() != owner():name()) {
+        Private = 1
+    }
+    if(changed(Key) & Key == 127) {
+        BackspaceTime = 0
+        removeLastChar()
+    } elseif(Key == 127) {
+        if(BackspaceTime == 20) {
+            BackspaceTime = 20
+            DelayTime++
+            if(DelayTime == 3) {
+                DelayTime = 0
+                removeLastChar()
+            }
+        } else {
+            BackspaceTime++
+        }
+    } elseif(changed(Key) & Key) {
+        BackspaceTime = 0
+        if(Key == 13) {
+            if(httpCanRequest()) {
+                SearchFor = SearchStr:trim()
+                Station = RadioStations[RadioStations[SearchFor:lower(), number], string]
+                if(SearchFor == "radio") {
+                    foreach(K, V:number = RadioStations) {
+                        print(K + " " + V)
+                    }
+                    #print(RadioStations[RadioStations["electro", number], string])
+                    #play(RadioStations[1, string])
+                    #Streaming = 1
+                    #UrlsArray[1, string] = Station
+                    #stoptimer("timeChange")
+                } elseif(Station != "") {
+                    httpRequest("http://negi.sytes.net/gmod/search.php?stream=" + Station)
+                    print(Station)
+                    play(Station)
+                    Streaming = 1
+                    UrlsArray = array()
+                    UrlsArray[1, string] = Station
+                    TimeArray = array()
+                    stoptimer("timeChange")
+                } else {
+                    Req = httpUrlEncode(SearchFor)
+                    #print(Req)
+                    httpRequest("http://negi.sytes.net/gmod/search.php?args=" + Req + "&ver=" + Version)
+                }
+            } else {
+                print("Try again")
+                
+                     }
+        } elseif(Key == 9) {
+            switchLanguage()
+        } elseif(Key != 154) {
+            if(!Reg) {
+                if(Key >= 65 & Key <= 90) {
+                    Key += 32
+                }
+                if(Key >= 91 & Key <= 122) {
+                    UC = RuLayout[Key - 90, number]
+                } elseif(Key == 32 | Key >= 48 & Key <= 57) {
+                    UC = Key
+                } else {
+                    UC = RuLayout2[Key, number]
+                }
+            } else {
+                UC = Key
+            }
+            SearchStr += toUnicodeChar(UC)
+        }
+        S:egpSetText(SearchBarText, SearchStr)  
+    }
+}
+ 
+if(httpClk()) {
+    Data = httpData():explode("\n")
+    Count = Data:count()
+   
+    if(Data[1, string] == "ok") {
+        SongsCount = Data[2, string]:toNumber()
+        print("Found " + SongsCount)
+       
+        SongArray = array()
+       
+        for(I = 1, SongsCount) {
+            SongArray[I, string] = Data[I + 2, string]
+            #print(Data[I + 2, string])
+        }
+       
+        if(SongsCount < 10) {
+            for(I = Count - 3, SongArray:count() - Count) {
+                SongArray[I, string] = ""
+            }
+        }
+       
+        UrlsArray = Data[Count - 1, string]:explode(",")
+        TimeArray = Data[Count, string]:explode(",")
+        play("http://vk-music.ru" + UrlsArray[1, string])
+        Streaming = 0
+       
+        S:egpColor(ResultsText[1, number], vec(0, 150, 255))
+        S:egpColor(Results[LastPlayed, number], vec(50))
+        S:egpColor(Results[1, number], vec(100, 90, 100))
+       
+        for(I = 1, SongsCount) {
+            TimeArray[I, number] = TimeArray[I, string]:toNumber()
+        }
+        timer("timeChange", 1000)
+        
+         drawResults(1)
+        CurrentPlaying = 1
+        LastPlayed = 1
+        CurrentPage = 1
+        PlayingPage = 1
+        TotalPages = ceil(SongsCount / 10)
+        StartTime = curtime()
+        CurrentSeconds = 0
+        S:egpSetText(PageText, "1/" + TotalPages)
+    } elseif(Data[1, string] == "iok") {
+        print("unfo")
+        Str = Data[2, string]
+        print(1 + " " + Str)
+        S:egpSetText(PageText, "1/1")
+        S:egpSetText(TimeText, "0:00/0:00")
+        S:egpColor(ResultsText[1, number], vec(130, 0, 255))
+        S:egpColor(Results[LastPlayed, number], vec(50))
+        S:egpColor(Results[1, number], vec(100, 90, 100))
+        SongArray = array()
+        SongArray[1, string] = Str
+        CurrentPlaying = 1
+        LastPlayed = 1
+        CurrentPage = 1
+        PlayingPage = 1
+        TotalPages = 1
+        CurrentSeconds = 0
+        drawResults(1)
+    } else {
+        print("Not found")
+        S:egpSetText(ResultsText[1, number], " Nothing found")
+        S:egpColor(ResultsText[1, number], vec(255, 50, 0))
+        for(I = 2, 10) {
+            S:egpSetText(ResultsText[I, number], "")
+        }
+    }
+}

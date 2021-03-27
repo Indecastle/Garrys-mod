@@ -1,0 +1,140 @@
+@name Handheld Black Hole
+@inputs
+@outputs
+@persist TravelSpeed RotateSpeed Sensitivity HoloScale [HoloModel HMaterial BMaterial RightHand]:string
+@persist ThrowSnd Thrown Active [SpaceBall]:entity [TargPos EyeVect HolePos]:vector Ranger:ranger
+@persist [OwnEnts EntMass]:array ForceVect:vector E
+@trigger
+
+# Black Hole by Dave (STEAM_0:1:18771231)
+# Version 1.0, last revision on 22/11/11
+# Permission granted to redistribute.
+# Permission granted to modify.
+# Please give credit where credit is due.
+
+if (first() | duped())
+{
+
+# Basic configuration:
+
+TravelSpeed = 20
+RotateSpeed = 5.625
+Sensitivity = 128
+HoloScale = 1
+HoloModel = "icosphere3"
+BMaterial = "models/props_lab/warp_sheet"
+HMaterial = "models/effects/portalrift_sheet"
+
+# Do not alter any of the below unless you know what you are doing.
+
+RightHand = "anim_attachment_RH"
+Thrown = 0
+
+SpaceBall = holoCreate(0,owner():attachmentPos(RightHand),vec(HoloScale,HoloScale,HoloScale))
+holoModel(0,HoloModel)
+holoMaterial(0,BMaterial)
+holoParentAttachment(0,owner(),RightHand)
+
+holoCreate(1,entity():pos()+vec(0,0,2),vec(50,0,50),ang(0,0,0))
+holoCreate(2,entity():pos()+vec(0,0,2),vec(0,50,50),ang(0,0,0))
+holoCreate(3,entity():pos()+vec(0,0,2),vec(50,50,0),ang(0,0,0))
+holoMaterial(1,HMaterial)
+holoMaterial(2,HMaterial)
+holoMaterial(3,HMaterial)
+holoAlpha(1,0)
+holoAlpha(2,0)
+holoAlpha(3,0)
+
+runOnTick(1)
+
+}
+
+if (owner():keyAttack2())
+{
+
+if (!ThrowSnd)
+{
+
+holoEntity(0):soundPlay(0,0,"weapons/tripwire/ropeshoot.wav")
+ThrowSnd = 1
+
+}
+
+EyeVect = owner():eye()
+holoAng(0,EyeVect:toAngle())
+holoUnparent(0)
+TargPos = owner():shootPos()
+Thrown = 1
+
+}
+
+if (!Active)
+{
+
+if (Thrown)
+{
+
+TargPos += EyeVect * TravelSpeed
+holoPos(0, TargPos)
+holoAng(0,holoEntity(0):toWorld(ang(RotateSpeed,0,0)))
+
+rangerFilter(owner())
+Ranger = rangerOffset(Sensitivity, TargPos, SpaceBall:pos())
+
+if (Ranger:hit())
+{
+
+holoAlpha(0,0)
+HolePos = TargPos + vec(0,0,16)
+holoPos(1,HolePos) holoAlpha(1,255)
+holoPos(2,HolePos) holoAlpha(2,255)
+holoPos(3,HolePos) holoAlpha(3,255)
+holoEntity(3):soundPlay(0,0,"ambient/energy/force_field_loop1.wav")
+Active = 1
+
+}
+
+}
+
+} else {
+
+timer("Reset",10000)
+if (clk("Reset"))
+{
+
+rangerReset()
+holoAlpha(0,255)
+holoEntity(3):soundPlay(0,0,"ambient/explosions/explode_1.wav")
+holoAlpha(1,0)
+holoAlpha(2,0)
+holoAlpha(3,0)
+holoPos(0,owner():attachmentPos(RightHand))
+holoParentAttachment(0,owner(),RightHand)
+Thrown = 0
+ThrowSnd = 0
+Active = 0
+
+}
+
+findByClass("prop*")
+OwnEnts = findToArray()
+
+while (opcounter() < maxquota())
+{
+
+for (E = 1, OwnEnts:count())
+{
+
+if (OwnEnts[E,entity]:owner() == owner())
+{
+
+ForceVect = (-OwnEnts[E,entity]:pos() + HolePos) * OwnEnts[E,entity]:mass() * 8
+OwnEnts[E,entity]:applyForce(ForceVect)
+
+}
+
+}
+
+}
+
+}

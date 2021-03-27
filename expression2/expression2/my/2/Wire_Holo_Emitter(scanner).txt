@@ -1,0 +1,35 @@
+@name Wire Holo Emitter (scanner)
+@inputs 
+@outputs [Pos Color]:vector FadeTime GroundBeam LineBeam Size Active X Y Z Clear Local
+@persist I Emitter:entity Ar:array Radius
+@trigger 
+
+if(first()) {
+    Active = 1
+    findByClass("gmod_wire_holoemitter")
+    Emitter = findClosest(entity():pos())
+    findInSphere(Emitter:pos(),50)
+    Ar = findToArray()
+    Radius = 500
+}
+
+interval(10)
+P = entity(36)
+#P = owner()
+Color = vec(50,50,255)
+
+local V = vec(Radius*abs(cos(I)),0,Radius*abs(sin(I)))
+local V2 = vec(V:x()*cos(45)-V:z()*sin(45),0, +V:x()*sin(45) + V:z()*cos(45))
+rangerFilter(Ar)
+local Ranger = rangerOffset(Emitter:pos(),Emitter:toWorld(V2))
+
+Pos = Ranger:pos()
+#Pos = Emitter:toLocal(Pos0)
+
+FadeTime = 0.5
+GroundBeam = 1
+LineBeam = 0
+Size = 5
+#Local = 1
+
+I=(I+1)%360

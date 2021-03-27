@@ -1,0 +1,101 @@
+@name Spam fire
+@inputs Wire_Igniter:entity
+@outputs Pulse
+@persist Height_Ranger Height_Place Radius_Ranger Frequency [InitPos StartPos]:vector Run AimMode Toggle
+@trigger all
+
+if (duped()) { reset() }
+
+if (first() | dupefinished()) {
+    runOnKeys(owner(),1)
+    setName("generic")
+    Height_Ranger = 500
+    Height_Place = 50
+    Radius_Ranger = 1000
+    Frequency = 10  # mc
+    
+    
+    InitPos = entity():pos() + vec(0,0,20)
+    StartPos = InitPos
+    Wire_Igniter:setPos(InitPos)
+    
+    function void run_handler() {
+        if (Run) {
+            timer("run", 10)
+            timer("pulse", 10)
+        } else {
+            stoptimer("run")
+            stoptimer("pulse") Pulse=0
+            Wire_Igniter:setPos(InitPos)
+        }
+    }
+    
+    timer("help", 10)
+}
+
+if (clk("run")) {
+    while (1) {
+        local X = randint(-Radius_Ranger, Radius_Ranger)
+        local Y = randint(-Radius_Ranger, Radius_Ranger)
+        local Z = randint(10, Height_Ranger)
+        local FromPos = StartPos + vec(X,Y, Z)
+        local R = rangerOffset(1000000, FromPos, vec(0,0,-1)) 
+        if (FromPos:isInWorld() == 1) {
+            Wire_Igniter:setPos(R:pos() + vec(0,0,Height_Place))
+            break
+        }
+    }
+    
+    timer("run", Frequency)
+}
+
+
+if (clk("pulse")) {
+    Pulse = !Pulse
+    timer("pulse", 10)
+}
+
+if(changed(owner():keyPressed("f"))) {
+    if (AimMode) {
+        StartPos = owner():aimPos() + vec(0,0,20)
+    }
+    if (Toggle) {
+        if (owner():keyPressed("f")) {
+            Run = !Run
+            run_handler()
+        }
+    } else {
+        Run = owner():keyPressed("f")
+        run_handler()
+    }
+
+}
+
+
+
+if(changed(owner():keyPressed("g")) & owner():keyPressed("g")) {
+    AimMode = !AimMode
+    if (AimMode) {
+        printColor(vec(200), "Aim mode ", vec(0, 255, 0), "ON")
+    } else {
+        StartPos = InitPos
+        printColor(vec(200), "Aim mode ", vec(255, 0, 0), "OFF")
+    }
+}
+
+
+if(changed(owner():keyPressed("h")) & owner():keyPressed("h")) {
+    Toggle = !Toggle
+    if (Toggle) {
+        printColor(vec(200), "Toggle ", vec(0, 255, 0), "ON")
+    } else {
+        StartPos = InitPos
+        printColor(vec(200), "Toggle ", vec(255, 0, 0), "OFF")
+    }
+}
+
+if(clk("help")) {
+    printColor(vec(200), "Key ", vec(255,255,0), "F", vec(200), ": ", vec(0,255,255), "Run spam fire")
+    printColor(vec(200), "Key ", vec(255,255,0), "G", vec(200), ": ", vec(0,255,255), "Aim mode")
+    printColor(vec(200), "Key ", vec(255,255,0), "H", vec(200), ": ", vec(0,255,255), "Toggle run on/off")
+}

@@ -1,0 +1,109 @@
+@name 3D Printer
+@inputs 
+@outputs 
+@persist Base:entity Time X Y Z Cubed:array Color:vector Prev:entity Old:entity Block:entity D Cooldown
+@trigger 
+
+
+#######################################
+###                                 ###
+###  3D Printer v.1.0 by Fasteroid  ###
+###                                 ###
+#######################################
+
+
+#[
+Each layer is composed of 100 cubes, with 10 rows and 10 columns.
+Together, these are sandwiched to create a shape.
+1 for fill, 0 for leave empty.
+]#
+if(first()==1){
+Base=propSpawn("models/hunter/plates/plate3x3.mdl",entity():toWorld(vec(66,66,0)),1)
+Base:setMaterial("models/debug/debugwhite")
+Base:setColor(vec(240,240,240))
+Base:setMass(50000)
+Color=vec(0,255,0)
+#        Front ------------------------------------------------------------------------------------------------------------> Back
+
+ L1= "1111111111"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1111111111"
+ L2= "1000000001"+"0100000010"+"0000000000"+"0000000000"+"0000000000"+"0000000000"+"0000000000"+"0000000000"+"0100000010"+"1000000001"
+ L3= "1000000001"+"0000000000"+"0010000100"+"0000000000"+"0000000000"+"0000000000"+"0000000000"+"0010000100"+"0000000000"+"1000000001"
+ L4= "1000000001"+"0000000000"+"0000000000"+"0001001000"+"0000000000"+"0000000000"+"0001001000"+"0000000000"+"0000000000"+"1000000001"
+ L5= "1000000001"+"0000000000"+"0000000000"+"0000000000"+"0000110000"+"0000110000"+"0000000000"+"0000000000"+"0000000000"+"1000000001"
+ L6= "1000000001"+"0000000000"+"0000000000"+"0000000000"+"0000110000"+"0000110000"+"0000000000"+"0000000000"+"0000000000"+"1000000001"
+ L7= "1000000001"+"0000000000"+"0000000000"+"0001001000"+"0000000000"+"0000000000"+"0001001000"+"0000000000"+"0000000000"+"1000000001"
+ L8= "1000000001"+"0000000000"+"0010000100"+"0000000000"+"0000000000"+"0000000000"+"0000000000"+"0010000100"+"0000000000"+"1000000001"
+ L9= "1000000001"+"0100000010"+"0000000000"+"0000000000"+"0000000000"+"0000000000"+"0000000000"+"0000000000"+"0100000010"+"1000000001"
+L10= "1111111111"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1000000001"+"1111111111"
+
+##Printing Functions###
+Cubed = (L1+L2+L3+L4+L5+L6+L7+L8+L9+L10):explode("")
+X=0
+Y=1
+Z=1
+}
+
+X=X+1
+
+if(X>10){
+X=1
+Y=Y+1}
+if(Y>10){
+Y=1
+Z=Z+1}
+if(Z==11){
+    D=D+1
+printColor(vec(255,255,255),"[",vec(0,255,0),"3D Printer",vec(255,255,255),"]: Print Complete!")
+}
+Time=Time+1
+
+if(D>5){
+selfDestruct()}
+
+#Molten Plastic Effects#
+Old=Prev
+Prev=Block
+Old:setMaterial("models/debug/debugwhite")
+Prev:setColor(Color)
+
+if(Cubed:string(Time)=="1"){
+
+Block=propSpawn("models/hunter/blocks/cube025x025x025.mdl",entity():pos()+vec(floor(X)*12,floor(Y)*12,20 + floor(Z)*12),1)
+Block:setColor(Color+vec(100,100,100))
+Block:setMaterial("models/shiny")
+
+noCollideAll(Block,1)      #No Collide Blocks?
+                 #Unfreezing is not a good idea if this is off!
+                 #Only turn this off if you know you need to!
+
+weld(Base,Block)
+interval(250)
+Cooldown=4
+}
+
+if(Cooldown!=0){
+Cooldown=Cooldown-1
+interval(250)
+}
+
+if(Cooldown==0){
+    interval(250)
+}
+
+
+if(Time/50==floor(Time/50)){
+if(Cubed:string(Time)=="1"){
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")
+    print("")            # Clearing chat makes you look professional!
+
+printColor(vec(255,255,255),"[",vec(0,255,0),"3D Printer",vec(255,255,255),"]: "+Time/10+"% Complete")
+}}

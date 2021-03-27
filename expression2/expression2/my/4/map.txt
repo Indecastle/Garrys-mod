@@ -1,0 +1,97 @@
+@name EGP MAP
+@inputs WW:wirelink
+@outputs I J K Light
+@persist EI [Players OP]:table O:entity W:wirelink  Size
+#@model models/cheeze/wires/nano_compare.mdl
+if(dupefinished() | duped()) { selfDestructAll() }
+if(first()) {
+    W = entity():isWeldedTo():wirelink()
+}
+if ((->WW|W)&(first()|changed(->WW)|changed(W))){   #entity():setMaterial("Models/effects/vol_light001") entity():propStatic(1) entity():propNotSolid(1) entity():propFreeze(1) entity():isWeldedTo():propStatic(1)
+    if(->WW) { W = WW }
+    W:egpClear()
+    setName("MAP " + random(1, 100):toString())
+    timer("scan",1000)
+    I = J = 0
+    Size = 100
+}
+K = 1+I*Size+J
+if (clk("scan")) {
+    if(I != Size) {
+        if(J != Size) {
+            local Ranger = rangerOffset(entity():toWorld(vec(I*100, J*100, 10000)), entity():toWorld(vec(I*100, J*100, -10000)))
+            Distance = Ranger:distance()
+            W:egpBox(1+I*Size+J,vec2(10+I*5,10+J*5),vec2(5,5))
+            W:egpColor(K,vec(Distance/20000*255))
+            Light = Distance/20000*255
+            J++
+        }
+        else  {
+            I++
+            J = 0
+        }
+        
+        timer("scan",0)
+    }
+}
+
+#[
+if (clk("scan")){
+    O = owner()
+    findByClass("player")
+    Players=findToTable()
+    if (Players:count()!=OP:count()){
+        I=0
+        EI=0
+        timer("egp",10)
+    }
+    OP=Players
+    timer("scan",200)
+}
+
+
+
+if (clk("egp")&(I<Players:count())){
+    if (clk("egp")&!I){W:egpClear()}
+    I++
+    P=Players[I,entity]
+    
+    EI++
+    W:egp3DTracker(EI,vec(0,0,0))
+    W:egpParent(EI,P)
+    if(Players[I,entity]:isAdmin()){
+        EI++
+        W:egpBox(EI,vec2(0,0),vec2(10,10))
+        W:egpColor(EI,vec4(255,0,0,100))
+        W:egpPos(EI,W:egpPos(EI-1))
+        W:egpParent(EI,EI-1)
+    }else{
+        EI++
+        W:egpBox(EI,vec2(0,0),vec2(10,10))
+        W:egpColor(EI,vec4(100,255,100,100))
+        W:egpPos(EI,W:egpPos(EI-1))
+        W:egpParent(EI,EI-1)
+    }
+    
+    EI++
+    W:egpText(EI,Players[I,entity]:name() ,vec2(-10,0))                    W:egpSize(EI,13)
+    W:egpText(EI+Players:count()*5,Players[I,entity]:name() ,vec2(-10,10)) W:egpSize(EI+Players:count()*5,13)
+    
+    W:egpParent(EI,EI-2)
+    W:egpParent(EI+Players:count()*5,EI-2)
+    timer("egp",50)
+    if(I>=Players:count()) { timer("distance",100) }
+}
+
+if(clk("distance"))
+{
+    for(J=1, Players:count())
+    {
+        Dist = O:pos():distance(Players[J,entity]:pos())/100
+        W:egpSetText(J*3+Players:count()*5,Players[J,entity]:health() + "hp" + " | " + round(Dist) + "m")
+    }
+    timer("distance",100)
+}
+
+entity():setAlpha(255)
+]#

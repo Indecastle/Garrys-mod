@@ -1,0 +1,86 @@
+@name Expression 2 Monitor
+@inputs E:wirelink
+@persist [ColorBlack ColorBlue ColorGrin]:vector
+@persist [HOffset, MOffset, SOffset]:number MaxCPU B
+noDuplications()
+runOnChat(1)
+if(first()){
+    E:egpClear()
+    ColorBlack = vec(30,30,30)
+    ColorBlue = vec(143,228,255)
+    ColorGrin = vec(45,166,86)
+    Rules = 0
+    MaxCPU = 2000
+}
+
+interval(2000)
+
+E = entity():isWeldedTo():wirelink()
+findByClass("gmod_wire_expression2")
+A = findToArray()
+if(changed(A:count())&A:count()){
+    E:egpClear()
+}
+
+E:egpBox(1,vec2(256,256),vec2(1024,512))
+E:egpColor(1,ColorBlack)
+E:egpBoxOutline(2,vec2(256,256),vec2(1024,512))
+E:egpColor(2,ColorBlue)
+E:egpSize(2,2)
+E:egpText(3,"PLAYER NAME",vec2(-128,20))
+E:egpFont(3,"Arial")
+E:egpAlign(3,1,1)
+E:egpText(4,"OPS",vec2(95,20))
+E:egpFont(4,"Arial")
+E:egpAlign(4,1,1)
+E:egpText(5,"CPU",vec2(195,20))
+E:egpFont(5,"Arial")
+E:egpAlign(5,1,1)
+E:egpText(6,"CHIP NAME",vec2(460,20))
+E:egpFont(6,"Arial")
+E:egpAlign(6,1,1)
+E:egpText(7,"EXPRESSION 2 MONITOR",vec2(256,-30))
+E:egpFont(7,"Arial")
+E:egpSize(7,57)
+E:egpAlign(7,1,1)
+E:egpColor(7,ColorBlue)
+E:egpText(8,"EXPRESSION 2 MONITOR",vec2(256,-30))
+E:egpFont(8,"Arial")
+E:egpSize(8,56)
+E:egpAlign(8,1,1)
+E:egpText(9,"by Cook1e",vec2(675,490))
+E:egpFont(9,"trebuchet")
+E:egpSize(9,20)
+E:egpAlpha(9,10)
+
+for(I=1,A:count()){
+    E:egpText(I+10,A[I,entity]:owner():name(),vec2(-128,30+20*I))
+    E:egpAlign(I+10,1,1)
+    E:egpColor(I+10,teamColor(A[I,entity]:owner():team()))
+    E:egpText(I+60,A[I,entity]:ops():toString(),vec2(95,30+20*I))
+    E:egpAlign(I+60,1,1)
+    E:egpText(I+110,ceil(A[I,entity]:cpuUsage()*1000000):toString(),vec2(195,30+20*I))
+    E:egpAlign(I+110,1,1)
+    E:egpText(I+160,A[I,entity]:getName(),vec2(460,30+20*I))
+    E:egpAlign(I+160,1,1)
+    E:egpColor(I+160,ColorGrin)
+    E:egpBoxOutline(I+210,vec2(256,30+20*I), vec2(1020,22))
+    E:egpColor(I+150,ColorBlue)
+    if(ceil(A[I,entity]:cpuUsage()*1000000)>MaxCPU){
+        #holoCreate(I,A[I,entity]:toWorld(vec(0,0,0)),vec(0.5,0.5,0.5),A[I,entity]:toWorld(ang(0,0,0)),vec(255,51,51),"")
+        #holoMaterial(I,"debug/debugportals")
+        #holoParent(I,A[I,entity])
+    }
+}
+#E:egpLine(I+150, vec2(7,30*I), vec2(505,30*I))
+#E:egpColor(I+100,ColorBlue)
+Hour = time("hour")+3
+Min = time("min")
+Sec = time("sec")
+E:egpText(10, ""+Hour+":"+Min+":"+Sec,vec2(730,20))
+E:egpAlign(10,1,1)
+E:egpFont(10,"Arial")
+E:egpSize(10,20)
+E:egpColor(10,vec(255))
+E:egpAlpha(10,255)
+

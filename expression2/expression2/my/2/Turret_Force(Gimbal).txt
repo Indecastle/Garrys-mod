@@ -1,0 +1,90 @@
+@name Turret Forcer Gimbal
+@inputs WhiteList:array CheckGod
+@outputs Target:entity Velocity Length Angle:angle On
+@persist Defaultpos MaxDegree Radius [Forcer H Gimbal]:entity E W:wirelink
+@trigger none
+interval(100)
+if(first()) { 
+    MaxDegree = 45
+    Radius = 500
+    E = 4
+    
+    Velocity = 1000
+    
+    On = 1
+    
+    #runOnKeys(owner(),1)
+    findByClass("gmod_wire_gimbal")
+    Gimbal = findClosest(entity():pos())
+    findByClass("gmod_wire_forcer")
+    Forcer = findClosest(entity():pos())
+    #W = Forcer:wirelink()
+    #findExcludePlayer(owner())
+    timer("scan",100)
+    
+    
+    
+    H = holoCreate(1,entity():toWorld(vec(0,0,10)),vec(0.3)) #H:setAlpha(0)
+    holoParent(1,entity())
+}
+
+#Forcer:setPos(H:toWorld(vec(10,0,0)))
+
+
+
+
+
+if(clk("scan")) {
+    findClearBlackEntityList()
+    findClearWhiteEntityList()
+    if(WhiteList:count() > 0) { findExcludeEntities(WhiteList) }
+    
+    findByClass("player")
+    Players = findToArray() 
+    local R = array()
+    for(I=1,Players:count()) {
+        Pos = holoEntity(1):angles():forward()
+        Pos0 = (Players:entity(I):attachmentPos("chest") - holoEntity(1):pos()):normalized()
+        Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+        Acos = acos(Cos)
+        if(Acos<MaxDegree & Players:entity(I):isAlive()) {
+            R:pushEntity(Players:entity(I))
+        }
+    }
+    
+    #findIncludeClass("player")
+    findIncludeEntities(R)
+    findInSphere(Gimbal:pos(),Radius)
+    local Count = 0
+    if(R:count() > 0) { Count = findSortByDistance(Gimbal:pos()) }
+    else { Count = 0 }
+    
+    Target = noentity()
+    rangerFilter(Gimbal) rangerFilter(Forcer)
+    for(I=1, Count) {
+        Ranger = rangerOffset(Gimbal:pos()+vec(0,0,20),findResult(I):attachmentPos("Chest")+vec(0,0,-20))
+        if(!Ranger:hitWorld() & Ranger:entity():type()!="prop_physics") { Target = findResult(I) break }
+    }
+    timer("scan",400)
+}
+
+if(Target:isPlayer()) {
+    Ang = (Target:attachmentPos("Chest") - Gimbal:pos()  ):toAngle()
+    Angle = Ang
+    Length = Gimbal:pos():distance(Target:pos())+100
+}
+else { 
+    Angle = holoEntity(1):angles()
+    Length = 0
+    }
+
+if(changed(Target:isPlayer())&Target:isPlayer()) {
+    Forcer:soundPlay("Alert",0.5,"NPC_FloorTurret.Alert")
+}
+
+if(changed(Target)&Target:isPlayer()) {
+    Forcer:soundPlay("change",0.5,"NPC_Turret.Deploy")
+}
+
+
+

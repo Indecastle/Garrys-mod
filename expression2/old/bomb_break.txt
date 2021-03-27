@@ -1,0 +1,25 @@
+@name bomb break
+@inputs Time Health
+@outputs Detonate
+#@persist [A1 A2 A3 A4 A5 A6]:entity
+@trigger Time Health
+
+if(first() | dupefinished()) {
+    Health = 25
+    #[findByClass("prop_physics")     A1 = findClosest(entity():pos())
+    findByClass("gmod_wire_keypad") A2 = findClosest(entity():pos())
+    findByClass("gmod_wire_screen") A3 = findClosest(entity():pos())
+    findByClass("gmod_wire_button") A4 = findClosest(entity():pos())
+    findByClass("gmod_wire_gate")   A5 = findClosest(entity():pos())
+    findByClass("gmod_wire_value")  A6 = findClosest(entity():pos())
+    ]#
+    entity():noCollideAll(1)
+}
+if(changed(round(Time)) & round(Time)==10) {
+    Detonate = 1
+    #A1:propDelete() A2:propDelete() A3:propDelete() A4:propDelete() A5:propDelete() A6:propDelete()
+}
+if((changed(Health) & Health==0)) { timer("bomb",100) }
+if(clk("bomb")) {
+    selfDestructAll()
+}

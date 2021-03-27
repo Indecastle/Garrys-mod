@@ -1,0 +1,43 @@
+@name Delay
+@inputs Clk Delay Reset
+@outputs Out TimeElapsed Remaining
+@persist ON StartTime
+
+if(~Delay) { 
+    TimeElapsed = 0
+    Remaining = Delay
+}
+
+if(changed(Reset) & Reset) { 
+    timer("suka", 0)
+}
+
+if(changed(Clk) & Clk & !Reset) { 
+    StartTime = curtime()
+    ON = 1
+    runOnTick(1)
+    timer("blyat", Delay*1000) 
+}
+
+if(clk("blyat")) {
+    print(1)
+    Out = 1
+    timer("suka", 400)
+    if(Clk) { timer("blyat", Delay*1000) }
+}
+
+if(clk("suka")) { 
+    ON = 0
+    runOnTick(0)
+    Out = 0 
+}
+
+if(ON) {
+    TimeElapsed = curtime() - StartTime
+    Remaining = Delay - TimeElapsed
+    if(Remaining < 0) {
+        TimeElapsed = 0
+        Remaining = Delay
+    }
+}
+

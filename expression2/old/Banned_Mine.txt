@@ -1,0 +1,66 @@
+@name Banned Mine
+@persist Trigger Model:string Prop1:entity Prop2:entity Reason:string
+@model models/props_phx/games/chess/black_dama.mdl
+@outputs Color:vector
+rangerFilter(Prop1)
+rangerFilter(Prop2)
+if (first() | duped()) {
+Reason = "Because, fuck you that's why!"
+    entity():setMaterial("models/debug/debugwhite")
+    Model = "models/props_phx/construct/windows/window_dome360.mdl"
+    function number entity:hostile() {
+    local Weapon = This:weapon():type()
+    return !(Weapon == "weapon_physcannon" | Weapon == "weapon_physgun" | Weapon == "gmod_tool")
+}
+
+function void entity:bewm() {
+    if (This:hostile() == 1 & This:isAlive()) {
+        local Prop = propSpawn("models/props_phx/ww2bomb.mdl", This:pos(), 1)
+        Prop:propBreak()
+    } else {
+        local Prop = noentity()
+    }
+}
+
+}
+
+interval(100)
+P = players()
+Mine = entity()
+
+for (I = 1, P:count()) {
+    if (P[I, entity]:pos():distance(Mine:pos()) < 50 ) {
+        Trigger = 1
+    }
+    Ranger = rangerOffset(10000000,Prop1:pos(),Prop1:up())
+    if (changed(Trigger) & Trigger == 1) {
+        holoCreate(1, Ranger:pos())
+        Prop1 = propSpawn(Model, P[I, entity]:pos() + vec(0, 0, 42), 1)
+        Prop2 = propSpawn(Model, P[I, entity]:pos() + vec(0, 0, 43), ang(0, 0, 180), 1)
+        Prop1:setMaterial("models/dav0r/hoverball")
+        Prop2:setMaterial("models/dav0r/hoverball")
+        Prop1:soundPlay(1,0,"hl1/fvox/evacuate_area.wav")
+        hint("Mine Triggered!", 75)
+        timer("selfDestruct", 7550)
+        timer("release", 5000)
+        entity():setAlpha(0)
+        hint("Mine Trapped " + P[I, entity]:name(), 75)
+        
+        
+    }
+    if (clk("selfDestruct") & Trigger == 1) {
+        entity():propDelete()
+        Prop1:propDelete()
+        Prop2:propDelete()
+    }
+    if (clk("release")) {
+        
+        concmd("ulx Ban "+Ranger:entity():name():explode(" "):string(1)+" 120 "+Reason)
+    }
+    if (changed(Prop1) & Prop1 == noentity()) {
+        print("Killed " + P[I, entity]:name(), 75)
+    }
+}
+Color = hsv2rgb(360 * curtime() / 10 % 360, 1, 1)
+entity():setColor(hsv2rgb(360 * curtime() / 10 % 360, 1, 1))
+soundPitch(1, sin(curtime())*10, abs(sin(curtime())*10))

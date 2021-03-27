@@ -1,0 +1,36 @@
+@name Ranger
+@persist [O EE B]:entity
+@outputs Dist Res:entity
+@trigger 
+
+interval(1000)
+
+if(first())
+{
+    EE = entity() #EE:propNotSolid(1)
+    O = owner()
+    
+    B = holoCreate(0,EE:toWorld(vec(0)), vec(1), EE:toWorld(ang(0)),vec(255), "")
+    
+    holoCreate(1, B:toWorld(vec(0,0,10)), vec(1), B:toWorld(ang(0)),vec(0,255,255), "")
+    
+    holoParent(0,EE)
+    holoParent(1,EE)
+    
+}
+else
+{
+    #Ranger = rangerOffset(B:toWorld(vec(0,0,10)),B:toWorld(vec(0,200,10)))
+    Ranger = rangerOffset(holoEntity(0):pos(),holoEntity(0):toWorld(vec(0,2000,10)))
+    if(!Ranger:hitWorld() & (Ranger:entity():type()!="prop_physics")) { print(1) }
+    holoPos(1,Ranger:pos())
+    Res = Ranger:entity()
+    if(Ranger:hit()) {
+        holoPos(1,holoEntity(1):toWorld(vec(0,2,0)))
+        Dist = B:pos():distance(holoEntity(1):pos())
+        
+    }
+}
+
+
+if(dupefinished()) {reset()}

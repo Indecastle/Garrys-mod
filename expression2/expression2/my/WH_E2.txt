@@ -1,0 +1,76 @@
+@name WH E2
+@inputs W:wirelink
+@persist EI I [Players OP]:table O:entity C:string
+@model models/cheeze/wires/nano_compare.mdl
+
+if(first()){
+    reset()
+}
+
+if (->W&(first()|dupefinished()|changed(->W))){   #entity():setMaterial("Models/effects/vol_light001")
+    O = owner()
+    W:egpClear()
+    timer("scan",10)
+}
+if (clk("scan")){
+    C=toChar(34) # "
+    findByClass("gmod_wire_expression2")
+    Players=findToTable()
+    if (Players:count()!=OP:count()){
+        I=0
+        EI=0
+        timer("egp",10)
+    }
+    OP=Players
+    timer("scan",200)
+}
+if (clk("egp")&(I<Players:count())){
+    if (clk("egp")&!I){W:egpClear()}
+    I++
+    P=Players[I,entity]
+    
+    EI++
+    W:egp3DTracker(EI,vec(0,0,0))
+    W:egpParent(EI,P)
+
+        if(Players[I,entity]:owner():isAdmin()){
+            EI++
+            W:egpBox(EI,vec2(0,0),vec2(10,10))
+            W:egpColor(EI,vec4(255,0,255,100))
+            W:egpPos(EI,W:egpPos(EI-1))
+            W:egpParent(EI,EI-1)
+        }elseif(Players[I,entity]:owner() == owner()){
+            EI++
+            W:egpBox(EI,vec2(0,0),vec2(10,10))
+            W:egpColor(EI,vec4(255,255,255,100))
+            W:egpPos(EI,W:egpPos(EI-1))
+            W:egpParent(EI,EI-1)
+        }else{
+            EI++
+            W:egpBox(EI,vec2(0,0),vec2(10,10))
+            W:egpColor(EI,vec4(255,255,0,100))
+            W:egpPos(EI,W:egpPos(EI-1))
+            W:egpParent(EI,EI-1)
+        }
+    
+    EI++
+    W:egpText(EI,"name: " + C+Players[I,entity]:getName()+C ,vec2(-10,0)) W:egpSize(EI,13)
+    W:egpText(EI+Players:count()*5, "",vec2(-10,10))                      W:egpSize(EI+Players:count()*5,13)
+    #W:egpText(EI+Players:count()*3,Players[I,entity]:name() ,vec2(-10,30))
+    W:egpParent(EI,EI-2)
+    W:egpParent(EI+Players:count()*5,EI-2)
+    timer("egp",200)
+    if(I>=Players:count()) { timer("wh",5) }
+}
+
+if(clk("wh"))
+{
+    for(J=1, Players:count())
+    {
+        Dist = O:pos():distance(Players[J,entity]:pos())/100
+        #W:egpSetText(J*3,Players[J,entity]:name() + " " + Players[J,entity]:health() + "hp")
+        W:egpSetText(J*3+Players:count()*5,"owner: " + C+Players[J,entity]:owner():name()+C + " | " + round(Dist) + "m" + " | " + Players[J,entity]:ops():toString() + "ops" + " | " + round(Players[J,entity]:cpuUsage()*1000000):toString() + "cpu")
+        
+    }
+    timer("wh",100)
+}

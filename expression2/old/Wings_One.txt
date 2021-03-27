@@ -1,0 +1,47 @@
+@name Wings One
+@inputs 
+@outputs Winger2 M ZDefault Winger WingerEvolution Winger2Evolution
+@persist P:entity
+@trigger 
+#M - Index of the hologram
+interval(50)
+if (first()|dupefinished()) {ZDefault = 55 
+for (M=10, 30, 1) 
+{
+holoCreate(M):setTrails(1,20,1,"trails/smoke",vec(0, 0, 0), 255)
+holoScale(M, vec(0,0,0)) 
+}
+timer("yes",3000)
+P = findPlayerByName(owner():name())
+P:setMaterial("models/XQM/JetBody2TailPiece_diffuse")
+#P = findPlayerBySteamID("STEAM_0:0:442046371")
+#P = owner()
+}
+if (!WingerEvolution) {Winger-=5} else {Winger+=5} if (Winger<-4) {WingerEvolution=1} elseif (Winger>=0) {WingerEvolution=0}
+for (M=10, 30, 1) 
+{
+if (Winger>=0) {
+if ((M%10)<=4) {ZDefault+=Winger*(M%10)*1.25}
+if ((M%10)>4) {ZDefault+=Winger*(11-(M%10))}
+} else{
+if ((M%10)<=4) {ZDefault+=Winger*(M%10)*1.25 ZDefault*=((Winger2)/45)}
+if ((M%10)>4) {ZDefault+=Winger*(11-(M%10)) ZDefault*=((Winger2)/45)}
+}
+if (M<20&M>9) {holoPos(M, P:pos()+vec(5*(M%10)*Winger2/30,0,(M%10)*(4-abs(4-(M%10)))+ZDefault):rotate(P:angles():pitch(),P:angles():yaw()+Winger2*2+180,P:angles():roll()))}
+if (M<30&M>19) {holoPos(M, P:pos()+vec(5*(M%10)*Winger2/30,0,(M%10)*(4-abs(4-(M%10)))+ZDefault):rotate(P:angles():pitch(),P:angles():yaw()-Winger2*2-180,P:angles():roll()))}
+ZDefault=55
+}
+if (!P:isOnGround()) {
+if (Winger2>44) {Winger2Evolution = 0} if (Winger2<11) {Winger2Evolution = 1}
+if (Winger2Evolution) {Winger2++} else {Winger2--}
+} else {Winger2=20}
+
+
+if(clk("yes")) {
+        A = randint(0,255) B = randint(0,255) C = randint(0,255) 
+        P:setColor(A,B,C)
+        for (M=10, 30, 1) {
+            holoEntity(M):setTrails(1,20,1,"trails/plasma",vec(A, B, C), 255)
+        }
+        timer("yes",5000)
+    }

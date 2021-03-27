@@ -1,0 +1,199 @@
+@name Holo Artillery
+@persist [Owner Bullet]:entity [StartPos CurPos Norm]:vector Size Ang Move Mode Sound Kill Speed Force Kills:array
+@trigger 
+if (first()) {
+    ####
+    # Hologram Artillery
+    # Made by Divran
+    # http://www.wiremod.com/forum/custom-gates/16081-divrans-e2-contraptions-thread.html
+    ####
+
+    #concmd("say Hologram Artillery - Made by Divran")
+
+    Kill = 0
+    Force = 0
+    Owner = owner()
+    #Bullet
+    holoCreate(1)
+    Bullet = holoEntity(1)
+    holoModel(1,"hqicosphere2")
+    holoColor(1,vec(0,0,0))
+    holoAlpha(1,0)
+    #Explosion
+    holoCreate(2)
+    holoModel(2,"hqicosphere")
+    holoColor(2,vec(255,255,0))
+    holoAlpha(2,0)
+    #Shockwave
+    holoCreate(3)
+    holoModel(3,"hqtorus2")
+    holoScaleUnits(3,vec(10,10,10))
+    holoColor(3,vec(50,40,40))
+    holoAlpha(3,0)
+    #Crosshair
+    holoCreate(4)
+    holoModel(4,"hqtorus2")
+    holoScaleUnits(4,vec(40,40,4))
+    holoColor(4,vec(35,35,35))
+    holoCreate(5)
+    holoModel(5,"hqcylinder2")
+    holoScaleUnits(5,vec(2,4,35))
+    holoColor(5,vec(35,35,35))
+    holoCreate(6)
+    holoModel(6,"hqcylinder2")
+    holoScaleUnits(6,vec(2,4,35))
+    holoColor(6,vec(35,35,35))
+    holoAng(5,ang(90,90,0))
+    holoAng(6,ang(90,0,0))
+    holoPos(4,entity():pos()+vec(0,0,0.5))
+    holoParent(6,4)
+    holoParent(5,4)
+    #Inside of explosion
+    holoCreate(7)
+    holoModel(7,"hqicosphere")
+    holoColor(7,vec(255,255,0))
+    holoAlpha(7,0)
+    holoParent(7,2)
+    
+    runOnTick(1)
+    runOnChat(1)
+    
+    Kills = array()
+    Kills[1,string] = ""
+    Kills[2,string] = "Double kill!"
+    Kills[3,string] = "Triple kill!"
+    Kills[4,string] = "Multi kill!"
+    Kills[5,string] = "M-M-M-MONSTER KILL!"
+    Kills[6,string] = "Ludicrous kill!!"
+}
+if (chatClk(owner())) {
+    M = lastSaid():explode(" ")
+    if (M:string(1) == ".give") {
+        T = findPlayerByName(M:string(2))
+        if (T) {
+            print("Gave the artillery to: " + T:name())
+            Owner = T
+        } else {
+            print("No player named " + M:string(2) + " found.")
+        }
+    } elseif (M:string(1) == ".kill") {
+        Kill = clamp(sign(M:string(2):toNumber()),0,1)
+        print("Kill set to " + Kill)
+    } elseif (M:string(1) == ".force") {
+        Force = clamp(sign(M:string(2):toNumber()),0,1)
+        print("Force set to " + Force)
+    }
+} elseif (tickClk()) {
+    E = Owner:keyUse()
+    #Start
+    if (changed(E) & E & Mode == 0 & Owner:isAlive()) {
+        #Bullet
+        holoAlpha(1,255)
+        Bullet:removeTrails()
+        Bullet:setTrails(10,0,5,"trails/smoke",vec(60,60,60),255)
+        #Effect
+        StartPos = Owner:aimPos()
+        CurPos = StartPos + vec(0,0,5000)
+        Mode = 1
+        holoPos(2,StartPos)
+        Norm = Owner:aimNormal()*5
+        holoPos(3,StartPos + Norm)
+        holoScaleUnits(2,vec(1,1,1))
+        holoScaleUnits(3,vec(1,1,1))
+        holoScaleUnits(7,vec(1,1,1))
+        #Crosshair Scale
+        holoScaleUnits(4,vec(60,60,4))
+        holoScaleUnits(5,vec(2.5,4.5,50))
+        holoScaleUnits(6,vec(2.5,4.5,50))
+        #Variables
+        Speed = Move = Sound = Size = 0
+        holoEntity(3):soundPlay(5,1,"buttons/button5.wav")
+        timer("CrosshairScale",800)
+    }
+    if (Mode == 1) {
+        #Moving crosshair
+        if (E) {
+            P = Owner:aimPos()-CurPos
+            if(P:setZ(0):length()>5 | Speed){Speed+=0.3}
+            CurPos+=( P:length()>(P:normalized()*Speed):length() ? P:normalized():setZ(0)*Speed : P:normalized() )
+            Move = 1
+        }
+        #Falling
+        CurPos -= vec(0,0,25)
+        holoPos(1,CurPos)
+        holoPos(4,CurPos:setZ(StartPos:z())+Norm/3)
+        #Bombardment sound
+        if (!Sound & (CurPos:z() - StartPos:z()) < 2100) {Sound = 1, Bullet:soundPlay(1,0,"weapons/mortar/mortar_shell_incomming1.wav")}
+        #Hit
+        if (CurPos:z() <= StartPos:z() - 10) {
+            holoAlpha(1,0)
+            holoAlpha(2,255)
+            holoAlpha(3,255)
+            holoAlpha(7,255)
+            Mode = 2
+            if (Move) {holoPos(2,CurPos+vec(0,0,35)), holoPos(3,CurPos+vec(0,0,35)+Norm)}
+            soundStop(1)
+            N = randint(3)
+            holoEntity(1):soundPlay(2,0,"weapons/mortar/mortar_explode"+N+".wav")
+            holoEntity(2):soundPlay(3,0,"weapons/mortar/mortar_explode"+N+".wav")
+            holoEntity(3):soundPlay(4,0,"weapons/mortar/mortar_explode"+N+".wav")
+            
+            #Kill & Force
+            if (Kill|Force) {
+                NrOfKills = 0
+                findInSphere(CurPos,510)
+                Targets = findToArray()
+                    Name = ""
+                    for(I=1,Targets:count()) {
+                        En = Targets:entity(I)
+                        if (Kill & En:isPlayer() & En:isAlive()) {
+                            NrOfKills++
+                            Name+= "\"" + En:name() + "\""
+                        }
+                        if (Force & !En:isPlayer() & En:owner() == owner()) {
+                            Dist = CurPos:distance(En:pos())
+                            if (Dist>510) {continue}
+                            Dir = (En:pos()-CurPos) + vec(0,0,En:massCenter():z()-CurPos:z())
+                            En:applyForce(Dir*250*((510-Dist)/4))
+                        }
+                            
+                    }        
+                    if (Name:trim() != "" & Kill) {concmd("ev slay " + Name:trim())}
+                    if (Kill & Kills[NrOfKills,string] != "") {concmd("say " + Kills[NrOfKills,string])}
+            }
+        }
+    } elseif (Mode == 2) {
+        #Explosion Effect
+        Size+=4
+        holoScaleUnits(2,vec(Size,Size,Size))
+        holoScaleUnits(7,vec(-Size,Size,Size)*0.99)
+        holoScaleUnits(3,vec(Size*2,Size*2,Size/4))
+        holoColor(2,vec(255,Size/2,0))
+        holoColor(3,vec(50+Size/8,40+Size/8,40+Size/8))
+        holoColor(7,vec(255,Size/2,0))
+        holoAlpha(2,(Size>255 ? 255 - (Size-255) : 255))
+        holoAlpha(3,(Size>255 ? 255 - (Size-255) : 255))
+        holoAlpha(7,(Size>255 ? 255 - (Size-255) : 255))
+        if (Size >= 510) {
+            holoAlpha(2,0)
+            holoAlpha(3,0)
+            holoAlpha(7,0)
+            Mode = 0
+            soundPurge()
+            holoScaleUnits(4,vec(40,40,4))
+            holoScaleUnits(5,vec(2,4,35))
+            holoScaleUnits(6,vec(2,4,35))
+        }
+    } elseif (Mode == 0) {
+        #Move the crosshair
+        Ang++
+        if (Ang>360) {Ang = 0}
+        holoAng(4,ang(0,Ang,0))
+        holoPos(4,Owner:aimPos()+Owner:aimNormal()*2)
+    }
+} elseif (clk("CrosshairScale")) {
+    holoScaleUnits(4,vec(20,20,2))
+    holoScaleUnits(5,vec(1,2,17.5))
+    holoScaleUnits(6,vec(1,2,17.5))
+} 
+

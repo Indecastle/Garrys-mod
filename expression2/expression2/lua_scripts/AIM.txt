@@ -1,0 +1,46 @@
+	curastate = false
+aimed = false
+tar = nil
+ 
+function gethead(ent)
+    if ent:LookupBone("ValveBiped.Bip01_Head1") then
+        local pos = ent:GetBonePosition(ent:GetHitBoxBone(0, 0))
+        return pos
+    end
+    return ent:LocalToWorld(ent:OBBCenter())
+end
+ 
+function getclosest(r)
+    local min = 999999
+    local lox
+    for k, v in pairs(player.GetAll())
+    do
+        local tbl = gethead(v):ToScreen()
+        local x = tbl.x
+        local y = tbl.y
+        local dist = math.sqrt((x - ScrW() / 2)^2 + (y - ScrH() / 2)^2)
+        if v != LocalPlayer() and dist <= r and dist < min then
+            lox = v
+            min = dist
+		        end
+    end
+    return lox
+end
+ 
+hook.Add("Think", "aim Markiz",	
+function()
+    local angle
+    if input.IsMouseDown(MOUSE_4) then								
+        if !curastate then
+            tar = getclosest(200)
+            print(tar)
+        end
+        if tar != nil then
+            angle = (gethead(tar) + tar:GetVelocity() * engine.TickInterval() * 0.6 - LocalPlayer():GetShootPos() - LocalPlayer():GetVelocity() * engine.TickInterval() * 0.6):Angle()
+        end
+        if angle != nil then		
+            LocalPlayer():SetEyeAngles(angle)      
+        end
+    end
+    curastate = input.IsMouseDown(MOUSE_4)
+end)

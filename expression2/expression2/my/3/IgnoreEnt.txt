@@ -1,0 +1,8 @@
+@name IgnoreEnt
+@outputs IgnoreEnt:array
+
+interval(100)
+
+findInSphere(entity():pos(),100)
+IgnoreEnt = findToArray()
+

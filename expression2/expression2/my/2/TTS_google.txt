@@ -1,0 +1,40 @@
+@name TTS google
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if(first()) {
+    soundURLload(1,"https://translate.google.com/translate_tts?ie=UTF-8&q={Hello%20world}&tl=ru&client=tw-ob",10,0,owner():pos())
+    runOnChat(1)
+}
+interval(100)
+function void tts(Index:number, Text:string, Lang:string, Noplay:number)
+{
+    #[Str = ""
+    for(I=1,Text:length())
+    {
+        Char = Text:index(I)
+        switch(Char)
+        {
+            case " ", Str = Str+"%20",break
+            default, Str = Str+Char, break
+        }
+    }]#
+    soundURLload(1,"http://translate.google.com/translate_tts?ie=UTF-8&q="+httpUrlEncode(Text)+"&tl="+Lang+"&client=tw-ob&ttsspeed=1",1,Noplay,owner():pos())
+    
+}
+
+if(chatClk(owner()))
+{
+    Str = owner():lastSaid()
+    hideChat(1)
+    tts(1,Str, "ru", 0)
+    #timer("t",100)
+    
+}
+if(clk("t")) {
+    soundURLplay(1)
+    print(1)
+}
+

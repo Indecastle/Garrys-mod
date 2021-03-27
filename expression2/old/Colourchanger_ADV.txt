@@ -1,0 +1,54 @@
+@name Colourchanger ADV
+@persist State Type:string Hint Reset
+interval(50)
+#Say 'normal' to be normal
+#Say 'shiny' to be shiny
+#Say 'flashy' to be flashy
+#Say 'hide' to be invisible
+#Say 'electric' to be electrified
+#Say 'state' to be hinted what state your in
+#Say 'reset' after you have used the state command so you can use it again
+if (owner():lastSaid() == "normal") {State=1}
+if (owner():lastSaid() == "hide") {State=2}
+if (owner():lastSaid() == "flashy") {State = 5}
+if (owner():lastSaid() == "shiny") {State = 9}
+if(owner():lastSaid() == "electric") {State = 20}
+if (owner():lastSaid() == "state" & Hint == 0) {Hint = 1}
+if (owner():lastSaid() == "reset") {Reset = 1}
+if (State == 1) {
+owner():setMaterial("normalplz")
+owner():setColor(255,255,255)
+Type = "You are Normal"
+}
+if (State == 2) {
+owner():setMaterial("Models/effects/vol_light001")
+State = 0
+Type = "You are Hidden"
+}
+if (State == 5) {
+owner():setMaterial("models/debug/debugwhite")
+State = 6
+Type = "You are Flashy"
+}
+if (State == 6) {
+owner():setColor(random(255),random(255),random(255))
+}
+if (State == 9) {
+owner():setMaterial("debug/env_cubemap_model")
+owner():setColor(255,255,255)
+State = 0
+Type = "You are Shiny"
+}
+if (State == 20) {
+owner():setMaterial("models/alyx/emptool_glow")
+owner():setColor(255,255,255)
+State = 0 
+Type = "You are Electric"
+}
+if (Hint == 1) {hint(Type,5)
+Hint = -1 
+}
+if (Reset == 1) {
+Hint = 0
+Reset = 0
+}

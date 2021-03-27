@@ -1,0 +1,250 @@
+@name Teleport to player
+@inputs [WPod Wtp]:wirelink
+@outputs [LocalPosition]:vector
+@persist [Target TargetFrom Vehicle]:entity TON SoundOk AllP IsWait Ejecting [Commands Players]:array I
+@trigger 
+
+interval(100)
+
+if(first() | duped()) { LocalPosition = vec(0,0,1)
+    runOnChat(1)
+    Commands = array("!TPON", "!TPhelp", "!tpto", "!tpme", "!tpb", "!tppto", "!tptosound", "!rest")
+    Ejecting = 1
+    Wtp["Sound",number] = 0
+    
+    findByClass("prop_vehicle_*")
+    Vehicle = findClosest(entity():pos()) ### Vehicle:propFreeze(1) ####################  #Vehicle:noCollideAll(1)
+    
+    printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!TPhelp\"")
+    
+    function number my_find_substr(Str:string, SubStr:string) {
+        return Str:lower():find(SubStr:lower())
+    }
+    function entity my_findPlayerByName(Name:string) {
+        local OK = noentity()
+        foreach(I, P:entity = Players) {
+            if(my_find_substr(P:name(), Name)) { OK = P break}
+        }
+        return OK
+    }
+    function entity my_findPlayerBySteamID(Name:string) {
+        local OK = noentity()
+        foreach(I, P:entity = Players) {
+            if(P:steamID() == Name) { OK = P break}
+        }
+        return OK
+    }
+    function number array:checkAr(Str:string) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:string(I) == Str) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:indexEnt(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = I break}
+        } 
+        return OK
+    }
+    function number array:removeEnt(Ent:entity) {
+        local OK = 0
+        if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+        return OK
+    }
+    function number array:addEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushEntity(Ent) OK=1}
+        return OK
+    }
+    #ifdef hsv2rgb(number, number, number)
+        function update_color() {
+            I = (I+0.3)%360
+            local Color = hsv2rgb(I, 1, 1)
+            Vehicle:setColor(Color)
+        }
+    #else
+        function update_color() {
+            I = (I+0.05)%360
+            local Color = vec(sin(I*20+255)*127+127,sin(I*20 + 255*2)*127+127,sin(I*2 + 3*255)*127+127)
+            Vehicle:setColor(Color)
+        }
+    #endif
+    I = randint(360)
+    
+    timer("update_players", 0)
+}
+
+update_color()
+
+if (clk("update_players")) {
+    Players = players()
+    timer("update_players", 1000)
+}
+
+if(chatClk()) {
+    Pla = lastSpoke() 
+    local Message = Pla:lastSaid()
+    FirstLetter = Message:index(1)
+    if (FirstLetter == ".") {}
+    elseif (FirstLetter == "!") {
+        local Ar = Pla:lastSaid():explode(" ")
+        if (Commands:checkAr(Ar:string(1))) {
+            hideChat(1)
+        }
+        if (Pla == owner()) {
+            switch(Ar:string(1))
+            {
+                case "!tpto", 
+                    Target = noentity()
+                    if (Ar:string(Ar:count()) == "id") { Target = my_findPlayerBySteamID(Ar:string(2)) }
+                    else { Target = my_findPlayerByName(Ar:string(2)) }
+                    print(Target)
+                    if(Target:isPlayer()) { timer("work01", 0) TargetFrom = owner() }
+                    else { print("Error")}
+                break
+                case "!tppto", 
+                    Target = noentity()
+                    if (Ar:string(3) == "id") { Target = my_findPlayerBySteamID(Ar:string(2)) }
+                    else { TargetFrom = my_findPlayerByName(Ar:string(2)) }
+                    if (Ar:string(4)=="id" | Ar:string(5)=="id") { Target = my_findPlayerBySteamID(Ar:string(Ar:count()-1)) }
+                    else { Target = my_findPlayerByName(Ar:string(Ar:count())) }
+                    print(TargetFrom)
+                    print(Target)
+                    if(Target:isPlayer()) { timer("work01", 0) }
+                    else { print("Error")}
+                break
+                case "!tpme", 
+                    Target = noentity()
+                    if (Ar:string(Ar:count()) == "id") { TargetFrom = my_findPlayerBySteamID(Ar:string(2)) }
+                    else { TargetFrom = my_findPlayerByName(Ar:string(2)) }
+                    Target = owner()
+                    print(TargetFrom)
+                    if(TargetFrom:isPlayer()) { timer("work01", 0)}
+                    else { print("Error")}
+                break
+                case "!tpb", 
+                    Target = entity()
+                    TargetFrom = owner()
+                    timer("work01", 0)
+                break
+                case "!tptosound",
+                    if(Ar:string(2) == "0") { Wtp["Sound",number] = 0 print("TPSound Off") timer("OK",0) }
+                    elseif(Ar:string(2) == "1") { Wtp["Sound",number] = 1 print("TPSound On") timer("OK",0)}
+                case "!rest",
+                    stopAllTimers()
+                    timer("work4", 0)
+                break
+                case "!TPhelp", 
+                    #if(Ar:string(2) == "ru") { timer("help_ru",100) }
+                    #elseif(Ar:string(2) == "en") { timer("help_en",100)}
+                    timer("help_en",100)
+                break
+                default,
+            }
+        }
+    }
+    elseif(TON) {
+        local OK = 0
+        
+    }
+}
+
+
+
+if (clk("work01")) {
+    local TargetPos = vec()
+    TargetPos = TargetFrom:toWorld(vec(50,0,30))
+    Wtp["TargetPos",vector] = TargetPos
+    timer("work02",100)
+}
+
+if (clk("work02")) {
+    #Jump = 1
+    Wtp["Jump",number] = 1
+    IsWait = 1
+    stoptimer("restart")
+    timer("restart", 5000)
+}
+
+if(WPod["Active",number] & IsWait) {
+    IsWait = 0
+    Ejecting = 0
+    timer("work1", 0)
+}
+elseif (WPod["Active",number] & Ejecting) {
+    WPod["Eject",number] = 1
+}
+
+
+if (clk("work1")) {
+    local TargetPos = Target:pos()+vec(0,0,10)
+    Wtp["TargetPos",vector] = TargetPos
+    timer("work2",100)
+    stoptimer("restart")
+    
+}
+if (clk("work2")) {
+    Wtp["Jump",number] = 1
+    timer("work3",300)
+    
+}
+if (clk("work3")) {
+    WPod["Eject",number] = 1
+    Ejecting = 1
+    timer("work4",400)
+}
+if (clk("work4")) {
+    local TargetPos = vec()
+    TargetPos = entity():pos()+vec(0,0,10)
+    Wtp["TargetPos",vector] = TargetPos
+    timer("work5",400)
+}
+if (clk("work5")) {
+    if(WPod["Active",number]) { timer("work5",200) }
+    else { 
+        Wtp["Jump",number] = 1
+        timer("work6",100)
+    }
+}
+if (clk("work6")) {
+    #Jump = 0
+    #Eject = 0
+}
+
+if(clk("restart")) {
+    IsWait = 0
+    timer("work3",0)
+}
+
+
+if (clk("OK")) {
+    owner():soundPlay(20, 0.3, "buttons/button9.wav")
+}
+
+if (clk("help_en")) {
+    printColor(vec(255,0,0), "###################################")
+    printColor(vec(255,255,0), "!tpto (username) ['id']", vec(0,255,255), "  - Teleport me to player")
+    printColor(vec(255,255,0), "!tpme (username) ['id']", vec(0,255,255), "  - Teleport player to me")
+    printColor(vec(255,255,0), "!tptosound 0/1", vec(0,255,255), "  - Teleport Sounds")
+    printColor(vec(255,255,0), "!tppto (username) ['id'] (username) ['id']", vec(0,255,255), "  - Teleport player to player")
+    printColor(vec(255,255,0), "!tpb", vec(0,255,255), "  - Teleport me to startpoint")
+    printColor(vec(255,255,0), "!rest", vec(0,255,255), "  - Restart Teleport")
+    #print(_HUD_PRINTCENTER, "Wait :)")
+    #timer("help_en2", 2000)
+    printColor(vec(255,0,0), "###################################")
+}
+
+if(clk("help_en2")) {
+    printColor(vec(255,255,0), "!FUN 0/1/2", vec(0,255,255), " - translate in chat other players")
+    printColor(vec(255,0,0), "###################################")
+}
+

@@ -1,0 +1,37 @@
+@name azaz
+@inputs 
+@outputs 
+@persist Anim Anim0
+
+runOnTick(1)
+if(first()) {
+    H = holoCreate(1,entity():pos())
+    #holoModel(1,"models/captainbigbutt/vocaloid/miku_append.mdl") 
+    holoAng(1,owner():angles())
+    holoModel(1,"models/player/breen.mdl")
+    holoSkin(1,0)
+    #H:setBodygroup(1,0)
+    
+    O =holoCreate(2)
+    holoPos(2,H:attachmentPos("anim_attachment_RH"))
+    holoAng(2,owner():angles()+ang(45,-90,-90))
+    holoPos(2,O:toWorld(vec(-1.2,-0.5,2.5)))
+    holoModel(2,owner():weapon():model())
+    
+    holoParentAttachment(2,H,"anim_attachment_RH")
+    holoAnim(1,owner():getAnimation())
+    
+    
+    #owner():playerSetBoneAng(5,ang(0,0,0))
+    #owner():playerSetBoneAng(1,ang(0,0,0))
+    
+}
+if(changed(owner():getAnimation()) & 1) {
+    holoAnim(1,owner():getAnimation())
+    holoModel(2,owner():weapon():model())
+    Anim0 = Anim
+}
+Anim = owner():getAnimation()
+
+
+

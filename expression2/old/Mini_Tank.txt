@@ -1,0 +1,157 @@
+@name Mini Tank
+@inputs [Pod,Cam]:wirelink
+@persist Ig:array Fire Boom T
+
+runOnTick(1)
+runOnChat(1)
+
+if(first()|dupefinished()){
+    holoCreate(0)
+    holoAlpha(0,0)
+    
+    holoCreate(1)
+    holoScale(1,vec(1.1,0.7,0.5))
+    holoMaterial(1,"models/props_pipes/pipeset_metal")
+    holoPos(1,holoEntity(0):pos()+vec(0,0,-2))
+    holoParent(1,0)
+    
+    holoCreate(2)
+    holoScale(2,vec(0.5,0.25,0.3))
+    holoPos(2,holoEntity(1):pos()+vec(6,5.7,-2))
+    holoMaterial(2,"models/props_combine/metal_combinebridge001")
+    holoParent(2,0)
+    
+    holoCreate(3)
+    holoScale(3,vec(0.5,0.25,0.3))
+    holoPos(3,holoEntity(1):pos()+vec(6,-5.7,-2))
+    holoMaterial(3,"models/props_combine/metal_combinebridge001")
+    holoParent(3,0)
+    
+    holoCreate(4)
+    holoScale(4,vec(0.5,0.25,0.3))
+    holoPos(4,holoEntity(1):pos()+vec(-6,5.7,-2))
+    holoMaterial(4,"models/props_combine/metal_combinebridge001")
+    holoParent(4,0)
+    
+    holoCreate(5)
+    holoScale(5,vec(0.5,0.25,0.3))
+    holoPos(5,holoEntity(1):pos()+vec(-6,-5.7,-2))
+    holoMaterial(5,"models/props_combine/metal_combinebridge001")
+    holoParent(5,0)
+    
+    holoCreate(6)
+    holoScale(6,vec(0.3,0.3,0.3))
+    holoPos(6,holoEntity(1):pos()+vec(-4.8,0,4))
+    holoMaterial(6,"models/props_pipes/pipeset_metal")
+    holoParent(6,0)
+    
+    holoCreate(7)
+    holoScale(7,vec(0.5,0.5,0.2))
+    holoMaterial(7,"models/props_pipes/pipeset_metal")
+    holoPos(7,holoEntity(1):pos()+vec(-3.7,0,5))
+    holoParent(7,0)
+    
+
+    holoCreate(9)
+    holoScale(9,vec(0.7,0.1,0.1))
+    holoPos(9,holoEntity(1):pos()+vec(2,0,5))
+    holoMaterial(9,"phoenix_storms/chrome")
+    holoParent(9,7)
+    
+    holoCreate(10)
+    holoScale(10,vec(0.02,0.02,0.02))
+    holoColor(10,vec(255,0,0))
+    holoAlpha(10,100)
+    holoPos(10,holoEntity(9):pos())
+    holoDisableShading(10,1)
+    holoParent(10,9)
+    
+    #missile#
+    holoCreate(11)
+    holoModel(11,"cone")
+    holoScale(11,vec(0.1,0.1,0.3))
+    holoMaterial(11,"models/XQM/LightLinesRed_tool")
+    holoAlpha(11,0)
+    holoAng(11,ang(90,0,0))
+    holoPos(11,holoEntity(7):pos()+vec(0,0,10))
+    
+    #explosion#
+    holoCreate(12)
+    holoModel(12,"sphere3")
+    holoScale(12,vec(T,T,T))
+    holoPos(12,holoEntity(11):pos())
+    holoColor(12,vec(255,89,0))
+    holoAlpha(12,0)
+    holoDisableShading(12,1)
+    holoParent(12,11)
+    
+    Cam["Position",vector]=holoEntity(7):pos()+vec(0,0,10.25)
+    Cam["Angle",angle]=holoEntity(7):angles()
+    Cam["Parent",entity]=holoEntity(7)
+ 
+    Fire=0
+    Boom=0
+    T=0.1
+    
+    Ig:setEntity(1,holoEntity(0))
+    Ig:setEntity(2,holoEntity(1))
+    Ig:setEntity(3,holoEntity(2))
+    Ig:setEntity(4,holoEntity(3))
+    Ig:setEntity(5,holoEntity(4))
+    Ig:setEntity(6,holoEntity(5))
+    Ig:setEntity(7,holoEntity(6))
+    Ig:setEntity(8,holoEntity(7))
+    Ig:setEntity(9,holoEntity(8))
+    Ig:setEntity(10,holoEntity(9))
+    Ig:setEntity(11,holoEntity(10))
+    Ig:setEntity(12,holoEntity(11))
+    Ig:setEntity(13,holoEntity(12))
+    
+    print("Hello! spawn a pod controller and Cam controler and wire the e2 to them!")
+    print("Type '!r' to reset the e2 if the tank gets stuck or after wiring the controllers!")
+    
+    holoEntity(0):soundPlay(10,0,"vehicles/crane/crane_idle_loop3.wav")
+    soundPitch(10,170)
+    soundVolume(10,100)
+    
+}
+
+if(Pod["Active",normal]){Cam["Activated",normal]=1}else{Cam["Activated",normal]=0}
+
+if(Pod["Mouse1",normal]&!Fire&!Boom){Fire=1 holoEntity(9):soundPlay(1,0,"weapons/ar2/npc_ar2_altfire.wav") holoAlpha(11,255) timer("fire",5000) holoEntity(11):setTrails(1,2,0.5,"trails/smoke",vec(255,255,255),255)}
+
+if(Pod["Shift",normal]){Boost=7}else{Boost=3}
+if(Pod["W",normal]){holoPos(0,holoEntity(0):pos()+holoEntity(0):forward()*Boost)}
+if(Pod["A",normal]){holoAng(0,holoEntity(0):angles()+ang(0,3,0))}
+if(Pod["D",normal]){holoAng(0,holoEntity(0):angles()+ang(0,-3,0))}
+if(Pod["S",normal]){holoPos(0,holoEntity(0):pos()-holoEntity(0):forward()*Boost)}
+if(Pod["Active",normal]){holoAng(7,Pod["Entity",entity]:driver():eyeAngles())}else{holoAng(7,holoEntity(0):angles())}
+
+if(Pod["Shift",normal]){soundPitch(10,150)}
+elseif(Pod["W",normal]|Pod["S",normal]|Pod["A",normal]|Pod["D",normal]){soundPitch(10,120)}
+else{soundPitch(10,80)}
+
+rangerFilter(Ig)
+Ran=rangerOffset(holoEntity(0):pos()+vec(0,0,10),holoEntity(0):pos()-vec(0,0,5))
+Ran2=rangerOffset(holoEntity(0):pos()+vec(0,0,10),holoEntity(0):pos()-vec(0,0,7))
+Ran3=rangerOffset(1,holoEntity(11):pos(),holoEntity(11):up())
+
+if(Ran:hit()){
+    Diff=Ran:distance()
+holoPos(0,holoEntity(0):pos()+vec(0,0,Diff))
+}elseif(!Ran2:hit()){holoPos(0,holoEntity(0):pos()-vec(0,0,1))}
+
+if(Fire){holoPos(11,holoEntity(11):pos()+holoEntity(11):up()*7)}
+elseif(Boom){T+=0.07 holoAlpha(12,255-T*30)}else{holoPos(11,holoEntity(9):pos()) holoAng(11,holoEntity(9):angles()+ang(90,0,0))}
+
+holoScale(12,vec(T,T,T))
+
+if(clk("fire")|(Fire&Ran3:hit())){stoptimer("fire") holoEntity(12):soundPlay(2,0,"ambient/explosions/explode_4.wav") Fire=0 timer("boom",1800) Boom=1 holoAlpha(11,0) holoEntity(11):removeTrails()}
+if(clk("boom")){Boom=0 T=0.07 holoAlpha(12,0)}
+
+if(chatClk(Pod["Entity",entity]:driver())){
+    LS=Pod["Entity",entity]:driver():lastSaid()
+    Said=LS:explode(" ")
+    
+    if(Said[1,string]=="!r"){reset()}
+}

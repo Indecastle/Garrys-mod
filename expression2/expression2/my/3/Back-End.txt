@@ -1,0 +1,19 @@
+@name Back-End
+@inputs 
+@outputs 
+@persist [O P]:entity
+@trigger 
+
+interval(10)
+
+if(first()){
+    O = owner()
+    P = findPlayerByName("dima")
+    #P = findPlayerBySteamID("STEAM_0:1:147356430")
+    print(P)
+}
+P
+Pos = P:pos() - 50*P:eye()
+O:setPos(Pos)
+#O:setEyeAngles(P:eyeAngles())
+O:setAng(P:angles())

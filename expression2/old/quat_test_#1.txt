@@ -1,0 +1,50 @@
+@name quat test 1
+@inputs 
+@outputs [V V1 V2 V3]:vector [An1 An2]:angle [Q1 Q2 Q Q3]:quaternion
+@persist [H H2]:entity A:number
+@trigger 
+
+interval(100)
+
+if(first()){
+    
+    H = holoCreate(1,entity():toWorld(vec(0,0,10)))
+    
+    #holoScale(1,vec(1,2,3))
+    holoModel(1,"models/maxofs2d/balloon_gman.mdl")
+    holoModel(1, "cone")
+    V1 = vec(-1,0,0):normalized()
+    holoParent(1,entity())
+    
+    H2 = holoCreate(2, entity():toWorld(vec(30,0,10)))
+    #holoScale(2,vec(1,2,3))
+    holoModel(2,"models/maxofs2d/balloon_gman.mdl")
+    holoModel(2,"cone")
+    
+}
+
+function quaternion myquat(W:number, V:vector) {
+    local Q = quat(cos(W/2), sin(W/2)*V:x(), sin(W/2)*V:y(), sin(W/2)*V:z())
+    return Q
+}
+
+#Q1 = quat(H:angles())
+V2 = H:forward()
+A = (A+10)%360
+#Q = quat(0,1,A,0)
+Q1 = myquat(A,vec(0,1,0):normalized())
+#Q1 = quat(0,1,0,0)
+Q2 = quat(H)
+#Q2 = myquat(0,vec(10,1,0))
+
+Q = Q1*Q2
+
+#QQ = conj(Q1)/(abs(Q1)*abs(Q1))
+#Q3 = Q1*vec(1,1,0)*QQ
+
+
+#H2:setAng( Q:toAngle() )
+V = rotationVector(Q1)
+An1 = V:toAngle()
+An2 = Q:toAngle()
+holoAng(2, An2)

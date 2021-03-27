@@ -1,0 +1,137 @@
+@name Traffic lights v2
+@inputs Button
+@outputs [Red Yellow Green P_Red P_Green]:vector 
+@persist [Step Step2] [Time_Step_0 Time_Step_1 Time_Step_2 Time_Step_3 Time_Step_4] Time_Step_3_Pulse #Green_Counter_Limit
+@persist Green_pulse Green_P_pulse
+@persist Button_Lock
+@trigger all
+
+if (first() || dupefinished()) {
+    # (Step) - [0] + [1] == [2] + [3] + [4]
+    # (Step) - [1] == [4]
+    Time_Step_0 = 13500
+    Time_Step_1 = 2000
+    Time_Step_2 = 7000
+    Time_Step_3 = 6500
+    Time_Step_3_Pulse = 500
+    #Green_Counter_Limit = 9
+    Time_Step_4 = 2000
+    
+    Step = 1
+    Step2 = 4
+    timer("run_step", 0)
+    timer("run_step2", 0)
+    
+    function set_color(Type:string, ON:number) {
+        switch (Type) 
+        {
+            case "red",
+                Red = (ON ? vec(255, 0, 0) : vec())
+            break
+            case "yellow",
+                Yellow = (ON ? vec(255, 255, 0) : vec())
+            break
+            case "green",
+                Green = (ON ? vec(0, 255, 0) : vec())
+        }
+    }
+    function set_P_color(Type:string, ON:number) {
+        switch (Type) 
+        {
+            case "red",
+                P_Red = (ON ? vec(255, 0, 0) : vec())
+            break
+            case "green",
+                P_Green = (ON ? vec(0, 255, 0) : vec())
+        }
+    }
+    function stop_pulse(Car, Person) {
+        switch (Car) 
+        {
+            case 1,
+                Green_pulse = 0
+                stoptimer("green_pulse")
+            break
+            default,
+                switch (Person) 
+                {
+                    case 1,
+                        Green_P_pulse = 0
+                        stoptimer("green_P_pulse")
+                }
+        }
+    }
+}
+
+if (~Button && Button) {
+    if (!Button_Lock) {
+        Button_Lock = 1
+        timer("run_step", Time_Step_2)
+    }
+}
+
+if (clk("run_step")) {
+    switch (Step) {
+        case 0,
+            set_color("yellow", 0)
+            set_color("red", 1)
+            set_P_color("red", 0)
+            set_P_color("green", 1)
+            timer("run_step", Time_Step_0)
+            timer("green_P_pulse", Time_Step_3)
+        break
+        case 1,
+            set_color("red", 1)
+            set_color("yellow", 1)
+            set_P_color("green", 0)
+            set_P_color("red", 1)
+            timer("run_step", Time_Step_1)
+            stop_pulse(0, 1)
+        break
+        case 2,
+            set_color("red", 0)
+            set_color("yellow", 0)
+            set_color("green", 1)
+            #timer("run_step", Time_Step_2)
+            Button_Lock = 0
+        break
+        case 3,
+            timer("green_pulse", 0)
+            timer("run_step", Time_Step_3)
+        break
+        case 4,
+            set_color("green", 0)
+            set_color("yellow", 1)
+            timer("run_step", Time_Step_4)
+            stop_pulse(1, 0)
+        break
+    }
+    Step = (Step + 1) % 5
+}
+
+if (clk("green_pulse")) {
+    Green_pulse++
+    set_color("green", Green_pulse % 2)
+    timer("green_pulse", Time_Step_3_Pulse)
+    #[if (Green_pulse == Green_Counter_Limit) {
+        Green_pulse = 0
+        timer("run_step", 0)
+    }
+    else {
+        timer("green_pulse", Time_Step_3_Pulse)
+    }]#
+}
+
+if (clk("green_P_pulse")) {
+    Green_P_pulse++
+    set_P_color("green", Green_P_pulse % 2)
+    timer("green_P_pulse", Time_Step_3_Pulse)
+    #[if (Green_pulse == Green_Counter_Limit) {
+        Green_pulse = 0
+        timer("run_step", 0)
+    }
+    else {
+        timer("green_pulse", Time_Step_3_Pulse)
+    }]#
+}
+

@@ -1,0 +1,345 @@
+@name Transforming Turret
+@inputs Turret:wirelink
+@outputs [Floor MorphSpeed Fire Mode Pitch Yaw Speed Time Bearing Spin Elev Next Scale Cos Height] Hn:vector
+@persist [Base Table H O E T Tur Ground]:entity [Mat Mat2]:string [Brown Boxsize]:vector
+@model models/hunter/plates/plate05x05.mdl
+
+## To make the turret functional spawn a wire turret ##
+## nocollide all the turret and wire it with wirelink ##
+## Press your use key on it to activate it, make sure it's unfrozen ##
+
+if(duped()){ reset() }
+
+if(first()){
+    E = entity()
+    O = owner()
+    Tur = Turret:entity()
+    
+    E:setAlpha(0)
+    E:setMass(5000)
+    Tur:setAlpha(0)
+    MorphSpeed = 1.5
+    Scale = 3
+    
+    Mat = "models/props_pipes/pipemetal001a"
+    Mat2 = "models/gibs/metalgibs/metal_gibs"
+    
+    Boxsize = E:boxSize()
+    
+    Floor = 150
+    Ground = holoCreate(Floor, E:pos(), Scale*Boxsize/12, E:angles())
+    holoModel(Floor, "octagon")
+    holoMaterial(Floor, Mat)
+    holoParent(Floor, E)
+    
+    Brown = vec(247,203,159)
+    
+    holoCreate(1, E:toWorld(vec(-4,0,1.5)*Scale), Scale*vec(8,8,8)/12, E:toWorld(ang(0,0,90)))
+    holoModel(1, "hq_dome")
+    holoMaterial(1, Mat)
+    holoColor(1, Brown)
+    holoClipEnabled(1, 1)
+    holoClip(1, vec(0,-0.5,0)*Scale, vec(0,1,0), 0)
+    holoParent(1, Floor)
+    
+    holoCreate(2, E:toWorld(vec(-4,0.15,3.75)*Scale), Scale*vec(2.75,2.75,1)/12, E:toWorld(ang(0,0,90)))
+    holoMaterial(2, Mat2)
+    holoModel(2, "hq_cylinder")
+    holoParent(2, 1)
+    
+    holoCreate(3, E:toWorld(vec(0,0.75,3.75)*Scale), Scale*vec(3,1.15,12)/12, E:toWorld(ang(90,0,0)))
+    holoMaterial(3, Mat)
+    holoColor(3, Brown)
+    holoModel(3, "hq_rcube")
+    holoParent(3, 2)
+    
+    holoCreate(4, E:toWorld(vec(4,1.4,3.75)*Scale), Scale*vec(2.75,2.75,1.25)/12, E:toWorld(ang(0,0,90)))
+    holoMaterial(4, Mat2)
+    holoModel(4, "hq_cylinder")
+    holoParent(4, 3)
+    
+    holoCreate(5, E:toWorld(vec(0,2,3.75)*Scale), Scale*vec(3,1.15,12)/12, E:toWorld(ang(90,0,0)))
+    holoMaterial(5, Mat)
+    holoColor(5, Brown)
+    holoModel(5, "hq_rcube")
+    holoParent(5, 4)
+    
+    holoCreate(6, E:toWorld(vec(-4,2.5,3.75)*Scale), Scale*vec(2.75,2.75,1)/12, E:toWorld(ang(0,0,90)))
+    holoMaterial(6, Mat2)
+    holoModel(6, "hq_cylinder")
+    holoParent(6, 5)
+    
+    H = holoCreate(7, E:toWorld(vec(-4,3,3.75)*Scale), Scale*vec(6,2.75,0.5)/12, E:toWorld(ang(0,0,90)))
+    holoMaterial(7, Mat)
+    holoColor(7, Brown)
+    holoModel(7, "hq_rcube_thin")
+    holoParent(7, 6)
+    
+    holoPos(1, E:toWorld(vec(-2.5,-3,1.5)*Scale))
+    
+    holoCreate(8, H:toWorld(vec(2.6,0.75,-0.75)*Scale), Scale*vec(1,1.25,1.2)/12, H:toWorld(ang(0,0,0)))
+    holoMaterial(8, Mat)
+    holoColor(8, Brown)
+    holoModel(8, "hq_rcube_thin")
+    holoParent(8, H)
+    
+    holoCreate(9, H:toWorld(vec(-2.6,0.75,-0.75)*Scale), Scale*vec(1,1.25,1.2)/12, H:toWorld(ang(0,0,0)))
+    holoMaterial(9, Mat)
+    holoColor(9, Brown)
+    holoModel(9, "hq_rcube_thin")
+    holoParent(9, H)
+    
+    H = holoCreate(10, H:toWorld(vec(0,0.75,-0.75)*Scale), Scale*vec(0.75,0.75,6)/12, E:toWorld(ang(90,0,0)))
+    holoMaterial(10, Mat2)
+    holoModel(10, "hq_cylinder")
+    holoParent(10, 7)
+    
+    H = holoCreate(11, H:toWorld(vec(0.75,0,0)*Scale), Scale*vec(1,2.75,4.25)/12, H:toWorld(ang(0,90,0)))
+    holoMaterial(11, Mat)
+    holoColor(11, Brown)
+    holoModel(11, "hq_rcube_thin")
+    holoParent(11, 10)
+    
+    holoCreate(12, H:toWorld(vec(0.75,-0.95,0)*Scale), Scale*vec(1,1.1,4.25)/12, H:toWorld(ang(0,90,0)))
+    holoMaterial(12, Mat)
+    holoColor(12, Brown)
+    holoModel(12, "hq_rcube_thin")
+    holoParent(12, 10)
+    
+    ## Turret Base ##
+    Base = H = holoCreate(13, H:toWorld(vec(1.3,2.625,0)*Scale), Scale*vec(8,8,0.5)/12, E:toWorld(ang(0,0,-90)))
+    holoMaterial(13, Mat)
+    holoColor(13, Brown)
+    holoModel(13, "hq_rcube") #_thin")
+    holoParent(13, 12)
+    
+    Table = holoCreate(14, H:toWorld(vec(0,0,0.25)*Scale), Scale*vec(6,6,0.75)/12, H:toWorld(ang(0,0,0)))
+    holoMaterial(14, Mat2)
+    holoModel(14, "hq_rcylinder_thin")
+    holoParent(14, 13)
+    holoCreate(15, H:toWorld(vec(0,-1/2,0.25)*Scale), Scale*vec(4,4,3.5)/12, H:toWorld(ang(0,0,90)))
+    holoMaterial(15, Mat)
+    holoColor(15, Brown)
+    holoModel(15, "hq_dome")
+    holoClipEnabled(15, 1)
+    holoClip(15, vec(), vec(0,1,0), 0)
+    holoParent(15, 14)
+    
+    holoCreate(16, H:toWorld(vec(0,1/2,0.25)*Scale), Scale*vec(4,4,3.5)/12, H:toWorld(ang(0,0,-90)))
+    holoMaterial(16, Mat)
+    holoColor(16, Brown)
+    holoModel(16, "hq_dome")
+    holoClipEnabled(16, 1)
+    holoClip(16, vec(), vec(0,-1,0), 0)
+    holoParent(16, 14)
+    
+    H = holoCreate(17, H:toWorld(vec(0,0,1.25)*Scale), Scale*vec(1.25,1.25,2)/12, H:toWorld(ang(0,0,90)))
+    holoMaterial(17, Mat2)
+    holoModel(17, "hq_cylinder")
+    holoParent(17, 14)
+    
+    holoCreate(18, H:toWorld(vec(0,1,0)*Scale), Scale*vec(1,1,2)/12, H:toWorld(ang(0,0,-90)))
+    holoMaterial(18, Mat)
+    holoColor(18, Brown)
+    holoModel(18, "hq_rcube_thin")
+    holoParent(18, 17)
+    
+    holoCreate(19, H:toWorld(vec(0,3,0)*Scale), Scale*vec(2,4,3)/12, H:toWorld(ang(0,0,-90)))
+    holoMaterial(19, Mat)
+    holoColor(19, Brown)
+    holoModel(19, "hq_rcube")
+    holoParent(19, 17)
+    
+    holoCreate(20, H:toWorld(vec(1,3,0)*Scale), Scale*vec(2.5,2.5,0.75)/12, H:toWorld(ang(90,0,0)))
+    holoMaterial(20, Mat2)
+    holoModel(20, "hq_cylinder")
+    holoParent(20, 17)
+    
+    for(I=1,8){
+        holoCreate(20+I, H:toWorld((vec(4.15,3,0)+vec(0,0.6,0):rotate(ang(0,0,I*45)))*Scale), Scale*vec(0.5,0.5,6)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(20+I, "phoenix_storms/gear")
+        holoModel(20+I, "hq_tube")
+        holoParent(20+I, 20)
+    }
+    timer("next",1000)
+    
+    rangerFilter(players())
+    rangerFilter(Tur)
+    rangerPersist(1)
+}
+if(clk("next")){
+    if(!Next){
+        holoCreate(29, H:toWorld(vec(6.75,3,0)*Scale), Scale*vec(1.6,1.6,0.5)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(29, Mat2)
+        holoModel(29, "hq_tube_thick")
+        holoParent(29, 20)
+        
+        holoCreate(30, H:toWorld(vec(6,3,0)*Scale), Scale*vec(1.6,1.6,0.5)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(30, Mat2)
+        holoModel(30, "hq_tube_thick")
+        holoParent(30, 20)
+        
+        ## Ammo Cartridge ##
+        holoCreate(31, H:toWorld(vec(0,3,2.75)*Scale), Scale*vec(3,3,2.25)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(31, Mat)
+        holoModel(31, "hq_tube")
+        holoColor(31, vec()+150)
+        holoParent(31, 17)
+        
+        holoCreate(32, H:toWorld(vec(0,3,-2.75)*Scale), Scale*vec(3,3,2.25)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(32, Mat)
+        holoModel(32, "hq_tube")
+        holoColor(32, vec()+150)
+        holoParent(32, 17)
+        
+        holoCreate(33, H:toWorld(vec(0,3,2.75)*Scale), Scale*vec(2.5,2.5,2)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(33, Mat)
+        holoModel(33, "hq_cylinder")
+        holoColor(33, vec()+100)
+        holoParent(33, 17)
+        
+        holoCreate(34, H:toWorld(vec(0,3,-2.75)*Scale), Scale*vec(2.5,2.5,2)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(34, Mat)
+        holoModel(34, "hq_cylinder")
+        holoColor(34, vec()+100)
+        holoParent(34, 17)
+        
+        holoCreate(35, H:toWorld(vec(0,3.25,1.75)*Scale), Scale*vec(4,4,1.5)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(35, "phoenix_storms/FuturisticTrackRamp_1-2")
+        holoModel(35, "hq_tube")
+        holoColor(35, vec()+150)
+        holoClipEnabled(35, 1)
+        holoClip(35, vec(),vec(0,1,0),0)
+        holoParent(35, 17)
+        
+        holoCreate(36, H:toWorld(vec(0,3.25,-1.75)*Scale), Scale*vec(4,4,1.5)/12, H:toWorld(ang(90,0,0)))
+        holoMaterial(36, "phoenix_storms/FuturisticTrackRamp_1-2")
+        holoModel(36, "hq_tube")
+        holoColor(36, vec()+150)
+        holoClipEnabled(36, 1)
+        holoClip(36, vec(),vec(0,1,0),0)
+        holoParent(36, 17)
+        Next++
+        timer("next",1000)
+    }elseif(Next==1){
+        for(I=1,8){
+            Rotate = ang(0,22.5+I*45,0)
+            holoCreate(36+I, E:toWorld(Scale*(Boxsize:setY(0)-vec(2,0,0)):rotate(Rotate)/2), Scale*vec(1,1,6.75)/12)
+            Q = (quat(E:toWorld(Rotate))*qRotation(vec(1,0,0),-90))*qRotation(vec(0,0,1),180)
+            holoAng(36+I, Q:toAngle())
+            holoMaterial(36+I, Mat2)
+            holoModel(36+I, "hq_cylinder")
+            holoParent(36+I, Floor)
+        }
+        Next++
+        timer("next",1000)
+    }elseif(Next==2){
+        for(I=1,8){
+            Rotate = ang(0,22.5+I*45,0)
+            holoCreate(44+I, E:toWorld((Scale*(Boxsize:setY(0)+vec(-3.85,0,11.9))):rotate(Rotate)/2), Scale*vec(2,8,12)/12)
+            holoMaterial(44+I, Mat)
+            holoAng(44+I, E:toWorld(Rotate))
+            holoParent(44+I, 36+I)
+        }
+        Next++
+        timer("next",1000)
+    }elseif(Next==3){
+        for(I=1,8){
+            Rotate = ang(0,22.5+I*45,0)
+            holoCreate(52+I, E:toWorld(Scale*(Boxsize:setY(0)+vec(-5.75,0,24)):rotate(Rotate)/2), Scale*vec(1,1,6.75)/12)
+            Q = (quat(E:toWorld(Rotate))*qRotation(vec(1,0,0),-90))*qRotation(vec(0,0,1),180)
+            holoAng(52+I, Q:toAngle())
+            holoMaterial(52+I, Mat2)
+            holoModel(52+I, "hq_cylinder")
+            holoParent(52+I, 44+I)
+        }
+        Next++
+        timer("next",1000)
+    }elseif(Next==4){
+        for(I=1,8){
+            Rotate = ang(0,22.5+I*45,0)
+            holoCreate(60+I, E:toWorld(Scale*(Boxsize:setY(0)+vec(-3.85,0,24+9.5)):rotate(Rotate)/2), Scale*vec(8,2,9.5)/12)
+            holoMaterial(60+I, Mat)
+            holoModel(60+I, "prism")
+            holoAng(60+I, E:toWorld(Rotate+ang(0,90,0)))
+            holoParent(60+I, 52+I)
+            
+            holoAng(52+I, holoEntity(52+I):toWorld(ang(0,-90,0))) #ang(0,-55,0)))
+        }
+        Next++
+        runOnTick(1)
+    }
+    soundPlay("servo",0,"ambient/machines/fluorescent_hum_1.wav")
+    soundVolume("servo",50)
+    soundPitch("servo",0)
+}
+
+Clk = O:keyUse() & O:aimEntity()==E & (Pitch==180|!Pitch)
+
+if(changed(Clk) & Clk){
+    Mode = !Mode
+}
+
+Pitch = clamp(Pitch+(Mode-!Mode)*MorphSpeed,0,180)
+if(changed(Pitch)){
+    if(inrange(Pitch,1,179)){
+        Cos = cos(Pitch)*45-45
+        soundPitch("servo",abs($Cos*140))
+        soundVolume("servo",50)
+        holoAng(2, Ground:toWorld(ang(Cos/1.5,0,90)))
+        holoAng(4, Ground:toWorld(ang(-Cos/1.5,0,90)))
+        holoAng(6, Ground:toWorld(ang(0,0,90)))
+        holoAng(10, (quat(holoEntity(6):toWorld(ang(90,0,0)))*qRotation(vec(0,0,1),-90-Cos)):toAngle() )
+        for(I=37,44){
+            Rotate = ang(Cos*1.5,22.5+I*45,0)
+            holoAng(I, (quat(Ground:toWorld(Rotate))*qRotation(vec(1,0,0),90)):toAngle())
+            holoAng(16+I, holoEntity(8+I):toWorld(ang(90-Cos/2,0,-90)))#ang(125-Cos/9,0,-90)))
+        }
+    }else{
+        soundVolume("servo",0)
+    }
+}
+
+Tpos = T:shootPos()+T:vel()/20-vec(0,0,10)
+Speed = clamp(Speed+(Fire-!Fire*2)/10,0,16)
+Spin = Spin%360+Speed
+holoAng(20, (quat(H:toWorld(ang(90,0,0)))*qRotation(vec(0,0,1),Spin)):toAngle())
+
+if(findCanQuery() & Pitch==180){
+    findByClass("player")
+    findClipToSphere(E:pos(),200*Scale)
+    T = findClosest(E:pos())
+}
+
+if(changed(T)){
+    Str = T ? "npc/scanner/scanner_siren1.wav" : "npc/roller/remote_yes.wav"
+    soundPlay("alert",0,Str,0.5)
+}
+
+Active = Mode & Pitch==180
+Fire = Active & E:pos():distance(Tpos)<120
+
+if(Tur & Next==5){
+    Turret["Fire",number] = Fire & Speed>10
+    Tur:applyForce(((H:toWorld(vec(0,2,1.5)*Scale)-Tur:pos())*15-Tur:vel()/2)*Tur:mass())
+    Tur:applyTorque((150*Tur:toLocalAxis(rotationVector(quat(H:toWorld(ang(0,0,-90)))/quat(Tur)))-12*Tur:angVelVector())*Tur:inertia())
+}
+
+if(Pitch){
+    Bearing = T & Active ? Bearing-holoEntity(14):bearing(Tpos)/8 : Bearing + ((!Mode ? -Bearing : cos(Time)*90)-Bearing)/(Fire ? 1 : 10)
+    Time = Active ? T ? Bearing : Time+0.75 : 90
+    holoAng(14,Base:toWorld(ang(0,Bearing,0)))
+    
+    Elev = T & Active ? Elev + (clamp( angnorm((Tpos-H:toWorld(vec(1,3,0))):toAngle())[1], -70, 32.5)-Elev)/5 : Elev-Elev/10
+    holoAng(17,Table:toWorld(ang(Elev,0,90)))
+    
+    Ro = rangerOffsetHull(15*Scale,E:pos()+vec(0,0,5)*Scale,-E:up(),Scale*Boxsize:setZ(0)/2)
+    if(Ro:hit() & Pitch>130){
+        Hn = Ro:hitNormal()
+        Height = Height+(max(Pitch/22,0)-Height)/4
+        Pos = Ro:position()+Hn*Height*Scale
+        E:applyForce((vec(0,0,(Pos-E:pos())[3]*15)-E:vel()/2)*E:mass())
+        E:applyTorque((50000*E:toLocalAxis(E:up():cross(Hn))-50*E:angVelVector())*E:inertia())
+    }
+    holoAng(Floor, E:toWorld(ang(0,Cos,0)))
+}else{ T = noentity() }

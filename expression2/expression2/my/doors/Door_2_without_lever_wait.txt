@@ -1,0 +1,108 @@
+@name Door 2 without lever wait
+@inputs Open Close Lock AutoClose CloseTime Friends:array
+@outputs IsOpenned FullyOpen FullyClosed #Blocked
+@persist [Players OP Path]:array [Door HDoor]:entity OK D SpeedD
+@trigger Opened
+
+if(first()) { entity():setAng(owner():angles())    timer("t",100)}
+if(clk("t")) { #entity():setAlpha(0)
+    SpeedD = 5
+    Door = propSpawn("models/props_c17/door01_left.mdl",entity():pos()+vec(0,0,55),1)
+    Door:setAlpha(0)
+    #Door:propStatic(1)
+    
+    HDoor = holoCreate(1,entity():pos()+vec(0,0,55))
+    holoModel(1,"models/props_c17/door01_left.mdl")
+    HDoor:setBodygroup(1,1)
+    holoParent(1,Door)
+   
+    
+    #P:propFreeze(1)
+    #noCollideAll(P,0)
+    
+    Path:pushString("doors/door_metal_medium_close1.wav") Path:pushString("doors/door_metal_large_close2.wav")
+    
+    
+    timer("scan",100)
+}
+
+if (clk("scan")){
+    O = owner()
+    findByClass("player")
+    Players=findToArray()
+    if (Players:count()!=OP:count()){
+        for(I=1,Players:count()) {
+            runOnKeys(Players:entity(I),1)
+        }
+    }
+    OP=Players
+    timer("scan",100)
+}
+
+function number array:checkAr(Ent:entity) {
+    local OK = 0
+    for(I=1,This:count()) {
+        if(This:entity(I) == Ent) { OK = 1 break}
+    }
+    return OK
+}
+
+if(keyClk() & keyClk():pos():distance(Door:pos()) < 120) {
+    if((changed(keyClk()) | changed(keyClk():keyPressed("e"))) & keyClk():keyPressed("e") & keyClk():aimEntity() == Door) {
+        local FOK = Friends:checkAr(keyClk())
+        if(OK) { 
+            OK = !OK timer("close", 10) stoptimer("open") stoptimer("autoclose")
+            FullyOpen=0
+        }
+        else {
+            if(!Lock | FOK) { 
+                OK = !OK timer("open",10) stoptimer("close") stoptimer("autoclose")
+                FullyClosed=0
+                IsOpenned=1
+            } 
+            elseif(D==0 | D==90) {
+                Door:soundPlay("blocked",0.5,"doors/latchlocked2.wav")
+                holoAnim(1,"locked")
+            }
+        }
+        if((D==0 | D==90) & !Lock | FOK) {
+            Door:soundPlay("pen",0.5,"doors/door_latch3.wav")
+            holoAnim(1,"open")
+        }
+    }
+}
+
+
+
+if(clk("open")&D<90) {
+    D+=SpeedD
+    Door:setAng(Door:toWorld(ang(0,SpeedD,0)))
+    timer("open", 50)
+    if(D>=90) { Door:soundPlay("opened",0.3,"doors/door_metal_medium_open1.wav") FullyOpen=1
+        if(AutoClose) { 
+            timer("autoclose", CloseTime>0 ? CloseTime*1000 : 2000)
+        }
+    }
+}
+
+if(clk("autoclose")) { OK = !OK timer("close",1) stoptimer("open") FullyOpen=0}
+
+if(clk("close")&D>0) {
+    D-=SpeedD
+    #Door:setAng(ang(0,Door:angles():yaw()-1,0))
+    Door:setAng(Door:toWorld(ang(0,-SpeedD,0)))
+    timer("close", 50)
+    if(D<=0) { Door:soundPlay("closed",2,Path:string(randint(2))) FullyClosed=1 IsOpenned=0}
+}
+
+if((clk("open") | clk("close")) & D==40) {
+    Door:soundPlay("event",1,"doors/door_squeek1.wav")
+    soundVolume("event",0.2)
+
+}
+
+
+if(changed(Open) & Open) { timer("open",10) }
+if(changed(Close) & Close) { timer("close",10) }
+if(changed(AutoClose) & AutoClose) { timer("autoclose", 500) }
+

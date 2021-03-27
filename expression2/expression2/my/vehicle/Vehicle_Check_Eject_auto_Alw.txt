@@ -1,0 +1,19 @@
+@name Vehicle Check Eject auto Alw
+@inputs 
+@outputs Eject
+@persist Vehicle:entity W:wirelink
+@trigger 
+
+if(first()) {
+    findByClass("gmod_sent_vehicle_fphysics_base")
+    Vehicle = findClosest(entity():pos())
+    print(Vehicle)
+    
+    W = Vehicle:wirelink()
+}
+
+if(W["Driver",entity]:isPlayer()) {
+    if(W["Driver",entity] != owner()) { W["Eject Driver",number] = 1 }
+}
+
+interval(200)

@@ -1,0 +1,124 @@
+@name Magnexo
+@inputs
+@outputs
+@persist Me:entity PropList:array OriginalPosition:vector SearchFlag PropCount Index
+
+interval(1)
+
+# ================
+# Set up constants
+# ================
+
+# These change the rate of prop movement and how quickly they slow when they reach their destination
+DeltaSmoother = 5
+DeltaMultiplier = 10
+
+# The desired mass of the props being thrown around
+#  Higher mass generally means they will be flung further away
+Mass = 50000
+
+
+# ====================
+# Initialize variables
+# ====================
+if (first()) {
+
+    # Set up the owner variable (convenience)
+    Me = owner()
+
+    # Initialize some variables
+    #  Not required, but is easier to keep track of initial values    
+    PropCount = 0
+    Index = 0
+    SearchFlag = 0
+}
+
+# Destroy the chip if it's duped
+if (duped()) {
+    selfDestruct()
+}
+
+# Reset the search flag so we don't search every run.
+#  This simply lessens the load on the server
+if (clk("SearchFlag")) {
+    SearchFlag = 0
+}
+
+# Activate the chip when hitting the 'e' key
+if (Me:keyUse()) {
+    
+    # If this is the first run through the loop, update the destination for the props
+    if (!Index) {
+        OriginalPosition = Me:aimPos()
+        
+        # Run a search to grab new props, if they are present
+        if (!SearchFlag) {
+            SearchFlag = 1
+            timer("SearchFlag", 1000)
+            findIncludePlayerProps(owner())
+            findByClass("prop_physics")
+            findSortByDistance(Me:aimPos()) # No real reason to do this, it just keeps me organized
+            if(PropCount!=findToArray():count()){
+                PropList=findToArray()
+                PropCount=PropList:count() # Again, for convenience
+            }
+        }
+        
+    }
+    
+    # Iterate over each prop while we still have ops left in our quota.
+    while (opcounter() < maxquota()) {
+        
+        # Grab the current prop from the prop array, based on index
+        CurrentProp = PropList:entity(Index + 1)
+        
+        # Set the mass of the prop
+        CurrentProp:setMass(Mass)
+        
+        # =========================
+        # Thrust calculations
+        # =========================
+        AimPos = OriginalPosition
+        
+        # ==================================================  =================
+        # If you want the props to move about, randomly, at their destination
+        #  uncomment the following, two lines
+        # ==================================================  =================
+        
+        #Spacing = CurrentProp:radius() * 50
+        #AimPos += vec(random(-Spacing, Spacing), random(-Spacing, Spacing), random(-Spacing / 1.5, Spacing / 2))
+        
+        # Calculate the initial thrust vector
+        Thrust = (AimPos - CurrentProp:pos()) + CurrentProp:massCenterL()
+        
+        # Calculate the X/Y planar distance for trajectory arc
+        A = (AimPos:x() - CurrentProp:pos():x()) * (AimPos:x() - CurrentProp:pos():x())
+        B = (AimPos:y() - CurrentProp:pos():y()) * (AimPos:y() - CurrentProp:pos():y())
+        PlaneDistance = sqrt(A + B)    
+    
+        # Add vertical thrust based on planar distance to arc the projectile
+        Thrust = Thrust + vec(0, 0, PlaneDistance / 5)
+        
+        # Calculate the thrust delta and apply it to the thrust vector
+        Delta = CurrentProp:vel() / DeltaSmoother
+        Thrust = (Thrust - Delta) * DeltaMultiplier
+        
+        # Apply thrust multiplier based on calculated mass
+        Multiplier = CurrentProp:mass()/10
+        if (Multiplier < 1) {
+            Multiplier = 1
+        }
+        Thrust = Thrust * Multiplier
+        
+        # Apply the final thrust to the chip
+        CurrentProp:applyForce(Thrust)
+        
+        # Increment the index number so we start working on the next prop in the array
+        Index++
+        if (Index >= PropCount) {
+            Index = 0
+            break
+        }
+    }
+
+}

@@ -1,0 +1,27 @@
+@name Test_reverse_velocity
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+runOnKeys(owner(),1)
+
+function quaternion myquat(W:number, V:vector) {
+    local Q = quat(cos(W/2), sin(W/2)*V:x(), sin(W/2)*V:y(), sin(W/2)*V:z())
+    return Q
+}
+
+
+if(changed(owner():keyPressed("b")) & owner():keyPressed("b"))
+{
+    P = entity()
+    K_vel = P:vel():length()
+    Vel_norm = P:vel():normalized()
+    #Vel_ang = P:vel():forward()
+    #An = (myquat(180,vec(1,0,0):normalized()) * quat(P:vel():normalized())):toAngle()
+    #P:setVel(An:forward() * K_vel)
+    
+    P:setVel((P:vel():toAngle() + ang(180, 0, 180)):forward() * K_vel)
+    
+    print(random())
+}

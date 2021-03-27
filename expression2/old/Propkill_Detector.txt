@@ -1,0 +1,23 @@
+@name Propkill Detector
+@outputs Last:entity
+@persist [O]:entity
+
+interval(100)
+
+if(first()) {
+    O = owner()
+}
+
+if(findCanQuery()) {
+    findClipToClass("prop_*")
+
+    findSortByDistance(O:shootPos())
+
+    A = findInSphere(O:shootPos(),100)
+}
+
+if(changed(owner():isAlive()) & !owner():isAlive()) {
+    Last = findResult(1)
+
+    print(_HUD_PRINTCENTER, "Propkill by " + Last:owner():name() + "'s prop.")
+}

@@ -1,0 +1,78 @@
+@name Chat v2
+@inputs A B C D E F W:wirelink InChar:string Checked
+@outputs Output KickChecked
+@persist Dialog:array Lines:table
+@trigger Checked A B C D E F 
+
+if(first() | dupefinished()) {
+    W:egpClear()
+    for(I=1,30) {
+        Dialog:pushString("")
+        W:egpText(I,"",vec2(10,15*I))
+    }
+    W:egpText(31,"",vec2(10,15*31))
+    
+    Lines:clear()
+    Lines:pushArray(array("A","",0,0))    Lines:pushArray(array("B","",0,0))    Lines:pushArray(array("C","",0,0))
+    Lines:pushArray(array("D","",0,0))    Lines:pushArray(array("E","",0,0))    Lines:pushArray(array("F","",0,0))
+}
+
+#=======
+Lines[1,array][3,number] = A
+Lines[2,array][3,number] = B
+Lines[3,array][3,number] = C
+Lines[4,array][3,number] = D
+Lines[5,array][3,number] = E
+Lines[6,array][3,number] = F
+#=======
+
+for(I=1,Lines:count()) {
+    local Array = Lines[I,array]
+    local Char = Array[3,number]
+    if(Array[4,number] != Char & (Char >= 30 & Char <= 122)) {  #(C >= 65 & C <= 90) | (C >= 97 & C <= 122) | (C >= 48 & C <= 57) | (C >= 30 & C <= 122)
+        Array[2,string] = Array[2,string] + toChar(Char)
+    }
+    elseif(Char == 127) {
+        Array[2,string] = Array[2,string]:sub(1,Array[2,string]:length()-1)
+    }
+    elseif(Char == 148) {
+        Array[2,string] = ""
+    }
+    Array[4,number] = Char
+}
+
+for(I=1,Lines:count()) {
+    if(InChar==Lines[I,array][1,string]) { 
+        W:egpSetText(1,Lines[I,array][2,string])
+        if(Lines[I,array][3,number] == 149) {
+            for(J=1,30) {
+                Dialog[J,string] = ""
+                W:egpSetText(J+1,"")
+            }
+        }
+    }
+}
+
+for(I=1,Lines:count()) {
+    local Array = Lines[I,array]
+    if((Array[3,number] == 13 | Array[3,number] == 142) & Array[2,string] != "") {
+        for(I=29,1,-1) {
+            Dialog[I+1,string] = Dialog[I,string]
+        }
+        Dialog[1,string] = "["+Array[1,string]+"] " + Array[2,string]
+        for(I=1,30) {
+            W:egpSetText(I+1,Dialog[I,string])
+        }
+        W:egpSetText(1,"")
+        Array[2,string] = ""
+    }
+}
+
+
+
+if(Checked == 1) { KickChecked = 0 }
+elseif(Checked == -1) { KickChecked = 1 timer("T",100)}
+
+if(clk("T")) {
+    KickChecked = 0
+}

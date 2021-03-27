@@ -1,0 +1,17 @@
+@name Sort Bubble
+
+function void array:sortB(Desc:number) {
+    for (I=1, This:count()) {
+        for (J=This:count(), I+1, -1) {    
+            if( !Desc & (This:number(J-1) < This:number(J))  |  Desc & (This:number(J-1) > This:number(J)) ) {
+                local Temp = This[J-1,number]
+                This[J-1,number] = This[J,number]
+                This[J,number] = Temp
+            }
+        }
+    }
+}
+
+Ar = array(5,7,234,65,4,2,2,4,6,7,8,6,45,34,5,6,7,500)
+Ar:sortB(1)
+print(Ar)

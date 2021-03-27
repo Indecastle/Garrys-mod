@@ -1,0 +1,35 @@
+@name Elavator V2.0
+@inputs Button1 Button2 Stable PointBottom:wirelink PointTop:wirelink
+@outputs 
+@persist Down Up
+@trigger 
+
+interval(30)
+
+Button = Button1 + Button2
+
+Base = entity:pos():z()
+P1 = PointBottom:entity():pos():z()
+P2 = PointTop:entity():pos():z)
+
+
+if(Button==1 & Down!=1 & Base < P2) {Up=1}
+if(Button==1 & Up!=1 & Base > P1) {Down=1}
+
+
+if(Up==1) {U=40} else {U=0}
+if(Down==1) {D=40} else {D=0}
+
+if(Base > P2) {Up=0}
+if(Base < P1) {Down=0}
+
+ST=Stable+U+D
+
+
+
+
+
+
+
+
+

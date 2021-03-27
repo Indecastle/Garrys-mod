@@ -1,0 +1,176 @@
+@name Teleport #2
+@inputs 
+@outputs 
+@persist [A B Vehicle Player]:entity W:wirelink SoundOk I WhiteList:array AllP
+@trigger 
+interval(100)
+if(first() | dupefinished()) { runOnChat(1)
+    entity():setAlpha(0)
+    findIncludePlayerProps(owner())
+    findByModel("models/maxofs2d/thruster_propeller.mdl")
+    findSortByDistance(entity():pos())
+    A = findResult(1) #A:propFreeze(1)
+    B = findResult(2) #B:propFreeze(1)
+    print(A)
+    print(B)
+    
+    findByClass("prop_vehicle_*")
+    Vehicle = findClosest(entity():pos()) Vehicle:propStatic(1) #Vehicle:noCollideAll(1) #Vehicle:propFreeze(1)
+    print(Vehicle)
+    
+    W = Vehicle:isWeldedTo():wirelink() W:entity():propNotSolid(1) W:entity():setAlpha(0)
+    W:entity():parentTo(Vehicle)
+    print(W:entity())
+    W["Vehicle",entity] = Vehicle
+    
+    findClearWhiteList()
+    WhiteList:pushEntity(owner())
+    
+    AllP = 1
+}
+
+#print(owner():pos():distance(Vehicle:pos()) )
+
+if(!Player:inVehicle()) { SoundOk = 1
+    Vehicle:setPos(A:pos()+vec(0,0,20)) Vehicle:setAng(ang(0,0,0)) #Vehicle:propFreeze(1)
+    findIncludeClass("player")
+    findInSphere(Vehicle:pos(),30)
+    Player = findClosest(Vehicle:pos())
+    
+}
+else { SoundOk = 0
+    local OK = 0
+    for(I=1,WhiteList:count()) {
+        local V = WhiteList:entity(I):vehicle()
+        if(V == Vehicle) {
+            OK = 1 break
+        }
+    }
+    if(OK | AllP) {
+        Vehicle:setPos(B:pos()+vec(0,0,20))
+    }
+    timer("eject",100)
+}
+
+if(changed(SoundOk)) { 
+        #A:soundPlay(I,  2, "k_lab.mini_teleport_crack2")
+        #B:soundPlay(I+1,2, "k_lab.mini_teleport_crack2")
+        #I=I+2
+        
+        soundPlayWorld("k_lab.mini_teleport_crack1",A:pos(),1,1,1)
+        soundPlayWorld("k_lab.mini_teleport_crack1",B:pos(),1,1,1)
+        #Vehicle:soundPlaySingle("k_lab.mini_teleport_crack1",1,1)
+    }
+
+function number array:checkAr(Ent:entity) {
+    local OK = 0
+    for(I=1,This:count()) {
+        if(This:entity(I) == Ent) { OK = 1 break}
+    }
+    return OK
+}
+function number array:indexEnt(Ent:entity) {
+    local OK = 0
+    for(I=1,This:count()) {
+        if(This:entity(I) == Ent) { OK = I break}
+    } 
+    return OK
+}
+function number array:removeEnt(Ent:entity) {
+    local OK = 0
+    if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+    return OK
+}
+function number array:addEnt(Ent:entity) {
+    local OK = 0
+    if(!This:checkAr(Ent)) { This:pushEntity(Ent) OK=1}
+    return OK
+}
+
+if(chatClk()) {
+    Pla = lastSpoke()
+    local OK = 0
+    for(I=1,WhiteList:count()) {
+        if(WhiteList:entity(I) == Pla) {
+            OK = 1 break
+        }
+    }
+    if(OK) {
+        local Ar = Pla:lastSaid():explode(" ")
+        if(Pla:lastSaid() == "!res") {
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local Temp = A
+                A = B
+                B = Temp
+                timer("work4",40)
+            }
+        }
+        elseif(Pla:lastSaid() == "!resall" & Pla == owner()) {
+            hideChat(1)
+            local Temp = A
+            A = B
+            B = Temp
+            timer("work4",40)
+        }
+        elseif(Ar:string(1) == "!add") {
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local P = findPlayerByName(Ar:string(2))
+                if(P:isPlayer() & Ar:string(2)!="") {  WhiteList:addEnt(P) print(P:name()+" added") timer("work5",1)}
+                else { print("player not found") }
+            }
+            
+        }
+        elseif(Ar:string(1) == "!dell") {
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local P = findPlayerByName(Ar:string(2))
+                if(P:isPlayer() & Ar:string(2)!="" & P != owner()) { WhiteList:removeEnt(P) print(P:name()+" deleted") timer("work5",1)}
+                else { print("player not found") }
+            }
+        }
+        elseif(Ar:string(1) == "!addall" & Pla == owner()) { 
+            hideChat(1)
+            local P = findPlayerByName(Ar:string(2))
+            
+            if(P:isPlayer() & Ar:string(2)!="") {  WhiteList:addEnt(P) print(P:name()+" added") timer("work5",1)}
+            else { print("player not found") }
+        }
+        elseif(Ar:string(1) == "!dellall" & Pla == owner()) {
+            hideChat(1)
+            local P = findPlayerByName(Ar:string(2))
+            
+            if(P:isPlayer() & Ar:string(2)!="" & P != owner()) {  WhiteList:removeEnt(P) print(P:name()+" deleted") timer("work5",1)}
+            else { print("player not found") }
+            
+        }
+        
+        elseif(Ar:string(1) == "!allp") {
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                if(Ar:string(2) == "0") { AllP = 0 print("AllPlayers off") timer("work5",1) }
+                elseif(Ar:string(2) == "1") { AllP = 1 print("AllPlayers on") timer("work5",1)}
+                
+            }
+            
+        }
+        elseif(Ar:string(1) == "!allpall" & Pla == owner()) {
+            hideChat(1)
+            if(Ar:string(2) == "0") { AllP = 0 print("AllPlayers off[all]") timer("work5",1) }
+            elseif(Ar:string(2) == "1") { AllP = 1 print("AllPlayers on[all]") timer("work5",1)}
+        }
+    }
+}
+
+if(clk("eject")) {
+    W["Eject",number] = 1
+}

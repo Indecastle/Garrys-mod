@@ -1,0 +1,85 @@
+@name Door 11
+@inputs Open1 Open2
+@outputs Opened
+@persist I [H A1 A2 B C]:entity OK
+@trigger Opened1 Opened2
+
+if(first()) { entity():setAng(owner():angles())    timer("t",100) }
+if(clk("t")) { #entity():setAlpha(0)
+    OK = 1
+    H = holoCreate(1,entity():pos())
+    holoModel(1,"models/props_lab/elevatordoor.mdl")
+
+    A1 = propSpawn("models/mechanics/solid_steel/plank_8.mdl", H:toWorld(vec()), 1) #A1:setMaterial("Models/effects/vol_light001")
+    A1:setAng(ang(0,90,90)+entity():angles())
+    A1:setPos(A1:toWorld(vec(0,45,55)))
+    #A1:setAlpha(0)
+    
+    
+    A2 = propSpawn("models/mechanics/solid_steel/plank_8.mdl", H:toWorld(vec()), 1) #A2:setMaterial("Models/effects/vol_light001")
+    A2:setAng(ang(0,90,90)+entity():angles())
+    A2:setPos(A2:toWorld(vec(0,-45,55)))
+    #A2:setAlpha(0)
+    
+    B = propSpawn("models/Mechanics/gears2/pinion_40t1.mdl", H:toWorld(vec()), 1) #B:setMaterial("Models/effects/vol_light001")
+    B:setAng(ang(0,90,0)+entity():angles())
+    B:setPos(B:toWorld(vec(0,0,112)))
+    #B:setAlpha(0)
+    
+    C = propSpawn("models/props_c17/fence01b.mdl", H:toWorld(vec()), 1) #C:setMaterial("Models/effects/vol_light001")
+    C:setPos(C:toWorld(vec(0,0,55)))
+    #C:setAlpha(0)
+    
+    #A1:propStatic(1) A2:propStatic(1) B:propStatic(1) C:propStatic(1)
+    
+    noCollideAll(A1,0)
+    noCollideAll(A2,0)
+    noCollideAll(B,0)
+    noCollideAll(C,0)
+    #P:propFreeze(1)
+    #noCollideAll(P,0)
+    
+    
+    timer("t2",2000)
+}
+if(clk("t2")) {
+    holoParent(1,C)
+    
+    Ar = array(entity(), A1, A2, B, C)
+    for(I=2,4) {
+        for(J=I,5) {
+            Ar:entity(I):weldTo(Ar:entity(J),1)
+        }
+    }
+}
+
+if(OK) 
+{
+    if(changed(Open1 | Open2)) {
+        if(Open1 | Open2) {
+            holoAnim(1,2)
+            #noCollideAll(C,1)
+            C:propNotSolid(1)
+            soundPlay(1,0.6,"eli_lab.airlockdoor_move")
+            Opened = 1
+        }
+        else {
+            holoAnim(1,1)
+            #noCollideAll(C,0)
+            C:propNotSolid(0)
+            soundPlay(2,0.6,"eli_lab.airlockdoor_move")
+            Opened = 0
+            timer("soundStop",600)
+        }
+        timer("OK",700)
+        OK = 0
+    }
+}
+if(clk("soundStop")) {
+    soundPlay(2,3,"eli_lab.airlockdoor_stop")
+}
+if(clk("OK")) {
+    OK = 1
+}
+interval(100)
+#A1:propFreeze(1) A2:propFreeze(1) B:propFreeze(1) C:propFreeze(1)

@@ -1,0 +1,51 @@
+@name CenterMass Alw
+@inputs 
+@outputs VCenterMass:vector
+@persist Props:array X Y Z Mass
+@trigger 
+interval(200)
+if(first()) {
+    findIncludeClass("prop*")	
+    findIncludeClass("acf*")
+    findIncludeClass("wire*")
+    findInSphere(entity():pos(),200)
+    Props = findToArray()
+    
+    
+    for(I=1,Props:count()) {
+        #holoCreate(I,Props:entity(I):pos())
+        X += Props:entity(I):mass()*Props:entity(I):pos():x()
+        Y += Props:entity(I):mass()*Props:entity(I):pos():y()
+        Z += Props:entity(I):mass()*Props:entity(I):pos():z()
+        Mass += Props:entity(I):mass() 
+    }
+    X /= Mass
+    Y /= Mass
+    Z /= Mass
+    
+    VCenterMass = vec(X,Y,Z)
+    holoCreate(0,VCenterMass)
+    holoScale(0,vec(0.3))
+    print(VCenterMass)
+}
+
+findIncludeClass("prop*")	
+findIncludeClass("acf*")
+findIncludeClass("wire*")
+findInSphere(entity():pos(),200)
+Props = findToArray()
+
+X=Y=Z=Mass=0
+
+for(I=1,Props:count()) {
+        #holoCreate(I,Props:entity(I):pos())
+        X += Props:entity(I):mass()*Props:entity(I):pos():x()
+        Y += Props:entity(I):mass()*Props:entity(I):pos():y()
+        Z += Props:entity(I):mass()*Props:entity(I):pos():z()
+        Mass += Props:entity(I):mass() 
+}
+X /= Mass
+Y /= Mass
+Z /= Mass
+VCenterMass = vec(X,Y,Z)
+holoPos(0,VCenterMass)

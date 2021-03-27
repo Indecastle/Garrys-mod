@@ -1,0 +1,97 @@
+@name EGP_Wallhack
+@inputs EGP:wirelink
+@outputs 
+@persist [Ply BSR]:array Status:string H
+Max=egpMaxUmsgPerSecond()
+if (Max>30) {Max=30}
+interval(1000/Max)
+
+if(first()|H!=players():count()|changed(EGP))
+{
+    Font="Lucida Console"
+    H=players():count()
+    EGP:egpClear()
+    Ply=players()
+    for(I=1,Ply:count()){
+        PL=Ply:entity(I)
+        C1=I*10
+        C2=I*10+1
+        C3=I*10+2
+        C4=I*10+3
+        C5=I*10+4
+        C6=I*10+5
+        if(PL:isAdmin()){
+            if(PL:isSuperAdmin()){
+                Status="Super Admin"
+                Col=vec(255,0,0)
+            }
+            else{
+                Status="Admin"
+                Col=vec(255,255,0)
+            }       
+        }
+        else{
+            Status="Player"
+            Col=vec(0,255,0)
+        }
+        
+        EGP:egp3DTracker(C1, PL:pos())
+        
+        EGP:egpRoundedBox(C2,vec2(50,100),vec2())
+        EGP:egpColor(C2,vec4(0,0,0,150)) 
+        
+        S1=PL:name()
+        EGP:egpText(C3,S1, vec2(0, 0))
+        EGP:egpFont(C3,Font)
+        EGP:egpSize(C3,10)
+        
+        S2=Status
+        EGP:egpText(C4,Status, vec2(0, 9))
+        EGP:egpFont(C4,Font)
+        EGP:egpColor(C4,Col)
+        EGP:egpSize(C4,10) 
+
+        
+        if(S1:length()>S2:length()){
+            BS=S1:length()*7
+        }else{
+            BS=S2:length()*7
+        }
+        EGP:egpSize(C2,vec2(BS+20,40))
+        EGP:egpPos(C2,vec2(EGP:egpSize(C2):x()/2-10,15))
+        
+        EGP:egpBoxOutline(C5,vec2(BS/2,25),vec2(BS+3,10))
+        EGP:egpColor(C5,vec(255,255,255))
+        
+        EGP:egpBox(C6,vec2(0,25),vec2(0,6))
+        
+        BSR[PL:id(),number]=BS
+        
+        EGP:egpParent(C2,C1)
+        EGP:egpParent(C3,C1)
+        EGP:egpParent(C4,C1)
+        EGP:egpParent(C5,C1)
+        EGP:egpParent(C6,C1)
+    }
+    
+}
+
+for(I=1,Ply:count()){
+    C1=I*10
+    C3=I*10+2
+    C6=I*10+5
+    PL=Ply:entity(I)
+    HP=clamp(PL:health(),0,100)
+    #print(I+" "+PL:name())
+    EGP:egp3DTracker(C1, PL:pos())
+    EGP:egpPos(C1,PL:pos()+vec(0,0,40))
+    
+    BS=BSR[PL:id(),number]
+    
+    EGP:egpPos(C6,vec2(BS*(HP/100)-BS*(HP/100)/2,25.5))
+    EGP:egpSize(C6,vec2(BS*(HP/100),8))
+    
+    EGP:egpColor(C6,vec(255*((100-HP)/100),255*(HP/100),0))
+    
+    EGP:egpColor(C3,teamColor(PL:team()))
+}

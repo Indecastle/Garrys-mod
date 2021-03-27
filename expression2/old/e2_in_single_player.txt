@@ -1,0 +1,21 @@
+@name SETANG STEERING 
+@inputs A D CHASSIS:entity 
+@persist SLAVE:entity [TURN_RATE TURN_ANGLE TURN TILTRATE TILT]
+@model models/hunter/blocks/cube05x05x05.mdl
+
+if (first()||duped()) {
+
+interval(10)
+entity():setMass(1500)
+TURN_RATE = 1
+TURN_ANGLE = 38
+SLAVE = entity()
+} elseif (clk()) {
+interval(10)
+
+if (!SLAVE:isPlayerHolding()) {
+TURN += clamp((A-D)*TURN_ANGLE - TURN, -TURN_RATE, TURN_RATE)
+SLAVE:setAng(CHASSIS:toWorld(ang(0, TURN,0 )) )
+SLAVE:propFreeze(1)
+}
+}

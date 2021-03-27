@@ -1,0 +1,102 @@
+@name Turret Rocket strela 360
+@inputs [WhiteList]:array CheckGod Ammo IgnoreEnt:array
+@outputs Target:entity Fire Reload Active
+@persist Defaultpos MaxDegree Radius [Turret ACF_ammo H]:entity W:wirelink E
+@persist A 
+@trigger none
+interval(100)
+if(first()|dupefinished()) { Reload = 1 Active = 1
+    MaxDegree = 361
+    Radius = 10000
+    E = 3      #intervaltick(0.015..)*E
+    
+    #runOnKeys(owner(),1)
+    findByClass("acf_rack")
+    Turret = findClosest(entity():pos())
+    findByClass("acf_ammo")
+    ACF_ammo = findClosest(entity():pos())
+    #IgnoreEnt = array(Turret, ACF_ammo)
+    #W = Turret:wirelink()
+    #findExcludePlayer(owner())
+    timer("scan",100)
+    
+    H = holoCreate(1,entity():toWorld(vec(0,0,10)),vec(0.3)) H:setAlpha(0)
+    holoParent(1,entity())
+}
+
+Turret:setPos(H:toWorld(vec(0,0,15)))
+
+
+
+
+if(clk("scan")) {
+    findClearWhiteList()
+    findClearBlackList()
+    if(WhiteList:count() > 0) { findExcludeEntities(WhiteList) }
+    
+    findByClass("player")
+    Players = findToArray() 
+    local R = array()
+    for(I=1,Players:count()) {
+        Pos = holoEntity(1):angles():forward()
+        Pos0 = (Players:entity(I):attachmentPos("eyes") - holoEntity(1):pos()):normalized()
+        Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+        Acos = acos(Cos)
+        if(Acos<MaxDegree & Players:entity(I):isAlive()) {
+            if((!CheckGod | !Players:entity(I):hasGodMode()) & Players:entity(I):inVehicle()) {
+                R:pushEntity(Players:entity(I))
+            }
+        }
+    }
+    
+    #findIncludeClass("player")
+    findIncludeEntities(R)
+    findInSphere(Turret:pos(),Radius)
+    local Count = 0
+    if(R:count() > 0) { Count = findSortByDistance(Turret:pos()) }
+    else { Count = 0 }
+    Target = noentity()
+    rangerFilter(IgnoreEnt)
+    for(I=1, Count) {
+        Ranger = rangerOffset(Turret:pos(),findResult(I):attachmentPos("eyes")+vec(0,0,-20))
+        if(!Ranger:hitWorld() #[& Ranger:entity():type()!="prop_physics"]#) { Target = findResult(I) break }
+    }
+    timer("scan", 1000)
+}
+
+if(Target:isPlayer()) {
+    #Ang = (Target:attachmentPos("Chest") - Turret:pos() + Target:vel() * tickInterval()*E ):toAngle()
+    Dir = (Target:pos() - Turret:pos() + Target:vel() * tickInterval()*E):normalized()
+    timer("fire", 700)
+}
+else { 
+    #timer("stopfire", 100) 
+    Fire=0
+    Turret:setAng(holoEntity(1):angles())
+    A = (A+3)%360
+    Dir = H:toWorld(ang(-40,A,0)):forward()
+}
+
+local Tar = Turret:angles():forward()
+local Div = 0.3
+local X = (Tar:x()+Div*Dir:x())/(1+Div)
+local Y = (Tar:y()+Div*Dir:y())/(1+Div)
+local Z = (Tar:z()+Div*Dir:z())/(1+Div)
+local An = vec(X,Y,Z):toAngle()
+Turret:setAng(An)
+
+if(clk("fire")) { #[W["Fire",number] = 1]# Fire=1 }
+if(clk("stopfire")) { #[W["Fire",number] = 0]# Fire=0 }
+
+if(changed(Target:isPlayer())&Target:isPlayer()) {
+    Turret:soundPlay("Alert",0.5,"NPC_Turret.Deploy")
+}
+
+if(changed(Target)&Target:isPlayer()) {
+    Turret:soundPlay("change",0.5,"NPC_Turret.Ping")
+}
+
+
+#if(changed(Ammo)&Ammo==40) { timer("Unload",100) }
+#if(clk("Unload")) { Unload = 1 timer("reset",400) }
+#if(clk("reset")) { Unload = 0 }

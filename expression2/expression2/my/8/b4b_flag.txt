@@ -1,0 +1,142 @@
+@name B4B Flag
+@persist I
+@trigger 
+
+if(first()|dupefinished())
+{
+
+# Instructions
+
+# Spawn and place the E2 where you want it, the flag trailing behind.
+# Weld the E2 to the base of where you want it, ie turret base, hull.
+# Parent the E2 to the gate on that base with "Remove Constraints" unticked!
+# Voila, spread the cheeki!
+
+# Made by DatAmazingCheese
+
+    # Flag
+    
+    # White 
+        
+    holoCreate(1)
+    holoModel(1,"models/pac/jiggle/base_cloth_3.mdl")
+    holoMaterial(1,"WTP/cloth_1")
+    holoColor(1,vec(255,255,255))
+    holoAlpha(1,255)
+    holoDisableShading(1,1)
+    holoPos(1,entity():toWorld(vec(-0.5,0,65.57)))
+    holoParent(1,entity())
+    
+    #Flag Bones
+    
+    holoBoneScale(1,0,vec(5,1,1))
+    holoBoneScale(1,1,vec(5,1,1))
+    holoBoneScale(1,2,vec(5,1,1))
+    holoBoneScale(1,3,vec(5,1,1))
+    holoBoneScale(1,4,vec(5,1,1))
+    holoBoneScale(1,5,vec(5,1,1))
+    holoBoneScale(1,6,vec(5,1,1))
+    holoBoneScale(1,7,vec(5,1,1))
+    holoBoneScale(1,8,vec(5,1,1))
+    holoBoneScale(1,9,vec(5,1,1))
+    
+    holoClipEnabled(1, 1, 1)
+    holoClip(1, 1, vec(0, 6.062, 0), vec(0, 90, 0), 0)
+    
+    # Red
+    
+    holoCreate(2)
+    holoModel(2,"models/pac/jiggle/base_cloth_3.mdl")
+    holoMaterial(2,"WTP/cloth_1")
+    holoColor(2,vec(255,0,0))
+    holoAlpha(2,255)
+    holoDisableShading(2,1)
+    holoPos(2,entity():toWorld(vec(-0.5,0,65.57)))
+    holoParent(2,entity())
+    
+    #Flag Bones
+    
+    holoBoneScale(2,0,vec(5,1,1))
+    holoBoneScale(2,1,vec(5,1,1))
+    holoBoneScale(2,2,vec(5,1,1))
+    holoBoneScale(2,3,vec(5,1,1))
+    holoBoneScale(2,4,vec(5,1,1))
+    holoBoneScale(2,5,vec(5,1,1))
+    holoBoneScale(2,6,vec(5,1,1))
+    holoBoneScale(2,7,vec(5,1,1))
+    holoBoneScale(2,8,vec(5,1,1))
+    holoBoneScale(2,9,vec(5,1,1))
+    
+    holoClipEnabled(2, 1, 1)
+    holoClip(2, 1, vec(0, 6.062, 0), vec(0, -90, 0), 0)
+    
+    holoClipEnabled(2, 2, 1)
+    holoClip(2, 2, vec(0, -6.062, 0), vec(0, 90, 0), 0)
+    
+    # White
+    
+    holoCreate(3)
+    holoModel(3,"models/pac/jiggle/base_cloth_3.mdl")
+    holoMaterial(3,"WTP/cloth_1")
+    holoColor(3,vec(255,255,255))
+    holoAlpha(3,255)
+    holoDisableShading(3,1)
+    holoPos(3,entity():toWorld(vec(-0.5,0,65.57)))
+    holoParent(3,entity())
+    
+    #Flag Bones
+    
+    holoBoneScale(3,0,vec(5,1,1))
+    holoBoneScale(3,1,vec(5,1,1))
+    holoBoneScale(3,2,vec(5,1,1))
+    holoBoneScale(3,3,vec(5,1,1))
+    holoBoneScale(3,4,vec(5,1,1))
+    holoBoneScale(3,5,vec(5,1,1))
+    holoBoneScale(3,6,vec(5,1,1))
+    holoBoneScale(3,7,vec(5,1,1))
+    holoBoneScale(3,8,vec(5,1,1))
+    holoBoneScale(3,9,vec(5,1,1))
+    
+    holoClipEnabled(3, 1, 1)
+    holoClip(3, 1, vec(0, -6.062, 0), vec(0, -90, 0), 0)
+    
+    #Pole
+    
+    holoCreate(4)
+    holoModel(4,"models/sprops/cylinders/size_1/cylinder_1_5x54.mdl")
+    holoMaterial(4,"models/props_docks/dock01a")
+    holoPos(4,entity():toWorld(vec(0,0,42.231)))
+    holoScale(4,vec(0.6,0.6,1.6))
+    holoParent(4,entity())
+    
+    #Pole Cap
+    
+    holoCreate(5)
+    holoModel(5,"models/sprops/geometry/sphere_24.mdl")
+    holoMaterial(5,"models/props_docks/dock01a")
+    holoPos(5,entity():toWorld(vec(0,0,86)))
+    holoScale(5,vec(0.075,0.075,0.075))
+    holoParent(5,entity())
+
+}
+
+interval(100)
+
+Speed = entity():vel():length()
+
+I += Speed / 7
+
+A = sin(I)*60
+
+if(Speed > 1)
+{
+    holoAng(1,entity():toWorld(ang(0,A,90)))
+    holoAng(2,entity():toWorld(ang(0,A,90)))
+    holoAng(3,entity():toWorld(ang(0,A,90)))
+}
+else
+{     
+    holoAng(1,entity():toWorld(ang(0,0,90)))
+    holoAng(2,entity():toWorld(ang(0,0,90)))
+    holoAng(3,entity():toWorld(ang(0,0,90)))
+}

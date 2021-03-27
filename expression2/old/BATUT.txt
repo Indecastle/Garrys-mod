@@ -1,0 +1,74 @@
+@name BATUT
+@outputs K Once2 On
+@persist Vect:vector Ply:array V4:entity
+@trigger all
+@model models/hunter/plates/plate1x1.mdl
+runOnTick(1)
+
+E = entity()
+O = owner()
+
+if(first() | duped()){ 
+        
+    E:setMaterial("phoenix_storms/dome")
+    holoCreate(1)
+    holoModel(1,"cube")
+    holoPos(1,E:pos())
+    holoMaterial(1,"phoenix_storms/future_vents")
+    holoScale(1,vec(5,5,0.1))
+    
+    holoCreate(2)
+    holoModel(2,"cube")
+    holoPos(2,E:pos()+vec(0,0,1))
+    holoMaterial(2,"phoenix_storms/gear")
+    holoScale(2,vec(2,2,0.1))
+    holoParent(2,E)
+    
+    
+    findByClass("player")
+    Ply = findToArray()
+}
+
+Bn = rangerOffset(20,E:pos(),5*E:up())
+    
+if(Bn:hit()){
+    Vect = (holoEntity(1):pos()-E:pos()+vec(0,0,60))
+    On = 1
+    if(Once2 == 0){
+        Once2 = 1
+        E:soundPlay(100,100,"doors/door_metal_thin_open1.wav")
+    }
+    
+    E:applyForce(Vect*500 + $Vect*500)
+    E:propFreeze(0)
+    
+}else{
+    timer("wait",1500)
+    
+    if(On == 1){
+        Vect = (holoEntity(1):pos()-E:pos()+vec(0,0,60))
+        E:applyForce(Vect*600 + $Vect*600)    
+    }
+    
+    if(clk("wait")){
+        stoptimer("wait")
+        On = 0
+        if(Once2 == 1){
+            Once2 = 0
+            E:soundPlay(100,100,"doors/door_metal_thin_close2.wav")
+        }
+        
+        E:setPos(holoEntity(1):pos() + vec(0,0,0))
+        E:setAng(holoEntity(1):angles())
+        E:propFreeze(1)
+    }
+}
+
+TarQ = quat(holoEntity(1):angles())
+CurQ = quat(E)
+Q = TarQ/CurQ
+V = E:toLocal(rotationVector(Q)+E:pos())
+E:applyTorque((900*V - 12*E:angVelVector())*E:inertia()) 
+
+## Made By Failcake
+## Requires PropCore!

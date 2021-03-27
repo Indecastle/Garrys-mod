@@ -1,0 +1,62 @@
+@name security
+@inputs Damage Clk Attacker:entity [T1 T2 T3 T4 T5]:entity
+@outputs ON 
+@persist [O E]:entity [Turrets WW]:array Timer Fire
+@trigger Clk
+
+#interval(1)
+if(first() | duped() | dupefinished()) { O = owner() E = entity()
+    runOnTick(1)
+    runOnKeys(owner(),1)
+    #runOnMouseKey(1)
+    
+    Timer = 1000
+    ON = 0
+    
+    Turrets = array(T1, T2, T3, T4, T5)
+    WW = array()
+    foreach(K,T:entity=Turrets) {
+        WW:pushWirelink(T:wirelink())
+    }
+}
+
+function void setfires(Turn:number) {
+    foreach(K,W:wirelink=WW) {
+        W["Fire",number] = Turn
+    }
+    if(Turn==0) {
+        foreach(K,T:entity=Turrets) {
+            T:setAng(ang(-90,0,0))
+        }
+    }
+}
+
+if(changed(Clk) & ON & Attacker!= owner()) {
+    setfires(1)
+    Fire = 1
+    stoptimer("stopfires")
+    timer("stopfires", 1000)
+}
+
+if(Fire & ON) {
+    foreach(K,T:entity=Turrets) {
+        T:setAng((Attacker:pos() - T:pos()+vec(0,0,30)+Attacker:vel() * tickInterval()*1.5):toAngle())
+    }
+}
+
+if(changed(owner():keyPressed("m")) & owner():keyPressed("m")) { 
+    setfires(0) ON = 0 Fire = 0
+    stoptimer("stopfires")
+}
+if(changed(owner():keyPressed("n")) & owner():keyPressed("n")) { 
+    setfires(0) ON = 1 Fire = 0
+    stoptimer("stopfires") 
+    timer("stopfires", 1000)
+}
+if(changed(owner():keyPressed("b")) & owner():keyPressed("b") & ON) { 
+    setfires(1) Fire = 1
+    stoptimer("stopfires") 
+    timer("stopfires", 1000)
+}
+
+if(clk("stopfires")) { setfires(0) Fire = 0 }

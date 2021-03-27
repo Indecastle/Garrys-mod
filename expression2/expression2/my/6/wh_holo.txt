@@ -1,0 +1,67 @@
+@name holo ex2 wallhack2
+@inputs 
+@outputs [TargetArr]:array 
+@persist RanT:ranger [Epos]:vector Target:entity
+@trigger 
+
+if(first() || dupefinished()) {
+    #runOnTick(1)
+    setName("generic")
+    Target = owner()
+    #Target = findPlayerByName("doctor")
+    #Target = findPlayerBySteamID("STEAM_0:1:506765215")
+    print(Target)
+    holoCreate(0)
+    holoParent(0,Target:weapon())
+    holoModel(0,"hq_hdome_thin")
+    holoScaleUnits(0,vec(50,50,50))
+    holoColor(0,vec4(0,255,0,50))
+    holoDisableShading(0,1)
+    
+    holoMaterial(0, "models/props_combine/tprings_globe")
+    holoAlpha(0, 0)
+}
+
+interval(100)
+
+local Players = players()
+
+holoVisible(0, Players, 0)
+holoVisible(0, Target, 1)
+    
+Epos = Target:pos()+vec(0,0,64)
+
+#findExcludeEntity(Target)
+#findExcludeEntity(holoEntity(0))
+#findInSphere(Target:pos(),99999)
+#findIncludeClass("Player")
+#findIncludeClass("npc")
+
+#TargetArr = findToArray()
+TargetArr = Players
+
+holoPos(0,Epos-vec(0,0,36))
+holoAng(0,(Target:eyeAngles()+ang(90,0,0)))
+
+foreach (I, P:entity = TargetArr) {
+    if(P){
+        holoCreate(I)
+        holoVisible(I, TargetArr, 0)
+        holoVisible(I, Target, 1)
+        holoParent(I,holoEntity(0))
+        holoScaleUnits(I,vec(1,1,1))
+        holoColor(I,vec4(255,0,0,100))
+        holoDisableShading(I,1)
+        holoModel(I,"hq_sphere")
+    }
+    else{
+        holoDelete(I)
+    }
+    rangerDefaultZero(0)
+    rangerFilter(Target)
+    RanT = rangerOffset(25,Epos,P:pos()+P:boxCenter()-Epos)
+    holoPos(I,RanT:pos()-vec(0,0,36))
+}
+
+
+

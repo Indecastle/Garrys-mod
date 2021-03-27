@@ -1,0 +1,95 @@
+@name Teleport (Half-Life 2) dop2 door
+@inputs DoorOn TP_ARRAY:array
+@outputs Z3 Z2 Z1
+@persist Speed [A11 A12 A13]:entity T3 T2 T1 B1 B2 B3
+@trigger DoorOn TP_ARRAY
+
+if(first() | dupefinished()) {
+    #[
+    findByModel("models/props_lab/teleportgate.mdl")
+    findSortByDistance(entity():pos())
+    A11 = findResult(1)
+    A12 = findResult(2)
+    A13 = findResult(3)
+    ]#
+    
+    Z1 = 30 Z2 = 50 Z3 = 70
+    
+    Speed = 15
+    timer("set Array", 100)
+}
+
+if((~TP_ARRAY | clk("set Array"))) {
+    if(TP_ARRAY:exists(1)) {
+        A11 = TP_ARRAY:entity(3)
+        A12 = TP_ARRAY:entity(4)
+        A13 = TP_ARRAY:entity(5)
+    }
+    else {
+        A11 = A12 = A13 = noentity()
+    }
+}
+
+if(~DoorOn & DoorOn) {
+    stopAllTimers()
+    timer("on",100)
+    B1 = B2 = B3 = 1
+    timer("B1",800) timer("B2",400) T3 = Speed
+    A11:soundPlay(1, 0.8, "doors/doormove7.wav")
+}
+
+if(~DoorOn & !DoorOn) {
+    stopAllTimers()
+    timer("off",100)
+    B1 = B2 = B3 = 1
+    T1 = Speed timer("B2",400) timer("B3",800) 
+    A11:soundPlay(1, 0.8, "doors/doormove7.wav")
+}
+
+function number heviside(Num) {
+    if(Num > 0) { return Num }
+    return 0
+}
+
+if(clk("B1")) { T1 = Speed }
+if(clk("B2")) { T2 = Speed A12:soundPlay(2, 0.8, "doors/doormove7.wav") }
+if(clk("B3")) { T3 = Speed }
+
+if(clk("on")) {
+    timer("on",100)
+    
+    
+    Z1 = (Z1 + T1)
+    Z2 = (Z2 + T2)
+    Z3 = (Z3 + T3)
+    
+    if(Z1 >= 110 & B1) { Z1 = 110 T1 = 0 B1 = 0}
+    if(Z2 >= 130 & B2) { Z2 = 130 T2 = 0 B2 = 0 A13:soundPlay(10, 0.4, "doors/door_metal_thin_close2.wav") timer("sound2", 500)}
+    if(Z3 >= 150 & B3) { Z3 = 150 T3 = 0 B3 = 0}
+    
+    if(Z1>=110 & Z2>=130 & Z3>=150) {
+        stoptimer("on")
+    }
+}
+
+
+if(clk("off")) {
+    timer("off",100)
+    
+    Z1 = (Z1 - T1)
+    Z2 = (Z2 - T2)
+    Z3 = (Z3 - T3)
+    
+    if(Z1 <= 30 & B1) { Z1 = 30 T1 = 0 B1 = 0 }
+    if(Z2 <= 50 & B2) { Z2 = 50 T2 = 0 B2 = 0 A13:soundPlay(10, 0.4, "doors/door_metal_thin_close2.wav") timer("sound2", 500)}
+    if(Z3 <= 70 & B3) { Z3 = 70 T3 = 0 B3 = 0 }
+    
+    
+    if(Z1<=30 & Z2<=50 & Z3<=70) {
+        stoptimer("off")
+    }
+}
+
+if(clk("sound2")) {
+    A13:soundPlay(11, 0.5, "doors/door_metal_thin_close2.wav")
+}

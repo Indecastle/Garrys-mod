@@ -1,0 +1,30 @@
+@name Test AngForce
+@inputs Ber Elev
+@outputs [Pos Dir]:vector [Angles Ang C AngVel AngForce]:angle P:entity On
+@persist 
+@trigger 
+
+if(first()) {
+    On = 1
+    runOnTick(1)
+    
+    findByClass("prop_physics")
+    P = findClosest(entity():pos())
+    print(P)
+}
+
+Pos = P:toWorld(vec(0,0,10))
+Angles = P:angles()
+C = Ang - P:angles()
+
+#Ang = ang(-Elev,Ber,0)
+Ang = ang(0,90,0)
+
+Dir = Ang:forward()
+#P:setAng(Ang+ang(0,8,0))
+AngVel = P:angVel()
+
+AngForce = ( (Ang - P:angles())*100 - AngVel*5 )*50
+
+P:applyAngForce(AngForce)
+#P:setPos(entity():toWorld(vec(0,0,50)))

@@ -1,0 +1,136 @@
+@name XYZ
+@inputs W:wirelink
+@outputs V:vector Pitch Yaw Roll 
+@persist [O E]:entity Lines:table A I
+@trigger 
+
+interval(100)
+runOnChat(1)
+
+if (->W&(first()|dupefinished()|changed(->W))){   #entity():setMaterial("Models/effects/vol_light001")
+    W:egpClear()
+    timer("scan",10)
+}
+
+if(first()|clk("scan")){
+    O = owner()
+    E = entity()
+    I=110
+    
+    holoCreate(1,entity():pos(),vec(10,0.1,0.1),ang(0,0,0),vec(255,0,0))
+    holoParent(1,E)
+    
+    holoCreate(2,entity():pos(),vec(10,0.1,0.1),ang(0,90,0),vec(0,255,0))
+    holoParent(2,E)
+    
+    holoCreate(3,entity():pos(),vec(10,0.1,0.1),ang(90,0,0),vec(0,0,255))
+    holoParent(3,E)
+    
+    holoCreate(11,entity():pos()+vec(60,0,0),vec(0.5,0.5,1),ang(90,0,0),vec(255,0,0),"cone")
+    holoParent(11,E)
+    
+    holoCreate(12,entity():pos()+vec(0,60,0),vec(0.5,0.5,1),ang(0,0,-90),vec(0,255,0),"cone")
+    holoParent(12,E)
+    
+    holoCreate(13,entity():pos()+vec(0,0,60),vec(0.5,0.5,1),ang(0,90,0),vec(0,0,255),"cone")
+    holoParent(13,E)
+    
+    
+    
+    holoCreate(20,entity():pos(),vec(10,0.1,0.1),ang(0),vec(255,255,255))
+    holoParent(20,E)
+    
+    holoCreate(21,entity():pos()+vec(60,0,0),vec(0.5,0.5,1),ang(0),vec(255,255,255),"cone")
+    
+    holoCreate(100)
+    holoModel(100,"hq_sphere")
+    holoScale(100,vec(11,11,11))
+    holoAlpha(100,25)
+    holoParent(100,E)
+    
+    holoCreate(101)
+    holoModel(101,"hq_sphere")
+    holoScale(101,-vec(11,11,11))
+    holoAlpha(101,25)
+    holoParent(101,E)
+    
+    
+    W:egp3DTracker(1,vec(0,0,0))
+    W:egpParent(1,holoEntity(11))
+    W:egp3DTracker(2,vec(0,0,0))
+    W:egpParent(2,holoEntity(12))
+    W:egp3DTracker(3,vec(0,0,0))
+    W:egpParent(3,holoEntity(13))
+    
+    W:egpText(11,"X",vec2(-10,0))
+    W:egpParent(11,1)
+    W:egpText(12,"Y",vec2(-10,0))
+    W:egpParent(12,2)
+    W:egpText(13,"Z",vec2(-10,0))
+    W:egpParent(13,3)
+}
+
+V = owner():eye()
+
+Pitch = O:eyeAngles():pitch()
+Roll = O:eyeAngles():roll()
+Yaw = O:eyeAngles():yaw()
+
+#A=(A+5)%360
+
+AngDir = O:eyeAngles()
+VecDir = O:eye()
+holoAng(20,AngDir)
+holoPos(21,E:pos()+VecDir*60)
+holoAng(21,AngDir+ang(90,0,0))
+
+if (chatClk(owner())) 
+{
+    M = owner():lastSaid():explode(" ")
+    if (M:string(1) == "!ad") {
+        hideChat(1)
+        H1 = holoCreate(I,O:attachmentPos("eyes"),vec(10,0.1,0.1),AngDir,vec(100,100,100),"cube")
+        Lines:pushEntity(H1)
+        I++
+        H2 = holoCreate(I,O:attachmentPos("eyes")+VecDir*60,vec(0.5,0.5,1),AngDir+ang(90,0,0),vec(100,100,100),"cone")
+        I++
+        Lines:pushEntity(H2)
+        if(M:string(2) == "1"){
+            H1:setPos(E:pos())
+            H2:setPos(E:pos()+VecDir*60)
+            holoParent(I-2,E)
+            holoParent(I-1,E)
+        }
+    }
+    elseif (M:string(1) == "!de") {
+        hideChat(1)
+        H1 = Lines:popEntity()
+        H1:remove()
+        H2 = Lines:popEntity()
+        H2:remove()
+        I-=2
+    }
+    elseif (M:string(1) == "!dellall") {
+        hideChat(1)
+        while(Lines:exists(1)){
+            H1 = Lines:popEntity()
+            H1:remove()
+            I--
+        }
+    }
+    elseif (M:string(1) == "!vis") {
+        hideChat(1)
+        if(M:string(2) == "1"){
+            holoAlpha(20,255)
+            holoAlpha(21,255)
+        }
+        elseif(M:string(2) == "0"){
+            holoAlpha(20,0)
+            holoAlpha(21,0)
+        }
+    }
+    elseif (M:string(1) == "!resang") {
+        hideChat(1)
+        E:setAng(ang(0))
+    }
+}

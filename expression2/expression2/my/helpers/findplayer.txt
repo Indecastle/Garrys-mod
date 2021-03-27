@@ -1,0 +1,32 @@
+@name FindPlayer
+@outputs Target:entity TargetPos:vector
+
+interval(100)
+
+if(first() | dupefinished()) {
+    runOnChat(1)
+}
+
+if(chatClk()) {
+    Pla = lastSpoke() 
+    local Message = Pla:lastSaid()
+    FirstLetter = Message:index(1)
+    if (FirstLetter == ".") {}
+    elseif (FirstLetter == "!") {
+        local Ar = Pla:lastSaid():explode(" ")
+        if (Pla == owner()) {
+            switch(Ar:string(1))
+            {
+                case "!find", 
+                    local P = noentity()
+                    if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                    else { P = findPlayerByName(Ar:string(2)) }
+                    if(!P:isPlayer() | Ar:string(2)=="") { print("player not found") }
+                    else { Target = P print(P)}
+                    hideChat(1)
+                default,
+            }
+        }
+    }
+}
+TargetPos = Target:pos()

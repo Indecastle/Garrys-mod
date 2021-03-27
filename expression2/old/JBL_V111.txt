@@ -1,0 +1,115 @@
+@name JBL_V111
+@persist [E O]:entity Rgb:vector F:array SS S M I
+@model models/hunter/blocks/cube025x025x025.mdl
+interval(100)
+
+SS+=3
+SS=SS%360
+Rgb=hsv2rgb(SS,1,1)
+
+#holoColor(11,(Rgb))
+#holoColor(12,(Rgb))
+
+if(first()){
+    
+    E=entity()
+    O=owner()
+    entity():setPos(entity():toWorld(vec(0,0,30)))   
+    
+    soundURLload("1","https://www.dropbox.com/s/snwsn874sgmy2m6/GONE.Fludd%20-%20%D0%9A%D0%A3%D0%91%D0%98%D0%9A%20%D0%9B%D0%AC%D0%94%D0%90.mp3?dl=1",100,0,E)
+    
+    E:setAlpha(0)
+    
+    holoCreate(1)
+    holoParent(1,E)
+    holoDisableShading(1,1)
+    holoAng(1,E:toWorld(ang(0,0,90)))
+    holoColor(1,vec(100))
+    holoScale(1,vec(1,1,2.5))
+    holoModel(1,"models/holograms/hq_rcylinder_thick.mdl")
+    
+    #holoCreate(2)
+    holoParent(2,E)
+    holoDisableShading(2,1)
+    holoPos(2,E:toWorld(vec(0,-11,0)))
+    holoAng(2,E:toWorld(ang(0,0,90)))
+    holoColor(2,vec(255))
+    holoScale(2,vec(1,1,2))
+    holoModel(2,"")
+    
+    #holoCreate(3)
+    holoParent(3,E)
+    holoDisableShading(3,1)
+    holoPos(3,E:toWorld(vec(0,11,0)))
+    holoAng(3,E:toWorld(ang(0,0,-90)))
+    holoColor(3,vec(255))
+    holoScale(3,vec(1,1,2))
+    holoModel(3,"")
+    
+    holoCreate(4)
+    holoParent(4,E)
+    holoDisableShading(4,1)
+    holoPos(4,E:toWorld(vec(0,-15,0)))
+    holoAng(4,E:toWorld(ang(0,0,90)))
+    holoScale(4,vec(3,3,1))
+    holoModel(4,"models/bull/dynamicbutton_small.mdl")
+    
+    holoCreate(5)
+    holoParent(5,E)
+    holoDisableShading(5,1)
+    holoPos(5,E:toWorld(vec(0,15,0)))
+    holoAng(5,E:toWorld(ang(0,0,-90)))
+    holoScale(5,vec(3,3,1))
+    holoModel(5,"models/bull/dynamicbutton_small.mdl")
+    
+    for(I=6,10){
+           
+        holoCreate(I)
+        holoParent(I,E)
+        holoDisableShading(I,1)
+        holoPos(I,E:toWorld(vec(0,-24+I*3,5)))
+        holoModel(I,"models/beer/wiremod/hydraulic_nano.mdl")
+        holoMaterial(I,"models/debug/debugwhite")
+        
+    }
+    
+    holoCreate(11)
+    holoParent(11,E)
+    holoDisableShading(11,1)
+    holoScale(11,vec(1.0))
+    holoAng(11,E:toWorld(ang(0,0,-90)))
+    holoModel(11,"models/cheeze/wires/speaker.mdl")
+    
+    holoCreate(12)
+    holoParent(12,E)
+    holoDisableShading(12,1)
+    holoScale(12,vec(1.0))
+    holoPos(12,E:toWorld(vec(0,-10,0)))
+    holoAng(12,E:toWorld(ang(0,0,90)))
+    holoModel(12,"models/cheeze/wires/speaker.mdl")
+
+    M=-0.1
+    
+}
+
+F = entity():soundFFT("1")
+
+for(I=1,5)
+{   
+    S = clamp( F[I,number]*0.2+21.9 ,21.9 ,24)
+    if(S < M)
+    {
+        holoColor(4,vec(M*50,0,80))
+        holoColor(5,vec(M*50,0,60))
+        holoPos(11,E:toWorld(vec(0,10+M/5,0)))
+        holoPos(12,E:toWorld(vec(0,-10-M/5,0)))
+    }
+    else
+    {
+        holoColor(4,vec(S*50,0,80))
+        holoColor(5,vec(S*50,0,60))
+        holoPos(11,E:toWorld(vec(0,10+S/5,0)))
+        holoPos(12,E:toWorld(vec(0,-10-S/5,0)))
+    }
+}
+#noDuplications()

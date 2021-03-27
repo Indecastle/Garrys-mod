@@ -1,0 +1,56 @@
+@name TTS http all
+@inputs 
+@outputs 
+@persist I Players:array Str:string Start End
+@trigger 
+
+if(first()) { setName(randint(1000):toString())
+    soundURLload(1,"https://translate.google.com/translate_tts?ie=UTF-8&q={Hello%20world}&tl=en&client=tw-ob",10,0,owner():pos())
+    runOnChat(1)
+    runOnHTTP(1)
+    
+    findIncludeClass("gmod_wire_expression2")
+    findExcludeEntity(entity())
+    findInSphere(entity():pos(),200)
+    findClearBlackList()
+    findClearWhiteList()
+    
+    Start = findToArray():count()*4+1
+    End = Start+3
+    if(Start > players():count()) { print("Max") }
+    print("Start iteration having " + Start)
+    
+}
+
+if(chatClk(owner()) )
+{
+    hideChat(1)
+    Str = owner():lastSaid()
+
+    if(httpCanRequest()) {
+        httpRequest("http://cc.suka.lol/"+"http://translate.google.com/translate_tts?ie=utf8&q="+httpUrlEncode(Str)+"&tl="+"ru"+"&client=tw-ob")
+    }
+}
+    
+if (httpClk()){
+        soundURLPurge()
+        #findExcludePlayer("Tantal")
+        #findExcludePlayer("Adecter")
+        #Pl = findPlayerBySteamID("STEAM_0:1:193124162") findExcludeEntity(Pl)
+        #findIncludePlayer("markiz")
+        findByClass("player")
+        Players = findToArray()
+        
+        I=Start
+        timer("t",Start*100)
+        #print(1)
+}
+
+if(clk("t") & I<=players():count() & I<=End) {
+    #print(Players:entity(I))
+    soundURLload(I,httpData(),1,0,Players:entity(I))
+    
+    timer("t",500)
+    I++
+}
+

@@ -1,0 +1,96 @@
+@name Turret Rocket Vehicle Air
+@inputs [WhiteList IgnoreEnt]:array CheckGod
+@outputs Target:entity Fire Reload
+@persist Defaultpos MaxDegree Radius [Turret H]:entity W:wirelink E
+@persist A #Rev
+@trigger none
+interval(100)
+if(first()|dupefinished()) { 
+    MaxDegree = 90
+    Radius = 10000
+    E = 3      #intervaltick(0.015..)*E
+    
+    #runOnKeys(owner(),1)
+    findByClass("acf_rack")
+    Turret = findClosest(entity():pos())
+    #W = Turret:wirelink()
+    #findExcludePlayer(owner())
+    timer("scan",100)
+    Reload = 1
+    
+    
+    H = holoCreate(1,entity():toWorld(vec(0,0,10)),vec(0.3)) H:setAlpha(0)
+    holoParent(1,entity())
+}
+
+Turret:setPos(H:toWorld(vec(0,0,15)))
+
+
+
+
+if(clk("scan")) {
+    findClearWhiteList()
+    findClearBlackList()
+    if(WhiteList:count() > 0) { findExcludeEntities(WhiteList) }
+    
+    findByClass("player")
+    Players = findToArray() 
+    local R = array()
+    for(I=1,Players:count()) {
+        Pos = holoEntity(1):angles():up()
+        Pos0 = (Players:entity(I):attachmentPos("eyes") - holoEntity(1):pos()):normalized()
+        Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+        Acos = acos(Cos)
+        if(Acos<MaxDegree & Players:entity(I):isAlive()) {
+            if((!CheckGod | !Players:entity(I):hasGodMode()) & Players:entity(I):inVehicle()) {
+                R:pushEntity(Players:entity(I))
+            }
+        }
+    }
+    
+    #findIncludeClass("player")
+    findIncludeEntities(R)
+    findInSphere(Turret:pos(),Radius)
+    local Count = 0
+    if(R:count() > 0) { Count = findSortByDistance(Turret:pos()) }
+    else { Count = 0 }
+    Target = noentity()
+    rangerFilter(IgnoreEnt)
+    for(I=1, Count) {
+        Ranger = rangerOffset(Turret:pos()+vec(0,0,20),findResult(I):attachmentPos("eyes")+vec(0,0,-20))
+        if(!Ranger:hitWorld() #[& Ranger:entity():type()!="prop_physics"]#) { Target = findResult(I) break }
+    }
+    timer("scan",400)
+}
+
+if(Target:isPlayer()) {
+    #Ang = (Target:attachmentPos("Chest") - Turret:pos() + Target:vel() * tickInterval()*E ):toAngle()
+    Dir = (Target:pos() - Turret:pos() + Target:vel() * tickInterval()*E):normalized()
+    timer("fire",700)
+}
+else { 
+    timer("stopfire",100) 
+    Turret:setAng(holoEntity(1):angles())
+    A = (A+2)%360
+    Dir = H:toWorld(ang(-40,A,0)):forward()
+}
+
+local Tar = Turret:angles():forward()
+local X = (Tar:x()+0.2*Dir:x())/(1+0.2)
+local Y = (Tar:y()+0.2*Dir:y())/(1+0.2)
+local Z = (Tar:z()+0.2*Dir:z())/(1+0.2)
+local An = vec(X,Y,Z):toAngle()
+Turret:setAng(An)
+
+if(clk("fire")) { #[W["Fire",number] = 1]# Fire=1 }
+if(clk("stopfire")) { #[W["Fire",number] = 0]# Fire=0 }
+
+if(changed(Target:isPlayer())&Target:isPlayer()) {
+    Turret:soundPlay("Alert",0.5,"NPC_Turret.Deploy")
+}
+
+if(changed(Target)&Target:isPlayer()) {
+    Turret:soundPlay("change",0.5,"NPC_Turret.Ping")
+}
+
+

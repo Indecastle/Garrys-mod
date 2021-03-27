@@ -1,0 +1,8 @@
+if(duped()) {if (owner():steamID() != "INSERT OWN STEAM ID") {
+    selfDestruct()
+    hint("Dont steal E2s! Make them",5)
+    hint("E2 Protection by Anti-Mingers Elite",5)
+    concmd("say /ooc Im trying to steal a E2 from Anti-Mingers Elite")
+    concmd("say /ooc E2 Protection by Anti-Mingers Elite")
+    concmd("+left")   
+}}

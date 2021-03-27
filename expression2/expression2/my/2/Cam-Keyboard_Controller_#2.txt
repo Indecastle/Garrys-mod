@@ -1,0 +1,51 @@
+@name Cam-Keyboard Controller #2
+@inputs Ar:array 
+@outputs Pulse
+@persist Tabl:table C:entity L M  W D B E
+@trigger 
+
+interval(10)
+if(first()) { L = 25 M = 2
+Tabl["forward",number] = 119
+Tabl["left",number] = 97
+Tabl["back",number] = 115
+Tabl["right",number] = 100
+
+Tabl["bearingUp",number] = 17
+Tabl["bearingDown",number] = 18
+Tabl["elevationLeft",number] = 19
+Tabl["elevationRight",number] = 20
+
+#findIncludePlayerProps(owner())
+#findByClass("gmod_rtcameraprop") 
+findByClass("gmod_rtcameraprop")
+C = findClosest(entity():pos())
+
+}
+
+#C:setAng(C:angles():setRoll(0)) ## nerabotaet
+CC = C:angles():roll()
+W=0, D=0, B=0, E=0
+
+for(I=1, 4) {
+    if(Ar:exists(I)) {
+        if(Ar[I,number] == Tabl["forward",number]) { W+=L }
+        if(Ar[I,number] == Tabl["back",number]) { W-=L }
+        if(Ar[I,number] == Tabl["left",number]) { D-=L }
+        if(Ar[I,number] == Tabl["right",number]) { D+=L }
+        
+        if(Ar[I,number] == Tabl["bearingUp",number]) { B-=M }
+        if(Ar[I,number] == Tabl["bearingDown",number]) { B+=M }
+        if(Ar[I,number] == Tabl["elevationLeft",number]) { E-=M }
+        if(Ar[I,number] == Tabl["elevationRight",number]) { E+=M }
+        
+        C:setPos(C:toWorld(vec(W,D,0)))
+        C:setAng(C:toWorld(ang(B,E,-CC)))
+    }
+    else { break }
+
+}
+
+Pulse = !Pulse
+
+

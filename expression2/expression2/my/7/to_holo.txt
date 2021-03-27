@@ -1,0 +1,22 @@
+@name copying to holo
+@persist J [O E]:entity
+
+if (first()) {
+    O=owner() E=entity()   
+    runOnKeys(O, 1) 
+}
+
+if((changed(O:keyPressed("b")) || O:keyPressed("b")) && O:aimEntity():isValid()) {
+    local Prop = O:aimEntity()
+    #Entity=holoCreate(number index,vector position,vector scale,angle ang,vector4 color,string model)
+    local Holo = holoCreate(J, Prop:pos(), vec(1), Prop:angles(), Prop:getColor4(), Prop:model())
+    holoMaterial(J, Prop:getMaterial())
+    if (Prop:isPlayer()) {
+        holoSkin(J, Prop:getSkin())
+        for (I=1, 10) {
+            holoBodygroups(J,Prop:getBodygroup(I)) 
+            #Holo:playerSetBoneAng(I, Prop:playerBoneAng(I))
+        }
+    }
+    J++
+}

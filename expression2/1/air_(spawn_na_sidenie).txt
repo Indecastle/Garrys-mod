@@ -1,0 +1,203 @@
+@name air
+@inputs
+@outputs
+@persist T Propspeed Vel Timer
+@trigger
+
+
+##########################
+####Written by SkyPanda###
+##########################
+
+
+
+E=entity():isWeldedTo()
+Holoref=holoEntity(2)
+if(first())
+{   
+    runOnTick(1)
+    Red=random(255)
+    Blue=random(255)
+    Green=random(255)
+    E:setMass(50)
+    entity():setMass(50)
+    E:setAlpha(255)
+
+    if(E:type()!="prop_vehicle_prisoner_pod") 
+    {
+        print("You must spawn the Chip on a seat")
+        selfDestructAll()
+    }
+    
+    holoCreate(1)
+    holoCreate(2)
+    holoCreate(3)
+    holoCreate(4)
+    holoCreate(5)
+    holoCreate(6)
+    holoCreate(7)                
+    holoCreate(8)
+    holoCreate(9)
+    holoCreate(10)
+    holoCreate(11)
+    holoCreate(12)
+    holoCreate(13)
+        
+    holoParent(1,E)
+    holoParent(2,E)
+    holoParent(3,E)
+    holoParent(4,E)
+    holoParent(5,E)
+    holoParent(6,E)
+    holoParent(7,E)
+    holoParent(8,E)
+    holoParent(9,E)
+    holoParent(10,E)       
+    holoParent(11,E)
+    holoParent(12,E)
+    holoParent(13,E)
+    
+    holoModel(1,"cube")
+    holoModel(2,"cube")
+    holoModel(3,"pyramid")
+    holoModel(4,"tetra")
+    holoModel(5,"cube")
+    holoModel(6,"hq_cone")
+    holoModel(7,"cube")    
+    holoModel(8,"hq_cylinder")
+    holoModel(9,"hq_cylinder")
+    holoModel(10,"hq_cylinder")
+    holoModel(11,"hq_cylinder")
+    holoModel(12,"hq_cylinder")
+    holoModel(13,"hq_cylinder")
+        
+    holoPos(1,E:toWorld(vec(0,0,0)))
+    holoPos(2,E:toWorld(vec(0,5,0)))
+    holoPos(3,E:toWorld(vec(0,-80,0)))
+    holoPos(4,E:toWorld(vec(0,-100,18)))
+    holoPos(5,E:toWorld(vec(0,-100,0)))
+    holoPos(6,E:toWorld(vec(0,55,0)))   
+    holoPos(7,E:toWorld(vec(0,60,0)))    
+    holoPos(8,E:toWorld(vec(0,40,-10)))
+    holoPos(9,E:toWorld(vec(-10,-30,-15)))
+    holoPos(10,E:toWorld(vec(10,-30,-15)))
+    holoPos(11,E:toWorld(vec(-20,-30,-30)))
+    holoPos(12,E:toWorld(vec(20,-30,-30)))
+    holoPos(13,E:toWorld(vec(0,40,-30)))
+       
+    holoAng(1,E:toWorld(ang(0,0,0)))
+    holoAng(2,E:toWorld(ang(0,0,0)))
+    holoAng(3,E:toWorld(ang(0,0,90)))
+    holoAng(4,E:toWorld(ang(0,180,-10)))
+    holoAng(5,E:toWorld(ang(0,0,0)))
+    holoAng(6,E:toWorld(ang(0,0,-90)))   
+    holoAng(7,E:toWorld(ang(0,0,0)))
+    holoAng(8,E:toWorld(ang(0,0,0)))
+    holoAng(9,E:toWorld(ang(45,0,0)))
+    holoAng(10,E:toWorld(ang(-45,0,0)))
+    holoAng(11,E:toWorld(ang(90,0,0)))
+    holoAng(12,E:toWorld(ang(90,0,0)))
+    holoAng(13,E:toWorld(ang(90,0,0)))
+        
+    holoScale(1,vec(17,3,0.15))
+    holoScale(2,vec(2,7,2))
+    holoScale(3,vec(2,2,8))
+    holoScale(4,vec(0.5,2,3))
+    holoScale(5,vec(5,2,0.15))
+    holoScale(6,vec(2,2,2))
+    holoScale(7,vec(0.3,0.1,3))
+    holoScale(8,vec(0.2,0.2,3))
+    holoScale(9,vec(0.2,0.2,3))
+    holoScale(10,vec(0.2,0.2,3))    
+    holoScale(11,vec(1,1,0.5))
+    holoScale(12,vec(1,1,0.5))
+    holoScale(13,vec(1,1,0.5))
+    
+    holoColor(1,vec(Red,Green,Blue))
+    holoColor(2,vec(Red,Blue,Red))
+    holoColor(3,vec(Red,Green,Blue))    
+    holoColor(4,vec(Red,Green,Blue))
+    holoColor(5,vec(Red,Green,Blue))
+    holoColor(6,vec(Red,Green,Blue))
+    holoColor(7,vec(75,75,75))
+    holoColor(8,vec(75,75,75))
+    holoColor(9,vec(75,75,75))
+    holoColor(10,vec(75,75,75))
+    holoColor(11,vec(0,0,0))
+    holoColor(12,vec(0,0,0))
+    holoColor(13,vec(0,0,0))    
+    
+    holoDisableShading(4,1) 
+}
+entity():setMass(0)
+E=entity():isWeldedTo()
+E:setMass(50000)
+Chair=entity():isWeldedTo()
+Driver=Chair:driver()
+W=Driver:keyForward()
+S=Driver:keyBack()
+Rvel=E:angVel():roll()
+Pvel=E:angVel():pitch()
+Yvel=E:angVel():yaw()
+Pd=E:angles():pitch()/100
+R1=E:angles():roll()/100
+Range=rangerOffset(100,E:pos()+vec(0,0,-8),-E:up())
+Height=Range:distance()
+E:applyForce(-E:vel()*E:mass())
+E:applyAngForce(ang(Rvel,-Yvel,-Pvel)*E:mass())
+E:applyForce(vec(0,0,1)*E:mass()*7.511255)
+if(Height<40|!Driver)
+{
+    E:applyForce(vec(0,0,1)*E:mass()*(28-Height))
+    E:applyForce(-vec(0,0,1)*E:mass()*5*(Height-28))
+}
+E:applyAngForce(ang(R1,0,-Pd)*E:mass()*100)
+if(Driver)
+{
+    if(Height>50)
+    {
+        Y=vec(Driver:eye():dot(Chair:right()),Driver:eye():dot(Chair:right()),0):y()
+    }
+    else{Y=0}
+    if(Vel>750)
+    {
+        P=vec(0,Driver:eye():dot(Chair:up()),Driver:eye():dot(Chair:up())):z()    
+    }
+    else{P=0}
+    E:applyAngForce(ang(-P,-Y,Y)*E:mass()*100)
+    
+    Timer+=1 
+    if(Timer>80)
+    {Timer=0}
+    if(Timer==5){E:soundPlay(1,0,"/vehicles/airboat/fan_blade_idle_loop1.wav")}
+    soundPitch(1,E:vel():length()*T*10)
+}
+else{soundStop(1)}
+Forward=E:forward()*E:mass()*150
+E:applyForce((Forward+$Forward)*T)
+if(W){T+=0.01}
+if(S|!Driver){T-=0.01}
+elseif(S&Height<40){T-=0.005}
+if(T<0){T=0}
+if(T>5){T=5}
+Vel=E:vel():length()
+Propspeed+=clamp(T*10,0,500)
+holoAng(7,E:toWorld(ang(Propspeed,0,0)))
+if(Driver&T<2&Height>40)
+{
+    E:applyForce(-vec(0,0,1)*E:mass()*100)    
+    T=2
+}
+if(E:driver())
+{
+    Active=1
+}
+else{Active=0}
+
+if(changed(Active)&Active)
+{
+    E:hintDriver("Made by SkyPanda",50)
+    E:hintDriver("W:S Accelerate",5)
+    E:hintDriver("Mouse aim to steer",5)
+    E:hintDriver("Enjoy!",5)
+}

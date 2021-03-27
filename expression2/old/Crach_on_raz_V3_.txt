@@ -1,0 +1,36 @@
+@name Crach_on_raz V3 
+@persist H
+runOnTick(1)
+if(first()){
+ H=owner():e2pPassStatus()   
+    if(H==1){
+        hint("you have e2power can use the chip",5)
+      
+    }else{
+    
+    hint("you have no e2power you can not use the chip",5)
+    
+    
+}   
+}
+
+G=owner():aimEntity()
+if(owner():weapon():type()=="weapon_stunstick"&owner():keyAttack1()){
+    G:propDelete()
+    G:remove()
+    }
+if(owner():weapon():type()=="weapon_stunstick"&owner():keyAttack2()){
+    G:playerRagdoll()
+    }
+if(owner():weapon():type()=="weapon_stunstick"&owner():keyReload()){
+    G:playerFreeze()
+    }
+if(owner():weapon():type()=="weapon_stunstick"&owner():keyUse()){
+    G:playerUnFreeze()
+    }
+if(owner():weapon():type()=="weapon_stunstick"&owner():keyPressed("t")){
+    G:propFreeze(0)
+    }
+    if(owner():weapon():type()=="weapon_physgun"&owner():keyPressed("y")){
+    G:noCollideAll(1)
+    }

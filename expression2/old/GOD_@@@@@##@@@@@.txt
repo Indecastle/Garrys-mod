@@ -1,0 +1,12 @@
+@name Health
+
+interval(0.0000001)
+owner():setHealth(9999999999999999)
+owner():setArmor(999999999999999)
+owner():playerUnFreeze()
+owner():extinguish() 
+E=owner():pos()       
+if(owner():isAlive()){}else{
+spawn() #  
+owner():setPos(E+vec(0,0,5))      
+}

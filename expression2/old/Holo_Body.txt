@@ -1,0 +1,55 @@
+@name Holo Body
+@persist R:array
+
+runOnTick(1)
+runOnLast(1)
+if(first()){
+    owner():setMaterial("models/wireframe")
+    holoCreate(1)
+    holoModel(1,"cylinder")
+    holoScale(1,vec(1.5,1.5,0.1))
+    holoPos(1,entity():pos() + vec(0,0,10))
+    holoMaterial(1,"models/wireframe")
+    holoVisible(1,owner(),0)
+    
+    Count = 8
+    
+    for(I = 2, Count + 1){
+        holoCreate(I)
+        holoPos(I,entity():pos() + vec(sin(I*45)*20,cos(I*45)*20,10))
+        holoColor(I,vec(sin(I*50+255)*127+127,sin(I*50 + 255*2)*127+127,sin(I*50 + 3*255)*127+127))
+        holoScale(I,vec(1,0.5,0.1))
+        holoMaterial(I,"models/wireframe")
+        holoAng(I,(holoEntity(I):pos()-holoEntity(1):pos()):toAngle())
+        holoParent(I,1)
+        holoVisible(I,owner(),0)
+    }
+}
+
+if(changed(owner():weapon())){
+    Found = 0
+    for(I = 1, R:count()){
+        if(R[I,entity] == owner():weapon()){
+            Found = 1
+            break
+        }
+    }
+    if(!Found){
+        R:pushEntity(owner():weapon())
+        owner():weapon():setMaterial("models/wireframe")
+    }
+}
+
+owner():setColor(vec(sin(curtime()*20+255)*127+127,sin(curtime()*20 + 255*2)*127+127,sin(curtime()*2 + 3*255)*127+127))
+owner():weapon():setColor(vec(sin(curtime()*20+255)*127+127,sin(curtime()*20 + 255*2)*127+127,sin(curtime()*2 + 3*255)*127+127))
+holoPos(1,owner():pos()+vec(0,0,85))
+holoAng(1,holoEntity(1):toWorld(ang(0,1,0)))
+
+if(last()){
+    owner():setMaterial("")
+    owner():setColor(vec(255,255,255))
+    for(I = 1, R:count()){
+        R[I,entity]:setMaterial("")
+        R[I,entity]:setColor(vec(255,255,255))
+    }
+}

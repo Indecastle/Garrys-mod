@@ -1,0 +1,20 @@
+@name Parent
+@inputs 
+@outputs [Vehicle Box Turret]:entity
+@persist 
+@trigger Box
+
+
+findByModel("models/buggy.mdl")
+Vehicle = findClosest(entity():pos())
+
+findByModel("models/hunter/blocks/cube025x025x025.mdl")
+Box = findClosest(entity():pos())
+
+findByClass("gmod_wire_turret")
+Turret = findClosest(entity():pos())
+
+Turret:parentTo(Box)
+Box:parentTo(Vehicle)
+#Box:unParent()
+#Turret:unParent()

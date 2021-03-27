@@ -1,0 +1,58 @@
+@name assblaster
+@inputs 
+@outputs S D
+@persist C Thrust G Nil:entity
+@model models/props_phx/rocket1.mdl
+
+if(first()|dupefinished()){
+    
+    Thrust=700
+    C=0 G=0
+    #[function vector entity:getDownPos(){
+        This:boxSize()
+    }]#
+    Nil=findPlayerByName("xvhakvstrhweq11617")
+    entity():propFreeze(0)
+}
+interval(10)
+if(owner():aimEntity()==entity() & changed(owner():keyUse()) & owner():keyUse() & C==0){
+    entity():soundPlay(1,1,"buttons/button17.wav")
+    entity():soundPlay(2,5,"ambient/alarms/siren.wav")
+    #soundPitch(2,150)
+    timer("start",5000)
+}
+if(clk("start")){
+    entity():soundPlay(3,999,"ambient/levels/launch/rockettakeoffblast.wav") 
+    C++
+}
+if(C>0){
+    particle(1,45,255,"particles/flamelet5",vec(255,255,255),entity():pos(),-entity():up()*1600,5,random(-20,20),255,0)
+    particleBounce(0)
+    entity():applyForce(entity():up()*tickInterval()*entity():mass()*Thrust) 
+    shake(entity():pos(),3,3,5,5000)
+    if(rangerOffset(entity():toWorld(vec(0,0,50)),entity():toWorld(vec(0,0,535))):hit() & G==0){
+        particle(1,10000,0,"sprites/orangeflare1",vec(255,255,255),entity():pos(),vec(),5,random(-2,2),255,0)  
+        for(I=0,30){
+            particle(25,2000,1500,"particles/flamelet5",vec(255,255,255),entity():pos()+randvec(-2000,2000),vec(),5,random(-2,2),255,0)          
+        }
+        Nil:soundPlay(9,5,"ambient/explosions/explode_6.wav",0)
+        shake(entity():pos(),175,175,6,5000)
+        entity():propFreeze(1)
+        entity():setAlpha(0)
+        timer("destroy",2000)
+        findClipToClass("prop")
+        findInSphere(entity():pos(),1000)
+        local A=findToArray()
+        addOps(-10000)
+        for(C1=0,A:count()){
+            A[C1,entity]:propFreeze(0)
+            A[C1,entity]:constraintBreak()
+            A[C1,entity]:propSetVelocity((A[C1,entity]:pos()-entity():pos())*100)   
+        }
+        G++
+    } 
+}
+if(clk("destroy")){
+    selfDestructAll()   
+}
+D=ranger(entity(),540):distance()

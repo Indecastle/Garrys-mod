@@ -1,0 +1,124 @@
+@name KofeVarka(For 666scorpion) 
+@inputs 
+@outputs 
+@persist Vars:table Cup LastG CupsT:table PlayerT:table Rang LastP
+@trigger 
+
+if(first()){
+for(I = 1,6){
+holoCreate(I)
+holoPos(I,vec(0,0,0))  
+LastG = 7  
+LastP = 1
+}
+Cup = 0
+Base = propSpawn("models/hunter/plates/plate025x025.mdl",1)
+Base:setPos(entity():pos()+vec(0,-5,5.25))
+Base:propFreeze(1)
+Base:propNotSolid(0)
+Base:setAlpha(0)
+Base:setMass(2)
+noCollideAll(Base,0)
+
+findByClass("gmod_wire_button")
+findInSphere(entity():pos(), 50)
+Vars["Entity",entity] = findClosest(entity():pos())
+Vars["Butt", wirelink] = Vars["Entity", entity]:wirelink()
+}
+
+interval(10)
+
+#Base_start
+holoPos(1,entity():pos()+vec(0,0,15))
+holoScale(1,vec(1.2,0.5,1.5))
+holoColor(1,vec(100,100,100))
+
+Vars["Butt", wirelink]:entity():setPos(holoEntity(1):pos()+vec(6,-3,2))
+Vars["Butt", wirelink]:entity():setAng(ang(90,90,180))
+
+holoPos(2,entity():pos()+vec(0,-3.6,5))
+holoColor(2,vec(0,0,0))
+holoScale(2,vec(1.2,1.1,0.3))
+
+holoPos(3,entity():pos()+vec(0,-4,23.9))
+holoMaterial(3,"models/dog/eyeglass")
+holoModel(3,"models/holograms/hq_sphere.mdl")
+holoClipEnabled(3,3)
+holoClip(3,vec(0,0,0),vec(360,360,360),0)
+
+holoPos(4,entity():pos()+vec(0,-4,23.9))
+holoClipEnabled(4,1,1)
+holoClip(4,1,vec(0,0,1),vec(0,0,-0.9),0)
+holoColor(4,vec(119,80,47))
+holoModel(4,"models/holograms/hq_sphere.mdl")
+holoScale(4,vec(0.9,0.9,0.9))
+holoClipEnabled(4,0,0)
+
+holoPos(5,entity():pos()+vec(0,-4,24.89))
+holoColor(5,vec(119,80,47))
+holoModel(5,"models/holograms/hq_sphere.mdl")
+holoScale(5,vec(0.88,0.88,0.01))
+
+holoPos(6,entity():pos()+vec(0,-5.25,15))
+holoModel(6,"models/hunter/tubes/tube1x1x1.mdl")
+holoColor(6,vec(0,0,0))
+holoScale(6,vec(0.05,0.05,0.2))
+
+#Base_end
+
+#Cup_start
+timer("Reload",200)
+if(clk("Reload") & Vars["Butt", wirelink]["Out",number] == 1 & Cup == 0){
+    Cup = 1
+   #[ Ranger = rangerOffsetHull(entity():toWorld(vec(0,0,0)),entity():toWorld(vec(0,-100,10)),vec(-100,0,10),vec(100,0,10))
+    
+    holoCreate(101, entity():toWorld(-vec(100,0,0)), vec(1), entity():toWorld(ang(0)),vec(255,0,0), "")
+    holoCreate(102, entity():toWorld(-vec(-100,0,0)), vec(1), entity():toWorld(ang(0)),vec(255,0,0), "")
+    holoCreate(103, entity():toWorld(-vec(100,100,0)), vec(1), entity():toWorld(ang(0)),vec(255,0,0), "")
+    holoCreate(104, entity():toWorld(-vec(-100,100,0)), vec(1), entity():toWorld(ang(0)),vec(255,0,0), "")
+     for(I=101,104) { holoParent(I,entity()) holoEntity(I):setAlpha(0)}]#
+       
+  
+}
+
+
+
+if(Cup == 1){
+   CupP = propSpawn("models/props_junk/garbage_coffeemug001a.mdl",entity():pos()+vec(0,-5,9.9),ang(0,0,0),1)
+   CupP:setMaterial("models/dog/eyeglass") 
+   CupP:setMass(2)
+   CupP:setAlpha(255)
+   CupP:propNotSolid(0)
+   CupP:propFreeze(0)
+   Cup = 0
+   CupsT[LastG-6,entity] = CupP
+    findIncludeClass("player*")
+    findInSphere(CupP:pos(),150)
+    if(findClosest(CupP:pos()):aimEntity() == Vars["Butt", wirelink]:entity()){
+         PlayerT[LastP,entity] = findClosest(CupP:pos())
+    LastP++
+    runOnKeys(PlayerT[LastP,entity],1)    
+        }
+
+   holoEntity(4):soundPlay("Geat",1,"ambient/water/leak_1.wav")
+   holoEntity(4):soundPlay("Cofe",0.692,"buttons/bell1.wav")#"physics/flesh/flesh_squishy_impact_hard4.wav")
+   
+   holoCreate(LastG)
+   holoColor(LastG,vec(119,80,47))
+   holoModel(LastG,"models/holograms/hq_sphere.mdl")
+   holoScale(LastG,vec(0.25,0.25,0.35))
+   holoPos(LastG,CupP:pos()+vec(0,-1,0))
+   LastG++
+   timer("Reload",2000)
+}
+for(I = 1,CupsT:count()){
+ holoPos(6+I,CupsT[I,entity]:pos() + vec(0,-1,0)) 
+}
+for(I = 1,PlayerT:count()){
+    if(PlayerT[I,entity]:keyWalk()){
+     PlayerT[I,entity]:soundPlay("Cofee",0.5,"ambient/creatures/leech_water_churn_loop2.wav")
+     PlayerT[I,entity] = noentity()
+     holoDelete(I+6)   
+    }  
+}
+#Cup_end

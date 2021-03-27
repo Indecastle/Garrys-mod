@@ -1,0 +1,132 @@
+@name Pencil
+@model models/hunter/plates/plate05.mdl
+@persist E:entity M1 M2 Z K Hit X [EPos SPos]:vector C Draw Pen Ang
+if(first()){
+    E=entity()
+    runOnTick(1)
+    entity():propNotSolid(1)
+    entity():propFreeze(0)
+    for(I=1,5){
+    H1=holoEntity(1)   
+     holoCreate(I)
+    holoParent(I,1)
+    holoMaterial(I,"models/debug/debugwhite")
+    for(C=2,5){
+    holoMaterial(C,"debug/debugdrawflat")
+}
+    entity():setAlpha(0)
+    }
+    holoPos(1,entity():massCenter())
+    holoAng(1,entity():toWorld(ang(0,0,90)))
+    holoParent(1,entity())
+holoScale(1,vec(0.4,0.4,2))
+holoModel(1,"cylinder")
+holoPos(2,H1:toWorld(vec(0,0,13.5)))
+holoModel(2,"cylinder")
+holoScale(2,vec(0.4,0.4,0.25))
+holoPos(3,H1:toWorld(vec(0,0,15.5)))
+holoModel(3,"cylinder")
+holoScale(3,vec(0.4,0.4,0.15))
+holoColor(1,vec(255,255,0))
+holoColor(2,vec(150,150,150))
+holoColor(3,vec(255,0,255))
+holoClipEnabled(4,1)
+holoClipEnabled(5,1)
+holoPos(4,H1:toWorld(vec(0,0,-15)))
+holoScale(4,vec(0.4,0.4,0.5))
+holoAng(4,H1:toWorld(ang(0,0,180)))
+holoModel(4,"hqcone")
+holoClip(4,vec(0,0,1),vec(0,0,1),0)
+holoPos(5,H1:toWorld(vec(0,0,-15)))
+holoColor(4,vec())
+holoScale(5,vec(0.4,0.4,0.5))
+holoAng(5,H1:toWorld(ang(0,0,180)))
+holoModel(5,"hqcone")
+holoClip(5,vec(0,0,1),vec(0,0,-1),0)
+holoColor(5,vec(255,231,206))
+C=500
+Pen=1
+}
+rangerFilter(entity())
+RD=rangerOffset(25,E:pos(),-vec(0,0,1))
+rangerFilter(entity())
+R2=rangerOffset(1000,E:pos(),-vec(0,0,1))
+M1=owner():keyAttack1()
+M2=owner():keyAttack2()
+if(M1&$M1){
+    K=!K
+}
+if(K){
+    Z=19
+}
+else{
+Z=25}
+if(M2&$M2){
+    K=0
+    Pen=!Pen
+    
+
+}
+if(changed(Pen)){
+        if(Pen){
+        Ang=90
+    }
+    else{
+        Ang=-90
+    }
+}
+Hit=RD:hit()
+if(Pen){
+if(changed(round(owner():aimPos()/15)*15)&!owner():isPlayerHolding()&K&Hit){
+    C++
+
+    holoCreate(C)
+holoClipEnabled(C,1,X)
+    SPos=RD:hitNormal()+RD:position()
+    
+}
+
+if(K&!$Hit&Hit){
+    
+     EPos=RD:hitNormal()+RD:position()
+
+    holoPos(C,(SPos+EPos)/2)
+    holoColor(C,vec())
+    holoMaterial(C,"debug/debugdrawflat")
+    holoScale(C,vec(0.1,0.1,SPos:distance(EPos)/12))
+    holoAng(C,(SPos-EPos):toAngle()+ang(0,90,90))
+       
+    }
+}
+if(!Pen){
+    if(findCanQuery()){
+        for(I=1,5){
+            findExcludeEntity(holoEntity(I))
+        }
+        findByClass("gmod_wire_hologram")
+        D=findClosest(entity():pos())
+       # print(holoIndex(D))
+    }
+    if(K){
+    if(D:pos():distance(RD:position())<=holoScale(holoIndex(D)):z()+2){
+       # print("test")  
+    X++
+ holoDelete(holoIndex(D)) }
+}
+}
+TargetAngle = ang(0,0,-Ang)
+DesiredQuat = quat(TargetAngle)
+CurrentQuat = quat(E)
+DifferenceQuat = DesiredQuat / CurrentQuat
+Rotation = rotationVector(DifferenceQuat)
+Rotation2 = Rotation + E:pos()
+Torque = E:toLocal(Rotation2)
+E:applyTorque((Torque*1000-E:angVelVector()*20)*E:inertia())
+
+CurPos=E:pos()
+Velocity = E:vel()
+Mass = E:mass()
+Multiplier=15
+TarPos=owner():aimPos()+vec(0,0,Z)
+V = (((TarPos - CurPos) * Multiplier - Velocity) * Mass)
+E:applyForce(V)

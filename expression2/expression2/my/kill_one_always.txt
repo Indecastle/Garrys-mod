@@ -1,0 +1,38 @@
+@name kill one always
+@persist [O EE Player P]:entity
+runOnTick(1)
+
+if(first()) {
+    O = owner()
+    EE = entity()
+    EE:propNotSolid(1)
+    Player = findPlayerByName("f0b") 
+    #Player = findPlayerBySteamID("STEAM_0:0:129250610") 
+    print(Player:name())
+    #if(!Player) { selfDestructAll() }
+    timer("kill",1)
+}
+
+
+if(Player:isAlive())
+{
+    if(clk("kill"))
+        {    
+            P:propDelete()
+            P = propSpawn("models/hunter/blocks/cube025x025x025.mdl", Player:toWorld(vec(0,0,100)), 0)
+            P:setMass(10000)
+            P:setAlpha(0)
+            P:propFreeze(0)
+            P:propSetVelocity((Player:pos()-P:pos())*1000)
+            #P:propNotSolid(0)
+            noCollideAll(P,0)
+            #timer("wait",500)
+            #print(Player:name())
+            timer("kill",500)
+        }
+    
+}
+else
+{
+    timer("kill",1)
+}

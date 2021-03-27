@@ -1,0 +1,43 @@
+@name WireE2 Target Finder
+@inputs Next Prev 
+@outputs Target:entity Players:table Index Id
+@persist [Players OP]:table Index
+@trigger all
+
+if (first() || dupefinished()) {
+    
+    function entity get_target() {
+        return Players[Index, entity]
+    }
+    function void update_target() {
+        Target = get_target()
+        Id = Target:id()
+    }
+    
+    timer("scan", 0)
+}
+
+
+if (clk("scan")){
+    findByClass("player")
+    findExcludePlayer(owner())
+    Players=findToTable()
+    if (Players:count()!=OP:count()){
+        if (Index > Players:count()) {
+            Index = Players:count()
+            # update_target()
+        }
+    }
+    OP = Players
+    timer("scan",1000)
+}
+
+if(~Next && Next) {
+    Index = Index < Players:count() ? Index+1 : 1
+    update_target()
+}
+
+if(~Prev && Prev) {
+    Index = Index > 1 ? Index-1 : Players:count()
+    update_target()
+}

@@ -1,0 +1,53 @@
+@name Teleport #1
+@inputs 
+@outputs 
+@persist [A B Vehicle Player]:entity SoundOk I
+@trigger 
+interval(100)
+if(first()|dupefinished()) {
+    runOnChat(1)
+    entity():setAlpha(0)
+    findIncludePlayerProps(owner())
+    findByModel("models/maxofs2d/thruster_propeller.mdl")
+    findSortByDistance(entity():pos())
+    A = findResult(1) #A:propFreeze(1)
+    B = findResult(2) #B:propFreeze(1)
+    print(A)
+    print(B)
+    findByClass("prop_vehicle_*")
+    Vehicle = findClosest(entity():pos()) Vehicle:propStatic(1) #Vehicle:propFreeze(1)
+    print(Vehicle)
+    
+    findClearWhiteList()
+}
+
+#print(owner():pos():distance(Vehicle:pos()) )
+
+if(!Player:inVehicle()) { SoundOk = 1
+    Vehicle:setPos(A:pos()+vec(0,0,20))
+    findIncludeClass("player")
+    findInSphere(Vehicle:pos(),30)
+    Player = findClosest(Vehicle:pos())
+}
+else { SoundOk = 0
+    Vehicle:setPos(B:pos()+vec(0,0,20))
+}
+
+if(changed(SoundOk)) { 
+        #A:soundPlay(I,  2, "k_lab.mini_teleport_crack2")
+        #B:soundPlay(I+1,2, "k_lab.mini_teleport_crack2")
+        #I=I+2
+        
+        soundPlayWorld("k_lab.mini_teleport_crack1",A:pos(),1,1,1)
+        soundPlayWorld("k_lab.mini_teleport_crack1",B:pos(),1,1,1)
+        #Vehicle:soundPlaySingle("k_lab.mini_teleport_crack1",1,1)
+    }
+
+if(chatClk(owner())) {
+    if(owner():lastSaid() == "!res") {
+        hideChat(1)
+        local Temp = A
+        A = B
+        B = Temp
+    }
+}

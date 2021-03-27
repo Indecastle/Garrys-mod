@@ -1,0 +1,66 @@
+@name Button for Wire_Doors
+@inputs A
+@outputs Open Close
+@persist B Timer IsCan OldVal
+@trigger 
+
+if(first()) {
+    Timer = 3000
+    IsCan = 1
+}
+
+## Event onChange
+#if(changed(A) & A) { Open=!Open Close=!Open }
+#[if(changed(A) & A) {
+    if(Open) { Open=0 }
+    elseif(Close) { Close=0 }
+    else {
+        if(B) { Open=1 }
+        else { Close=1 }
+        B=!B
+    }
+}
+if(clk("t")) {
+    if(Open) { Open=0 }
+    elseif(Close) { Close=0 }
+    else {
+        if(B) { Open=1 }
+        else { Close=1 }
+        B=!B
+    }
+}
+]#
+
+
+# Event OnActive
+
+
+#[
+if(changed(A) & A) {
+    if(Open) { Open=0 }
+    elseif(Close) { Close=0 }
+    else {
+        if(B) { Open=1 }
+        else { Close=1 }
+        B=!B
+    }
+}
+]#
+
+
+function void run() {
+    Close=!A Open=A
+    IsCan = 0 
+    OldVal = A
+    timer("timer", Timer)
+    print(A)
+}
+
+if(changed(A) & IsCan) { 
+    run()
+}
+
+if(clk("timer")) {
+    IsCan = 1
+    if(OldVal != A) { run()}
+}

@@ -1,0 +1,43 @@
+@name StreamRadio Woman
+@inputs 
+@outputs Url:string Play Radius Volume #Pause
+@persist W:wirelink [P Player]:entity
+@trigger 
+interval(10)
+if(first()) {
+W = entity():isWeldedTo():wirelink()
+P = entity():isWeldedTo()
+Player = findPlayerByName("DE")
+#Player = findPlayerBySteamID("STEAM_0:0:454533831")
+print(Player:name())
+#Player = findPlayerBySteamID("")
+#P:deleteWire("Play") P:deleteWire("Volume") P:deleteWire("Pause") P:deleteWire("Radius") P:deleteWire("Stream URL")
+P:createWire(entity(),"Play","Play")
+P:createWire(entity(),"Volume","Volume")
+#P:createWire(entity(),"Pause","Pause")
+P:createWire(entity(),"Radius","Radius")
+P:createWire(entity(),"Stream URL","Url")
+
+#Url = "http://cdndl.zaycev.net/121569/3200628/laskovyy_may_-_belye_rozy_%28zaycev.net%29.mp3"
+Url = "http://boobooka.com/wp-content/uploads/2017/03/zhenskie-stony.mp3"
+#Pause = 0
+Volume = 1
+Radius = 60
+Play = 1
+
+
+
+P:propNotSolid(1)
+P:setAlpha(0)
+entity():setAlpha(0)
+entity():propNotSolid(1)
+
+timer("time",1000)
+}
+
+if(clk("time")) {
+    W["Stream URL",string] = Url
+    W["Play",number] = Play
+}
+
+P:setPos(Player:attachmentPos("eyes"))

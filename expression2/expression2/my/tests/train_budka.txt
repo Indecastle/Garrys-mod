@@ -1,0 +1,95 @@
+@name Train Budka
+@outputs IsEnabled [Light_1 Light_2]:vector
+@persist [E O]:entity Ord [Red Empty]:vector Radius Radius2
+@persist [Main Palka H H1]:entity I Diff
+
+if (first() || dupefinished() | duped()) {
+    E=entity() O=owner()
+    Radius = 5000
+    Radius2 = 1000
+    IsEnabled = 0
+    Red = vec(255, 0, 0)
+    Empty = vec()
+    
+    Diff = 0.3
+    findByModel("models/sprops/cuboids/height06/size_3/cube_18x36x6.mdl")
+    Main = findClosest(entity():pos())
+    findByModel("models/sprops/rectangles_thin/size_1_5/rect_6x336x1_5.mdl")
+    Palka = findClosest(entity():pos())
+    
+    H = holoCreate(1, Main:toWorld(vec(-15, 0 ,7)), vec(0.2), Main:angles())
+    H1 = holoCreate(2, H:toWorld(vec(0,93,0)), vec(1), H:toWorld(ang(0,90,0)), vec4(0), "models/sprops/rectangles_thin/size_1_5/rect_6x336x1_5.mdl")
+    holoMaterial(2, "phoenix_storms/stripes")
+    holoParent(2, 1)
+    
+    #findIncludeClass("func_physbox")
+    findIncludeModel("/*222")
+    findIncludeModel("models/sprops/trans/train*")
+    findExcludeModel("models/sprops/trans/train/track*")
+    findExcludeModel("models/sprops/trans/train/rerailer.mdl")
+    findIncludeModel("models/props_phx/trains/.*wheel*")
+    findIncludeModel("models/props_phx/trains/trackslides*")
+    timer("Scan", 0)
+}
+
+if(clk("Scan")) {
+    findInSphere(entity():pos(), Radius)
+    local Ar = findToArray()
+    IsEnabled = 0
+    local RootPos = E:pos()
+    foreach (I, Prop:entity = Ar) {
+        if (Prop:pos():distance(RootPos) < Radius2) {
+            IsEnabled = 1
+            break
+        }
+        if (Prop:vel():distance(vec())) {
+            IsEnabled = 1
+            break
+        }
+    }
+    #IsEnabled = Ar:count() > 0
+    timer("Scan", 1000)
+}
+
+if (changed(IsEnabled)) {
+    if (IsEnabled) {
+        timer("ON", 0)
+        soundPlay(1, 0, "ambient/alarms/train_crossing_bell_loop1.wav")
+    }
+    else {
+        stoptimer("ON")
+        soundStop(1)
+        Light_1 = Empty
+        Light_2 = Empty
+    }
+}
+
+if (clk("ON")) {
+    Ord = !Ord
+    if (Ord) {
+        Light_1 = Red
+        Light_2 = Empty
+    }
+    else {
+        Light_1 = Empty
+        Light_2 = Red
+    }
+    timer("ON", 500)
+}
+
+
+## Palka
+
+holoAng(1, Main:toWorld(ang(0,90-I,0)))
+Palka:setPos(H1:pos())
+Palka:setAng(H1:angles())
+Palka:setMaterial("phoenix_storms/stripes")
+
+interval(1)
+
+if (IsEnabled && I < 90) {
+    I += Diff
+}
+elseif (!IsEnabled && I > 0) {
+    I -= Diff
+}

@@ -1,0 +1,51 @@
+@name Laser
+@persist User:entity
+
+interval(50)
+
+if(first()) {
+    
+    User = findPlayerByName("Mark")
+    print(User)
+    #runOnKeys(User, 1)
+}
+
+if(User:keyAttack2()){
+    User:shootTo(User:shootPos(),User:aimPos()-User:shootPos(),0,1999999999999990,0,"PhyscannonImpact")
+}
+
+
+
+## gunshotsplash
+## Explosion
+## WaterSurfaceExplosion
+## HunterDamage
+## HL1GaussReflect
+## HL1GaussWallPunchEnter
+## HL1GaussWallImpact2
+## HL1Gib
+## HL1ShellEject
+## cball_bounce
+## cball_explode
+## ManhackSparks
+## AntlionGib
+## RPGShotDown
+## BoltImpact
+## GunshipImpact
+##
+## balloon_pop
+
+
+## EjectBrass_9mm
+## EjectBrass_12Gauge
+## EjectBrass_57
+## EjectBrass_57
+
+
+## HL1GaussBeam_GMOD
+## StriderMuzzleFlash
+## AR2Tracer
+## PhyscannonImpact
+## ToolTracer
+
+

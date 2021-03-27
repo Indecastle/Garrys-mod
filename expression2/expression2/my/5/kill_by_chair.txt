@@ -1,0 +1,71 @@
+@name kill by chair
+@persist [O EE Veh Target]:entity [Home_pos]:vector [Home_ang]:angle
+
+if(first()) {
+    runOnChat(1)
+    O = owner()
+    EE = entity()
+    #EE:propNotSolid(1)
+    
+    findByClass("prop_vehicle_prisoner_pod")
+    Veh = findClosest(entity():pos())
+    #Veh = EE:isConstrainedTo() 
+    Veh:setMass(1000)
+    Veh:killPod()
+    Home_pos = Veh:pos() + vec(0,0,10)
+    Home_ang = Veh:angles()
+    
+    print(Veh)
+    
+    function log_iskill() {
+        if(Target:isAlive()) { print("player [" + Target:name() + "] alive") }
+        else { print("player [" + Target:name() + "] died") }
+    }
+    
+}
+
+
+
+if(chatClk()) {
+    Pla = lastSpoke() 
+    local Message = Pla:lastSaid()
+    FirstLetter = Message:index(1)
+    if (FirstLetter == ".") {}
+    elseif (FirstLetter == "!") {
+        local Ar = Pla:lastSaid():explode(" ")
+        if (Pla == owner()) {
+            switch(Ar:string(1))
+            {
+                case "!kk", 
+                    hideChat(1)
+                    local P = noentity()
+                    if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                    else { P = findPlayerByName(Ar:string(2)) }
+                    if(!P:isPlayer() | Ar:string(2)=="") { print("player not found") }
+                    else { Target = P print(P)}
+                    timer("start_kill", 100)
+                default,
+            }
+        }
+    }
+}
+
+
+if(clk("start_kill")) {
+    Veh:propFreeze(0)
+    Veh:setPos(Target:toWorld(vec(0,0,200)))
+    timer("vel_kill", 100)
+}
+
+if(clk("vel_kill")) {
+    Veh:setVel((Target:pos()-Veh:pos())*10)
+    timer("return_veh", 500)
+}
+
+if(clk("return_veh")) {
+    Veh:setVel(vec(0))
+    Veh:setPos(Home_pos)
+    Veh:setAng(Home_ang)
+    Veh:propFreeze(1)
+    log_iskill()
+}

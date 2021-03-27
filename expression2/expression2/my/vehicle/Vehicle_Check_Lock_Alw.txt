@@ -1,0 +1,37 @@
+@name Vehicle Check Lock Alw
+@inputs [Driver Vehicle]:entity
+@outputs Eject Lock
+@persist 
+@trigger Driver
+
+interval(100)
+runOnChat(1)
+
+if(Driver:isPlayer()) {
+    if(Driver != owner()) { Eject = 1 timer("off",100)}
+    else { Eject = 0 }
+}
+
+if(clk("off")) { Eject = 0 }
+
+
+
+if(chatClk()) {
+    Pla = lastSpoke()
+    hideChat(1)
+    
+    if(Pla:lastSaid() == "!lock" & Pla == owner()) {
+        local L1 = Pla:pos():distance(Vehicle:pos())
+        if(L1 < 100) {
+            Lock = 1
+            Vehicle:soundPlay(1,1,"buttons/button4.wav")
+        }
+    }
+    elseif(Pla:lastSaid() == "!unlock" & Pla == owner()) {
+        local L1 = Pla:pos():distance(Vehicle:pos())
+        if(L1 < 100) {
+            Lock = 0
+            Vehicle:soundPlay(2,1,"buttons/button18.wav")
+        }
+    }
+}

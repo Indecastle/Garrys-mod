@@ -1,0 +1,51 @@
+@name Vehicle Check Lock auto Alw
+@inputs Driver:entity
+@outputs Eject Lock
+@persist Vehicle:entity
+@trigger Driver
+
+runOnChat(1)
+
+if(first()) {
+    findByClass("gmod_sent_vehicle_fphysics_base")
+    Vehicle = findClosest(entity():pos())
+    print(Vehicle)
+    
+    Vehicle:createWire(entity(),"Lock","Lock")
+    Vehicle:createWire(entity(),"Eject Driver","Eject")
+    entity():createWire(Vehicle,"Driver","Driver")
+}
+
+#[
+if(Driver:isPlayer()) {
+    if(Driver != owner()) { Eject = 1 timer("off",100)}
+    else { Eject = 0 }
+}
+]#
+if(clk("off")) { Eject = 0 }
+
+
+
+if(chatClk()) {
+    Pla = lastSpoke()
+    
+    
+    if(Pla:lastSaid() == "!lock" & Pla == owner()) {
+        hideChat(1)
+        local L1 = Pla:pos():distance(Vehicle:pos())
+        if(L1 < 200) {
+            Lock = 1
+            Vehicle:soundPlay(1,1,"buttons/button4.wav")
+            print("Locked")
+        }
+    }
+    elseif(Pla:lastSaid() == "!unlock" & Pla == owner()) {
+        hideChat(1)
+        local L1 = Pla:pos():distance(Vehicle:pos())
+        if(L1 < 200) {
+            Lock = 0
+            Vehicle:soundPlay(2,1,"buttons/button18.wav")
+            print("Unlocked")
+        }
+    }
+}

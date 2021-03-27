@@ -1,0 +1,41 @@
+@name Carapace
+@inputs 
+@outputs 
+@persist [O EE B]:entity [Players OP]:table I
+
+if(first()) {
+    O = owner()
+    EE = entity()
+    timer("scan",10)
+    EE:propNotSolid(1)
+    
+}
+
+if (clk("scan")){
+    O = owner()
+    findByClass("player")
+    Players=findToTable()
+    if (Players:count()!=OP:count()){
+        I=0
+        EI=0
+        timer("hat",10)
+    }
+    OP=Players
+    timer("scan",10)
+}
+
+if(clk("hat")&(I<Players:count())) {
+    if (clk("hat")&!I){propDeleteAll()}
+    I++
+    P=Players[I,entity]
+    #P = findPlayerByName("Odin")
+    if(P == findPlayerByName("Odin") | 1) {#print(P:name())
+        #B = propSpawn("models/player/items/humans/top_hat.mdl", P:attachmentPos("eyes")+P:forward()*10,1)
+        holoCreate(I, P:attachmentPos("chest"), vec(1), P:attachmentAng("chest")+ang(0,150,50), vec(255), "models/gibs/gunship_gibs_eye.mdl")
+        holoPos(I,holoEntity(I):toWorld(vec(5,10,-5)))
+        holoParentAttachment(I,P,"chest")
+        holoVisible(I,P,0)
+
+    }
+    timer("hat",50)
+}

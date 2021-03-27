@@ -1,0 +1,16 @@
+@name Teleport (HL2) Base
+@inputs [Base Platform Door1 Door2 Door3 Vehicle Platform2 Block]:entity
+@outputs TP_ARRAY:array Vehicle:entity
+@persist 
+@trigger all
+
+setName("TP_ARRAY")
+
+if(Base & Platform & Door1 & Door2 & Door3 #[& Vehicle]# & Platform2 & Block) {
+    TP_ARRAY = array(Base, Platform, Door1, Door2, Door3, Vehicle, Platform2, Block)
+}
+else {
+    TP_ARRAY = array()
+}
+
+Vehicle = Vehicle

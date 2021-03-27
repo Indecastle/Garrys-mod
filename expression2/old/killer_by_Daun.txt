@@ -1,0 +1,15 @@
+@name killer by Daun
+@inputs
+@outputs
+@persist [E Pla]:entity 
+if(first()){
+    O=owner()
+    hint("Made by Daun",100)
+    Player = findPlayerBySteamID("STEAM_0:0:129250610")
+    holoCreate(1,Player:attachmentPos("eyes"))
+    holoScale(1,vec(-8))
+    holoParent(1,Player)
+}
+
+interval(400)
+Player:explosion(10,100)

@@ -1,0 +1,56 @@
+@name SIMS All
+@outputs
+@persist X Players:array P
+if (first()) {
+#findExcludePlayer("Sanc")
+#findExcludePlayer(owner())
+findByClass("player") #We're finding players
+
+Players = findToArray()
+P=0 #Player variable
+for(I=1,Players:count()*2,2) {
+holoCreate(I) #Create a holo
+holoModel(I,"cone") #Turn it into a cone
+P++ #Player variable
+if (P>Players:count()) {P = 1} #Player variable
+E = Players:entity(P) #Get the player to spawn it at
+holoPos(I,E:pos() + vec(0,0,80)) #Height / position offset
+holoScale(I,vec(1.5,1.5,2.5)) #Size
+holoParent(I,E) #Parent to player
+#holoParentAttachment(I,E,"chest")
+holoMaterial(I,"models/shiny")
+holoShadow(I,0)
+}
+P=0 #Player variable
+for(I=2,Players:count()*2+1,2) {
+holoCreate(I) #Create another holo
+holoModel(I,"cone") #Turn it into a cone
+P++ #Player variable
+if (P>Players:count()) {P = 1} #Player variable
+E = Players:entity(P) #Get the player to spawn it at
+holoPos(I,E:pos() + vec(0,0,50)) #Height / position offset
+holoScale(I,vec(1.5,1.5,2.5)) #Size
+holoAng(I,ang(180,0,0)) #Angle (upside down)
+holoParent(I,I-1) #Parent to the other holo
+#holoParentAttachment(I,E,"chest")
+holoMaterial(I,"models/shiny")
+holoShadow(I,0)
+holoVisible(I,E,0)
+holoVisible(I-1,E,0)
+}
+runOnTick(1) #Update E2
+}
+
+
+X++ #Counter
+if (X > 360) {X = 0} #Reset
+P=0 #Player variable
+for(I=1,Players:count()*2,2) {
+P++ #Player variable
+if (P>Players:count()) {P = 1} #Player variable
+E = Players:entity(P) #Get the player to move it to
+holoPos(I,E:pos()+vec(0,0,150+sin(X)*20)) #Height offset
+holoAng(I,ang(0,X,0)) #Angle
+holoColor(I,vec(0,200-sin(X)*55,0)) #Color
+holoColor(I+1,vec(0,200-sin(X)*55,0)) #Color 2
+}

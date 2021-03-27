@@ -1,0 +1,52 @@
+@name HUD Props
+@inputs W:wirelink
+@persist EI I J [Players OP]:table O:entity
+#@model models/cheeze/wires/nano_compare.mdl
+if (->W&(first()|dupefinished()|changed(->W))){
+    W:egpClear()
+    timer("scan",10)
+}
+if (clk("scan")){
+    O = owner()
+    if(findCanQuery()) {
+        findByClass("player")
+        Players=findToTable()
+        if (Players:count()!=OP:count()){
+            I=0
+            EI=0
+            J=0
+            timer("egp",5)
+        }
+        OP=Players
+    }
+    timer("scan",500)
+}
+if (clk("egp")&(I<Players:count())){
+    if (clk("egp")&!I){W:egpClear()}
+    I++
+    P=Players[I,entity]
+    
+    EI++
+    W:egpText(EI, "aff", vec2(5,200+15*(EI-1)))
+    W:egpSize(EI,13)
+    
+
+    timer("egp",5)
+    if(I>=Players:count()) { timer("distance",100) }
+}
+
+if(clk("distance"))
+{
+    if(findCanQuery()) {
+        J++
+        if(J>Players:count()) {J=1}
+        
+        findByClass("prop_physics")
+        findClipToPlayerProps(Players[J,entity])
+        W:egpSetText(J,Players[J,entity]:name()+", props: "+findSortByDistance(Players[J,entity]:pos()))
+    }
+    timer("distance",100)
+    
+}
+#print(findCount())
+entity():setAlpha(255)

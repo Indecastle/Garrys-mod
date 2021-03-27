@@ -1,0 +1,381 @@
+@name FailCake Radio
+@inputs EGP:wirelink
+@persist GTable:gtable
+@persist [Music MusicN MusicT]:array On Auto GGs Alpha Al DD Change
+@persist [O E]:entity Com:array F Start Delay I Cos Sync Sto ModelAny 
+@trigger all
+@model models/props_lab/jar01b.mdl
+
+if(first() | duped()){
+runOnTick(1)
+runOnChat(1)
+runOnLast(1)
+
+setName("FailCake Radio [Master]")
+
+O = owner()
+E = entity()
+F = 0
+I = 1
+Al = 150
+Alpha = 0
+
+GTable = gTable("stream",1)
+GTable:clear()
+
+hint("* Made By FailCake *",7)
+
+Music[Music:count() + 1,string] = "http://www.dropbox.com/s/grq402sh1eiqewi/Dynoro%20%20Gigi%20D%E2%80%99Agostino%20-%20In%20My%20Mind.ogg?dl=1" 
+MusicN[MusicN:count() + 1,string] = "In my mind" 
+MusicT[MusicT:count() + 1,number] = 270 # 270
+
+Music[Music:count() + 1,string] = "music/portal_still_alive.mp3" 
+MusicN[MusicN:count() + 1,string] = "Portal 1 - Still Alive" 
+MusicT[MusicT:count() + 1,number] = 185 # 109
+
+Music[Music:count() + 1,string] = "sweet.mp3" 
+MusicN[MusicN:count() + 1,string] = "Get On My Hourse" 
+MusicT[MusicT:count() + 1,number] = 150 # 150
+
+Music[Music:count() + 1,string] = "zeldatheme.mp3" 
+MusicN[MusicN:count() + 1,string] = "Zelda Theme" 
+MusicT[MusicT:count() + 1,number] = 100 # 100
+
+Music[Music:count() + 1,string] = "ui/gamestartup12.mp3" 
+MusicN[MusicN:count() + 1,string] = "Tf2 Meet the Medic" 
+MusicT[MusicT:count() + 1,number] = 154
+
+Music[Music:count() + 1,string] = "ui/gamestartup11.mp3" 
+MusicN[MusicN:count() + 1,string] = "Tf2 Meet the Medic 2" 
+MusicT[MusicT:count() + 1,number] = 95
+
+Music[Music:count() + 1,string] = "ui/gamestartup1.mp3" 
+MusicN[MusicN:count() + 1,string] = "Tf2 Theme" 
+MusicT[MusicT:count() + 1,number] = 76
+
+Music[Music:count() + 1,string] = "ui/gamestartup8.mp3" 
+MusicN[MusicN:count() + 1,string] = "Tf2 Intruder Alert" 
+MusicT[MusicT:count() + 1,number] = 75
+
+Music[Music:count() + 1,string] = "ui/gamestartup6.mp3" 
+MusicN[MusicN:count() + 1,string] = "Tf2 Petite Chou-Fleur" 
+MusicT[MusicT:count() + 1,number] = 103
+
+Music[Music:count() + 1,string] = "ui/gamestartup3.mp3" 
+MusicN[MusicN:count() + 1,string] = "Tf2 Rocket Jump Waltz" 
+MusicT[MusicT:count() + 1,number] = 38
+
+Music[Music:count() + 1,string] = "ui/holiday/gamestartup_saxxy.mp3" 
+MusicN[MusicN:count() + 1,string] = "Tf2 Saxxy Theme" 
+MusicT[MusicT:count() + 1,number] = 128
+
+GTable["Count",number] = 0 
+GTable["Done",number] = 0
+
+
+
+
+
+### SETTINGS ###
+GTable["Break",number] = 1 # Allow Radio to Break on Water
+GTable["Static",number] = 1 # Static Mod
+GTable["MRANGE",number] = 100000000 # Max Transmiting Range before Static
+ModelAny = 1 # Different Model for Radio Master
+### SETTINGS ###
+
+
+#Made By FailCake
+
+
+
+On = 0
+Sync = 0
+Auto = 0
+## HOLO STUFF
+
+holoCreate(1)
+holoModel(1,"hqcylinder")
+holoPos(1,E:toWorld(vec(0,0,8)))
+holoScaleUnits(1,vec(0.5,0.5,6))
+holoParent(1,E)
+
+holoCreate(2)
+holoModel(2,"dome")
+holoPos(2,E:toWorld(vec(0,0,5.2)))
+holoScaleUnits(2,vec(1.5,1.5,1))
+holoParent(2,E)
+
+holoCreate(3)
+holoModel(3,"hqsphere")
+holoPos(3,E:toWorld(vec(0,0,11)))
+holoScaleUnits(3,vec(1.5,1.5,1.5))
+holoParent(3,E)
+
+holoCreate(4)
+holoModel(4,"hqsphere")
+holoPos(4,E:toWorld(vec(0,0,11)))
+holoScaleUnits(4,vec(1,1,1))
+holoParent(4,E)
+holoColor(4,vec(255,0,0))
+holoAlpha(4,0)
+
+
+holoMaterial(1,"models/props_combine/metal_combinebridge001")
+holoMaterial(2,"models/props_pipes/GutterMetal01a")
+holoMaterial(3,"models/debug/debugwhite")
+
+holoColor(3,vec(200,0,0)) 
+
+GTable["Maintra",entity] = E
+
+EGP:egpClear()
+
+holoCreate(5)
+holoModel(5,"models/props_junk/PopCan01a.mdl")
+holoScaleUnits(5,vec(1,1,1))
+holoParent(5,E)
+
+if(ModelAny){
+if(holoEntity(5):model() != "models/Holograms/cube.mdl"){
+printColor(vec(0,255,0),"HoloModelAny Detected!") 
+E:setAlpha(1)
+holoDelete(5)
+
+holoCreate(6)
+holoModel(6,"models/props_lab/tpplug.mdl")
+holoParent(6,E)
+holoPos(6,E:toWorld(vec(0,0,-5.5)))
+holoAng(6,ang(-90,0,0))
+
+holoPos(2,E:toWorld(vec(0,0,6.5)))
+}else{
+E:setMaterial("models/props_lab/door_klab01") 
+printColor(vec(255,0,0),"HoloModelAny Not Detected!") 
+}
+
+}else{
+E:setMaterial("models/props_lab/door_klab01")
+}
+}
+
+if(chatClk(O)){
+Com = O:lastSaid():explode(" ") 
+#Made By FailCake
+
+#=============================================================
+#=============================================================
+if(Com[1,string] == "-url"){
+hideChat(1)
+Start = 1 
+hint("URL blyad!",7)
+
+GTable["Urlmusic",string] = Music[F,string] 
+GTable["Urlname",string] = MusicN[F,string] 
+GTable["UrlDone",number] = 0
+GTable["Urltime",number] = MusicT[F,number]
+}
+#=============================================================
+#=============================================================
+if(Com[1,string] == "-start"){
+hideChat(1)
+Start = 1 
+hint("Started Broadcasting!",7)
+}
+
+if(Com[1,string] == "-auto"){
+hideChat(1)
+Auto = Com[2,string]:toNumber()
+hint("AutoMode is now :" + Auto,7)
+}
+
+if(Com[1,string] == "-sync" & Sync == 0){
+hideChat(1)
+Sync = 1
+Sto = F
+hint("Syncronizing Radios!",7)
+}
+
+if(Com[1,string] == "-change"){
+hideChat(1)
+
+if(Com[2,string]:toNumber() <= Music:count() & Com[2,string]:toNumber() > 0){
+Change = Com[2,string]:toNumber()
+F = Change
+
+GTable["music",string] = Music[Change,string] 
+GTable["name",string] = MusicN[Change,string] 
+GTable["Done",number] = 0
+GTable["time",number] = MusicT[Change,number]
+
+GTable["Brod",number]= 1
+
+Delay = 1
+hint("Changing to music : " + MusicN[Change,string],7)
+}else{
+hint("[ERROR] Music Not Found!",7)
+}
+
+}
+
+
+if(Com[1,string] == "-stop"){
+hideChat(1)
+Auto = 0
+Start = 0
+F = 0
+hint("Stoping Radios!",7)
+GTable["STOP",number] = 1
+}
+
+}
+
+if(Start){
+
+holoColor(3,vec(0,200,0)) 
+holoColor(4,vec(0,255,0))
+holoAlpha(4,150)
+
+
+if(Auto == 0){
+setName("FailCake Radio [Master][Broadcasting]")
+}else{
+setName("FailCake Radio [Master][Auto][Broadcasting]")
+}
+
+if(Sync == 0){
+
+if(F < Music:count()){
+F+=1 
+}else{
+F = 1
+}
+
+}
+
+On = 1
+
+GTable["music",string] = Music[F,string] 
+GTable["name",string] = MusicN[F,string] 
+GTable["Done",number] = 0
+GTable["time",number] = MusicT[F,number]
+
+GTable["Brod",number]= 1
+
+Delay = 1
+Start = 0
+}
+
+
+if(Delay){
+timer("delay",300)
+
+if(clk("delay")){
+Delay = 0
+GTable["Brod",number] = 0
+} 
+
+}
+
+if(GTable["Done",number] == 1){
+
+setName("FailCake Radio [Master]") 
+holoColor(3,vec(200,0,0)) 
+holoColor(4,vec(255,0,0))
+holoAlpha(4,0)
+On = 0
+GTable["Done",number] = 0 
+
+if(Auto){
+timer("wait",2000)
+}
+
+}
+
+
+
+
+
+if(On){
+
+if(Alpha == 0){ 
+GGs-=1
+Cos = cos(GGs/2)*10 
+
+if(Cos < 0){
+holoScaleUnits(4,vec(Cos,Cos,Cos))
+}
+}
+
+if(round(Cos) == -9){
+Alpha = 1 
+}
+
+}
+#Made By FailCake
+if(Alpha){
+
+if(Al > 0){
+Al -= 3 
+holoAlpha(4,Al)
+}else{
+Alpha = 0
+Al = 150
+GGs = 0
+holoScaleUnits(4,vec(0,0,0))
+holoAlpha(4,Al)
+}
+
+}
+
+
+
+
+if(duped()){
+selfDestructAll() 
+}
+
+if(clk("wait")){
+Start = 1 
+stoptimer("wait")
+}
+
+if(GTable["STOPED",number] >= GTable["Count",number]){
+GTable["STOP",number] = 0 
+GTable["STOPED",number] = 0 
+GTable["Done",number] = 1 
+}
+
+
+if(Sync == 1){
+Start = 0
+GTable["STOP",number] = 1 
+timer("autor",1000)
+Sync = 2
+}
+
+
+if(clk("autor") & Sync == 2){
+F = Sto
+GTable["music",string] = Music[F,string] 
+GTable["name",string] = MusicN[F,string] 
+GTable["Done",number] = 0
+GTable["time",number] = MusicT[F,number]
+
+GTable["Brod",number]= 1
+
+Delay = 1 
+Sync = 3
+timer("smalde",1400) 
+hint("Radios Syncronized!",7)
+stoptimer("autor") 
+}
+#Made By FailCake
+if(clk("smalde") & Sync == 3){
+Sync = 0
+Sto = 0
+stoptimer("smalde") 
+}
+
+if(last()){
+GTable["Maintra",entity] = noentity() 
+}

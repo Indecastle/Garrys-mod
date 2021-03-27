@@ -1,0 +1,47 @@
+@name Floor
+@persist I J A EE:entity R
+# Got bored so yeah ~ Banter / Anti Brony Brotherhood ~
+interval(70)
+if(first())
+{
+    I = 1
+    J = 1
+    EE = entity()
+    A = 200
+    U = 0
+    R = 12 #storona kvadrata
+    
+}
+
+
+#entity():setAlpha(0)
+#entity():setPos(entity():pos()+vec(0,0,2))
+
+
+
+if(J <= R & perf())
+{
+    U = (I-1)*R+J
+    holoCreate(U)
+    holoPos(U,EE:pos()+vec(I*600,J*600, 2)-vec(300+300*R,300+300*R,0))
+    holoParent(U,EE)
+    holoMaterial(U,"models/debug/debugwhite")
+    holoModel(U,"models/hunter/plates/plate32x32.mdl")
+    holoScale(U,vec(50,50,1))
+    holoColor(U,vec(0,0,0))
+    holoShadow(U,1)
+    J++
+#print(holoRemainingSpawns())
+}
+
+if(I <= R & perf()) 
+{
+    if(J > R)
+    {
+        J = 1
+        I++
+        if(I>R) { runOnTick(0) print("finish") stopAllTimers()}
+    }
+}
+
+"привет гринс, (пишу с блокнота)"

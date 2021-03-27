@@ -1,0 +1,57 @@
+@name My Fading Door
+@inputs Fade Door:entity SoundOff Invisible [Material Sound]:string
+@outputs FadeActive
+@persist
+@trigger Fade Material Sound
+
+if(first() | duped() | dupefinished()) {
+    #ifdef runOnLast(number)
+    runOnLast(1)
+    #endif
+}
+
+if(Material == "") {
+    Material = "models/props_lab/Tank_Glass001"
+}
+if(Sound == "") {
+    Sound = "ambient/machines/combine_shield_touch_loop1.wav"
+}
+
+if(Fade) {
+    FadeActive = 1
+    if (!SoundOff) { Door:soundPlay("Door",100000,Sound) soundVolume("Door",0.4)}
+    Door:setMaterial(Material)
+    if (Invisible) { Door:setAlpha(0) }
+    
+    #ifdef propNotSolid(number)
+    Door:propNotSolid(1)
+    #else
+    Door:noCollideAll(1)
+    #endif
+}
+else {
+    FadeActive = 0
+    soundStop("Door")
+    Door:setMaterial("")
+    Door:setAlpha(255)
+    
+    #ifdef propNotSolid(number)
+    Door:propNotSolid(0)
+    #else
+    Door:noCollideAll(0)
+    #endif
+}
+
+
+#ifdef last()
+if(last()) {
+    soundStop("Door")
+    Door:setMaterial("")
+    Door:setAlpha(255)
+    #ifdef propNotSolid(number)
+    Door:propNotSolid(0)
+    #else
+    Door:noCollideAll(0)
+    #endif
+}
+#endif

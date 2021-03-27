@@ -1,0 +1,23 @@
+@name Vehicle Eject One Alw #2
+@inputs 
+@outputs 
+@persist [Vehicles OP]:table W:wirelink I [Driver Veh]:entity
+@trigger 
+if(first() & entity():isWeldedTo():type() == "gmod_wire_pod") {
+    W = entity():isWeldedTo():wirelink()
+    setName(randint(10000):toString())
+    timer("scan",10)
+    Driver = findPlayerByName("Markiz") #Name of Target 
+    #Driver = findPlayerBySteamID("STEAM_0:1:193124162")
+    print(Driver)
+}
+
+if (clk("scan")){
+    O = owner()
+    if(Driver:inVehicle()){
+        Veh = Driver:vehicle()
+        W["Vehicle",entity] = Veh
+        W["Eject",number] = 1
+    }
+    timer("scan",100)
+}

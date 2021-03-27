@@ -1,0 +1,57 @@
+@name e2 phone-butka
+@inputs Start
+@outputs RGB:vector On
+@persist Step_light Ord Rands:array [H E]:entity
+
+if (first() || duped() || dupefinished()) { 
+    E = entity()
+    H = holoCreate(1, entity():pos())
+    holoParent(1, entity())
+    holoAlpha(1, 0)
+    On = 1
+    
+    function update_color(Enum) {
+        RGB = Enum ? vec(100,100,0) : vec()
+    }
+    
+    update_color(1)
+    
+    H:soundPlay(1, 0, "ambient/levels/labs/equipment_beep_loop1.wav")
+    soundVolume(1, 0.2)
+}
+
+if (~Start && Start) {
+    stoptimer("sound")
+    timer("sound", 2100)
+    soundPlay(2, 2, "npc/stalker/go_alert2a.wav")
+    
+    stoptimer("light")
+    timer("light", 1000)
+    Step_light = 0
+    update_color(1)
+    Rands = array(randint(90), randint(90))
+}
+
+if(clk("sound")) {
+    soundStop(2)
+}
+
+if(clk("light")) {
+    switch (Step_light) {
+        case Rands:number(1),
+        case Rands:number(2),
+            timer("light", 300)
+            update_color(0)
+        break
+        default,
+            if (Step_light < 100) {
+                update_color(Step_light%2)
+                timer("light", 20)
+            }
+            else {
+                update_color(1)
+                Step_light = 0
+            }
+    }
+    Step_light++
+}

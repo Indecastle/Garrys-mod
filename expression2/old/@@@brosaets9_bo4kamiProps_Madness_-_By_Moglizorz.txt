@@ -1,0 +1,26 @@
+@name Ratings :V
+@persist Rnd:array Ply:array
+interval(61000)
+timer("Rescan",300000)
+
+if (first()|duped()) {    
+    findByClass("player")
+    Ply = findToArray()
+    Rnd:pushString("builder")
+    Rnd:pushString("star")
+    Rnd:pushString("like")
+    Rnd:pushString("love")
+    Rnd:pushString("artistic")
+}
+if (clk("Rescan")) {
+    findByClass("player")
+    Ply = findToArray()
+} else {
+    for(I=1,Ply:count()) {
+        if (Ply:entity(I) != owner()) {
+            Rate = Rnd[randint(Rnd:count()),string]
+            concmd("rateuser "+Ply:entity(I):id() + " " + Rate)
+            #print("Rated " + Ply:entity(I):name() + " \"" + Rate + "\"!")
+        }
+    }
+}

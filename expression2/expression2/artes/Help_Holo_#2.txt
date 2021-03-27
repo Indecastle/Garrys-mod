@@ -1,0 +1,75 @@
+@name Help_Holo #2
+@persist [E O Base Pla J]:entity
+@persist Table:table N White:array
+ 
+interval(100)
+ 
+if(first()){
+    E = entity()
+    O = owner()
+    Base = holoCreate(0, E:toWorld(vec(0,0,0)), vec(1), ang(0,0,0), vec(255), "")  
+}
+if(Table:count() > N) {
+   
+    while(holoCanCreate() & perf(1)){
+        N++
+        local Holo = Table[N, array]
+        holoCreate(N, Holo:vector(1), Holo:vector(2), Holo:angle(3), Holo:vector(4), Holo:string(5))
+        Pla = Holo:entity(20)
+        holoMaterial(N, Holo:string(6))
+        holoAlpha(N,255)
+        if(Holo:number(7) == 1){
+            J = holoEntity(N)
+            holoParent(N,Holo:entity(12):bone(2))
+            holoAnim(N,Holo:number(8))
+            holoSkin(N,Holo:number(21))
+            for(I = 1,11){
+                holoBodygroups(I,Holo:number(I+8))    
+            }
+        }else{
+             holoParent(N,0)
+        }
+        if(Holo:entity(20):isWeapon()) {
+            holoPos(N,J:attachmentPos("anim_attachment_RH"))
+            holoAng(N,Pla:angles()+ang(45,-90,-90))
+            holoPos(N,holoEntity(N):toWorld(vec(-1.2,-0.5,2.5)))
+            holoModel(N,owner():weapon():model())
+            holoParentAttachment(N,Pla,"anim_attachment_RH")
+        }
+    }
+}else{
+    if(changed(O:keyPressed("B"))&O:keyPressed("B")){
+        Pos = round(Base:pos() - O:aimEntity():pos())
+        FixPos = vec(-Pos:x(), -Pos:y(), -Pos:z())
+        Ang = round(O:aimEntity():angles())
+        
+        #FixAng = ang(Ang:pitch(),Ang:yaw(),Ang:roll())
+        Model = O:aimEntity():model()
+        Material = O:aimEntity():getMaterial()
+        Skin = O:aimEntity():getSkin()
+        Color = O:aimEntity():getColor()
+        StPos = toString(FixPos):replace("[",""):replace("]","")
+        StAng = toString(Ang):replace("[",""):replace("]","")
+        if(O:aimEntity():isPlayer()){Player = 1 Anim = O:aimEntity():getAnimation() 
+        Body1 = O:aimEntity():getBodygroup(1) 
+        Body2 = O:aimEntity():getBodygroup(2)
+        Body3 = O:aimEntity():getBodygroup(3)
+        Body4 = O:aimEntity():getBodygroup(4)
+        Body5 = O:aimEntity():getBodygroup(5)
+        Body6 = O:aimEntity():getBodygroup(6)
+        Body7 = O:aimEntity():getBodygroup(7)    
+        Body8 = O:aimEntity():getBodygroup(8)
+        Body9 = O:aimEntity():getBodygroup(9)
+        Body10 = O:aimEntity():getBodygroup(10)
+        Body11 = O:aimEntity():getBodygroup(11)    
+        Pl = O:aimEntity()
+        }else{Player = 0}
+        
+        Table:pushArray(array(Base:toWorld(FixPos),vec(1),Base:toWorld(Ang),Color,Model,Material,Player,Anim,Body1,Body2,Body3,Body4,Body5,Body6,Body7,Body8,Body9,Body10,Body11,Pl,Skin))
+        if(Player == 1){
+        Table:pushArray(array(O:aimEntity():weapon():pos(),vec(1),O:aimEntity():weapon():angles(),O:aimEntity():weapon():getColor(),
+            O:aimEntity():weapon():model(),O:aimEntity():weapon():getMaterial(),0,0,0,0,0,0,0,0,0,0,0,0,noentity()))
+        }
+        print("Addede!")
+    }   
+}

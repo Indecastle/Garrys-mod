@@ -1,0 +1,2 @@
+@outputs T
+runOnTick(1) E=ioOutputEntities("T")[1,entity] E:setPos(owner():shootPos()+vec(0,0,20)) E:setAng((owner():aimPos()-E:pos()):toAngle()) T=owner():keyAttack2()

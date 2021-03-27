@@ -1,0 +1,40 @@
+@name TeleportBuild
+@inputs 
+@outputs TargetPos:vector Jump
+@persist 
+@trigger 
+
+if(first()) {
+    runOnChat(1)
+    
+}
+
+if(chatClk()) {
+    Pla = lastSpoke() 
+    local Message = Pla:lastSaid()
+    FirstLetter = Message:index(1)
+    if (FirstLetter == ".") {}
+    elseif (FirstLetter == "!") {
+        local Ar = Pla:lastSaid():explode(" ")
+        
+        if (Pla == owner()) {
+            switch(Ar:string(1))
+            {
+                case "!jj", 
+                    hideChat(1)
+                    TargetPos = owner():pos()+vec(0,0,100)
+                    timer("1",300)
+                break
+            }
+        }
+    }
+}
+
+if(clk("1")) {
+    Jump = 1
+    timer("2",300)
+}
+
+if(clk("2")) {
+    Jump = 0
+}

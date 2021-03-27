@@ -1,0 +1,39 @@
+@name Vehicle Terminate One Alw
+@inputs 
+@outputs E:entity Vec:vector
+@persist [Vehicles OP]:table W:wirelink I [Driver]:entity
+@trigger 
+if(first() & entity():isWeldedTo():type() == "gmod_wire_pod") {
+    W = entity():isWeldedTo():wirelink()
+    setName(randint(10000):toString())
+    timer("scan",10)
+    Driver = findPlayerByName("markiz") #Name of Target
+    #Driver = findPlayerBySteamID("STEAM_0:1:193124162")
+    print(Driver)
+}
+
+if (clk("scan")){
+    O = owner()
+    findByClass("prop_vehicle_*")
+    Vehicles=findToTable()
+    if (Vehicles:count()!=OP:count()){
+        I=1
+        timer("egp",10)
+    }
+    OP=Vehicles
+    timer("scan",100)
+}
+
+if (clk("egp")){
+    local Veh = Vehicles[I,entity]
+    if(Veh:driver() == Driver) {
+        W["Vehicle",entity] = Veh 
+        W["Terminate",number] = 1
+    }
+    
+    
+    
+    timer("egp",10)
+    I++
+    if(I>Vehicles:count()) { I = 1 }
+}

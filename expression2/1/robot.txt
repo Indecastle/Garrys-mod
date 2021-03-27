@@ -1,0 +1,422 @@
+@name robot
+@outputs Fire
+@persist I Stop Attack Hue Sat V Catch
+@persist Command:string Intro:array
+@persist [TarPos SavePos Color]:vector
+@persist [CandObj Turret TarEnt Entity User Obj]:entity
+if(first()|duped()){
+    Intro[0,string] = "____________HoloMech Instructions_____________"
+    Intro[1,string] = "Thanks for using the HoloMech by Dr. Awkward!"
+    Intro[2,string] = "There are many features, they include:"
+    Intro[3,string] = "say ! then a command to order HoloMech"
+    Intro[4,string] = "some commands will accept a player name or part of a name!"
+    Intro[5,string] = "such as !follow, !user, and !attack"
+    Intro[6,string] = "example: !attack Awk"
+    Intro[7,string] = "some commands will default to whoever said them"
+    Intro[8,string] = "such as !user and !follow"
+    Intro[9,string] = "HoloMech will go to wherever you are aiming with the !go command"
+    Intro[10,string] = "HoloMech will aim where you are aiming with the !aim command"
+    Intro[11,string] = "look at an object and say !ball then throw it at HoloMech to play catch"
+    Intro[12,string] = "look at an object and say !grab and holomech will pick up that object"
+    Intro[13,string] = "look at an object and say !fetch to have HoloMech collect that object for you"
+    Intro[14,string] = "say !drop and HoloMech will drop the object it currently has"
+    Intro[15,string] = "if you say !stop or !wait HoloMech will stop what it is doing"
+    Intro[16,string] = "if you say !wait HoloMech will look at someone while it is waiting"
+    Intro[17,string] = "The command !user specifies an individual that you name whom will be able to command your HoloMech"
+    Intro[18,string] = "the !attack command will rotate the gun and fire a turret if equipped"
+    Intro[19,string] = "to equip a turret, spawan a wire turret, make sure it isn't in the ground or welded to anything"
+    Intro[20,string] = "wire it to the e2 under Fire, and hit your use key while looking at the turret"
+    Intro[21,string] = "you may want to nocollide your turret with everything and make it invisible"
+    Intro[22,string] = "HoloMech will spawn with a random color, to change HoloMech's color simply say !color then a value beteen 0 and 359"
+    Intro[23,string] = "HoloMech also accepts the commands !Hue, !Sat, and !V which change the parameters of hsv2rgb() (!sat and !v are between 0 and 1000)"
+    Intro[24,string] = "examples: !color 100 is green, !hue 200 turns it blue, !sat 500 makes it pale blue, and !V 0 makes it black"
+    Intro[25,string] = "you may notice the eye disappears for a moment, this is on purpose, it is the robot blinking"
+    Intro[26,string] = "Thanks again and Enjoy HoloMech!"
+    Intro[27,string] = "______________________________________________"
+    for(I=0,Intro:count()){concmd("echo "+Intro[I,string])}
+    runOnChat(1)
+    TarPos = entity():pos()
+    User = owner()
+    Command = ""
+    Attack = 0
+    Obj = noentity()
+    I = 0
+    Hue = random(0,359)
+    Sat = 1
+    V = 1
+    Color = hsv2rgb(Hue,1,1)
+    printColor(Color,"look in the console for instructions on how to operate your HoloMech by Dr. Awkward")
+}
+interval(100)
+if(I > 40){
+    if((chatClk(owner()) |chatClk(User)) & lastSaid():sub(0,1) == "!"){
+            Command = lastSaid():lower():explode(" ")[1,string]
+        if(Command == "!follow" | Command == "!user" | Command == "!attack"){
+            if(owner():lastSaid() == "!follow" | owner():lastSaid() == "!user"){
+                User = owner()
+                Entity = owner()
+                TarEnt = owner()
+            }
+            elseif(User:lastSaid() == "!follow"){TarEnt = User}
+            elseif(User:lastSaid() != "!attack"){Find = 1}
+        }
+        if(Find){
+            Target = findPlayerByName(lastSaid():explode(" ")[2,string])
+            if(Command == "!user"){
+                User = Target
+                Entity = User
+            }
+            else{Entity = Target}
+            Find = 0
+            TarEnt = Entity
+        }
+        if(Command == "!stop"){Entity = noentity()}
+        if(Command == "!attack"){Attack = 1}
+        if(Command == "!go"){SavePos = lastSpoke():aimPos()}
+        if(Command == "!color"){
+            V = 1
+            Sat = 1
+            Hue = clamp(lastSaid():lower():explode(" ")[2,string]:toNumber(),0,359)    
+            Color = hsv2rgb(Hue,1,1)
+            for(J=0,37){holoColor(J,Color)}
+        }
+        if(Command == "!hue"){
+            Hue = clamp(lastSaid():lower():explode(" ")[2,string]:toNumber(),0,359)    
+            Color = hsv2rgb(Hue,Sat,V)
+            for(J=0,37){holoColor(J,Color)}
+        }
+        if(Command == "!sat"){
+            Sat = clamp(lastSaid():lower():explode(" ")[2,string]:toNumber(),0,1000)/1000
+            Color = hsv2rgb(Hue,Sat,V)
+            for(J=0,37){holoColor(J,Color)}
+        }
+        if(Command == "!v"){
+            V = clamp(lastSaid():lower():explode(" ")[2,string]:toNumber(),0,1000)/1000
+            Color = hsv2rgb(Hue,Sat,V)
+            for(J=0,37){holoColor(J,Color)}
+        }
+    }
+}
+if(!Entity & Command == "!wait"){
+    findByClass("player")
+    findInSphere(holoEntity(13):pos(),500)
+    Entity = findClosest(holoEntity(13):pos())
+}
+if(Entity & Command == "!wait"){
+    EntVec = Entity:pos() - holoEntity(13):pos()
+    if(EntVec:length() > 500){Entity = noentity()}
+}
+if(clk()){I++}
+if(I==1){
+    #Central Sphere
+    holoCreate(13,entity():pos()+vec(0,0,40),vec(1,1,1),entity():angles(),Color,"hqsphere")
+    holoMaterial(13,"phoenix_storms/indenttiles2")
+    #pelvis
+    holoCreate(0,holoEntity(13):pos(),vec(0.5,0.5,2),holoEntity(13):toWorld(ang(0,0,90)),Color,"hqcylinder")
+    holoParent(0,13)
+    holoMaterial(0,"phoenix_storms/grey_steel")
+    #Left Hip
+    holoCreate(1,holoEntity(0):toWorld(vec(0,0,15)),vec(1,1,1),holoEntity(13):toWorld(ang(-45,0,90)),Color,"hqsphere")
+    holoParent(1,0)
+    holoMaterial(1,"phoenix_storms/indenttiles2")
+    #Upper Left Leg
+    holoCreate(2,holoEntity(1):toWorld(vec(0,-10,0)),vec(1,1,1),holoEntity(1):toWorld(ang(0,0,90)),Color,"hqcylinder")
+    holoParent(2,1)
+    holoMaterial(2,"phoenix_storms/grey_steel")
+    #Left Knee
+    holoCreate(3,holoEntity(1):toWorld(vec(0,-20,0)),vec(1,1,1),holoEntity(13):toWorld(ang(45,0,90)),Color,"hqcylinder")
+    holoParent(3,1)
+    holoMaterial(3,"phoenix_storms/indenttiles2")
+    #Lower Left Leg
+    holoCreate(4,holoEntity(3):toWorld(vec(0,-10,0)),vec(1,1,1),holoEntity(3):toWorld(ang(0,0,90)),Color,"hqcylinder")
+    holoParent(4,3)
+    holoMaterial(4,"phoenix_storms/grey_steel")
+    #Left Ankle
+    holoCreate(5,holoEntity(3):toWorld(vec(0,-20,0)),vec(1,1,1),holoEntity(13):toWorld(ang(0,0,90)),Color,"hqcylinder")
+    holoParent(5,3)
+    holoMaterial(5,"phoenix_storms/indenttiles2")
+    #Left Foot    
+    holoCreate(6,holoEntity(5):toWorld(vec(-6,-5,0)),vec(1,1,1),holoEntity(13):toWorld(ang(0,0,0)),Color,"dome")
+    holoParent(6,5)
+    holoMaterial(6,"phoenix_storms/indenttiles2")
+    #Right hip
+    holoCreate(7,holoEntity(0):toWorld(vec(0,0,-15)),vec(1,1,1),holoEntity(13):toWorld(ang(-45,0,90)),Color,"hqsphere")
+    holoParent(7,0)
+    holoMaterial(7,"phoenix_storms/indenttiles2")
+    #Right Upper Leg
+    holoCreate(8,holoEntity(7):toWorld(vec(0,-10,0)),vec(1,1,1),holoEntity(7):toWorld(ang(0,0,90)),Color,"hqcylinder")
+    holoParent(8,7)
+    holoMaterial(8,"phoenix_storms/grey_steel")
+    #Right Knee
+    holoCreate(9,holoEntity(7):toWorld(vec(0,-20,0)),vec(1,1,1),holoEntity(13):toWorld(ang(45,0,90)),Color,"hqcylinder")
+    holoParent(9,7)
+    holoMaterial(9,"phoenix_storms/indenttiles2")
+    #Right Lower Leg
+    holoCreate(10,holoEntity(9):toWorld(vec(0,-10,0)),vec(1,1,1),holoEntity(9):toWorld(ang(45,0,90)),Color,"hqcylinder")
+    holoParent(10,9)
+    holoMaterial(10,"phoenix_storms/grey_steel")
+    #Right Ankle
+    holoCreate(11,holoEntity(9):toWorld(vec(0,-20,0)),vec(1,1,1),holoEntity(13):toWorld(ang(0,0,90)),Color,"hqcylinder")
+    holoParent(11,9)
+    holoMaterial(11,"phoenix_storms/indenttiles2")
+    #Right foot
+    holoCreate(12,holoEntity(11):toWorld(vec(-6,-5,0)),vec(1,1,1),holoEntity(13):toWorld(ang(0,0,0)),Color,"dome")
+    holoParent(12,11)
+    holoMaterial(12,"phoenix_storms/indenttiles2")
+    ######TOP######
+    #mid
+    holoCreate(14,holoEntity(13):pos(),vec(1.2,1.2,0.4),entity():angles()+ang(0,0,90),Color,"hqcylinder")
+    holoParent(14,13)
+    holoMaterial(14,"phoenix_storms/grey_steel")
+    #Base/main attachment
+    holoCreate(15,holoEntity(13):pos()+vec(0,0,5),vec(1.15,0.35,1),entity():angles(),Color)
+    holoParent(15,13)
+    holoMaterial(15,"phoenix_storms/grey_steel")
+    #Base
+    holoCreate(16,holoEntity(13):pos()+vec(0,0,16),vec(3,3,1),entity():angles(),Color,"hqcylinder")
+    holoParent(16,13)
+    holoMaterial(16,"phoenix_storms/indenttiles2")
+    #head
+    holoCreate(17,holoEntity(13):pos()+vec(0,0,22),vec(3,3,3),entity():angles(),Color,"dome")
+    holoParent(17,16)
+    holoMaterial(17,"phoenix_storms/grey_steel")
+    #mohawk
+    holoCreate(18,holoEntity(13):pos()+vec(0,0,31),vec(3.2,3.2,0.6),holoEntity(17):angles(),Color,"hqsphere2")
+    holoParent(18,17)
+    holoMaterial(18,"phoenix_storms/indenttiles2")
+    ##eye
+    holoCreate(19,holoEntity(18):toWorld(vec(19,0,0)),vec(0.4,0.4,0.4),entity():angles()+ang(90,0,0),Color,"hqcylinder")
+    holoParent(19,18)
+    holoMaterial(19,"phoenix_storms/grey_steel")
+    #upper body sholder attachments
+    holoCreate(20,holoEntity(16):pos(),vec(0.5,0.5,4),holoEntity(16):angles()+ang(0,0,90),Color,"hqcylinder")
+    holoParent(20,16)
+    holoMaterial(20,"phoenix_storms/grey_steel")
+    #minigun box
+    holoCreate(21,holoEntity(16):toWorld(vec(0,30,0)),vec(1,1,1),holoEntity(16):angles(),Color)
+    holoParent(21,16)
+    holoMaterial(21,"phoenix_storms/indenttiles2")
+    #minigun base rotator
+    holoCreate(22,holoEntity(21):toWorld(vec(5,0,0)),vec(1,1,1),holoEntity(21):angles()+ang(90,0,0),Color,"hqcylinder")
+    holoParent(22,21)
+    holoMaterial(22,"phoenix_storms/grey_steel")
+    #barrel 1
+    holoCreate(23,holoEntity(22):toWorld(vec(3,0,18)),vec(0.3,0.3,2),holoEntity(22):angles()+ang(0,90,90),Color,"hqcylinder")
+    holoParent(23,22)
+    holoMaterial(23,"phoenix_storms/indenttiles2")
+    #barrel 2
+    holoCreate(24,holoEntity(22):toWorld(vec(-3,0,18)),vec(0.3,0.3,2),holoEntity(22):angles()+ang(0,90,90),Color,"hqcylinder")
+    holoParent(24,22)
+    holoMaterial(24,"phoenix_storms/indenttiles2")
+    #barrel 3
+    holoCreate(25,holoEntity(22):toWorld(vec(0,3,18)),vec(0.3,0.3,2),holoEntity(22):angles()+ang(0,90,90),Color,"hqcylinder")
+    holoParent(25,22)
+    holoMaterial(25,"phoenix_storms/indenttiles2")
+    #barrel 4
+    holoCreate(26,holoEntity(22):toWorld(vec(0,-3,18)),vec(0.3,0.3,2),holoEntity(22):angles()+ang(0,90,90),Color,"hqcylinder")
+    holoParent(26,22)
+    holoMaterial(26,"phoenix_storms/indenttiles2")
+    #minigun link
+    holoCreate(27,holoEntity(22):toWorld(vec(0,0,17)),vec(1,1,0.2),holoEntity(22):angles(),Color,"hqcylinder")
+    holoParent(27,22)
+    holoMaterial(27,"phoenix_storms/grey_steel")
+    #front minigun link
+    holoCreate(28,holoEntity(22):toWorld(vec(0,0,27)),vec(1,1,0.2),holoEntity(22):angles(),Color,"hqcylinder")
+    holoParent(28,22)
+    holoMaterial(28,"phoenix_storms/grey_steel")
+    #right arm sholder socket
+    holoCreate(29,holoEntity(20):toWorld(vec(0,0,28)),vec(1,1,1),holoEntity(16):toWorld(ang(15,0,0)),Color,"hqsphere")
+    holoParent(29,16)
+    holoMaterial(29,"phoenix_storms/indenttiles2")
+}
+if(I  == 40){
+    #upper Right Arm
+    holoCreate(30,holoEntity(29):toWorld(vec(0,0,-8)),vec(0.5,0.5,1),holoEntity(29):toWorld(ang(0,0,0)),Color,"hqcylinder")
+    holoParent(30,29)
+    holoMaterial(30,"phoenix_storms/grey_steel")
+    #elbow
+    holoCreate(31,holoEntity(30):toWorld(vec(0,0,-11)),vec(1,1,0.5),holoEntity(16):toWorld(ang(0,0,90)),Color,"hqcylinder")
+    holoParent(31,29)
+    holoMaterial(31,"phoenix_storms/indenttiles2")
+    #lower right Arm
+    holoCreate(32,holoEntity(31):toWorld(vec(11,0,0)),vec(0.5,0.5,2),holoEntity(31):toWorld(ang(90,0,0)),Color,"hqcylinder")
+    holoParent(32,31)
+    holoMaterial(32,"phoenix_storms/grey_steel")
+    #palm
+    holoCreate(33,holoEntity(32):toWorld(vec(0,0,6)),vec(1,1,1),holoEntity(33):toWorld(ang(0,0,0)),Color,"hqsphere")
+    holoParent(33,32)
+    holoMaterial(33,"phoenix_storms/indenttiles2")
+    #finger1
+    holoCreate(34,holoEntity(32):toWorld(vec(3,0,13)),vec(0.5,0.1,0.1),holoEntity(33):toWorld(ang(0,45,0)),Color)
+    holoParent(34,32)
+    holoMaterial(34,"phoenix_storms/indenttiles2")
+    #finger2
+    holoCreate(35,holoEntity(32):toWorld(vec(-3,0,13)),vec(0.5,0.1,0.1),holoEntity(33):toWorld(ang(0,-45,0)),Color)
+    holoParent(35,32)
+    holoMaterial(35,"phoenix_storms/indenttiles2")
+    #finger1tip
+    holoCreate(36,holoEntity(35):toWorld(vec(-2.5,-2.5,0)),vec(0.1,0.1,0.5),holoEntity(35):toWorld(ang(90,0,90)),Color,"pyramid")
+    holoParent(36,32)
+    holoMaterial(36,"phoenix_storms/indenttiles2")
+    #finger2tip
+    holoCreate(37,holoEntity(34):toWorld(vec(-2.5,2.5,0)),vec(0.1,0.1,0.5),holoEntity(34):toWorld(ang(90,0,-90)),Color,"pyramid")
+    holoParent(37,32)
+    holoMaterial(37,"phoenix_storms/indenttiles2")
+    ##eye pupil
+    holoCreate(38,holoEntity(19):toWorld(vec(0,0,2.5)),vec(-0.05,-0.4,-0.4),holoEntity(18):toWorld(ang(0,0,0)),vec(0,0,0),"hqsphere")
+    holoParent(38,19)
+    holoMaterial(38,"models/debug/debugwhite")
+    ##eye Red
+    holoCreate(39,holoEntity(19):toWorld(vec(0,0,2.5)),vec(0.01,0.3,0.3),holoEntity(18):toWorld(ang(0,0,0)),vec(255,0,0),"hqsphere")
+    holoParent(39,19)
+    for(J = 0,37){holoColor(J,Color)}
+} 
+if(Command == "!ball"){Entity = User}
+if(Command == "!fetch" & Obj){Obj = noentity()}
+if(I > 40 & chatClk(User) & ((lastSaid():lower() == "!grab") | (lastSaid():lower() == "!fetch") | (lastSaid():lower() == "!ball")) & !Obj){
+    if(User:aimEntity():mass() <= 1000){
+        CandObj = User:aimEntity()
+    }
+}
+if(CandObj){
+    RefVec = CandObj:pos() - holoEntity(13):pos()
+    if(RefVec:length() <= 160){
+        if(Command == "!ball" & Catch +15 <= I){Obj = CandObj}
+        elseif(Command != "!ball"){Obj = CandObj}
+        if(Command != "!ball"){CandObj = noentity()}
+        if(Command == "!fetch"){Command = "!return"}
+        if(!(Catch >= I)){Catch = I+10}
+    }
+}
+if(Obj){
+    if(Command == "!throw" | (Command == "!ball" & Catch == I)){
+        if(Entity){
+            Distance = Entity:pos() - Obj:pos()
+            ObjVec = (Obj:pos() - holoEntity(33):toWorld(vec(-10,0,10)*(Distance:length()/50)*(Obj:mass())/10))
+        }
+        else{
+            ObjVec = (Obj:pos() - holoEntity(33):toWorld(vec(-100-Obj:radius(),0,Obj:radius()/2)))*100
+            }
+        Obj:applyForce(Obj:mass()*-ObjVec)
+        Obj = noentity()
+    }
+    elseif(Command == "!drop"){Obj = noentity()}
+    else{
+        ObjVec = holoEntity(33):toWorld(vec(-Obj:radius()-20,0,0)) + vec(0,0,Obj:radius()) - Obj:pos()
+        Obj:applyForce(Obj:mass()*10*ObjVec - Obj:vel()*Obj:mass())
+    }
+}
+
+#Blinking
+if(I%floor(random(25,100)) == 0){holoAlpha(39,0)}
+else{holoAlpha(39,255)}
+
+#Finding the target position
+if(Command == "!stop" | Command == "!wait"){
+    TarEnt = noentity()
+    TarPos = holoEntity(13):pos()
+    Attack = 0
+}
+elseif(Command == "!go"){
+    TarEnt = noentity()
+    Entity = noentity()
+    TarPos = SavePos
+}
+elseif(Command == "!return"){TarPos = User:pos()}
+elseif(CandObj & (Command != "!ball")){TarPos = CandObj:pos()}
+elseif(TarEnt){TarPos = TarEnt:pos()}
+else{TarPos = holoEntity(13):pos()}
+
+TarVec = -vec(1,1,0)*(TarPos - holoEntity(13):pos())
+
+if(Command == "!aim"){TarAng = User:aimPos() - holoEntity(13):pos()}
+elseif(Entity){TarAng = Entity:attachmentPos("eyes")-holoEntity(21):pos()}
+elseif(Command == "!attack"){TarAng = holoEntity(21):toWorld(vec(-100,0,0))-holoEntity(21):pos()}
+else{TarAng = holoEntity(13):toWorld(vec(-100,0,0))-holoEntity(13):pos()}
+holoAng(18,ang(holoEntity(17):angles():pitch()+TarAng:toAngle():pitch(),holoEntity(17):angles():yaw(),holoEntity(17):angles():roll()+90))
+holoAng(16,ang(holoEntity(13):angles():pitch(),TarAng:toAngle():yaw(),holoEntity(13):angles():roll()))
+holoAng(21,ang(holoEntity(17):angles():pitch()+TarAng:toAngle():pitch(),holoEntity(17):angles():yaw(),holoEntity(17):angles():roll()+90))
+if(TarVec:length() < 300 + Obj:radius()){Speed = 5}
+else{Speed = 10}
+if(TarVec:length() > 150 + Obj:radius()){
+    Move = holoEntity(13):toWorld(vec(Speed*-1,0,0))
+    
+    holoAng(13,TarVec:toAngle())
+    holoAng(0,holoEntity(13):angles()+ang(0,cos(Speed*I*5)*15,90-sin(Speed*I*5)*15))
+    
+    holoAng(1,holoEntity(13):toWorld(ang(-45+cos(Speed*I*5)*15-sin(Speed*I*5)*24,0,90)))
+    holoAng(3,holoEntity(13):toWorld(ang(45-cos(Speed*I*5)*15-sin(Speed*I*5)*15,0,90)))
+    holoAng(5,holoEntity(13):toWorld(ang(0,0,90)))
+
+    holoAng(7,holoEntity(13):toWorld(ang(-45+cos(Speed*I*5+180)*15-sin(Speed*I*5+180)*24,0,90)))
+    holoAng(9,holoEntity(13):toWorld(ang(45-cos(Speed*I*5+180)*15-sin(Speed*I*5+180)*15,0,90)))
+    holoAng(11,holoEntity(13):toWorld(ang(0,0,90)))
+    
+    holoAng(29,holoEntity(16):toWorld(ang(15+sin(Speed*I*5)*20,0,0)))
+    holoAng(31,holoEntity(16):toWorld(ang(0,0,90)))
+    
+
+    if((Speed == 10 & I%4 == 0)|(Speed == 5 & I%6 == 0)){
+        holoEntity(13):soundPlay(1+I%4,0,"vehicles/tank_turret_start1.wav")
+        soundPitch(1+I%4,100+Speed*7)
+        soundVolume(1+I%4,0.5)
+        soundStop(1+I%4,0.3)
+    }
+    Stop = 0
+    Wobble = 2*sin(Speed*I*10)
+
+}
+else{
+    if(Command == "!return"){
+            Obj = noentity()
+            Command = "!wait"
+    }
+    Move = holoEntity(13):pos()
+    
+    holoAng(0,holoEntity(13):angles()+ang(0,0,90))
+    
+    holoAng(1,holoEntity(13):toWorld(ang(-45,0,90)))
+    holoAng(3,holoEntity(13):toWorld(ang(45,0,90)))
+    holoAng(5,holoEntity(13):toWorld(ang(0,0,90)))
+
+    holoAng(7,holoEntity(13):toWorld(ang(-45,0,90)))
+    holoAng(9,holoEntity(13):toWorld(ang(45,0,90)))
+    holoAng(11,holoEntity(13):toWorld(ang(0,0,90)))
+    
+    holoAng(29,holoEntity(16):toWorld(ang(15,0,0)))
+    holoAng(31,holoEntity(16):toWorld(ang(0,0,90)))
+    
+    Wobble = -5
+    if(!Stop){
+        soundPlay(0,0,"doors/doormove3.wav")
+        Stop = 1
+    }
+}
+Ranger = rangerOffset(9999999,holoEntity(13):toWorld(vec(0,0,50)),vec(0,0,-1))
+holoPos(13,Move+vec(0,0,90 + Wobble - Ranger:distance()))
+if(!Turret & owner():keyUse() & owner():aimEntity():type() == "gmod_wire_turret"){Turret = owner():aimEntity()}
+if(Turret){
+    TurTorqueVec = vec(1,0,0):cross(Turret:toLocal(holoEntity(28):toWorld(vec(0,0,100))))
+    TurForceVec = holoEntity(28):pos() - Turret:pos()
+    Turret:applyTorque((10*TurTorqueVec*Turret:inertia() - 8*Turret:angVelVector()*Turret:inertia()))
+    Turret:applyForce(Turret:mass()*10*TurForceVec - Turret:vel()*Turret:mass())
+    Turret:setAlpha(0)
+    #ifdef entity:propNotSolid(number)
+    Turret:propNotSolid(1)
+    #endif
+}
+if(Attack){
+    Fire = 1
+    holoAng(22,holoEntity(21):toWorld(ang(I*50,90,90)))
+    if((I*50)%3 == 0){
+        holoEntity(26+I%4):soundPlay(26+I%4,0,"ambient/explosions/explode_9.wav")
+        soundVolume(26+I%4,0.4)
+        soundPitch(26+I%4,1000)
+        soundStop(26+I%4,0.3)
+    }
+}
+else{
+    holoAng(22,holoEntity(21):toWorld(ang(0,90,90)))
+    Fire = 0
+}
+if(Command  == "!die"){selfDestruct()}

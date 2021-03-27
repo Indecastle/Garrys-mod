@@ -1,0 +1,71 @@
+@name firework 2
+@persist E:entity Rand Distance Explosive UpVel
+@model models/sprops/cylinders/size_2/cylinder_3x12.mdl
+
+interval(20)
+
+if(first())
+{
+    Explosive=random(1000,1600)
+    UpVel=random(500,630)
+    
+    E=entity()
+    E:noCollideAll(0)
+    E:setMaterial("sprops/textures/sprops_metal5")
+    E:propFreeze(0)
+    holoCreate(1)
+    holoPos(1,E:pos())
+    holoModel(1,"models/holograms/hq_cylinder.mdl")
+    holoMaterial(1,"sprops/trans/misc/tracks_wood")
+    holoScale(1,vec(0.1,0.1,1))
+   
+    holoCreate(10)
+    holoModel(10,"models/sprops/trans/misc/coil.mdl")
+    holoParent(10,E)
+    holoColor(10,randvec(40,255))
+    holoMaterial(10,"models/shiny")
+    holoScale(10,vec(0.7,0.7,0.8))
+    holoPos(10,E:toWorld(vec(0,0,-5)))
+
+    holoCreate(11)
+    holoModel(11,"models/holograms/hq_cone.mdl")
+    holoParent(11,E)
+    holoColor(11,randvec(40,255))
+    holoMaterial(11,"models/debug/debugwhite")
+    holoScale(11,vec(0.4))
+    holoPos(11,E:toWorld(vec(0,0,8)))
+}
+
+Distance=E:pos():distance(holoEntity(1):pos())
+E:applyForce(E:up()*UpVel)
+Rand=random(1,200)
+
+if(Distance>190)
+{
+    particle(2,8,0,"sprites/light_glow02_add",vec(255,Rand,0),E:pos(),randvec(-10,10),random(10,15),random(10,-10),140,0)
+    particle(2,10,0,"sprites/light_glow02_add",vec(Rand,Rand,Rand),E:pos(),randvec(-10,10),random(10,15),random(10,-10),140,0)
+
+    if(Distance>Explosive)
+    {
+        for(I=1,20)
+        {
+        particle(2,15,0,"sprites/light_glow02_add",randvec(130,255),E:pos(),randvec(-40,40),random(10,15),random(10,-10),140,0)   
+        particleGravity(vec(0,0,-30))    
+        }
+        for(I=1,20)
+        {
+        particle(2,19,0,"sprites/light_glow02_add",randvec(130,255),E:pos(),randvec(-40,40),random(10,15),random(10,-10),140,0)       
+        particleGravity(vec(0,0,-30))    
+        }
+        for(I=1,20)
+        {
+        particle(2,16,0,"sprites/light_glow02_add",randvec(130,255),E:pos(),randvec(-40,40),random(10,15),random(10,-10),140,0)        
+        particleGravity(vec(0,0,-30))    
+        }
+            if(Distance>Explosive+1)
+            {
+                E:remove()
+        
+            }        
+    }
+}

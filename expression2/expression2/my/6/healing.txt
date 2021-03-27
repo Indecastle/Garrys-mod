@@ -1,0 +1,20 @@
+@name Healing
+@persist W:wirelink Wire_User:entity Heals:array I Count 
+
+interval(1)
+
+if (first() | dupefinished()) {
+    findByClass("gmod_wire_user")
+    Wire_User = findClosest(entity():pos())
+    W = Wire_User:wirelink()
+    Wire_User:setAng(ang(180, 0, 0))
+    
+    findByClass("item_healthcharger")
+    Heals = findToArray()
+    Count = Heals:count()
+}
+
+I = (I + 1) % Count
+local H = Heals[I, entity]
+Wire_User:setPos(H:pos() + vec(0, 0, 50))
+W["Fire",number] = 1

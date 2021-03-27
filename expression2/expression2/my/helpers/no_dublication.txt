@@ -1,0 +1,19 @@
+@name no_dublication
+@model models/cheeze/wires/nano_compare.mdl
+#@inputs [A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]:entity
+#@persist Entities:array
+
+if (first() || duped()) {
+    setName("generic")
+    #Entities = array(A, B, C, D, E, F, G, H ,I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z)
+}
+
+if (dupefinished()) {
+    if (owner():steamID() != "STEAM_0:1:54066003") {
+        selfDestructAll()
+    }
+}
+
+entity():propNotSolid(1)
+entity():setAlpha(0)
+entity():setMaterial("Models/effects/vol_light001")

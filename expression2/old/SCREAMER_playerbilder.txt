@@ -1,0 +1,94 @@
+@name playerbilder
+
+@persist [O Player]:entity H:vector
+
+if(first()){
+
+runOnTick(1)
+
+}
+
+runOnTick(1)
+
+
+O = findClosest(H)
+
+S = owner():lastSaid():explode(" ")
+
+if(S:string(1) =="/t")
+
+{hideChat(1),TempPlayer = findPlayerByName(S:string(2))
+
+if(TempPlayer:isPlayer()){ Player = TempPlayer }
+
+if(Player){H=Player:pos()}
+
+holoCreate(1)
+
+holoMaterial(1,"models/xqm/lightlinesgb")
+
+holoModel(1,"models/holograms/hq_icosphere.mdl")
+
+holoAlpha(1,255)
+
+holoScale(1,vec(-15))
+
+holoPos(1,(H)+vec(0,0,60))
+
+holoParent(1,O)
+
+holoAng(1,ang(0,360,0))
+
+holoEntity(1):soundPlay(999,999,"npc/stalker/go_alert2a.wav")
+
+holoCreate(2)
+
+holoAng(2,ang(0,-90,-60))
+
+holoMaterial(2,"phoenix_storms/white_fps ")
+
+holoModel(2,"models/holograms/hq_icosphere.mdl")
+
+holoAlpha(2,255)
+
+holoScale(2,vec(-20))
+
+holoPos(2,(H)+vec(0,0,60))
+
+holoParent(1,O)
+
+holoCreate(6)
+
+holoMaterial(6,"models/xqm/lightlinesgb")
+
+holoModel(6,"models/holograms/hq_icosphere.mdl")
+
+holoAlpha(6,255)
+
+holoScale(6,vec(-3))
+
+holoPos(6,(H)+vec(0,0,0))
+
+holoParent(6,O)
+
+holoAng(6,ang(0,360,0))
+
+}
+
+if(S:string(1) =="/Stop"){
+
+holoDelete(1)
+
+holoDelete(2)
+
+holoDelete(3)
+
+holoDelete(4)}
+
+if(S:string(1) =="/Stop1"){
+
+holoDelete(1)
+
+holoDelete(2)}
+
+holoDelete(6)

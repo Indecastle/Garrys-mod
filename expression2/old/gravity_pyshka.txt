@@ -1,0 +1,29 @@
+@name gravity pyshka
+
+@inputs
+
+@outputs
+
+@persist
+
+@trigger
+
+runOnTick(1)
+
+S = owner():lastSaid():explode(" ")
+
+if(S:string(1) =="/p")
+
+{TempPlayer = findPlayerByName(S:string(2))
+
+if(TempPlayer:isPlayer()){ Player = TempPlayer }
+
+if(Player){H=Player:pos()}
+
+}
+
+if(owner():keyAttack2()){
+
+Player:setPos(owner():aimPos())
+
+}

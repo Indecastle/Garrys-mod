@@ -1,0 +1,286 @@
+@name Emitter Helper
+@inputs [WPod Wtp G]:wirelink
+@outputs LocalPosition:vector TPSound
+@persist [E O Selected_Player Vehicle Driver]:entity [T T2]:table Num_page Fullpage Players:array StartPos:vector 
+@persist Pod_mouse1 TP_Mode:string Interval_render_players Interval_render_buttons Page_Size
+
+#interval(100)
+
+if (first() | dupefinished() | duped() | changed(G)) {
+    Interval_render_players = 1000
+    Interval_render_buttons = 1000
+    Page_Size = 20
+    
+    function array array:sortB(Desc:number) {
+        ##ifdef <(string, string)
+        local Temp = noentity()
+        for (I=1, This:count()) {
+            for (J=This:count(), I+1, -1) {    
+                if( !Desc && (This[J-1,entity]:name() < This[J,entity]:name())  ||  Desc && (This[J-1,entity]:name() > This[J,entity]:name()) ) {
+                    Temp = This[J-1,entity]
+                    This[J-1,entity] = This[J,entity]
+                    This[J,entity] = Temp
+                }
+            }
+        }
+        ##endif
+        
+        return This
+    }
+    function number get_fullpage() {
+        return (Num_page - 1) * Page_Size
+    }
+    function number get_count_pages() {
+        return ceil(Players:count() / Page_Size)
+    }
+    function void update_render_pages() {
+        G:egpSetText(7, "Page " + Num_page:toString() + "/" + get_count_pages() )
+    }
+    
+    function sound_apply() {
+        Vehicle:soundPlay(20, 0.3, "buttons/button9.wav")
+    }
+    function sound_denied() {
+        Vehicle:soundPlay(20, 0.697, "buttons/button2.wav")
+    }
+    
+    function event_handler(R_Player:table) {
+        local Type_command = R_Player[4, string]
+        if (Type_command == "button_right") {
+            if (Num_page < get_count_pages()) {
+                Num_page++
+                update_render_pages()
+            }
+        }
+        elseif(Type_command == "button_left") {
+            if (Num_page > 1) {
+                Num_page--
+                update_render_pages()
+            }
+        }
+        elseif(Type_command == "button_TP") {
+            if (Selected_Player:isPlayer()) {
+                #StartPos = Vehicle:pos()
+                if (TP_Mode == "e2") {
+                    timer("work0", 10)
+                }
+                elseif (TP_Mode == "wire") {
+                    timer("work11", 10)
+                }
+                sound_apply()
+            }
+        }
+        elseif (Type_command == "button_row_player") {   
+            local Index = R_Player[5, table][1, number]
+            local P = Players[Index + get_fullpage(),entity]
+            Selected_Player = P
+            G:egpSetText(8,"Player: " + Selected_Player:name():sub(1,40))
+        }
+        elseif(Type_command == "tp_mode") {
+            if (Driver == O) {
+                TP_Mode = TP_Mode == "e2" ? "wire" : "e2"
+                G:egpSetText(206,"tp_mode: " + TP_Mode)
+                sound_apply()
+            }
+            else {
+                sound_denied()
+            }
+        }
+    }
+}
+
+if(changed(G)){
+    timer("init_Pod", 100)
+    #runOnKeys(owner(),1)
+    #runOnTick(1)
+    
+    timer("render_players", 10)
+    timer("render_buttons", 10)
+    
+    #findByClass("prop_vehicle_prisoner_pod")
+    #Vehicle = findClosest(entity():pos())
+    
+    Num_page = 1
+    T = table()
+    T2 = table()
+    LocalPosition = vec(0,12,20)
+    TPSound = 0
+    TP_Mode = "wire" # "e2" / "wire"
+    
+    E = entity()    O = owner()   #E:propNotSolid(1)
+    
+    #function void create_button(Id:number, Pos:vector2, Size:vector2, Id_button:string) {   
+    #}
+    
+    G:egpClear()
+    G:egpResolution(vec2(0),vec2(1000))
+    G:egpRoundedBox(1,vec2(500),vec2(1000,1000)) G:egpColor(1,vec4(100,100,100,100))
+    G:egpRoundedBox(2,vec2(500),vec2(970,970)) G:egpColor(2,vec4(0,0,0,150))
+    
+    G:egpText(3,"Name",vec2(50,160)) G:egpFont(3,"Marlett",25) 
+    G:egpText(4,"Health",vec2(300,160)) G:egpFont(4,"Marlett",25) 
+    G:egpText(5,"IsAlive",vec2(500,160)) G:egpFont(5,"Marlett",25) 
+    G:egpText(6,"Role",vec2(750,160)) G:egpFont(6,"Marlett",25) 
+    
+    G:egpText(7,"Page 1",vec2(35,30)) G:egpFont(7,"Marlett", 20)
+    G:egpText(8,"Player:",vec2(190,30)) G:egpFont(8,"Marlett", 20)
+    
+    
+    
+    T:pushTable(table(201, vec2(50, 100),vec2(50), "button_left"))
+    G:egpRoundedBox(201,vec2(50, 100),vec2(50)) G:egpColor(201,vec(150))
+    G:egpText(202,"<",vec2(32,70)) G:egpFont(202,"Marlett",30)
+    
+    T:pushTable(table(203, vec2(120, 100),vec2(50), "button_right"))
+    G:egpRoundedBox(203,vec2(120, 100),vec2(50)) G:egpColor(203,vec(150))
+    G:egpText(204,">",vec2(106,70)) G:egpFont(204,"Marlett",30)
+    
+    T:pushTable(table(205, vec2(850, 50),vec2(250, 50), "tp_mode"))
+    G:egpRoundedBox(205,vec2(850, 50),vec2(250, 50)) G:egpColor(205,vec(150))
+    G:egpText(206,"tp_mode: "+TP_Mode, vec2(740,30)) G:egpFont(206,"Marlett",20)
+    
+    T:pushTable(table(207, vec2(920, 110),vec2(80, 50), "button_TP"))
+    G:egpRoundedBox(207,vec2(920, 110),vec2(80, 50)) G:egpColor(207,vec(150))
+    G:egpText(208,"TP",vec2(900,90)) G:egpFont(208,"Marlett",20)
+    
+    for(I=1,Page_Size){
+        T:pushTable(table(180 + I, vec2(500,195 + I * 35), vec2(930,35), "button_row_player", table(I)))
+        G:egpBox(180 + I,vec2(500,195 + I * 35),vec2(930,35) )  G:egpColor(180 + I,vec4(100,100,100,100)) 
+        G:egpText(100 + I,"",vec2(50,177 + I * 35)) G:egpFont(100 + I,"Marlett",18)  
+        G:egpText(120 + I,"",vec2(300,175 + I * 35)) G:egpFont(120 + I,"Marlett",18)  
+        G:egpText(140 + I,"",vec2(500,175 + I * 35)) G:egpFont(140 + I,"Marlett",18)  
+        G:egpText(160 + I,"",vec2(750,175 + I * 35)) G:egpFont(160 + I,"Marlett",18) 
+    }
+    
+}
+
+if(clk("init_Pod")) {
+    Vehicle = WPod:entity("Entity")
+    StartPos = Vehicle:pos()
+}
+
+Pod_mouse1 = WPod:number("Mouse1")
+
+Driver = WPod:entity("Driver")
+
+if (changed(Driver)) {
+    if (Driver:isPlayer()) {
+        Interval_render_players = 500
+        Interval_render_buttons = 50
+    }
+    else {
+        Interval_render_players = 1000
+        Interval_render_buttons = 1000
+    }
+    stoptimer("render_players")
+    stoptimer("render_buttons")
+    timer("render_players", Interval_render_players)
+    timer("render_buttons", Interval_render_buttons)
+}
+
+if(clk("render_players")) {
+    Players = players():sortB(1)
+    Fullpage = get_fullpage()
+    
+    for(I=1, Page_Size){
+        local P = Players[I + Fullpage,entity]
+        if (P:isValid()) {
+            G:egpSetText(100 + I,P:name():sub(1,13)) G:egpColor(100 + I,vec4(255,255,255,150))
+            G:egpSetText(120 + I,P:health():toString()) G:egpColor(120 + I,vec4(255,255,255,150))
+            if (P:isSuperAdmin()) {
+                G:egpColor(160 + I, vec4(150,0,0,150))
+                G:egpSetText(160 + I,"SuperAdmin")
+            }
+            elseif (P:isAdmin()) {
+                G:egpColor(160 + I, vec4(150,150,0,150))
+                G:egpSetText(160 + I,"Admin")
+            } else {
+                G:egpColor(160 + I, vec4(0,150,200,150))
+                G:egpSetText(160 + I, "User")
+            }
+            if(P:isAlive()) {
+                G:egpSetText(140 + I, "alive")
+                G:egpColor(140 + I, vec4(0,150,0,150))
+            } else {
+                G:egpSetText(140 + I, "death")
+                G:egpColor(140 + I, vec4(150,0,0,150))
+            }
+        } else {
+            G:egpSetText(100 + I,"") G:egpColor(100 + I,vec4(0,0,0,150))
+            G:egpSetText(120 + I,"") G:egpColor(120 + I,vec4(0,0,0,150))
+            G:egpSetText(140 + I,"") G:egpColor(140 + I,vec4(0,0,0,150))
+            G:egpSetText(160 + I,"") G:egpColor(160 + I,vec4(0,0,0,150))
+            
+        }
+    }
+    update_render_pages()
+    
+    timer("render_players", Interval_render_players)
+}
+
+if(clk("render_buttons")) {
+    for(I=1,T:count()){
+        local R = T[I,table]
+        if(inrange(G:egpCursor(Driver),R[2,vector2]-R[3,vector2]/2, R[2,vector2]+R[3,vector2]/2)) { 
+            if(Driver:pos():distance(G:entity():pos()) < 200){
+                G:egpColor(R[1,number],vec(100,0,0)) 
+                if (changed(Pod_mouse1) && Pod_mouse1) {  
+                    event_handler(R)
+                }
+            }
+        }
+        else { G:egpColor(R[1,number],vec(100))}
+    }
+    timer("render_buttons", Interval_render_buttons)
+}
+
+
+
+
+if (clk("work0")) {
+    #ifdef entity:setPos(vector)
+    Vehicle:setPos(Selected_Player:pos() + vec(0, 0, 50))
+    #endif
+    timer("work1", 10) 
+}
+if (clk("work1")) {
+    #W["Eject",number] = 1
+    Vehicle:ejectPod()
+    timer("work2", 10)
+}
+if (clk("work2")) {
+    #ifdef entity:setPos(vector)
+    Vehicle:setPos(StartPos)
+    #endif
+}
+
+
+if (clk("work11")) {
+    local TargetPos = Selected_Player:pos() + vec(0,0,20)
+    Wtp["TargetPos",vector] = TargetPos
+    timer("work12",100)
+    stoptimer("restart")
+    
+}
+if (clk("work12")) {
+    Wtp["Jump",number] = 1
+    timer("work13",300)
+    
+}
+if (clk("work13")) {
+    WPod["Eject",number] = 1
+    Ejecting = 1
+    timer("work14",400)
+}
+if (clk("work14")) {
+    local TargetPos = StartPos + vec(0,0,20)
+    Wtp["TargetPos",vector] = TargetPos
+    timer("work15",400)
+}
+if (clk("work15")) {
+    if(WPod["Active",number]) { timer("work5",200) }
+    else { 
+        Wtp["Jump",number] = 1
+        timer("work16",100)
+    }
+}

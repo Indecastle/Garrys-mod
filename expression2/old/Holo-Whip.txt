@@ -1,0 +1,62 @@
+@name Holo-Whip
+@persist D
+@model models/hunter/plates/plate025x025.mdl
+#runOnTick(1)
+interval(20)
+Kinks = 50
+KLength = 1
+Thick = 0.15
+Bend = 1
+
+if(first())
+{
+    #print(entity():boxSize():toString())
+    for(I=1,5)
+    {
+        
+        holoCreate(I) 
+        holoModel(I,"hqcylinder2")
+        holoScale(I,vec(Thick,Thick,KLength))
+        #A:pushEntity(holoEntity(I))
+    }
+    #print(A:count():toString())
+    holoVisible(5,players(),0)
+}
+
+D=(D+3)%360
+for(I=1,5)
+{
+    if(I==1)
+    {
+        #PPos = toWorld(vec(-5,0,32),ang(),owner():pos(),owner():angles())
+        local DopAng = ang()
+        local Divider = 0
+        if(owner():keyDuck()) {
+            PPos = toWorld(vec(-5,0,18),ang(0,0,0),owner():pos(),owner():angles())
+            holoPos(I,PPos)
+            DopAng=ang(120+10*cos(D),0,0)  Divider= 10
+        }
+        else {
+            PPos = toWorld(vec(-5,0,32),ang(0,0,0),owner():pos(),owner():angles())
+            holoPos(I,PPos) 
+            DopAng=ang(150+10*cos(D),0,0)  Divider= 4
+        }
+        
+        Ang = (holoEntity(I+1):pos()-owner():pos()):toAngle()+DopAng
+        #Ang = owner():holo
+        holoAng(I,Ang - ang(1,0,0)*owner():eyeAngles():pitch()/Divider)
+        
+    } 
+    else
+    {
+        holoPos(I,holoEntity(I-1):pos()+holoEntity(I-1):up()*KLength*12)
+        Ang = (holoEntity(I+1):pos()-holoEntity(I-1):pos()):toAngle()+ang(90,0,0)
+        holoAng(I,Ang)
+    }
+
+    #P = holoEntity(I):angles():pitch()/360*255
+    #Y = holoEntity(I):angles():yaw()/360*255
+    #R = holoEntity(I):angles():roll()/360*255
+    
+    #holoColor(I,vec(P,Y,R))
+}

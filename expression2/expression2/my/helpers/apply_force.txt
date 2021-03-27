@@ -1,0 +1,28 @@
+@name My apply force
+@inputs 
+@outputs 
+@persist [O Tur E]:entity Pos2:vector Ang2:angle
+@trigger 
+
+if (first()) {
+    runOnTick(1)
+    O = owner() E = entity()
+    findIncludePlayerProps(O)
+    findByClass("prop_*")
+    Tur = findClosest(E:pos())
+    Scale = 1
+    Ang2 = ang(0,0,0)
+    Pos2 = E:pos() + vec(0,0,50)
+    
+    function void entity:myapply(Pos:vector, Ang:angle, Precision:number) {
+        This:applyForce(((Pos-This:pos())*15-This:vel()/2)*This:mass())
+        #This:applyTorque((Precision*150*This:toLocalAxis(rotationVector(quat(Ang)/quat(This)))-12*This:angVelVector())*This:inertia())
+        This:applyAngForce(( (Ang - This:angles())*100 - This:angVel()*5 )*50)
+    }
+}
+Pos2 = E:toWorld(vec(0,0,50))
+Ang2 = entity():angles()
+Tur:myapply(Pos2, Ang2, 4)
+
+
+

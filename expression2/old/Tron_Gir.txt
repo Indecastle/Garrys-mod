@@ -1,0 +1,128 @@
+@name Tron Gir
+@inputs 
+@outputs Gait
+@persist E:entity GlowCount Load C RGait RSpeed Gait Speed Scale:vector
+@trigger 
+
+if (!Load) {
+    if (first()) {
+        Scale = vec(1,1,1)
+        runOnTick(1)
+        runOnChat(1)
+        E = entity()
+        holoCreate(0,E:pos()+vec(0,0,50),vec())
+        E = holoEntity(0)
+        holoCreate(1,E:pos(),vec(1,1.25,1.25)*Scale,E:toWorld(ang(0,0,180))),holoModel(1,"dome"),holoParent(1,E)
+        holoCreate(2,E:toWorld(vec(0,0,-3.5)*Scale),vec(0.75,0.9,1.5)*Scale,E:toWorld(ang(0,0,180))),holoModel(2,"dome"),holoParent(2,1)
+        T = 0
+        for (I = -1, 1, 2) {
+            holoCreate(3+T,E:toWorld(vec(0,7.5*I,-2)*Scale),vec(0.35,0.35,0.35)*Scale,E:angles()),holoModel(3+T,"hqicosphere"),holoParent(3+T,1)
+            holoCreate(5+T,E:toWorld(vec(0,7.6*I,-5.5)*Scale),vec(0.2,0.2,0.5)*Scale,E:angles()),holoModel(5+T,"hqcylinder"),holoParent(5+T,3+T)
+            holoCreate(7+T,E:toWorld(vec(0,7.6*I,-8.5)*Scale),vec(0.25,0.25,0.25)*Scale,E:angles()),holoModel(7+T,"hqicosphere"),holoParent(7+T,5+T)
+            holoCreate(9+T,E:toWorld(vec(0,7.6*I,-11)*Scale),vec(0.2,0.2,0.5)*Scale,E:angles()),holoModel(9+T,"hqcylinder"),holoParent(9+T,7+T)
+            holoCreate(11+T,E:toWorld(vec(0,7.6*I,-14.5)*Scale),vec(0.4,0.3,0.75)*Scale,E:angles()),holoModel(11+T,"dome"),holoParent(11+T,9+T)
+            holoCreate(13+T,E:toWorld(vec(0,4*I,-10)*Scale),vec(0.35,0.35,0.35)*Scale,E:angles()),holoModel(13+T,"hqicosphere"),holoParent(13+T,1)
+            holoCreate(15+T,E:toWorld(vec(0,4*I,-14)*Scale),vec(0.25,0.25,0.6)*Scale,E:angles()),holoModel(15+T,"hqcylinder"),holoParent(15+T,13+T)
+            holoCreate(17+T,E:toWorld(vec(0,4*I,-18)*Scale),vec(0.35,0.35,0.35)*Scale,E:angles()),holoModel(17+T,"hqicosphere"),holoParent(17+T,15+T)
+            holoCreate(19+T,E:toWorld(vec(0,4*I,-21)*Scale),vec(0.25,0.25,0.45)*Scale,E:angles()),holoModel(19+T,"hqcylinder"),holoParent(19+T,17+T)
+            holoCreate(21+T,E:toWorld(vec(1,4*I,-24)*Scale),vec(0.5,0.35,0.35)*Scale,E:angles()),holoModel(21+T,"dome"),holoParent(21+T,19+T)
+            T++
+        }
+        holoCreate(55,E:toWorld(vec(0,0,3)*Scale),vec()),holoParent(55,0)
+        holoCreate(23,E:toWorld(vec(0,0,10)*Scale),vec(1,1,1.5)*Scale,E:toWorld(ang(0,0,180))),holoModel(23,"dome"),holoParent(23,55)
+        holoCreate(24,E:toWorld(vec(5,2.5,7)*Scale),vec(0.05,0.2,0.2)*Scale,E:toWorld(ang(8,25,185))),holoModel(24,"dome"),holoParent(24,23)
+        holoCreate(25,E:toWorld(vec(5,-2.5,7)*Scale),vec(0.05,0.2,0.2)*Scale,E:toWorld(ang(8,-25,175))),holoModel(25,"dome"),holoParent(25,23)
+        holoCreate(26,E:toWorld(vec(3.25,0,3)*Scale),vec(0.1,0.2,0.2)*Scale,E:toWorld(ang(0,0,180))),holoModel(26,"hqtorus"),holoParent(26,23)
+        timer("Second",1000)
+    }
+    if (clk("Second")) {
+        T = 0
+        for (I = -1, 1, 2) {
+            holoCreate(56+T,E:toWorld(vec(-0.1,7.6*I,-14.5)*Scale),vec(0.4,0.3,0.4)*Scale,E:toWorld(ang(90,0,0))),holoModel(56+T,"dome"),holoParent(56+T,11+T)
+            holoCreate(58+T,E:toWorld(vec(0.1,7.6*I,-14.5)*Scale),vec(0.4,0.3,0.4)*Scale,E:toWorld(ang(-90,0,0))),holoModel(58+T,"dome"),holoParent(58+T,11+T)
+           T++
+        }
+        timer("Glow",1000)
+    }
+    if (clk("Glow")) {
+        T = 0
+        for (I = -1, 1, 2) {
+            holoCreate(37+T,E:toWorld(vec(0,7.6*I,-5.5)*Scale),vec(0.1,0.25,0.5)*Scale,E:angles()),holoModel(37+T,"hqsphere"),holoParent(37+T,5+T)
+            holoCreate(39+T,E:toWorld(vec(0,6.6*I,-2)*Scale),vec(0.45,0.5,0.2)*Scale,E:toWorld(ang(0,0,-120*I))),holoModel(39+T,"hqicosphere"),holoParent(39+T,1)
+            holoCreate(41+T,E:toWorld(vec(1,4*I,-24)*Scale),vec(0.55,0.4,0.1)*Scale,E:angles()),holoModel(41+T,"dome"),holoParent(41+T,21+T)
+            holoCreate(43+T,E:toWorld(vec(0,3.1*I,-10)*Scale),vec(0.45,0.5,0.2)*Scale,E:toWorld(ang(0,0,-125*I))),holoModel(43+T,"hqicosphere"),holoParent(43+T,1)
+            T++
+        } 
+        timer("Glow2",1000)
+    }
+    if (clk("Glow2")) {
+        holoCreate(45,E:toWorld(vec(0,0,-0.15)*Scale),vec(0.3,1.3,1.3)*Scale,E:toWorld(ang(0,0,180))),holoModel(45,"dome"),holoParent(45,1)
+        T = 0
+        for (I = -1, 1, 2) {
+            holoCreate(46+T,E:toWorld(vec(0,7.6*I,-11)*Scale),vec(0.1,0.25,0.5)*Scale,E:angles()),holoModel(46+T,"hqsphere"),holoParent(46+T,9+T)
+            holoCreate(48+T,E:toWorld(vec(0,7.6*I,-14.49)*Scale),vec(0.4,0.1,1)*Scale,E:angles()),holoModel(48+T,"dome"),holoParent(48+T,9+T)
+            holoCreate(50+T,E:toWorld(vec(0,4*I,-14)*Scale),vec(0.3,0.1,0.6)*Scale,E:angles()),holoModel(50+T,"hqcylinder"),holoParent(50+T,15+T)
+            holoCreate(52+T,E:toWorld(vec(0,4*I,-21)*Scale),vec(0.3,0.2,0.45)*Scale,E:angles()),holoModel(52+T,"hqcylinder"),holoParent(52+T,19+T)
+            T++
+        }
+        holoCreate(54,E:toWorld(vec(0,0,-0.15)*Scale),vec(1.05,1.3,0.3)*Scale,E:toWorld(ang(0,0,180))),holoModel(54,"dome"),holoParent(54,1)
+        timer("Glow3",1000)
+    }
+    if (clk("Glow3")) {
+        #if (holoRemainingSpawns() >= 10) {
+            holoCreate(36,E:toWorld(vec(0,0,-3.55)*Scale),vec(0.3,0.95,1.5)*Scale,E:toWorld(ang(0,0,180))),holoModel(36,"dome"),holoParent(36,1)
+            holoCreate(27,E:toWorld(vec(5.5,0,-3)*Scale),vec(0.1,0.1,0.1)*Scale,E:toWorld(ang(110,0,0))),holoModel(27,"hqtorus"),holoParent(27,1)
+            holoCreate(28,E:toWorld(vec(5.7,0,-2)*Scale),vec(0.05,0.05,0.10)*Scale,E:toWorld(ang(8,0,0))),holoModel(28,"hqcylinder"),holoParent(28,1)
+            holoCreate(29,E:toWorld(vec(5,0,-4)*Scale),vec(0.05,0.05,0.10)*Scale,E:toWorld(ang(30,0,180))),holoModel(29,"hqcylinder"),holoParent(29,1)
+            holoCreate(30,E:toWorld(vec(5.35,1,-3)*Scale),vec(0.05,0.05,0.10)*Scale,E:toWorld(ang(20,11,-90))),holoModel(30,"hqcylinder"),holoParent(30,1)
+            holoCreate(31,E:toWorld(vec(5.35,-1,-3)*Scale),vec(0.05,0.05,0.10)*Scale,E:toWorld(ang(20,-11,90))),holoModel(31,"hqcylinder"),holoParent(31,1)
+        #}
+        for (I = 1, 4) {holoCreate(31+I,holoEntity(32-I):toWorld(vec(0,0,0.6)*Scale),vec(0.05,0.05,0.10)*Scale,holoEntity(32-I):toWorld(ang(0,0,-90))),holoModel(31+I,"hqcylinder"),holoParent(31+I,1)}
+        for (I = 24, 54) {holoMaterial(I,"debug/debugdrawflat")}
+        for (I = 1, 23) {holoMaterial(I,"models/shiny")}
+        for (I = 1, 24) {holoShadow(I,1)}
+        Load = 1
+    }
+} else {
+    Disp = 6#5+(5*sin(curtime()*100))
+    if (changed(Disp)) {
+        for (I = 24, 54) {holoColor(I,hsv2rgb(vec(18*Disp,1,1)))}
+        holoAng(24,holoEntity(23):toWorld(ang(8,-25,5+(5-Disp)*7)))
+        holoAng(25,holoEntity(23):toWorld(ang(8,25,-5-(5-Disp)*7)))
+        holoAng(26,E:toWorld(ang((5-Disp)*10+15,0,180)))
+        #holoAng(26,holoEntity(23):toWorld(ang(-45,0,0)))
+    }
+    RGait = 0.75
+    RSpeed = 20 #max 15
+    TarPos = owner():pos()+((E:pos()-owner():pos()):normalized()*vec(100,100,0))#owner():aimPos()
+    Dist = E:pos():setZ(0):distance(TarPos:setZ(0))
+    Norm = (TarPos-E:pos())
+    if (Dist >= clamp(Speed,1,20)*3) {
+        if (Gait < RGait) {
+            Gait += RGait/35
+            Speed += RSpeed/35
+        }
+        holoAng(0,mix(Norm,E:forward(),0.9):toAngle()*ang(0,1,0))
+    } else {
+        if (Gait > 0) {
+            Gait -= RGait/55
+            Speed -= RSpeed/55
+        } else {
+            Gait = 0
+            Speed = 0
+        }
+    }
+    C += Speed
+    T = 0
+    R = rangerOffset(50*Scale:z(),E:pos()+vec(0,0,25)*Scale:z(),vec(0,0,-1))
+    holoPos(0,E:toWorld(vec(0.2*Speed*Gait*Scale:z(),0,0)):setZ(R:position():z()+(24*Scale:z())))
+    for (I = -1, 1, 2) {
+        holoAng(13+T,E:toWorld(ang(I*cos(C)*25-10,0,0)*Gait))
+        holoAng(17+T,E:toWorld(ang(I*sin(C+45)*65+35,0,0)*Gait))
+        holoAng(21+T,E:toWorld(ang(I*sin(C+45)*50+5,0,0)*Gait))
+        holoAng(3+T,E:toWorld(ang(I*sin(C/2)*20*Gait,0,0)))
+        holoAng(7+T,holoEntity(3+T):toWorld(ang(-80*Gait,0,0)))     
+        T++
+    }
+    holoAng(1,E:toWorld(ang(Speed/2,-sin(C)*Gait,180)))
+}

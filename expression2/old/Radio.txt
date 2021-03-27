@@ -1,0 +1,75 @@
+@name Radio
+
+@persist [EE Ow]:entity
+
+runOnChat(1)
+
+if(chatClk(owner())&owner():lastSaid()=="/Record"){
+
+hideChat(1)
+
+print("radio plays Record")
+
+soundURLplay("1")
+
+soundURLload("1","http://air.radiorecord.ru:8101/rr_320", 1, 0, owner())
+
+soundVolume(1,1)
+
+soundURLparent("1",owner())
+
+}
+
+if(chatClk(owner())&owner():lastSaid()=="ty"){
+
+print("radio plays Club RMF")
+
+hideChat(1)
+
+soundURLplay("1")
+
+soundURLload("1","http://195.150.20.5:8000/rmf_dance", 1, 0, owner())
+
+soundVolume(1,1)
+
+soundURLparent("1", owner())
+
+}
+
+if(chatClk(owner())&owner():lastSaid()=="/Private"){
+
+print("radio plays Private")
+
+hideChat(1)
+
+soundURLplay("1")
+
+soundURLload("1","", 1, 0, owner())
+
+soundVolume(1,1)
+
+soundURLparent("1", owner())
+
+}
+
+if(chatClk(owner())&owner():lastSaid()=="/ZFM"){
+
+print("radio plays ZFM")
+
+hideChat(1)
+
+soundURLplay("1")
+
+soundURLload("1","http://radio.zaycev.fm:9002/ZaycevFM(128)", 1, 0, owner())
+
+soundVolume(1,1)
+
+soundURLparent("1", owner())
+
+}
+
+if(chatClk(Ow)&Ow:lastSaid()=="/Stop"){
+
+hideChat(1)
+
+soundURLdelete("1") }

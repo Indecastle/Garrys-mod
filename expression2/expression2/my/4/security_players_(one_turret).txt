@@ -1,0 +1,180 @@
+@name Security Players (One Turret)
+@inputs Damage Clk [Attacker Victim Turret]:entity Friends:array WW:wirelink
+@outputs ON 
+@persist [O E]:entity  Timer Fire Commands:array
+@persist FriendlyFire FireMe HiddenMode DeadMode P:entity HModeFirst
+@trigger Clk
+
+interval(100)
+if(first() | duped() | dupefinished()) { O = owner() E = entity()
+    #runOnTick(1)
+    runOnChat(1)
+    runOnKeys(owner(),1)
+    #runOnMouseKey(1)
+    
+    Timer = 1000
+    ON = 0
+    FriendlyFire = 1
+    FriendlyFireMe = 1
+    HiddenMode = 0
+    DeadMode = 0
+    
+    function number array:checkAr(Str:string) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:string(I) == Str) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+    function void setfire(IsFire:number) {
+        WW["Fire",number] = IsFire
+        Fire = IsFire
+    }
+    function void setStopFire() {
+        setfire(0)
+        Turret:setPos(entity():pos() + vec(0,0,30))
+        Turret:setAng(ang(-90,0,0))
+    }
+    setStopFire()
+    Commands = array("!shelp", "!sff", "!sfm", "!smode", "!sdmode")
+    printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!Shelp\"")
+}
+
+#if (->WW)
+
+if(->Turret & changed(->Turret)) {
+    #WW = Turret:wirelink()
+    setStopFire()
+}
+
+
+if(changed(Clk) & ON & ((Attacker!=owner() | !FriendlyFireMe) & (!Friends:checkAr(Attacker) | !FriendlyFire)) ) {
+    if (!DeadMode | !Victim:isAlive()){
+        if (HiddenMode) {
+            P:propDelete()
+            P = propSpawn("models/hunter/blocks/cube025x025x025.mdl", Attacker:toWorld(vec(0,0,100)), 0)
+            P:setMass(10000)
+            P:setAlpha(0)
+            P:propFreeze(0)
+            P:propSetVelocity((Attacker:pos()-P:pos())*1000)
+            #P:propNotSolid(0)
+            #noCollideAll(P,0)
+            #timer("wait",500)
+            #print(Attacker:name())
+        }
+        else {
+            setfire(1)
+            stoptimer("stopfire")
+            timer("stopfire", Timer)
+        }
+    }
+}
+
+if(Fire) {
+    if(!Attacker:isAlive()) {
+        stoptimer("stopfire") 
+        setStopFire()
+    }
+    else {
+        Turret:setPos(Attacker:attachmentPos("eyes")+vec(0,0,10))
+        Turret:setAng((Attacker:attachmentPos("eyes") + vec(0,0, -10) - Turret:pos() + Attacker:vel() * tickInterval()*1.5):toAngle())
+    }
+}
+else {
+    setStopFire()
+}
+
+if(changed(owner():keyPressed("m")) & owner():keyPressed("m")) { 
+    printColor(vec(255,255,0), "Secure Info:", vec(0,255,255), "- Secure ", vec(255,0,0), "Disabled")
+    setStopFire()
+    ON = 0
+    stoptimer("stopfire")
+}
+if(changed(owner():keyPressed("n")) & owner():keyPressed("n")) { 
+    printColor(vec(255,255,0), "Secure Info:", vec(0,255,255), "- Secure ", vec(0,255,0), "Enabled")
+    setStopFire()
+    ON = 1
+    stoptimer("stopfire") 
+}
+if(changed(owner():keyPressed("l")) & owner():keyPressed("l") & ON & Attacker!=owner() & !Friends:checkAr(Attacker)) { 
+    setfire(!Fire)
+    stoptimer("stopfire") 
+}
+
+if(clk("stopfire")) { 
+    setStopFire()
+}
+
+
+
+
+
+
+if(chatClk()) {
+    local Pla = lastSpoke() 
+    local Message = Pla:lastSaid()
+    local FirstLetter = Message:index(1)
+    if (FirstLetter == ".") {}
+    elseif (FirstLetter == "!") {
+        local Ar = Pla:lastSaid():explode(" ")
+        if (Commands:checkAr(Ar:string(1):lower())) {
+            hideChat(1)
+        }
+        
+        if (Pla == owner()) {
+            switch(Ar:string(1):lower())
+            {
+                case "!sff", 
+                    if(Ar:string(2) == "0") { FriendlyFire = 0 print("Friendly-Fire Off") timer("OK",0) }
+                    elseif(Ar:string(2) == "1") { FriendlyFire = 1 print("Friendly-Fire On") timer("OK",0)}
+                break
+                case "!sfm", 
+                    if(Ar:string(2) == "0") { FriendlyFireMe = 0 print("Friendly-Fire-Me Off") timer("OK",0) }
+                    elseif(Ar:string(2) == "1") { FriendlyFireMe = 1 print("Friendly-Fire-Me On") timer("OK",0)}
+                break
+                case "!smode", 
+                    if(Ar:string(2) == "0") { HiddenMode = 0 print("Hidden-Mode Off") timer("OK",0) }
+                    elseif(Ar:string(2) == "1") { HiddenMode = 1 print("Hidden-Mode On") timer("OK",0)}
+                break
+                case "!sdmode", 
+                    if(Ar:string(2) == "0") { DeadMode = 0 print("Dead-Mode Off") timer("OK",0) }
+                    elseif(Ar:string(2) == "1") { DeadMode = 1 print("Dead-Mode On") timer("OK",0)}
+                break
+                case "!shelp", 
+                    #if(Ar:string(2) == "ru") { timer("help_ru",100) }
+                    #elseif(Ar:string(2) == "en") { timer("help_en",100)}
+                    timer("help_en",100)
+                break
+                default,
+            }
+        }
+    }
+}
+
+
+if (clk("OK")) {
+    owner():soundPlay(20, 0.3, "buttons/button9.wav")
+}
+
+if (clk("help_en")) {
+    printColor(vec(255,0,0), "###################################")
+    printColor(vec(255,255,0), "!sff 1/0", vec(0,255,255), "  - Friendly-Fire on/off ")
+    printColor(vec(255,255,0), "!sfm 1/0", vec(0,255,255), "  - Friendly-Fire-Me on/off")
+    printColor(vec(255,255,0), "!smode 1/0", vec(0,255,255), "  - Hidden Mode on/off")
+    printColor(vec(255,255,0), "!sdmode 1/0", vec(0,255,255), "  - Dead Mode on/off")
+    printColor(vec(255,255,0), "!SHelp", vec(0,255,255), "  - Show Help")
+    printColor(vec(255,0,0), "###################################")
+    #print(_HUD_PRINTCENTER, "Wait :)")
+    #timer("help_en2", 2000)
+}
+
+if(clk("help_en2")) {
+    #printColor(vec(255,0,0), "###################################")
+}

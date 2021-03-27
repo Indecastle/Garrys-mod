@@ -1,0 +1,256 @@
+@name http translate
+@inputs 
+@outputs IsSucces IsCanRequest Queue:table
+@persist Hide [APIkey SourceLang TargetLang]:string      LastWriter:entity LastAnswer:string
+@persist [WhiteList BlackList]:array AllP TON TME FUN AutoT TEST Delay:number Commands:array
+@trigger 
+
+interval(100)
+
+if(first() | duped() | dupefinished()) { Hide = 1 #setName(randint(1000):toString())
+    #soundURLload(1,"https://translate.google.com/translate_tts?ie=UTF-8&q={Hello%20world}&tl=en&client=tw-ob",10,0,owner():pos())
+    runOnChat(1)
+    runOnHTTP(1)
+    AllP = 0
+    TON = 1
+    TME = 1
+    FUN = 0
+    AutoT = 1
+    TEST = 0
+    Delay = 500 # ms
+    Queue = table()
+    
+    APIkey = "trnsl.1.1.20190908T103553Z.38158ae702159ca3.f9a440fe932afd97bffb69731ce6f44c0e46f1d3"
+    SourceLang = "ru"
+    TargetLang = "en"
+    
+    printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!Thelp\"")
+    
+    Commands = array("!TON","!TME","!FUN","!sl","!tl","!autot","!resl","!reft","!tallp","!taddw","!taddb")
+    Commands = Commands:add(array("!tdellw","!tdellb","!test","!delay","!Thelp"))
+    
+    function string getrequest(APIKey:string, SL:string, TL:string, Text:string, Auto:number) {
+        Text = httpUrlEncode(Text)
+        TextLang = AutoT ? TL : (SL + "-" + TL)
+        return ("https://translate.yandex.net/api/v1.5/tr.json/translate?key=" + APIkey + "&text=" + Text + "&lang=" + TextLang)
+    }
+    function number array:checkAr(Str:string) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:string(I) == Str) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:indexEnt(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = I break}
+        } 
+        return OK
+    }
+    function number array:removeEnt(Ent:entity) {
+        local OK = 0
+        if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+        return OK
+    }
+    function number array:addEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushEntity(Ent) OK=1}
+        return OK
+    }
+}
+
+
+
+if(chatClk()) {
+    Pla = lastSpoke() 
+    local Message = Pla:lastSaid()
+    FirstLetter = Message:index(1)
+    if (FirstLetter == ".") {}
+    elseif (FirstLetter == "!") {
+        local Ar = Pla:lastSaid():explode(" ")
+        if (Commands:checkAr(Ar:string(1))) {
+            hideChat(1)
+        }
+        
+        if (Pla == owner()) {
+            switch(Ar:string(1))
+            {
+                case "!TON", 
+                    if(Ar:string(2) == "0") { TON = 0 print("Translate Off") timer("OK",1) }
+                    elseif(Ar:string(2) == "1") { TON = 1 print("Translate On") timer("OK",1)}
+                break
+                case "!TME", 
+                    if(Ar:string(2) == "0") { TME = 0 print("Translate me Off") timer("OK",1) }
+                    elseif(Ar:string(2) == "1") { TME = 1 print("Translate me On") timer("OK",1)}
+                break
+                case "!FUN", 
+                    if(Ar:string(2) == "0") { FUN = 0 print("FUN Off") timer("OK",1) }
+                    elseif(Ar:string(2) == "1") { FUN = 1 print("FUN v1 On") timer("OK",1)}
+                    elseif(Ar:string(2) == "2") { FUN = 2 print("FUN v2 On") timer("OK",1)}
+                break
+                case "!sl", 
+                    SourceLang = Ar:string(2)
+                    print("SourceLang = " + SourceLang)
+                    timer("OK",0)
+                break
+                case "!tl", 
+                    TargetLang = Ar:string(2)
+                    print("TargetLang = " + TargetLang)
+                    timer("OK",0)
+                break
+                case "!autot", 
+                    if(Ar:string(2) == "0") { AutoT = 0 print("AutoT Off") timer("OK",0) }
+                    elseif(Ar:string(2) == "1") { AutoT = 1 print("AutoT On") timer("OK",0)}
+                break
+                case "!resl", 
+                    local Temp = SourceLang
+                    SourceLang = TargetLang
+                    TargetLang = Temp
+                    print("SourceLang = " + SourceLang)
+                    print("TargetLang = " + TargetLang)
+                    timer("OK", 1)
+                break
+                case "!reft", 
+                    Queue:clear()
+                    timer("OK", 0)
+                break
+                case "!tallp", 
+                    if(Ar:string(2) == "0") { AllP = 0 print("AllPlayers off") timer("OK",1) }
+                    elseif(Ar:string(2) == "1") { AllP = 1 print("AllPlayers on") timer("OK",1)}
+                break
+                case "!taddw", 
+                    local P = noentity()
+                    if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                    else { P = findPlayerByName(Ar:string(2)) }
+                    if(!P:isPlayer() | P==owner() | Ar:string(2)=="") { print("player not found") }
+                    elseif(!WhiteList:addEnt(P)) { print("The WhiteList already has this player") }
+                    else { print(P:name()+" added to the WhiteList") timer("OK",1) }
+                break
+                case "!taddb", 
+                    local P = noentity()
+                    if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                    else { P = findPlayerByName(Ar:string(2)) }
+                    if(!P:isPlayer() | P==owner() | Ar:string(2)=="") { print("player not found") }
+                    elseif(!BlackList:addEnt(P)) { print("The BlackList already has this player") }
+                    else { print(P:name()+" added to the BlackList") timer("OK",1) }
+                break
+                case "!tdellw", 
+                    local P = noentity()
+                    if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                    else { P = findPlayerByName(Ar:string(2)) }
+                    if(!P:isPlayer() | Ar:string(2)=="") { print("player not found") }
+                    elseif(!WhiteList:removeEnt(P)) { print("This player is not WhiteListed") }
+                    else { print(P:name()+" deleted from WhiteList") timer("OK",1) }
+                break
+                case "!tdellb", 
+                    local P = noentity()
+                    if (Ar:string(Ar:count()) == "id") { P = findPlayerBySteamID(Ar:string(2)) }
+                    else { P = findPlayerByName(Ar:string(2)) }
+                    if(!P:isPlayer() | Ar:string(2)=="") { print("player not found") }
+                    elseif(!BlackList:removeEnt(P)) { print("This player is not BlackListed") }
+                    else { print(P:name()+" deleted from BlackList") timer("OK",1) }
+                break
+                case "!test", 
+                    if(Ar:string(2) == "0") { TEST = 0 print("TEST Off") timer("OK",0) }
+                    elseif(Ar:string(2) == "1") { TEST = 1 print("TEST On") timer("OK",0)}
+                break
+                case "!delay", 
+                    if(!isnan(Ar:string(2):toNumber())) { Delay = Ar:string(2):toNumber() print("Delay =", Delay) timer("OK",0) }
+                    else { print("Delay Error") timer("OK",0)}
+                break
+                case "!Thelp", 
+                    #if(Ar:string(2) == "ru") { timer("help_ru",100) }
+                    #elseif(Ar:string(2) == "en") { timer("help_en",100)}
+                    timer("help_en",100)
+                break
+                default,
+            }
+        }
+    }
+    elseif(TON) {
+        local OK = 0
+        local OKb = BlackList:checkAr(Pla)
+        if(!OKb) {
+            OK = WhiteList:checkAr(Pla)
+        }
+        if (Pla == owner() & TME) {
+            if (Hide) {
+                hideChat(1)
+                Queue:insertArray(1, array(Pla, getrequest(APIkey, TargetLang, SourceLang, Message, AutoT)))
+                #print("me2")
+            }
+            else { Hide = 1 }
+            #print("me")
+        }
+        elseif ((OK | (AllP & !OKb)) & Pla != owner()) {
+            #hideChat(1)
+            #print("they")
+            Queue:insertArray(1, array(Pla, getrequest(APIkey, SourceLang, TargetLang, Message, AutoT)))
+        }
+    }
+}
+
+if (httpClk()){
+    Pars = jsonDecode(httpData())
+    local Answer = Pars["text",table][1,string]
+    if(!TEST & LastWriter==owner() | FUN) {
+        Hide = 0
+        timer("concmd", Delay)
+        if(FUN==2 & LastWriter!=owner()) {
+            LastAnswer = "["+LastWriter:name()+"] - " + Answer
+        }
+        else { LastAnswer = Answer }
+    }
+    else {
+        printColor(vec(255,255,0), LastWriter:name(), vec(0,255,255), ":", vec(200,255,255), Answer)
+    }
+    #printTable(Pars)
+}
+
+#IsSucces = httpSuccess()
+IsCanRequest = httpCanRequest()
+
+if (IsCanRequest) {
+    Ar = Queue:popArray()
+    LastWriter = Ar:entity(1)
+    httpRequest(Ar:string(2))
+}
+
+if(clk("concmd")) {
+    concmd("say " + LastAnswer)
+}
+
+if (clk("OK")) {
+    owner():soundPlay(20, 0.3, "buttons/button9.wav")
+}
+
+if (clk("help_en")) {
+    printColor(vec(255,0,0), "###################################")
+    printColor(vec(255,255,0), "!taddw [nick]", vec(0,255,255), "  - Add Friend to WhiteList")
+    printColor(vec(255,255,0), "!tdellw [nick]", vec(0,255,255), "  - Remove Friend from WhiteList")
+    printColor(vec(255,255,0), "!taddb [nick]", vec(0,255,255), "  - Add Player to BlackList")
+    printColor(vec(255,255,0), "!tdellb [nick]", vec(0,255,255), "  - Remove Player from BlackList")
+    printColor(vec(255,255,0), "!tallp 0/1", vec(0,255,255), "  - allow all players to use teleport")
+    printColor(vec(255,255,0), "!reft", vec(0,255,255), "  - clears the Queue")
+    print(_HUD_PRINTCENTER, "Wait :)")
+    timer("help_en2", 2000)
+}
+
+if(clk("help_en2")) {
+    printColor(vec(255,255,0), "!TON 0/1", vec(0,255,255), "  - Translate ON/OFF")
+    printColor(vec(255,255,0), "!TME 0/1", vec(0,255,255), "  - Translate me ON/OFF")
+    printColor(vec(255,255,0), "!sl [lang]", vec(0,255,255), "  - Set Source Language")
+    printColor(vec(255,255,0), "!tl [lang]", vec(0,255,255), "  - Set Target Language")
+    printColor(vec(255,255,0), "!resl", vec(0,255,255), "  - Swap Languages")
+    printColor(vec(255,255,0), "!autot 0/1", vec(0,255,255), " - translate auto-TargetLang")
+    printColor(vec(255,255,0), "!FUN 0/1/2", vec(0,255,255), " - translate in chat other players")
+    printColor(vec(255,0,0), "###################################")
+}

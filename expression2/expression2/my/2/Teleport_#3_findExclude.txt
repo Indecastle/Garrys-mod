@@ -1,0 +1,222 @@
+@name Teleport #3 findExclude
+@inputs Active
+@outputs Eject Jump TargetPos:vector
+@persist [A B Vehicle]:entity W:wirelink SoundOk [WhiteList]:array AllP
+@trigger 
+interval(100)
+if(first() | dupefinished()) { runOnChat(1) OK = 1
+    
+    findIncludePlayerProps(owner())
+    findByModel("models/maxofs2d/thruster_propeller.mdl")
+    findSortByDistance(entity():pos())
+    A = findResult(1) ### A:propFreeze(1) ###########
+    B = findResult(2) ### B:propFreeze(1) ###########
+    print(A)
+    print(B)
+    
+    findByClass("prop_vehicle_*")
+    Vehicle = findClosest(entity():pos()) ### Vehicle:propFreeze(1) ####################  #Vehicle:noCollideAll(1)
+    print(Vehicle)
+    
+    findClearWhiteList()
+    
+    TargetPos = A:pos()+vec(0,0,22)
+    Jump = 1
+    timer("work6",400)
+    
+    WhiteList:pushEntity(owner())
+    findIncludePlayer(owner())
+    
+}
+
+#print(owner():pos():distance(Vehicle:pos()) )
+
+function number array:checkAr(Ent:entity) {
+    local OKlocal = 0
+    for(I=1,This:count()) {
+        if(This:entity(I) == Ent) { OKlocal = 1 break}
+    }
+    return OKlocal
+}
+
+if(!Active) { SoundOk = 0
+    #[Vehicle:setPos(A:pos()+vec(0,0,20))]# 
+}
+else {
+    #Vehicle:setPos(B:pos()+vec(0,0,20)) 
+    OK = 0
+    local Driver = Vehicle:driver()
+    OK = WhiteList:checkAr(Driver)
+    if(OK | AllP){
+        SoundOk = 1
+        ### Vehicle:propFreeze(1) Vehicle:setAng(ang(0,0,0))  ########################
+    }
+    else { Eject = 1 timer("work6",400) }
+}
+
+if(changed(SoundOk) & SoundOk == 1) { 
+    timer("work1",100)
+
+}
+
+if(chatClk()) {
+    Pla = lastSpoke()
+    OK = 0
+    OK = WhiteList:checkAr(Pla)
+    if(OK) {
+        local Ar = Pla:lastSaid():explode(" ")
+        if(Pla:lastSaid() == "!res") { # Swap A,B
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local Temp = A
+                A = B
+                B = Temp
+                timer("work4",40)
+            }
+        }
+        if(Pla:lastSaid() == "!ref") { # Refresh vehicle
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                timer("work4",40)
+            }
+        }
+        elseif(Pla:lastSaid() == "!resall" & Pla == owner()) { # Swap A,B (at long distance)
+            hideChat(1)
+            local Temp = A
+            A = B
+            B = Temp
+            timer("work4",40)
+        }
+        elseif(Pla:lastSaid() == "!refall" & Pla == owner()) { # Refresh vehicle (at long distance)
+            hideChat(1)
+            timer("work4",40)
+        }
+        elseif(Ar:string(1) == "!add") { # Add Friend to WhiteList
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local P = findPlayerByName(Ar:string(2))
+                if(P:isPlayer() & Ar:string(2)!="") {  findIncludePlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" added to the WhiteList") timer("work5",1)}
+                else { print("player not found") }
+            }
+            
+        }
+        elseif(Ar:string(1) == "!addb") { # Add Enemy to BlackList
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local P = findPlayerByName(Ar:string(2))
+                if(P != owner() & Ar:string(2)!="") {  findExcludePlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" added to the BlackList") timer("work5",1)}
+                else { print("player not found") }
+            }
+            
+        }
+        elseif(Ar:string(1) == "!dell") { # Remove Friend from WhiteList
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local P = findPlayerByName(Ar:string(2))
+                if(P != owner() & Ar:string(2)!="") {  findDisallowPlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" deleted from WhiteList") timer("work5",1)}
+                else { print("player not found") }
+            }
+        }
+        elseif(Ar:string(1) == "!dellb") { # Remove Enemy from BlackList
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                local P = findPlayerByName(Ar:string(2))
+                if(P:isPlayer() & Ar:string(2)!="") {  findAllowPlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" deleted from BlackList") timer("work5",1)}
+                else { print("player not found") }
+            }
+        }
+        elseif(Ar:string(1) == "!addall" & Pla == owner()) { # Add friend to WhiteList (at long distance)
+            hideChat(1)
+            local P = findPlayerByName(Ar:string(2))
+            
+            if(P:isPlayer() & Ar:string(2)!="") {  findIncludePlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" added to the WhiteList") timer("work5",1)}
+            else { print("player not found") }
+        }
+        elseif(Ar:string(1) == "!addball" & Pla == owner()) { # Add enemy to BlackList (at long distance)
+            hideChat(1)
+            local P = findPlayerByName(Ar:string(2))
+            
+            if(P != owner() & Ar:string(2)!="") {  findExcludePlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" added to the BlackList") timer("work5",1)}
+            else { print("player not found") }
+        }
+        elseif(Ar:string(1) == "!dellall" & Pla == owner()) { # Remove friend from WhiteList (at long distance)
+            hideChat(1)
+            local P = findPlayerByName(Ar:string(2))
+            
+            if(P != owner() & Ar:string(2)!="") {  findDisallowPlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" deleted from WhiteList") timer("work5",1)}
+            else { print("player not found") }
+            
+        }
+        elseif(Ar:string(1) == "!dellball" & Pla == owner()) { # Remove enemy to BlackList (at long distance)
+            hideChat(1)
+            local P = findPlayerByName(Ar:string(2))
+            
+            if(P:isPlayer() & Ar:string(2)!="") {  findAllowPlayer(P) findByClass("player") WhiteList = findToArray() print(P:name()+" deleted from BlackList") timer("work5",1)}
+            else { print("player not found") }
+            
+        }
+        
+        elseif(Ar:string(1) == "!allp") { # allow all players to use teleport
+            hideChat(1)
+            local L1 = Pla:pos():distance(A:pos())
+            local L2 = Pla:pos():distance(B:pos())
+            if(L1 < 100 | L2 < 100) {
+                if(Ar:string(2) == "0") { AllP = 0 print("AllPlayers off") timer("work5",1) }
+                elseif(Ar:string(2) == "1") { AllP = 1 print("AllPlayers on") timer("work5",1)}
+                
+            }
+            
+        }
+        elseif(Ar:string(1) == "!allpall" & Pla == owner()) { # allow all players to use teleport (at long distance)
+            hideChat(1)
+            if(Ar:string(2) == "0") { AllP = 0 print("AllPlayers off") timer("work5",1) }
+            elseif(Ar:string(2) == "1") { AllP = 1 print("AllPlayers on") timer("work5",1)}
+        }
+    }
+}
+
+
+
+if (clk("work1")) {
+    TargetPos = B:pos()+vec(0,0,22)
+    timer("work2",400)
+    
+}
+if (clk("work2")) {
+    Jump = 1
+    timer("work3",400)
+    
+}
+if (clk("work3")) {
+    Eject = 1
+    Jump = 0
+    timer("work4",400)
+}
+if (clk("work4")) {
+    TargetPos = A:pos()+vec(0,0,22)
+
+    timer("work5",400)
+}
+if (clk("work5")) {
+    if(Active) { timer("work5",400) }
+    else { 
+        Jump = 1
+        timer("work6",400)
+    }
+}
+if (clk("work6")) {
+    Jump = 0
+    Eject = 0
+}

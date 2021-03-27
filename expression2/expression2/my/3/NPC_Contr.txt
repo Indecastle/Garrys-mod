@@ -1,0 +1,124 @@
+@name NPC cotr
+@inputs 
+@outputs 
+@persist [NPC Target]:entity Toggle_spam
+@trigger 
+
+interval(10)
+runOnKeys(owner(),1)
+#entity():propNotSolid(1)
+
+if(changed(owner():keyPressed("e")) & owner():keyPressed("e") & owner():aimEntity())
+{
+    NPC = owner():aimEntity()
+    print(NPC)
+}
+
+if(changed(owner():keyPressed("b")) & owner():keyPressed("b"))
+{
+    Target = owner():aimEntity()
+    NPC:npcSetTarget(Target)
+    print(owner():aimEntity())
+}
+if(changed(owner():keyPressed("n")) & owner():keyPressed("n"))
+{
+    NPC:npcSetTarget(Target)
+    NPC:npcFace(Target:pos()+vec(0,0,20))
+}
+if(changed(owner():keyPressed("r")) & owner():keyPressed("r"))
+{
+    NPC:npcGoRun(owner():aimPos()+vec(0,0,10))
+}
+if(changed(owner():keyPressed("t")) & owner():keyPressed("t"))
+{
+    NPC:npcGoWalk(owner():aimPos()+vec(0,0,10))
+}
+if(changed(owner():keyPressed("h")) & owner():keyPressed("h"))
+{
+    NPC:npcShoot()
+    #print("shooted")
+}
+
+if(changed(owner():keyPressed("j")) & owner():keyPressed("j"))
+{
+    NPC:npcAttack()
+    #print("attack")
+}
+if(changed(owner():keyPressed("l")) & owner():keyPressed("l"))
+{
+    NPC:npcStop()
+    #print("stoped")
+}
+
+if(changed(owner():keyPressed("7")) & owner():keyPressed("7"))
+{
+    NPC:npcRelationship(owner():aimEntity(), "like", 999)
+    print(NPC:npcDisp(owner():aimEntity()))
+}
+if(changed(owner():keyPressed("8")) & owner():keyPressed("8"))
+{
+    NPC:npcRelationship(owner():aimEntity(), "neutral", 999)
+    print(NPC:npcDisp(owner():aimEntity()))
+}
+if(changed(owner():keyPressed("9")) & owner():keyPressed("9"))
+{
+    NPC:npcRelationship(owner():aimEntity(), "hate", 999)
+    print(NPC:npcDisp(owner():aimEntity()))
+}
+if(changed(owner():keyPressed("0")) & owner():keyPressed("0"))
+{
+    NPC:npcRelationship(owner():aimEntity(), "fear", 999)
+    print(NPC:npcDisp(owner():aimEntity()))
+}
+if(changed(owner():keyPressed("o")) & owner():keyPressed("o"))
+{
+    NPC:npcRelationship(owner(), "like", 999)
+    print(NPC:npcDisp(owner()))
+}
+if(changed(owner():keyPressed("p")) & owner():keyPressed("p"))
+{
+    Target = owner()
+    NPC:npcRelationship(owner(), "hate", 999)
+    print(NPC:npcDisp(owner()))
+}
+if(changed(owner():keyPressed("x")) & owner():keyPressed("x"))
+{
+    NPC:npcFace(owner():aimPos()+vec(0,0,10))
+    print("face")
+}
+if(changed(owner():keyPressed("6")) & owner():keyPressed("6"))
+{
+    foreach(K, E:entity = players()){
+        NPC:npcRelationship(E, "like", 999)
+    }
+    print("All likes")
+}
+if(changed(owner():keyPressed("5")) & owner():keyPressed("5"))
+{
+    foreach(K, E:entity = players()){
+        NPC:npcRelationship(E, "hate", 999)
+    }
+    NPC:npcRelationship(owner(), "like", 999)
+    print("All hates")
+}
+if(changed(owner():keyPressed("k")) & owner():keyPressed("k"))
+{
+    NPC:npcGiveWeapon("357")
+}
+
+if(changed(owner():keyPressed("m")) & owner():keyPressed("m"))
+{
+    if (Toggle_spam) {
+        stoptimer("spam_shoot")
+    }else{
+        timer("spam_shoot", 10)
+    }
+    Toggle_spam = Toggle_spam ? 0 : 1
+    
+}
+
+if(clk("spam_shoot")) {
+    NPC:npcGiveWeapon("357")
+    NPC:npcShoot()
+    timer("spam_shoot", 100)
+}

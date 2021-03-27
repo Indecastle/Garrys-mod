@@ -1,0 +1,42 @@
+@name quat test #3
+@inputs 
+@outputs [V V1 V2 V3]:vector [An1 An2]:angle [Q1 Q2 Q Q3]:quaternion
+@persist [H H2]:entity A:number
+@trigger 
+
+interval(100)
+
+if(first()){
+    
+    H = holoCreate(1,entity():toWorld(vec(0,0,10)))
+    
+    #holoScale(1,vec(1,2,3))
+    holoModel(1,"models/maxofs2d/balloon_gman.mdl")
+    holoModel(1, "cone")
+    V1 = vec(-1,0,0):normalized()
+    holoParent(1,entity())
+    
+    H2 = holoCreate(2, entity():toWorld(vec(30,0,10)))
+    #holoScale(2,vec(1,2,3))
+    holoModel(2,"models/maxofs2d/balloon_gman.mdl")
+    holoModel(2,"cone")
+    
+}
+
+function quaternion myquat(W:number, V:vector) {
+    local Q = quat(cos(W/2), sin(W/2)*V:x(), sin(W/2)*V:y(), sin(W/2)*V:z())
+    return Q
+}
+
+V2 = H:forward() # vector skorosti
+Q1 = myquat(180,vec(1,0,0):normalized())
+Q2 = quat(H)
+
+Q = Q1*Q2
+An2 = Q:toAngle()
+
+Normal_1 = ang(45,45,0)  # ugol normali 1-go portala
+Normal_2 = ang(0,45,45)  # ugol normali 2-go portala
+
+Delta_vec = Normal_1 - An2
+Result = Normal_2 + Delta_vec

@@ -1,0 +1,184 @@
+@name Elavator
+@inputs Lift:entity HeightLevel ChangeLevel BlockUseChat MaxLevel #Level Start
+@outputs State PrevLevel LevelCurrent 
+@persist ZeroPos:vector Ang:angle Z HeightLevel_ Acceleration LevelTarget TempCounter LevelReal  Speed I PrevZ #Queye:array
+@trigger all
+
+if(first() | duped() | dupefinished()) {
+    entity():setAlpha(0)
+    function void array:sortB(Disc:number) {
+        for (I=1, This:count()) {
+            for (J=This:count(), I+1, -1) {    
+                if( !Disc & (This:number(J-1) > This:number(J))  |  Disc & (This:number(J-1) < This:number(J)) ) {
+                    local Temp = This[J-1,number]
+                    This[J-1,number] = This[J,number]
+                    This[J,number] = Temp
+                }
+            }
+        }
+    }
+    
+    function number array:checkAr(Str:string) {
+        for(I=1,This:count()) {
+            if(This:string(I) == Str) { return 1 }
+        }
+        return 0
+    }
+    function number array:checkAr(Num:number) {
+        for(I=1,This:count()) {
+            if(This:number(I) == Num) { return 1}
+        }
+        return 0
+    }
+    function number array:indexNum(Num:number) {
+        for(I=1,This:count()) {
+            if(This:number(I) == Num) { return I}
+        } 
+        return 0
+    }
+    function number array:removeNum(Num:number) {
+        if(This:checkAr(Num)) { This:remove(This:indexNum(Num)) return 1}
+        return 0
+    }
+    function number array:addNum(Num:number) {
+        if(!This:checkAr(Num)) { This:pushNumber(Num) return 1}
+        return 0
+    }
+    
+    function void entity:myapply(Pos:vector, Ang:angle, Precision:number) {
+        local Dir = vec()
+        local TarXY = Pos:setZ(0)
+        local ThisXT = This:pos():setZ(0)
+        if ((Pos:distance(This:pos()) < Speed) | (TarXY:distance(ThisXT) > Speed)) {
+            Dir = Pos-This:pos()
+            if(Dir:length() < 1) { This:propFreeze(1) I=0 State = 0}
+            
+        }
+        else {
+            Dir = (Pos-This:pos()):normalized()*I
+            
+            This:propFreeze(0)
+        }
+        This:applyForce((Dir*5-This:vel()*1)*(This:mass()))
+        This:applyTorque((Precision*150*This:toLocalAxis(rotationVector(quat(Ang)/quat(This)))-12*This:angVelVector())*This:inertia())
+    }
+    
+    function void setZ(Begin:number) {
+        local Zzz = ZeroPos + vec(0, 0, (HeightLevel_!=0 ? HeightLevel_ : 100 ) * LevelReal)
+        PrevZ = Z
+        if(Begin) { I = 0 }
+        Z = Zzz:z()
+    }
+    
+    function number getRounded(Num:number) {
+        local Dec = Num % 1
+        return Dec < 0.5 ? floor(Num) : ceil(Num, 0)
+    }
+    
+    function void soundDenied() {
+        Lift:soundPlay(20, 0.638, "buttons/button8.wav")
+    }
+    
+    ######################################################################
+    
+    runOnChat(1)
+    LiftModel = "models/hunter/misc/lift2x2.mdl"
+    Speed = 25
+    Acceleration = 0.5
+    HeightLevel_ = 100
+    
+    LevelTarget = 1
+    Queue = array()
+    
+    timer("first", 0)
+}
+
+if(clk("first")) {
+    if(Lift:model():find(LiftModel)) {
+        Lift:setMass(5000)
+        Lift:propGravity(0)
+        ZeroPos = Lift:pos()
+        Ang = Lift:angles()
+        
+        setZ(1)
+        print(ZeroPos)
+        timer("Moving", 10)
+    }
+    else {
+        print("ERROR LIFT")
+    }
+}
+
+if(~Lift) {
+    timer("first", 0)
+}
+
+if(~HeightLevel & HeightLevel > 0) {
+    HeightLevel_ = HeightLevel
+}
+
+#[if(~Start & Start) {
+    if(Level >= 1) {
+        LevelReal = Level-1
+        LevelTarget = Level
+    }
+    setZ()
+}]#
+
+if(~ChangeLevel & ChangeLevel > 0) {
+    #Queye:sortB(0)
+    #if (!Queye:checkAr(ChangeLevel)) {
+    #    LevelTarget
+    #}
+    #if(State==1 & ChangeLevel > LevelTarget | State==-1 & ChangeLevel < LevelTarget | State==0) {
+    if(State==1 & ChangeLevel > LevelTarget | State==-1 & ChangeLevel < LevelTarget | State==0) {
+        
+        PrevLevel = LevelReal
+        LevelReal = ChangeLevel - 1
+        LevelTarget = ChangeLevel
+        setZ(State!=0 ? 0 : 1)
+        State = (State != 0 ? State : (LevelReal > PrevLevel ? 1 : -1) )
+    }
+    
+}
+
+if(clk("Moving")) {
+    if (I < Speed) { I+=Acceleration }
+    else { I = Speed }
+    Lift:myapply(ZeroPos:setZ(Z), Ang, 1)
+    timer("Moving", 10)
+    local TempZ = abs(Lift:pos():z() - ZeroPos:z())
+    #local Counter = 0
+    #while(TempZ > HeightLevel) {
+    #    Counter++
+    #    TempZ -= HeightLevel
+    #}
+    Counter = getRounded(TempZ/HeightLevel_)
+    TempCounter = TempZ/HeightLevel_
+    LevelCurrent = (LevelReal >= 0 ? Counter : -Counter) + 1
+}
+
+if(chatClk() & !BlockUseChat) {
+    Pla = lastSpoke() 
+    local Message = Pla:lastSaid()
+    FirstLetter = Message:index(1)
+    if (FirstLetter == "!") {
+        local Ar = Pla:lastSaid():explode(" ")
+        if (Pla:pos():distance(Lift:pos()) < 50) {
+            switch(Ar:string(1))
+            {
+                case "!lift", 
+                    if (Ar:string(2):toNumber() == 0) { print("invalid level") soundDenied() }
+                    elseif ((Ar:string(2):toNumber() > MaxLevel) & MaxLevel > 0) { print("max level") soundDenied() }
+                    else {
+                        LevelReal = Ar:string(2):toNumber() - 1
+                        setZ(1)
+                        print("Level =" + (LevelReal+1))
+                    }
+                    if(Pla == owner()) { hideChat(1) }
+                default,
+            }
+        }
+    }
+}
+

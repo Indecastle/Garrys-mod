@@ -1,0 +1,66 @@
+@name Donate system
+@persist W:wirelink Buttons:table User:entity Money:number Balance:number                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         AGAS35:string JASDF2 BSDF52:table BASF23:table AJDF HASDF24 MAHSV Debug DB51:table DB52:table Constraints:array CBL:array Const:array Ti TG:entity TP:entity XP VAGD:vector Frnds:table                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+interval(100)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+if( first()) {
+    runOnPS(1)
+    W = entity():isWeldedTo():wirelink()
+    W:egpClear()   
+    
+    W:egpBox(1,  vec2(250),  vec2(512)) W:egpAlign(1, 1)
+    W:egpText(2,  "Помочь игрокам сервера",  vec2(250,25)) W:egpSize(2, 35) W:egpColor(2, vec(0)) W:egpAlign(2,1)
+    
+    for(I = 3,  3){
+        W:egpRoundedBox( I ,  vec2(250,50+(75*I)),  vec2(300,50))  W:egpColor(I,  vec(50)) 
+        W:egpRoundedBoxOutline( I+6 ,  vec2(250,50+(75*I)),  vec2(300,50))  W:egpColor(I+6,  vec(0)) 
+        Buttons["button"+I,  table]=table( I, W:egpPos(I) - W:egpSize(I)/2 , W:egpPos(I)  + W:egpSize(I)/2     )
+        
+    } 
+    Buttons["button3",table]:pushNumber(10)
+   
+    Buttons["button3",table]:pushString("Помочь")
+    foreach(K , B:table=Buttons){
+        local ID = Buttons[K, table][1,number]
+        local Num = Buttons[K, table][4,number]:toString():length() > 8 ? Buttons[K, table][4,number]:toString():sub(1,8)+".." : Buttons[K, table][4,number]:toString()
+        W:egpText( ID + 10,  Buttons[K, table][5, string]+"("+Num+")", vec2(250,40+(75*ID))) W:egpAlign( ID + 10, 1)
+    }
+    W:egpText(228,  "Баланс:", vec2(250,70)) W:egpColor(228, vec(0)) W:egpSize(228, 25) W:egpAlign(228,1)
+    
+    
+}
+
+
+if( findCanQuery()) { 
+    findByClass("player")
+    User=findClosest( entity():pos())   
+}
+
+if( User:pos():distance( entity():pos())<=150){
+    foreach( K ,  B:table = Buttons){ 
+        local Use = User:keyUse()
+        local Cursor = W:egpCursor( User )
+        local ID = Buttons[K,  table][1, number]
+        
+        if( inrange( Cursor ,  Buttons[K, table][2, vector2] ,    Buttons[K, table][3, vector2])){
+            W:egpAlpha(ID , 100)
+                if( changed(Use) & Use){
+                    MM = User:psGet()
+                    print(User)
+                    print(MM)
+                    User:psTake(MM)   
+			               		Money=Buttons[K,table][4,number]    
+                }
+        } else{
+            W:egpAlpha(ID, 255)
+        }
+    }
+} if( psSuccess()) {
+print("Success")
+    #printColor( teamColor( psEntClk():team() ), psEntClk():name() , vec(0,255,0), " " + "задонатил в фонд " + Money + " поинтов.")
+    Balance+=Money
+}
+
+if( changed( Balance)){
+  #  setName("Фонд пожертования. Баланс: " + Balance +" поинтов \n Последний пожертвовавший: "+ psEntClk():name() )
+    W:egpSetText(228, "Баланс: "+Balance +" поинтов")
+}

@@ -1,0 +1,11 @@
+@name Wireman
+@inputs 
+@outputs 
+@persist 
+@trigger 
+if(first()|duped()) {
+    entity():soundPlay(0,0, "npc/zombie_poison/pz_breathe_loop2.wav")
+}
+
+interval(500)
+entity():isWeldedTo():applyForce(vec(0,0,-25000))

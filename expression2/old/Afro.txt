@@ -1,0 +1,13 @@
+@name Afro
+    
+Radius = 100
+holoCreate(1)
+O = owner()
+Atc = O:lookupAttachment("eyes")
+holoPos(1,O:attachmentPos(Atc)+(O:attachmentPos(Atc)-O:pos()):normalized() * (Radius/2+2) - O:forward() * 5)
+holoAng(1,O:attachmentAng(Atc))
+holoModel(1,"hqicosphere2")
+holoColor(1,vec(0,0,0))
+holoMaterial(1,"models/debug/debugwhite")
+holoScaleUnits(1,vec(Radius,Radius,Radius)*1.04)
+holoParentAttachment(1,O,"eyes")

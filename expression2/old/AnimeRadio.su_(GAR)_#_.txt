@@ -1,0 +1,5 @@
+@name AnimeRadio.su (GAR) # 
+@model models/props_lab/citizenradio.mdl #  (     HL2)
+
+if(duped()) {selfDestructAll()} #    E2 .
+soundURLload(1,"http://animeradio.su:8000",100,0,entity()) #

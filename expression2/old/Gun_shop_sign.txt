@@ -1,0 +1,40 @@
+@name Gun shop sign
+@inputs A:wirelink
+
+A:egpBoxOutline(1, vec2(10,250), vec2(250,450))
+A:egpColor(1, vec(255,0,0))
+
+A:egpText(2, "Friends GunShop", vec2(-50,50))
+A:egpColor(2, vec(0,0,255))
+
+A:egpBoxOutline(3, vec2(10,60), vec2(135,40))
+
+A:egpText(4, "Uzi 3000$", vec2(-100,100))
+
+A:egpText(5, "Ak-47 6000$", vec2(-100,115))
+
+A:egpText(6, "SkS 8500$", vec2(-100,130))
+
+A:egpText(7, "G3 8000$", vec2(-100,145))
+
+A:egpText(8, "M24 9500$", vec2(-100,160))
+
+A:egpText(9, "MP5K 8000$", vec2(-100,175))
+
+A:egpBoxOutline(10, vec2(-55,170), vec2(110,170))
+A:egpColor(10, vec(0,255,0))
+
+A:egpBoxOutline(11, vec2(70,185), vec2(120,200))
+A:egpColor(11, vec(255,0,0))
+
+A:egpText(12, "[RULES]", vec2(40,100))
+A:egpColor(12, vec(255,255,0))
+
+A:egpText(13, "Hold guns=kos", vec2(15,120))
+
+A:egpText(14, "Prices stay!", vec2(15,135))
+
+A:egpText(15, "No stealing!", vec2(15,150))
+
+A:egpBox(16, vec2(70,175), vec2(110,1))
+A:egpColor(16, vec(0,0,255))

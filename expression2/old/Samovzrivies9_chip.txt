@@ -1,0 +1,9 @@
+@name Samovzrivies9 chip
+
+runOnTick(1)
+
+entity():explosion()
+
+entity():explosion()
+
+entity():explosion()

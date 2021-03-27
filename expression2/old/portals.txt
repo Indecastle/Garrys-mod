@@ -1,0 +1,57 @@
+@name Portals
+@persist [E O]:entity R:table I [Ar]:array
+if(first()){
+    E = entity() O = owner() runOnTick(1)
+
+    #function quaternion myquat(W:number, V:vector) {
+    #    local Q = quat(cos(W/2), sin(W/2)*V:x(), sin(W/2)*V:y(), sin(W/2)*V:z())
+    #    return Q
+    #}
+
+    findIncludePlayerProps(O)
+    findInSphere(entity():pos(), 10000)
+    Ar = findToArray()
+}
+if(O:weapon():type() == "weapon_physcannon"){
+
+    if(changed(O:keyAttack1()) & O:keyAttack1()){R["Pt1",vector] = round(O:aimPos(),2) R["Pt1_Ang",angle] = round(O:aimNormal():toAngle(),2)}
+    if(changed(O:keyAttack2()) & O:keyAttack2()){R["Pt2",vector] = round(O:aimPos(),2) R["Pt2_Ang",angle] = round(O:aimNormal():toAngle(),2)}
+
+}
+
+if(changed(R["Pt1",vector]) | changed(R["Pt2",vector])){
+    
+    holoCreate(1,R["Pt1",vector]) holoAng(1,R["Pt1_Ang",angle]) holoScale(1,vec(0.3,4,8)) holoColor(1,vec()) holoDisableShading(1,1)
+    holoCreate(2,R["Pt1",vector]) holoAng(2,R["Pt1_Ang",angle] + ang(90,0,0)) holoScale(2,vec(8.1,4.1,0.4)) holoColor(2,vec(255,120,0)) holoModel(2,"models/holograms/hq_stube_thin.mdl") holoDisableShading(2,1)
+    
+    holoCreate(3,R["Pt2",vector]) holoAng(3,R["Pt2_Ang",angle]) holoScale(3,vec(0.3,4,8)) holoColor(3,vec()) holoDisableShading(3,1)
+    holoCreate(4,R["Pt2",vector]) holoAng(4,R["Pt2_Ang",angle] + ang(90,0,0)) holoScale(4,vec(8.1,4.1,0.4)) holoColor(4,vec(0,120,255)) holoModel(4,"models/holograms/hq_stube_thin.mdl") holoDisableShading(4,1)
+
+}
+
+foreach(I, P:entity = Ar){
+    if(P:pos():distance(R["Pt1",vector]-vec(0,0,60)) < 100 & P["Exit1",number] == 0){
+        P["Exit1",number] = 1
+        
+        #An = (myquat(180,vec(1,0,0):normalized()) * quat(P:vel())):toAngle()
+        #Dt = R["Pt1_Ang",angle] - An
+        #Rest = R["Pt2_Ang",angle] + Dt
+        
+        
+        
+        #:setVel(vec(Rest:pitch(),Rest:yaw(),Rest:roll()))
+        #P:setVel(vec(An))
+        #P:setEyeAngles(R["Pt2_Ang",angle])
+   
+        local Rev_vel = P:vel():toAngle() + ang(180, 0, 180)
+        Dt = R["Pt1_Ang",angle] + Rev_vel
+        Rest = R["Pt2_Ang",angle] + Dt
+        Rest = Rest:setPitch(-Rest:pitch())
+        P:setVel(Rest:forward() * P:vel():length())
+        
+        P:setPos(R["Pt2",vector] + holoEntity(3):forward()*30)
+
+        
+    }else{P["Exit1",number] = 0}
+}
+

@@ -1,0 +1,204 @@
+@name move area
+@persist TRUE FALSE
+@persist [E O]:entity Scale On [SavePosMin SavePosMax SavedCenterPos]:vector IsSaved DiffPoses:array
+@outputs Clk_Shift Clk_Attack1 Clk_Attack2
+
+interval(100)
+
+if (first()) {
+    TRUE=1 FALSE=0
+    E=entity() O=owner()
+    runOnKeys(O, 1)
+    Scale = 100
+    findExcludeClass("gmod_wire_hologram")
+    
+    function number key_pressed(Key:string) {
+        return keyClk(O) == 1 && keyClkPressed() == Key
+        #return changed(O:keyPressed(Key)) && O:keyPressed(Key)
+    }
+    
+    function number is_pressed_key(Key:string, Old_value:number) {
+        if (keyClkPressed() == Key) {
+            local KeyClk = keyClk(O)
+            if (KeyClk == 1) {
+                return KeyClk
+            }
+            elseif (KeyClk == -1) {
+                return 0
+            }
+        }
+        return Old_value
+    }
+    
+    function update_pos_rect(Type, CenterPos:vector) {
+        switch (Type) {
+            case 1,
+                holoPos(1, CenterPos)
+                holoPos(2, CenterPos)
+            break
+            case 2,
+                holoPos(3, CenterPos)
+                holoPos(4, CenterPos)
+            break
+        }
+    }
+    
+    function update_pos_sphere(Type, CenterPos:vector) {
+        switch (Type) {
+            case 1,
+                foreach (I, V:vector = DiffPoses) {
+                    holoPos(I+4, CenterPos + V)
+                }
+            break
+            case 2,
+                foreach (I, V:vector = DiffPoses) {
+                    holoPos(I+12, CenterPos + V)
+                }
+            break
+        }
+    }
+    
+    function update_scale() {
+        holoScaleUnits(1, vec(Scale))
+        holoScaleUnits(2, vec(-Scale))
+        holoScaleUnits(3, vec(Scale))
+        holoScaleUnits(4, vec(-Scale))
+        local CenterPos = O:aimPos()
+        update_pos_sphere(1, CenterPos)
+        update_pos_sphere(2, SavedCenterPos)
+        if (IsSaved) {
+            SavePosMin = SavedCenterPos - vec(Scale / 2)
+            SavePosMax = SavedCenterPos + vec(Scale / 2)
+        }
+    }
+    
+    function set_visible(Is, IsAdv) {
+        if (IsAdv) {
+            holoVisible(3, O, Is)
+            holoVisible(4, O, Is)
+            foreach (I, V:vector = DiffPoses) {
+                    holoVisible(I+12, O, Is)
+                }
+        }
+        else {
+            holoVisible(1, O, Is)
+            holoVisible(2, O, Is)
+            foreach (I, V:vector = DiffPoses) {
+                    holoVisible(I+4, O, Is)
+                }
+        }
+    }
+    
+    function update_enabling() {
+        set_visible(On, FALSE)
+        if (!On) {
+            IsSaved = FALSE
+            set_visible(FALSE, TRUE)
+        }
+    }
+    
+    function update_DiffPoses() {
+        local HR = Scale / 2
+        DiffPoses = array()
+        DiffPoses:pushVector(vec(HR, HR, HR))
+        DiffPoses:pushVector(vec(HR, HR, -HR))
+        DiffPoses:pushVector(vec(HR, -HR, HR))
+        DiffPoses:pushVector(vec(HR, -HR, -HR))
+        DiffPoses:pushVector(vec(-HR, HR, HR))
+        DiffPoses:pushVector(vec(-HR, HR, -HR))
+        DiffPoses:pushVector(vec(-HR, -HR, HR))
+        DiffPoses:pushVector(vec(-HR, -HR, -HR))
+    }
+    
+    
+    
+    function scale_handler(Event:string) {
+        switch (Event) {
+            case "more",
+                if (Scale < 10000) {
+                    Scale += 25
+                }
+            break
+            case "less",
+                if (Scale > 50) {
+                    Scale -= 25
+                }
+            break
+        }
+        update_DiffPoses()
+        update_scale()
+    }
+    
+    # Entity=holoCreate(number index,vector position,vector scale,angle ang,vector color)
+    holoCreate(1, E:pos(), vec(1), ang(), vec4(0, 255, 0, 50))
+    holoCreate(2, E:pos(), vec(-1), ang(), vec4(0, 255, 0, 150))
+    
+    holoCreate(3, E:pos(), vec(1), ang(), vec4(255, 255, 0, 50))
+    holoCreate(4, E:pos(), vec(-1), ang(), vec4(255, 255, 0, 150))
+    
+    for (I=5, 12) {
+        holoCreate(I, E:pos(), vec(1), ang(), vec4(0, 255, 0, 150), "icosphere3")
+    }
+    for (I=13, 20) {
+        holoCreate(I, E:pos(), vec(1), ang(), vec4(255, 255, 0, 150), "icosphere3")
+    }
+    update_DiffPoses()
+    update_scale()
+    for (I=1, 20) {
+        holoVisible(I, players(), 0)
+    }
+    
+    
+}
+
+
+Clk_Shift = is_pressed_key("lshift", Clk_Shift)
+Clk_Attack1 = is_pressed_key("mouse_left", Clk_Attack1)
+Clk_Attack2 = is_pressed_key("mouse_right", Clk_Attack2)
+
+if (key_pressed("mouse_wheel_up")) {
+    scale_handler("more")
+}
+if (key_pressed("mouse_wheel_down")) {
+    scale_handler("less")
+}
+
+if (changed(Clk_Shift&&Clk_Attack2) && Clk_Shift&&Clk_Attack2) {
+    On = !On
+    update_enabling()
+}
+
+if (changed(Clk_Attack2) && Clk_Attack2 && !Clk_Shift) {
+    if (On) {
+        SavedCenterPos = O:aimPos()
+        SavePosMin = SavedCenterPos - vec(Scale / 2)
+        SavePosMax = SavedCenterPos + vec(Scale / 2)
+        printColor(vec(255,255,0), "Saved Area")
+        IsSaved = TRUE
+        update_pos_rect(2, SavedCenterPos)
+        update_pos_sphere(2, SavedCenterPos)
+        set_visible(TRUE, TRUE)
+    }
+}
+
+if (changed(Clk_Shift&&Clk_Attack1) && Clk_Shift&&Clk_Attack1) {
+    if (On && IsSaved) {
+        findInBox(SavePosMin, SavePosMax)
+        Ents = findToArray()
+        foreach (I, Ent:entity = Ents) {
+            local Diff = SavedCenterPos - Ent:pos()
+            Ent:setPos(O:aimPos() - Diff)
+        }
+        On = FALSE
+        update_enabling()
+        printColor(vec(255,255,0), "Moved")
+    }
+    IsSaved = FALSE
+    set_visible(FALSE, TRUE)
+}
+
+if (On) {
+    local CenterPos = O:aimPos()
+    update_pos_rect(1, CenterPos)
+    update_pos_sphere(1, CenterPos)
+}

@@ -1,0 +1,25 @@
+@name spray 
+@inputs 
+@outputs 
+@persist 
+@trigger 
+runOnTick(1)
+#owner():weapon():setModel("lol.mdl")
+if(owner():ammoCount("AlyxGun")<150){
+ owner():giveAmmo("AlyxGun",1)     
+}
+if(owner():ammoCount("AlyxGun")<150){
+ owner():giveAmmo("AlyxGun",1)     
+}
+if(owner():ammoCount("XBowBolt")<150){
+ owner():giveAmmo("XBowBolt",1)     
+}
+if(owner():ammoCount("Buckshot")<150){
+ owner():giveAmmo("Buckshot",1)     
+}
+if(owner():ammoCount("slam")<150){
+ owner():giveAmmo("slam",1)     
+}
+if(first()){
+print("lol AlyxGun hahah")
+}

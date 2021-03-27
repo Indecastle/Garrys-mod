@@ -1,0 +1,96 @@
+@name Turret Forcer Anomaly
+@inputs WhiteList:array CheckGod
+@outputs Target:entity Velocity Length
+@persist Defaultpos MaxDegree Radius [Turret H]:entity E W:wirelink
+@trigger none
+interval(100)
+if(first()) { 
+    MaxDegree = 360
+    Radius = 500
+    E = 4
+    
+    Velocity = -100
+    
+    #runOnKeys(owner(),1)
+    findByClass("gmod_wire_forcer")
+    Turret = findClosest(entity():pos())
+    #W = Turret:wirelink()
+    #findExcludePlayer(owner())
+    timer("scan",100)
+    
+    
+    
+    H = holoCreate(1,entity():toWorld(vec(0,0,10)),vec(0.3)) H:setAlpha(0)
+    holoParent(1,entity())
+    
+    HMaterial = "models/effects/portalrift_sheet"
+    holoCreate(1,entity():pos()+vec(0,0,10),vec(50,0,50),ang(0,0,0))
+    holoCreate(2,entity():pos()+vec(0,0,10),vec(0,50,50),ang(0,0,0))
+    holoCreate(3,entity():pos()+vec(0,0,10),vec(50,50,0),ang(0,0,0))
+    holoMaterial(1,HMaterial)
+    holoMaterial(2,HMaterial)
+    holoMaterial(3,HMaterial)
+    holoParent(1,entity()) holoParent(2,entity()) holoParent(3,entity())
+    holoEntity(3):soundPlay(0,0,"ambient/energy/force_field_loop1.wav")
+}
+
+Turret:setPos(H:toWorld(vec(10,0,0)))
+
+
+
+
+
+if(clk("scan")) {
+    findClearBlackEntityList()
+    findClearWhiteEntityList()
+    if(WhiteList:count() > 0) { findExcludeEntities(WhiteList) }
+    
+    findByClass("player")
+    Players = findToArray() 
+    local R = array()
+    for(I=1,Players:count()) {
+        Pos = holoEntity(1):angles():forward()
+        Pos0 = (Players:entity(I):attachmentPos("eyes") - Turret:pos()):normalized()
+        Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+        Acos = acos(Cos)
+        if(Acos<MaxDegree & Players:entity(I):isAlive()) {
+            if(!CheckGod | !Players:entity(I):hasGodMode()) {
+                R:pushEntity(Players:entity(I))
+            }
+        }
+    }
+    
+    #findIncludeClass("player")
+    findIncludeEntities(R)
+    findInSphere(Turret:pos(),Radius)
+    local Count = 0
+    if(R:count() > 0) { Count = findSortByDistance(Turret:pos()) }
+    else { Count = 0 }
+    Target = noentity()
+    for(I=1, Count) {
+        Ranger = rangerOffset(Turret:pos()+vec(0,0,20),findResult(I):attachmentPos("eyes")+vec(0,0,-20))
+        if(!Ranger:hitWorld() & Ranger:entity():type()!="prop_physics") { Target = findResult(I) break }
+    }
+    timer("scan",200)
+}
+
+if(Target:isPlayer()) {
+    Ang = (Target:attachmentPos("chest") - Turret:pos() + Target:vel() * tickInterval()*E):toAngle()
+    Turret:setAng(Ang+ang(90,0,0))
+    Length = Turret:pos():distance(Target:pos())+100
+}
+else { 
+    Turret:setAng(holoEntity(1):angles()+ang(90,0,0))
+    Length = 0
+    }
+
+if(changed(Target:isPlayer())&Target:isPlayer()) {
+    #Turret:soundPlay("Alert",0.5,"NPC_FloorTurret.Alert")
+}
+
+if(changed(Target)&Target:isPlayer()) {
+    #Turret:soundPlay("change",0.5,"NPC_Turret.Deploy")
+}
+
+
+

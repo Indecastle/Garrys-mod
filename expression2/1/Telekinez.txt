@@ -1,0 +1,112 @@
+@name Telekinesis
+@inputs 
+@outputs 
+@persist GrabbedProps:array OrbitAngle
+@trigger 
+
+#[
+Usage:
+Place the chip anywhere.
+Right click on a prop with the crowbar to levitate it.
+Hold left click with the crowbar to cast levitated props, release to call them back.
+Reload with the crowbar to drop levitated props.
+Edit constants (below) to change how the levitated props move.
+]#
+
+#constants
+OrbitSpeed = 1 #make this negative for clockwise rotation
+OrbitHeight = 200
+OrbitDistance = 200
+MaxProps = 35 #going to much higher than this can cause the chip to exceed the soft quota
+
+runOnTick(1)
+
+if(owner():weapon():type() == "weapon_crowbar")
+{
+rangerFilter(GrabbedProps)
+rangerFilter(owner())
+RangerData = rangerOffset(16384, owner():shootPos(), owner():eye())
+
+#pick up props by right clicking with the crowbar
+if(owner():keyAttack2() && GrabbedProps:count() < MaxProps)
+{
+PickedEntity = RangerData:entity()
+if(PickedEntity)
+{
+if(!PickedEntity:isFrozen())
+{
+GrabbedProps:pushEntity(PickedEntity)
+}
+}
+}
+
+#drop all props by reloading the crowbar
+if(owner():keyReload())
+{
+while(GrabbedProps:count())
+{
+GrabbedProps:pop()
+}
+}
+
+#cast props by swinging the crowbar
+if(owner():keyAttack1())
+{
+TargetPosition = RangerData:pos()
+for(I = 1, GrabbedProps:count())
+{
+Prop = GrabbedProps[I, entity]
+
+#remove props from the array if they are null (most likely they've been removed or gib'd)
+if(!Prop)
+{
+GrabbedProps:removeEntity(I)
+}
+
+Prop:applyForce(((TargetPosition - Prop:pos())) * Prop:mass())
+}
+}
+else
+{
+#make the props serenely orbit the player like a graceful halo
+OrbitAngle += OrbitSpeed
+SeparationAngle = 360 / GrabbedProps:count()
+
+for(I = 1, GrabbedProps:count())
+{
+OffsetAngle = OrbitAngle + SeparationAngle * I
+TargetPosition = owner():pos() + vec(OrbitDistance * cos(OffsetAngle), OrbitDistance * sin(OffsetAngle), OrbitHeight)
+Prop = GrabbedProps[I, entity]
+
+#remove props from the array if they are null (most likely they've been removed or gib'd)
+if(!Prop)
+{
+GrabbedProps:removeEntity(I)
+}
+
+Prop:applyForce(((TargetPosition - Prop:pos() - Prop:vel() * 0.25)) * Prop:mass())
+}
+}
+}
+else
+{
+#this is just a copy pasta from the above since e2 has no custom functions (ugh!)
+#make the props serenely orbit the player like a graceful halo
+OrbitAngle += OrbitSpeed
+SeparationAngle = 360 / GrabbedProps:count()
+
+for(I = 1, GrabbedProps:count())
+{
+OffsetAngle = OrbitAngle + SeparationAngle * I
+TargetPosition = owner():pos() + vec(OrbitDistance * cos(OffsetAngle), OrbitDistance * sin(OffsetAngle), OrbitHeight)
+Prop = GrabbedProps[I, entity]
+
+#remove props from the array if they are null (most likely they've been removed or gib'd)
+if(!Prop)
+{
+GrabbedProps:removeEntity(I)
+}
+
+Prop:applyForce(((TargetPosition - Prop:pos() - Prop:vel() * 0.25)) * Prop:mass())
+}
+}

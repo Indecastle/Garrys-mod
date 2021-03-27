@@ -1,0 +1,20 @@
+@name Wire E2 Beacon Sensor
+@inputs Target:entity
+@outputs Distance World_X World_Y World_Z [World_Vec ShootPos EyeDir]:vector EyeAngle:angle
+@persist [O E]:entity
+
+if (first() | dupefinished()) {
+    O = owner() E = entity()
+}
+
+interval(100)
+local Pos = Target:pos()
+
+World_Vec = Pos
+World_X = Pos:x()
+World_Y = Pos:y()
+World_Z = Pos:z()
+Distance = Pos:distance(E:pos())
+ShootPos = Target:shootPos()
+EyeDir = (Target:aimPos()-Target:shootPos()):normalized()
+EyeAngle = EyeDir:toAngle()

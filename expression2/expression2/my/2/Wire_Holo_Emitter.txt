@@ -1,0 +1,17 @@
+@name Wire Holo Emitter
+@inputs 
+@outputs P:entity [Pos Color]:vector FadeTime GroundBeam LineBeam Size X Y Z Local
+@persist
+@trigger 
+
+interval(10)
+P = entity(36)
+#P = owner()
+Color = vec(randint(255),randint(255),randint(255))
+Pos = vec(random(-10000,10000),random(-10000,10000),5000)
+FadeTime = 1
+GroundBeam = 0
+LineBeam = 1
+Size = 100
+Local = 1
+

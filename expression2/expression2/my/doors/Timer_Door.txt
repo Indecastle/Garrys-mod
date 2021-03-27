@@ -1,0 +1,54 @@
+@name Timer Door
+@inputs A1 A2 B1
+@outputs Fade Remaining RGB_Color:vector
+@persist Interval EndTime
+@trigger all
+
+if (first() | duped() | dupefinished()) {
+    Interval = 6000
+    
+    function void handler(Open) {
+        if (Open) {
+            EndTime = curtime() + Interval / 1000
+            Fade = 1
+            stopAllTimers()
+            timer("timer", Interval)
+            timer("Remaining", 100)
+        } else {
+            Fade = 0
+            Remaining = 0
+            stopAllTimers()
+        }
+    }
+}
+
+
+if (changed(B1) & B1) {
+    if (!Fade) {
+        handler(1)
+    } else {
+        handler(0)
+    }
+}
+
+if(changed(A1 | A2) & (A1 | A2)) {
+    handler(1)
+}
+
+
+
+if(clk("timer")) {
+    Fade = 0
+}
+
+if(clk("Remaining")) {
+    Remaining = EndTime - curtime()
+    if (Remaining < 0) {
+        Remaining = 0
+    }
+    else {
+        timer("Remaining", 100)
+    }
+}
+
+RGB_Color = Fade ? vec(0,255,0) : vec(255,0,0)

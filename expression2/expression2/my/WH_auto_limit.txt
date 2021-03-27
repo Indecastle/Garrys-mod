@@ -1,0 +1,71 @@
+@name WH auto limit
+@inputs WW:wirelink
+@persist EI I [Players OP]:table O:entity W:wirelink
+@model models/cheeze/wires/nano_compare.mdl
+if(dupefinished() | duped()) { selfDestructAll() }
+if(first()) {
+    W = entity():isWeldedTo():wirelink()
+}
+if ((->WW|W)&(first()|changed(->WW)|changed(W))){   entity():setMaterial("Models/effects/vol_light001") entity():propStatic(1) entity():propNotSolid(1) entity():propFreeze(1) entity():isWeldedTo():propStatic(1)
+    if(->WW) { W = WW }
+    W:egpClear()
+    setName("xui")
+    timer("scan",10)
+}
+if (clk("scan")){
+    O = owner()
+    #findByClass("player")
+    findIncludeClass("player")
+    findInSphere(owner():pos(), 5000)
+    Players=findToTable()
+    if (Players:count()!=OP:count()){
+        I=0
+        EI=0
+        W:egpClear()
+        timer("egp",10)
+    }
+    OP=Players
+    timer("scan",200)
+}
+if (clk("egp")&(I<Players:count())){
+    I++
+    P=Players[I,entity]
+    
+    EI++
+    W:egp3DTracker(EI,vec(0,0,0))
+    W:egpParent(EI,P)
+    if(Players[I,entity]:isAdmin()){
+        EI++
+        W:egpBox(EI,vec2(0,0),vec2(10,10))
+        W:egpColor(EI,vec4(255,0,0,100))
+        W:egpPos(EI,W:egpPos(EI-1))
+        W:egpParent(EI,EI-1)
+    }else{
+        EI++
+        W:egpBox(EI,vec2(0,0),vec2(10,10))
+        W:egpColor(EI,vec4(100,255,100,100))
+        W:egpPos(EI,W:egpPos(EI-1))
+        W:egpParent(EI,EI-1)
+    }
+    
+    EI++
+    W:egpText(EI,Players[I,entity]:name() ,vec2(-10,0))                    W:egpSize(EI,13)
+    W:egpText(EI+Players:count()*5,Players[I,entity]:name() ,vec2(-10,10)) W:egpSize(EI+Players:count()*5,13)
+    
+    W:egpParent(EI,EI-2)
+    W:egpParent(EI+Players:count()*5,EI-2)
+    timer("egp",50)
+    if(I>=Players:count()) { timer("distance",100) }
+}
+
+if(clk("distance"))
+{
+    for(J=1, Players:count())
+    {
+        Dist = O:pos():distance(Players[J,entity]:pos())/100
+        W:egpSetText(J*3+Players:count()*5,Players[J,entity]:health() + "hp" + " | " + round(Dist) + "m")
+    }
+    timer("distance",100)
+}
+
+entity():setAlpha(255)

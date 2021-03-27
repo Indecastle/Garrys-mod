@@ -1,0 +1,17 @@
+@name Teleport Prop(one)
+@persist Prop:entity
+
+if(first()) {
+    runOnKeys(owner(),1)
+}
+
+if(owner():keyPressed("e")) {
+    if(owner():aimEntity() & owner():aimEntity():owner() == owner()) {
+        Prop = owner():aimEntity()
+        print(Prop)
+    }
+}
+
+if(owner():keyPressed("r")) {
+    Prop:setPos(owner():shootPos()+owner():eye()*100)
+}

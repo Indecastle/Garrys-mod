@@ -1,0 +1,286 @@
+@name Portalgun
+@persist PortO Tick PortB Active [PortalPlaceSound PortalExitSound]:string
+@persist Timer
+interval(10)
+if(first()|duped()){
+    PortalPlaceSound="weapons/physcannon/energy_bounce1.wav"
+    PortalExitSound="weapons/physcannon/energy_bounce2.wav"
+    PortO=123456
+    PortB=234567
+    holoCreate(PortO)
+    holoModel(PortO,"hqtorus2")
+    holoColor(PortO,vec(255,100,0))
+    holoScale(PortO,vec(7,4,1))
+    holoMaterial(PortO,"models/debug/debugwhite")
+    holoCreate(PortB)
+    holoModel(PortB,"hqtorus2")
+    holoColor(PortB,vec(0,50,200))
+    holoScale(PortB,vec(7,4,1))
+    holoMaterial(PortB,"models/debug/debugwhite")
+    holoCreate(12)
+    holoModel(12,"plane")
+    holoScale(12,vec(6,3.3,1))
+    holoMaterial(12,"models/props_lab/Tank_Glass001")
+    holoAng(12,entity():angles()+ang(0,0,0))
+    holoCreate(13)
+    holoModel(13,"plane")
+    holoScale(13,vec(6,3.3,1))
+    holoMaterial(13,"models/props_combine/stasisshield_sheet")
+    holoAng(13,entity():angles()+ang(0,0,0))
+    holoPos(12,entity():pos()+vec(0,0,1))
+    holoPos(13,entity():pos()+vec(0,0,1))
+    holoParent(12,PortO)
+    holoParent(13,PortB)
+    Active=0
+    holoAlpha(PortO,0)
+    holoAlpha(PortB,0)
+    holoAlpha(12,0)
+    holoAlpha(13,0)
+
+    Base=450
+    Base2=451
+    Mid1=452
+    Mid2=453
+    Mid3=454
+    Mid4=455
+    Mid5=456
+    Mid6=457
+    End11=458
+    End21=459
+    End31=460
+    End12=461
+    End22=462
+    End32=463
+    End13=464
+    End23=465
+    End33=466
+    End4=467
+    End5=468
+    End6=469
+    BaseEnt=holoCreate(Base)
+    holoModel(Base,"hqicosphere2")
+    holoPos(Base,entity():pos()+vec(0,0,30))
+    holoScaleUnits(Base,vec(7,13,8))
+    holoClipEnabled(Base,1)
+        
+    Mid1Ent=holoCreate(Mid1)
+    holoModel(Mid1,"hqcylinder2")
+    holoAng(Mid1,BaseEnt:angles()+ang(0,0,90))
+    holoPos(Mid1,BaseEnt:toWorld(vec(0,-9,0)))
+    holoScaleUnits(Mid1,vec(3.5,3.5,10))
+    holoColor(Mid1,vec(20,20,30))
+    
+    holoCreate(Mid2)
+    holoModel(Mid2,"hqcylinder2")
+    holoAng(Mid2,BaseEnt:angles()+ang(0,0,90))
+    holoPos(Mid2,BaseEnt:toWorld(vec(0,-9,0)))
+    holoScaleUnits(Mid2,vec(5,5,1.5))
+    holoColor(Mid2,vec(20,20,30))
+    
+    holoCreate(Mid3)
+    holoModel(Mid3,"hqcylinder2")
+    holoAng(Mid3,BaseEnt:angles()+ang(0,0,90))
+    holoPos(Mid3,BaseEnt:toWorld(vec(0,-4,-0.6)))
+    holoScaleUnits(Mid3,vec(5,6,4))
+    holoColor(Mid3,vec(20,20,30))
+    
+    holoCreate(Mid4)
+    holoModel(Mid4,"hqcylinder2")
+    holoAng(Mid4,BaseEnt:angles()+ang(0,0,90))
+    holoPos(Mid4,BaseEnt:toWorld(vec(0,-10,0)))
+    holoScaleUnits(Mid4,vec(4.5,4.5,2))
+    holoColor(Mid4,vec(20,20,30))
+    
+    holoCreate(Mid5)
+    holoModel(Mid5,"hqcylinder2")
+    holoAng(Mid5,BaseEnt:angles()+ang(0,0,90))
+    holoPos(Mid5,BaseEnt:toWorld(vec(0,-12,0)))
+    holoScaleUnits(Mid5,vec(3.7,3.7,1.8))
+    holoColor(Mid5,vec(20,20,30))
+    
+    holoCreate(Mid6)
+    holoModel(Mid6,"hqcylinder2")
+    holoAng(Mid6,BaseEnt:angles()+ang(0,0,90))
+    holoPos(Mid6,BaseEnt:toWorld(vec(0,-14,0)))
+    holoScaleUnits(Mid6,vec(3.7,3.7,1.3))
+    holoColor(Mid6,vec(20,20,30))
+    
+    Base2Ent=holoCreate(Base2)
+    holoAng(Base2,BaseEnt:angles()+ang(180,0,-10))
+    holoModel(Base2,"dome")
+    holoPos(Base2,BaseEnt:toWorld(vec(0,-10,-1)))
+    holoScaleUnits(Base2,vec(7,10,8))
+    
+    holoCreate(End11)
+    holoScaleUnits(End11,vec(0.5,0.5,5))
+    holoPos(End11,Mid1Ent:toWorld(vec(0,3,1)))
+    holoAng(End11,Mid1Ent:toWorld(ang(0,0,-45)))
+    holoColor(End11,vec(20,20,30))
+    
+    holoCreate(End21)
+    holoScaleUnits(End21,vec(0.4,0.4,5))
+    holoPos(End21,Mid1Ent:toWorld(vec(0,4.4,4.2)))
+    holoAng(End21,Mid1Ent:toWorld(ang(0,0,0)))
+    holoColor(End21,vec(20,20,30))
+    
+    holoCreate(End31)
+    holoModel(End31,"tetra")
+    holoScaleUnits(End31,vec(1,1,4))
+    holoPos(End31,Mid1Ent:toWorld(vec(0,4,7)))
+    holoAng(End31,Mid1Ent:toWorld(ang(0,0,45)))
+    holoColor(End31,vec(20,20,30))
+    
+    holoCreate(End12)
+    holoScaleUnits(End12,vec(0.5,0.5,5))
+    holoPos(End12,Mid1Ent:toWorld(vec(0,5,3):rotate(0,115,0)))
+    holoAng(End12,Mid1Ent:toWorld(ang(0,115,-45)))
+    holoColor(End12,vec(20,20,30))
+    
+    holoCreate(End22)
+    holoScaleUnits(End22,vec(0.4,0.4,5))
+    holoPos(End22,Mid1Ent:toWorld(vec(0,6.4,6.2):rotate(0,115,0)))
+    holoAng(End22,Mid1Ent:toWorld(ang(0,115,0)))
+    holoColor(End22,vec(20,20,30))
+    
+    holoCreate(End32)
+    holoModel(End32,"tetra")
+    holoScaleUnits(End32,vec(1,1,4))
+    holoPos(End32,Mid1Ent:toWorld(vec(0,6,9):rotate(0,115,0)))
+    holoAng(End32,Mid1Ent:toWorld(ang(0,115,45)))
+    holoColor(End32,vec(20,20,30))
+    
+    holoCreate(End13)
+    holoScaleUnits(End13,vec(0.5,0.5,5))
+    holoPos(End13,Mid1Ent:toWorld(vec(0,5,3):rotate(0,-115,0)))
+    holoAng(End13,Mid1Ent:toWorld(ang(0,-115,-45)))
+    holoColor(End13,vec(20,20,30))
+    
+    holoCreate(End23)
+    holoScaleUnits(End23,vec(0.4,0.4,5))
+    holoPos(End23,Mid1Ent:toWorld(vec(0,6.4,6.2):rotate(0,-115,0)))
+    holoAng(End23,Mid1Ent:toWorld(ang(0,-115,0)))
+    holoColor(End23,vec(20,20,30))
+    
+    holoCreate(End33)
+    holoModel(End33,"tetra")
+    holoScaleUnits(End33,vec(1,1,4))
+    holoPos(End33,Mid1Ent:toWorld(vec(0,6,9):rotate(0,-115,0)))
+    holoAng(End33,Mid1Ent:toWorld(ang(0,-115,45)))
+    holoColor(End33,vec(20,20,30))
+    
+    holoCreate(End4)
+    holoModel(End4,"hqtorus2")
+    holoScaleUnits(End4,vec(5,10,1))
+    holoPos(End4,BaseEnt:toWorld(vec(0,-5,2)))
+    holoAng(End4,BaseEnt:toWorld(ang(90,0,0)))
+    holoColor(End4,vec(20,20,30))
+    
+    holoCreate(End5)
+    holoModel(End5,"hqtorus2")
+    holoScaleUnits(End5,vec(5,10,1))
+    holoPos(End5,BaseEnt:toWorld(vec(0,-5,3):rotate(115,0,0)))
+    holoAng(End5,BaseEnt:toWorld(ang(205,0,0)))
+    holoColor(End5,vec(20,20,30))
+    
+    holoCreate(End6)
+    holoModel(End6,"hqtorus2")
+    holoScaleUnits(End6,vec(5,10,1))
+    holoPos(End6,BaseEnt:toWorld(vec(0,-5,3):rotate(-115,0,0)))
+    holoAng(End6,BaseEnt:toWorld(ang(-205,0,0)))
+    holoColor(End6,vec(20,20,30))
+    for(I=451,469){
+        holoParent(I,450)
+    }
+    holoPos(450,owner():attachmentPos("anim_attachment_rh"))
+    holoAng(450,owner():attachmentAng("anim_attachment_rh"))
+    holoPos(450,holoEntity(450):toWorld(vec(9.4,0,3)))
+    holoAng(450,holoEntity(450):toWorld(ang(-12,70,0)))
+    holoParentAttachment(450,owner(),"anim_attachment_rh")
+    for(I=450,469){
+        holoAlpha(I,0)
+    }
+}
+if((owner():weapon():type()=="weapon_physcannon")){
+    for(Z=450,469){
+        holoAlpha(Z,255)
+    }
+    owner():weapon():setMaterial("Models/effects/vol_light001")
+}
+else{
+    for(I=450,469){
+        holoAlpha(I,0)
+    }
+}
+soundPitch(0,200)
+if(Active){
+    R1=rangerOffset(45,holoEntity(PortO):pos(),(vec(0,0,1)):rotate(holoEntity(PortO):angles()))
+    R2=rangerOffset(45,holoEntity(PortB):pos(),(vec(0,0,1)):rotate(holoEntity(PortB):angles()))
+    if(R1:hit()&R1:entity()){
+        if(R1:entity():owner()==owner()){
+            R1:entity():applyForce((-R1:entity():vel()):rotate(holoEntity(PortB):angles())*R1:entity():mass()*1.1)
+        }
+        R1:entity():applyForce((-R1:entity():vel()):rotate(holoEntity(PortB):angles())*2.5)
+        holoEntity(PortO):soundPlay(1,0,PortalExitSound)
+        R1:entity():tele(holoEntity(PortB):pos()+holoEntity(PortB):up()*(R1:entity():radius()+40)-vec(0,0,(R1:entity():boxSize():z()/2)*R1:entity():isPlayer()))
+        Ar1=R1:entity():getConstraints()
+        for(I=1,Ar1:count()){
+            Ar1:entity(I):tele(holoEntity(PortO):pos()+holoEntity(PortO):up()*(Ar1:entity(I):radius()+40)-vec(0,0,(Ar1:entity(I):boxSize():z()/2)*Ar1:entity(I):isPlayer()))
+        }
+    }
+    if(R2:hit()&R2:entity()){
+        if(R2:entity():owner()==owner()){
+            R2:entity():applyForce((-R2:entity():vel()):rotate(holoEntity(PortB):angles())*R2:entity():mass()*1.1)
+        }
+        R2:entity():applyForce((-R2:entity():vel()):rotate(holoEntity(PortO):angles())*2.5)
+        holoEntity(PortB):soundPlay(1,0,PortalExitSound)
+        R2:entity():tele(holoEntity(PortO):pos()+holoEntity(PortO):up()*(R2:entity():radius()+40)-vec(0,0,(R2:entity():boxSize():z()/2)*R2:entity():isPlayer()))
+        Ar2=R2:entity():getConstraints()
+        for(B=1,Ar2:count()){
+            Ar2:entity(B):tele(holoEntity(PortO):pos()+holoEntity(PortO):up()*(R2:entity():radius()+40)-vec(0,0,(R2:entity():boxSize():z()/2)*R2:entity():isPlayer()))
+        }
+    }
+}
+if(owner():weapon():type()=="weapon_physcannon"){
+    if(changed(owner():keyAttack1())&owner():keyAttack1()&owner():aimEntity():getColor()!=vec(1,1,1)){
+        holoUnparent(PortO)
+        holoPos(PortO,owner():aimPos())
+        holoAng(PortO,owner():aimNormal():toAngle()+ang(90,0,0))
+        holoEntity(PortO):soundPlay(1,0,PortalPlaceSound)
+        holoEntity(PortO):setdLight(holoEntity(PortO):pos(),vec(255),4,70,0)
+        holoEntity(PortO):dLightColor(vec(255,255,0))
+
+            
+
+        Active=1
+        if(owner():aimEntity()!=noentity()){
+            holoParent(PortO,owner():aimEntity())
+        }
+        holoAlpha(PortO,255)
+        holoAlpha(12,255)
+    }
+    if(changed(owner():keyAttack2())&owner():keyAttack2()&owner():aimEntity():getColor()!=vec(1,1,1)){
+        holoUnparent(PortB)
+        holoPos(PortB,owner():aimPos())
+        holoAng(PortB,owner():aimNormal():toAngle()+ang(90,0,0))
+        holoEntity(PortO):soundPlay(1,0,PortalPlaceSound)
+        holoEntity(PortB):setdLight(holoEntity(PortB):pos(),vec(255),4,70,0)
+        holoEntity(PortB):dLightColor(vec(0,255,255))
+        Active=1
+        if(owner():aimEntity()!=noentity()){
+            holoParent(PortB,owner():aimEntity())
+        }
+        holoAlpha(PortB,255)
+        holoAlpha(13,255)
+    }
+}
+if(owner():keyUse()&owner():keyAttack1()&owner():keyAttack2()&owner():weapon():type()=="weapon_physcannon"){
+    Active=0
+    holoAlpha(PortO,0)
+    holoAlpha(PortB,0)
+    holoEntity(PortB):dLightColor(vec(0,0,0))
+    holoEntity(PortO):dLightColor(vec(0,0,0))
+    holoAlpha(12,0)
+    holoAlpha(13,0)
+}
+if(owner():keyZoom()){reset()}
+

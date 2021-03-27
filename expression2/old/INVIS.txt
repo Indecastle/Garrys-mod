@@ -1,0 +1,6 @@
+@name INVIS
+runOnTick(1)
+entity():owner():setColor(0,0,0)
+owner():setMaterial("Models/effects/vol_light001")
+#owner():setModel("models/weapons/shell.mdl") 
+owner():weapon():setAlpha(0)

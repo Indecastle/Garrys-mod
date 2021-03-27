@@ -1,0 +1,107 @@
+@name Magnit na E
+@inputs
+@outputs
+@persist Me:entity PropList:array LastProp:entity SearchFlag PropCount Index
+
+interval(1)
+
+# ================
+# Set up constants
+# ================
+AngularDeltaSmoother = 1
+AngularDeltaMultiplier = 1
+DeltaSmoother = 5
+DeltaMultiplier = 10
+Mass = 50000
+
+
+# ====================
+# Initialize variables
+# ====================
+if (first()) {
+
+    # Set up the owner variable
+    Me = entity():owner()
+    
+    PropCount = 0
+    Index = 0
+    SearchFlag = 0
+}
+
+if (duped()) {
+    selfDestruct()
+}
+
+if (clk("SearchFlag")) {
+    SearchFlag = 0
+}
+
+# Set a destination
+if (Me:keyUse()) {
+    
+    if (!Index) {
+        AimPos = Me:aimPos()
+        
+        if (!SearchFlag) {
+            SearchFlag = 1
+            timer("SearchFlag", 1000)
+            findIncludePlayerProps(owner())
+            findByClass("prop_physics") 
+            #findByClass("sent_ball")
+            findSortByDistance(Me:aimPos())
+            if(PropCount!=findToArray():count()){
+                PropList=findToArray()
+                PropCount=PropList:count()
+            }
+        }
+        
+    }
+    while (opcounter() < maxquota()) {
+        
+        GuardProp = PropList:entity(Index + 1)
+        GuardProp:setMass(Mass)
+        
+        if (Index > 0) {
+            AimPos = LastProp:pos()
+        }
+        
+        # =========================
+        # Thrust calculations
+        # =========================
+        
+        # Calculate the initial thrust vector
+        Thrust = (AimPos - GuardProp:pos()) + GuardProp:massCenterL()
+        
+        if (Index == 0) {
+            # Calculate the X/Y planar distance for trajectory arc
+            A = (AimPos:x() - GuardProp:pos():x()) * (AimPos:x() - GuardProp:pos():x())
+            B = (AimPos:y() - GuardProp:pos():y()) * (AimPos:y() - GuardProp:pos():y())
+            PlaneDistance = sqrt(A + B)    
+        
+            # Add vertical thrust based on planar distance to arc the projectile
+            Thrust = Thrust + vec(0, 0, PlaneDistance / 5)
+        }
+        
+        # Calculate the thrust delta and apply it to the thrust vector
+        Delta = GuardProp:vel() / DeltaSmoother
+        Thrust = (Thrust - Delta) * DeltaMultiplier
+        
+        # Apply thrust multiplier based on calculated mass
+        Multiplier = GuardProp:mass()/10
+        if (Multiplier < 1) {
+            Multiplier = 1
+        }
+        Thrust = Thrust * Multiplier
+        
+        # Apply the thrust final thrust to the chip
+        GuardProp:applyForce(Thrust)
+        
+        Index++
+        if (Index >= PropCount) {
+            Index = 0
+            break
+        }
+        LastProp = GuardProp
+    }
+
+}
