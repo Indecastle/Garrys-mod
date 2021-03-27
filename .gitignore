@@ -1,0 +1,11 @@
+#
+# If all files excluded and you will include only specific sub-directories
+# the parent path must matched before.
+#
+
+/**
+!/.gitignore
+
+!/advdupe2/
+/advdupe2/**
+# !/advdupe2/myTemplate/
