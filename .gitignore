@@ -9,6 +9,8 @@
 !/advdupe2/
 !/advdupe2/**
 
+!/expression2/
+!/expression2/**
 
 /expression2/_autosave_.txt
 /expression2/_helloworld_.txt
@@ -16,5 +18,3 @@
 /expression2/_shutdown_.txt
 /expression2/_tabs_.txt
 
-!/expression2/
-!/expression2/**
