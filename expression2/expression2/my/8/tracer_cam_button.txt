@@ -1,0 +1,101 @@
+@name Tracer Cam Button
+@inputs Run
+@outputs TestDistance
+@persist [E O Cam H1]:entity W:wirelink  [SunDirection]:vector
+@persist X Y Res HalfSquare RenderDistanceLimit Develop DistanceToHolo DistanceToSquare TickRenders
+
+
+if (first()) { E=entity() O=owner()
+    Develop = 1
+    SunDirection = sunDirection()
+    
+    Res = 256
+    HalfSquare = 10
+    DistanceToSquare = 20
+    RenderDistanceLimit = 1000
+    TickRenders = 40
+    
+    function wirelink:initScreen() {
+        This[1048574]=0 #Reset Screen and whatever was on it will be cleared.
+        This[1048569]=3 #Set color mode to 3
+        This[1048575]=1 #Apply changes
+        This[1048572]=Res #Set new resolution on Y (Height)
+        This[1048573]=Res #Set new resolution on X (Width)
+    }   
+    function wirelink:drawPixel(X, Y, Color:vector, Res) {
+        This[X+Y*Res]=rgb2digi(Color,3)
+    }
+    function vector getPos1(X, Y) {
+        local One = HalfSquare*2 / Res
+        return H1:toWorld(vec(0, HalfSquare - One*X, HalfSquare - One*Y))
+    }
+    function number getBrightness(HitNormal:vector) {
+        return (SunDirection:dot(HitNormal) + 1) / 2
+    }
+    function setVisibleTest(Visible) {
+        if (Develop) {
+            local Color = (Visible ? vec4(255,255,255,255) : vec4())
+            holoColor(2, Color)
+            holoColor(3, Color)
+        }
+    }
+    function test(Y) {
+        if (Develop) {
+            rangerFilter(Cam)
+            local Ranger = rangerOffset(RenderDistanceLimit, Cam:pos(), getPos1(0, Y) - Cam:pos())
+            rangerFilter(Cam)
+            local Ranger2 = rangerOffset(RenderDistanceLimit, Cam:pos(), getPos1(Res-1, Y) - Cam:pos())
+            TestDistance = Ranger:distance()
+            holoPos(2, Ranger:pos())
+            holoPos(3, Ranger2:pos())
+        }
+    }
+    
+    findByModel("models/gibs/hgibs.mdl")
+    Cam = findClosest(O:pos())
+    findByClass("gmod_wire_digitalscreen")
+    W = findClosest(O:pos()):wirelink()
+    
+    #timer("render", 10)
+    
+    #W:initScreen()
+    Color=randvec(0,255)
+    H1 = holoCreate(1, Cam:toWorld(vec(DistanceToSquare, 0, 0)), vec(0.001,2,2), Cam:angles(), vec4(0,255,0, 100))
+    holoScaleUnits(1, vec(0.001, HalfSquare*2, HalfSquare*2))
+    holoParent(1, Cam)
+    if (Develop) {
+        H2 = holoCreate(2, H1:toWorld(vec(0, HalfSquare, HalfSquare)), vec(0.5), ang(), vec(255), "icosphere3")
+        H3 = holoCreate(3, H1:toWorld(vec(0, HalfSquare, HalfSquare)), vec(0.5), ang(), vec(255), "icosphere3")
+        setVisibleTest(0)
+    }
+}
+
+if (changed(Run) & Run) {
+    W:initScreen()
+    setVisibleTest(1)
+    X = Y = 0
+    timer("render", 10)
+}
+
+if(clk("render")) {
+    for (I_ = 1, TickRenders) {
+        rangerFilter(Cam)
+        local Ranger = rangerOffset(RenderDistanceLimit, Cam:pos(), getPos1(X, Y) - Cam:pos())
+        local Dist = Ranger:distance()
+        local HitNormal = Ranger:hitNormal()
+        local Color = (Dist < RenderDistanceLimit-1 
+                        ? hsv2rgb(Dist/RenderDistanceLimit*2000, 1, getBrightness(HitNormal)) # *120+130
+                        : vec())
+        
+        W:drawPixel(X, Y, Color, Res)
+        
+        X++
+        if (Y != Res & X==Res) {X=0 test(Y) Y++}
+        #if (Y==Res) {Y=0}
+    }
+    
+    if (Y != Res) { timer("render", 10) }
+    else { setVisibleTest(0)}
+}
+
+

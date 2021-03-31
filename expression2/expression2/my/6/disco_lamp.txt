@@ -10,7 +10,7 @@ if (first()) {
     findByClass("gmod_wire_lamp")
     Lamp = findClosest(entity():pos())
     
-    Speed_Color = 1 # SKOROSTb CVETA
+    Speed_Color = 0.5 # SKOROSTb CVETA
     Speed = 0.1 # SKOROSTb
     Angle_1 = 0 # NAKLON LAMPbl
 }

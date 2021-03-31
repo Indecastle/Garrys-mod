@@ -11,7 +11,7 @@ if(first()|dupefinished()){
     #[function vector entity:getDownPos(){
         This:boxSize()
     }]#
-    Nil=findPlayerByName("xvhakvstrhweq11617")
+    Nil=findPlayerByName("Mark")
     entity():propFreeze(0)
 }
 interval(10)

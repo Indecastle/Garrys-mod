@@ -89,32 +89,36 @@ if (chatClk(owner()))
     M = owner():lastSaid():explode(" ")
     if (M:string(1) == "!ad") {
         hideChat(1)
-        H1 = holoCreate(I,O:attachmentPos("eyes"),vec(10,0.1,0.1),AngDir,vec(100,100,100),"cube")
-        Lines:pushEntity(H1)
-        I++
-        H2 = holoCreate(I,O:attachmentPos("eyes")+VecDir*60,vec(0.5,0.5,1),AngDir+ang(90,0,0),vec(100,100,100),"cone")
-        I++
-        Lines:pushEntity(H2)
         if(M:string(2) == "1"){
-            H1:setPos(E:pos())
-            H2:setPos(E:pos()+VecDir*60)
+            H1 = holoCreate(I,E:pos(),vec(10,0.1,0.1),AngDir,vec(100,100,100),"cube")
+            I++
+            H2 = holoCreate(I,E:pos()+VecDir*60,vec(0.5,0.5,1),AngDir+ang(90,0,0),vec(100,100,100),"cone")
+            I++
             holoParent(I-2,E)
             holoParent(I-1,E)
         }
+        else {
+            H1 = holoCreate(I,O:attachmentPos("eyes"),vec(10,0.1,0.1),AngDir,vec(100,100,100),"cube")
+            I++
+            H2 = holoCreate(I,O:attachmentPos("eyes")+VecDir*60,vec(0.5,0.5,1),AngDir+ang(90,0,0),vec(100,100,100),"cone")
+            I++
+        }
+        Lines:pushEntity(H1)
+        Lines:pushEntity(H2)
     }
     elseif (M:string(1) == "!de") {
         hideChat(1)
         H1 = Lines:popEntity()
-        H1:remove()
+        holoDelete(holoIndex(H1))
         H2 = Lines:popEntity()
-        H2:remove()
+        holoDelete(holoIndex(H2))
         I-=2
     }
     elseif (M:string(1) == "!dellall") {
         hideChat(1)
         while(Lines:exists(1)){
             H1 = Lines:popEntity()
-            H1:remove()
+            holoDelete(holoIndex(H1))
             I--
         }
     }
