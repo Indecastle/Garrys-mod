@@ -1,0 +1,36 @@
+--@name KeyHandler
+--@author
+--@shared
+
+local O = owner()
+local OO = player()
+
+if O == OO then
+    if SERVER then
+    
+        function handler(key)
+            print("!"..key)
+        end
+        
+        hook.add("ClientInitialized", "cl_init", function(ply)
+        end)
+        
+        net.receive("keyHandler", function (len, ply)
+            local key = net.readInt(7)
+            handler(key)
+        end)
+    else
+        
+        net.receive("holo", function(len)
+            net.readEntity(receivedHologram)
+        end)
+        
+        
+        hook.add("inputPressed", "", function(button)
+            net.start("keyHandler")
+            net.writeInt(button, 7)
+            net.send()
+        end)
+    end
+end
+

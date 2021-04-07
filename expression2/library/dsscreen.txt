@@ -1,0 +1,150 @@
+@name DSscreen
+@inputs DS:wirelink
+@outputs 
+@persist Res T
+
+if(first())
+{
+    runOnTick(1)
+    function wirelink:clearScreen(){This[1048574]=0}
+    function wirelink:initScreen(Res){
+        This[1048574]=0 #Reset Screen and whatever was on it will be cleared.
+        This[1048569]=3 #Set color mode to 3
+        This[1048575]=1 #Apply changes
+        This[1048572]=Res #Set new resolution on Y (Height)
+        This[1048573]=Res #Set new resolution on X (Width)
+    }  
+  
+    Res=128
+    DS:initScreen(Res)
+##########################PIXEL#########################################    
+    function wirelink:drawPixel(X,Y,Color:vector,Res)
+        {
+            This[X+Y*Res]=rgb2digi(Color,3)
+        }
+#############################LINE######################################
+function wirelink:drawLineLow(X0,Y0, X1,Y1,Color:vector,Res)
+{
+  local Dx = X1 - X0
+  local Dy = Y1 - Y0
+  local Yi = 1
+  if( Dy < 0)
+    {
+    Yi = -1
+    Dy = -Dy
+    }
+  D = 2*Dy - Dx
+  Y = Y0
+
+  for(X=X0,X1)
+    {
+    This:drawPixel(X,Y,Color,Res)
+    if(D > 0)
+       {
+       Y = Y + Yi
+       D = D - 2*Dx
+       }
+    D = D + 2*Dy
+    }
+}
+function wirelink:drawLineHigh(X0,Y0,X1,Y1,Color:vector,Res)
+{
+  local Dx = X1 - X0
+  local Dy = Y1 - Y0
+  local Xi = 1
+  if(Dx < 0)
+    {
+    Xi = -1
+    Dx = -Dx
+    }
+  D = 2*Dx - Dy
+  X = X0
+  for(Y=Y0,Y1)
+    {
+    This:drawPixel(X,Y,Color,Res)
+    if(D > 0)
+        {
+       X = X + Xi
+       D = D - 2*Dy
+        }
+    D = D + 2*Dx
+    }
+}
+            function wirelink:drawLine(X0,Y0,X1,Y1,Color:vector,Res)
+               {
+ if(abs(Y1 - Y0) < abs(X1 - X0))
+    {
+    if(X0 > X1)
+        {
+      This:drawLineLow(X1, Y1, X0, Y0,Color,Res)
+        }
+        else
+        {  
+      This:drawLineLow(X0, Y0, X1, Y1,Color,Res)
+        }
+    }
+    else
+    {
+    if(Y0 > Y1)
+        {
+      This:drawLineHigh(X1, Y1, X0, Y0,Color,Res)
+        }
+        else
+        {
+      This:drawLineHigh(X0, Y0, X1, Y1,Color,Res)
+        }
+    }
+            }
+               
+#########################CIRCLE##########################################
+            function wirelink:drawCirc(X,Y,Rad,Color:vector,Res)
+                {
+                    local X1 = Rad
+                    local Y1 = 0
+                    local Err = 0
+                
+                    while ((X1 >= Y1))
+                    {
+                        This:drawPixel(X + X1, Y + Y1,Color,Res)
+                        This:drawPixel(X + Y1, Y + X1,Color,Res)
+                        This:drawPixel(X - Y1, Y + X1,Color,Res)  
+                        This:drawPixel(X - X1, Y + Y1,Color,Res)
+                        This:drawPixel(X - X1, Y - Y1,Color,Res)
+                        This:drawPixel(X - Y1, Y - X1,Color,Res)
+                        This:drawPixel(X + Y1, Y - X1,Color,Res)
+                        This:drawPixel(X + X1, Y - Y1,Color,Res)
+                           
+                            if (Err <= 0)
+                            {
+                                Y1 =Y1+1
+                                Err =Err+( 2*Y1 + 1)
+                            }
+                         
+                            if (Err > 0)
+                            {
+                                X1 =X1-1
+                                Err =Err-( 2*X1 + 1)
+                            }
+                    }   
+                }
+#######################INTERPOLATE###########################################                
+        function number lerpN(C1:number,C2:number,F)
+        {  
+            
+         return (1-F)*C1+F*C2
+    
+        }
+######################RECTANGLE#########################################
+       function wirelink:drawRect(X,Y,X1,Y1,Color:vector,Res)
+        {
+            This:drawLine(X,Y,X1,Y,Color,Res)
+            This:drawLine(X,Y1,X,Y,Color,Res)
+            This:drawLine(X1,Y,X1,Y1,Color,Res)
+            This:drawLine(X,Y1,X1,Y1,Color,Res)
+        }
+}
+
+
+
+
+

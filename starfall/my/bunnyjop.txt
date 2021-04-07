@@ -1,0 +1,44 @@
+--@name BunnyHop
+--@author Markiz
+--@client
+
+local O = owner()
+local OO = player()
+local jumping = false
+local oldIsPressed = true
+
+
+
+setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+local permissionSatisfied = hasPermission("console.command")
+
+hook.add("permissionrequest", "", function()
+    permissionSatisfied = hasPermission("console.command")
+end)
+
+
+//if OO == O then
+    hook.add("tick", "", function()
+        if permissionSatisfied then
+            jumping = !jumping
+            newIsPressed = input.isKeyDown(KEY.SPACE)
+            if oldIsPressed != newIsPressed then
+                oldIsPressed = newIsPressed
+                if !newIsPressed then
+                    concmd("-jump")
+                end
+            end
+            
+            if oldIsPressed then
+                if jumping then
+                    concmd("+jump")
+                else
+                    concmd("-jump")
+                end
+            end
+        end
+    end)
+    
+//end
+
+

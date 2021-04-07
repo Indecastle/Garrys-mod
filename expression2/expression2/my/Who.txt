@@ -7,9 +7,9 @@ runOnKeys(owner(),1)
 if(changed(owner():keyPressed("e")) & owner():keyPressed("e") & owner():aimEntity())
 {
     
-    print("owner: " + owner():name())
+    #print("owner: " + owner():name())
     print("name: " + owner():aimEntity():getName())
-    #print("owner: " + owner():aimEntity():owner():toString())
+    print("owner: " + owner():aimEntity():owner():toString())
     print("entity: " + owner():aimEntity():toString())
     print("class: " + owner():aimEntity():type())
     print("model: " + owner():aimEntity():model())

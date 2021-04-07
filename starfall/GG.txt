@@ -1,0 +1,110 @@
+--@name GG
+
+--@client
+
+if SERVER then
+
+    local holo = holograms.create(chip():getPos(), chip():getAngles(), "models/Combine_Helicopter/helicopter_bomb01.mdl")
+    holo:setNoDraw(true)
+    holo:setParent(chip())
+    hook.add("net","",function(name, len, pl)
+        holo:setMaterial(net.readString(), pl)
+        holo:setNoDraw(false)
+        net.start("sendholo")
+        net.writeEntity(holo)
+        net.send(pl)
+    end)
+
+else
+
+
+local function getBBox(verts)
+    local xmin, ymin, xmax, ymax 
+    
+    if #verts > 0 then
+        xmin, ymin, xmax, ymax = verts[1].x, verts[1].y, verts[1].x, verts[1].y
+    
+        for i = 2, #verts do
+            if verts[i].x < xmin then xmin = verts[i].x end
+            if verts[i].y < ymin then ymin = verts[i].y end
+            if verts[i].x > xmax then xmax = verts[i].x end
+            if verts[i].y > ymax then ymax = verts[i].y end
+        end
+    end
+
+    return xmin, ymin, xmax, ymax
+end
+
+local dirs = {Vector(-1, -1, -1), Vector(1, -1, -1), Vector(-1, 1, -1), Vector(-1, -1, 1), Vector(1, 1, -1), Vector(1, -1, 1), Vector(-1, 1, 1), Vector(1, 1, 1)}
+
+
+
+
+--------------prop-render-------
+--[[hook.add("drawhud","myhook",function()
+    for i, p in ipairs(find.byClass("prop*")) do
+        if p:getPos():getDistance( owner():getPos() ) > 300 then continue end
+        local obbw = p:obbCenterW()
+        local obbhs = p:obbSize() / 2
+        local verts = {}
+        
+        for i = 1, 8 do verts[i] = (obbw + obbhs * dirs[i]):toScreen() end
+
+        local x0, y0, x1, y1 = getBBox(verts)
+        local w, h = x1 - x0, y1 - y0
+        
+        --render.setColor(team.getColor(p:getTeam()))
+        render.drawRectOutline(x0, y0, w, h)
+        
+        
+        render.setColor(Color(255,0,0))
+        render.drawText(x0+5+w,y1,"hp:"..p:getHealth())
+            
+        render.setColor(Color(0,255,0))
+        render.drawRect(x0,y0,3, h * (math.clamp(p:getHealth(), 0, 100) / 100))
+ 
+        --render.setColor(team.getColor(p:getTeam()))
+        render.setColor(Color(255,255,255))
+               
+    end]]
+    
+    
+    
+   
+        
+        
+        
+        
+        
+        -------------------players------------
+        hook.add("drawhud","myshook",function()
+    for i, p in ipairs(find.allPlayers()) do
+        if p:getPos():getDistance( owner():getPos() ) > 1300 then continue end
+        local obbw = p:obbCenterW()
+        local obbhs = p:obbSize() / 2
+        
+        local verts = {}
+        
+        for i = 1, 8 do verts[i] = (obbw + obbhs * dirs[i]):toScreen() end
+
+        local x0, y0, x1, y1 = getBBox(verts)
+        local w, h = x1 - x0, y1 - y0
+        
+        render.setColor(team.getColor(p:getTeam()))
+        render.drawRectOutline(x0, y0, w, h)
+        
+        
+        render.setColor(Color(255,0,0))
+        render.drawText(x0+5+w,y1,"hp:"..p:getHealth())
+            
+        render.setColor(Color(0,255,0))
+        render.drawRect(x0,y0,3, h * (math.clamp(p:getHealth(), 0, 100) / 100))
+ 
+       render.setColor(team.getColor(p:getTeam()))
+        render.setColor(Color(255,255,255))
+               
+  
+        
+end
+end)
+end

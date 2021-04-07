@@ -1,5 +1,5 @@
 @name Button for Wire_Doors_toggle
-@inputs A
+@inputs A Keypad1
 @outputs Open Close
 @persist B Timer IsCan OldVal
 @trigger 
@@ -8,21 +8,33 @@ if(first()) {
     Timer = 3000
     IsCan = 1
     
-    function void run() {
-        Close=!A Open=A
+    function void run(Force) {
         IsCan = 0 
-        OldVal = A
-        timer("timer", (A ? Timer*2 : Timer))
+        if (Force) {
+            Close=0 Open=1
+            OldVal = 1
+            timer("timer", Timer*2)
+        }
+        else {
+            Close=!A Open=A
+            OldVal = A
+            timer("timer", (A ? Timer : Timer))
+        }
+        
     }
 }
 
 
 
 if(changed(A) & IsCan) { 
-    run()
+    run(0)
+}
+
+if(changed(Keypad1) & Keypad1 & IsCan & !A) { 
+    run(1)
 }
 
 if(clk("timer")) {
     IsCan = 1
-    if(OldVal != A) { run()}
+    if(OldVal != A) { run(0) }
 }

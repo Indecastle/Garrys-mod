@@ -1,0 +1,21 @@
+@name GiperTroxoida
+@inputs
+@outputs 
+@persist I
+@trigger 
+#include "library/DSscreen"
+Rmax=200
+Rmin=151
+H=130
+Width=512
+
+if(first()){
+    DS:initScreen(Width)
+}
+while(perf(50)){
+    X=(Rmax-Rmin)*cos(I)+H*cos(((Rmax-Rmin)/Rmin)*I)
+    Y=(Rmax-Rmin)*sin(I)+H*sin(((Rmax-Rmin)/Rmin)*I)
+    DS:drawPixel(round(X)+Width/2,round(Y)+Width/2,hsv2rgb(vec(I/20,1,1)),Width)
+    I++
+}
+

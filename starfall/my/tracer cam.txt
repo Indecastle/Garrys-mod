@@ -1,0 +1,155 @@
+--@name Tracer Cam
+--@author Markiz
+--@shared
+
+
+local Detail = 20
+local HalfSquare = 10
+local DistanceToSquare = 20
+local RenderDistanceLimit = 35
+
+local Performance = 50 // Manage to perfomance
+local Performance_Cpu_Limit = 0.5// Manage to perfomance
+
+
+// ##### don't touch !!! ########
+local Res_ = 1024 / Detail
+local HalfRes_ = 1024 / 2
+local dxy = HalfSquare*2 / Res_
+local SunDirection = Vector(-1,-1,-1):getNormalized()
+
+local tt = find.byModel("models/gibs/hgibs.mdl")
+local cam123 = find.closest(tt, chip():getPos())
+// ##### don't touch !!! ########
+
+
+if SERVER then
+    
+    // holograms.create(any pos, any ang, any model, any scale)
+    // H1 = holoCreate(1, Cam:toWorld(vec(DistanceToSquare, 0, 0)), vec(0.001,2,2), Cam:angles(), vec4(0,255,0, 100))
+    local realm_holo = holograms.create(cam123:localToWorld(Vector(DistanceToSquare, 0, 0)), cam123:getAngles(), "models/holograms/cube.mdl", Vector(0.001,2,2))
+    realm_holo:setParent(cam123)
+    realm_holo:setColor(Color(0,255,0, 100))
+    realm_holo:setScale(Vector(0.001, HalfSquare*2, HalfSquare*2)/12)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("holo")
+        net.writeEntity(realm_holo)
+        net.send(ply)
+    end)
+    
+else
+    render.createRenderTarget("myrendertarget")
+    
+    setupPermissionRequest({ "render.screen", "input" }, "See an example of render.screen.", true)
+    local permissionSatisfied = hasPermission("render.screen") and hasPermission("input")
+    hook.add("permissionrequest", "fractal_Markiz", function()
+        permissionSatisfied = hasPermission("render.screen") and hasPermission("input")
+    end)
+    
+    local server_holo
+    local paint
+    
+    local function receivedHologram(ent)
+        if ent==nil then error("Failed to get hologram!") end
+        
+        -- We need to convert it back to it's original type in order to use the Hologram methods on it
+        server_holo = ent:toHologram()
+        
+        initHooks()
+    end
+    
+    net.receive("holo", function(len)
+        -- Since the client may not have created the hologram yet, it's important to use the callback of net.readEntity to wait and be sure it exists first.
+        net.readEntity(receivedHologram)
+    end)
+    
+
+    function get_coro()
+        return coroutine.wrap(function()
+                local I_ = 0
+                local time1 = timer.curtime()
+                for y=0, Res_ do
+                    for x=0, Res_ do
+                        I_ = I_ + 1
+                        if I_ == Performance then
+                            I_ = 0
+                            coroutine.yield()
+                        end
+                        if !server_holo:isValid() or cam123 == nil or !cam123:isValid() then
+                            return true
+                        end
+                        local Pos1 = server_holo:localToWorld(Vector(0, HalfSquare - x*dxy, HalfSquare - y*dxy))
+                    
+                        local startPos = cam123:getPos()
+                        local dir = (Pos1 - startPos):getNormalized()
+                        local tr = trace.trace(startPos, startPos + dir*RenderDistanceLimit, {cam123, server_holo}, MASK.ALL, nil, false)
+                        local hitPos = tr.HitPos
+                        local dist = hitPos:getDistance(startPos)
+                        //print(tr.HitNonWorld)
+                        local hitNormal = tr.HitNormal
+                        local brightness = (SunDirection:dot(hitNormal) + 1) / 2
+                        
+                        local color = Vector(0,0,0)
+                        if tr.HitNonWorld and dist < RenderDistanceLimit then
+                            if tr.Entity:isValid() and tr.Entity:isPlayer() then
+                                color = Color(1,1, brightness*0.95 + 0.05):hsvToRGB()
+                            elseif tr.HitSky then
+                                color = Color(0,255,255) 
+                            else
+                                color = render.traceSurfaceColor(hitNormal + hitPos, hitPos - hitNormal)
+                            end
+                            
+                        end
+                        
+                        
+                        render.setColor(color)
+                        render.drawRectFast(x*Detail, y*Detail, Detail, Detail)
+                        
+                    end
+                    //coroutine.yield()
+                end
+                print(timer.curtime() - time1)
+                return true
+            end)
+    end
+
+    
+    
+    
+    function initHooks()
+        paint = get_coro()
+        
+        hook.add("renderoffscreen","",function()
+            render.selectRenderTarget("myrendertarget")
+            if  permissionSatisfied then
+                while quotaAverage() < quotaMax() * Performance_Cpu_Limit do
+                    if paint() then
+                        //hook.remove("renderoffscreen","")
+                        //return
+                        paint = get_coro()
+                    end
+                end
+            end
+        end)
+        
+        hook.add("render","",function()
+            if not permissionSatisfied then
+                render.setColor(Color(255, 255, 255))
+                render.setFont("DermaLarge")
+                render.drawText(256, 256 - 32, "Use me", 1)
+                return
+            end
+            //if timer.curtime() > time1 then
+                //time1 = timer.curtime() + 0.1
+                render.setRenderTargetTexture("myrendertarget")
+                render.drawTexturedRect(0,0,512,512)
+            //end
+        end)        
+    end
+    
+    
+
+
+end
+

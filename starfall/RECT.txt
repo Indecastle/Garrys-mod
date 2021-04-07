@@ -1,0 +1,11 @@
+--@client
+a = 0
+hook.add("render", "", function()
+    a = a  + player():getVelocity():getLength() / 50
+    for j = 1, 50 do
+        i = 51 - j
+        render.setColor(Color((a * 2 ^ (i / 100) * 15) % 360, 1, 1):hsvToRGB())
+        render.drawRect(256 - 5 * i, 256 - 5 * i, 10 * i, 10 * i)
+        render.drawText(0,0,tostring(player():getVelocity():getLength()))
+    end
+end)

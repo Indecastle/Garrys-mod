@@ -1,0 +1,102 @@
+--@name TargetEntity Server
+--@author
+--@shared
+
+local O = owner()
+local OO = player()
+
+local MOUSE4_pressed = false
+
+local target, targetP;
+
+local oldIsPressed = nil
+
+
+function func()
+    local tr = O:getEyeTrace()          
+    target = tr.Entity 
+    //targetP = target:getPhysicsObject()
+    
+    //local kek = target.Password 
+    
+    local tr2 = trace.trace(O:getShootPos(), O:getShootPos() + O:getEyeAngles():getForward()*10000000, {O}, MASK.ALL, nil, false)
+    local dist = tr.HitPos:getDistance(O:getShootPos())
+    local dist2 = tr2.HitPos:getDistance(O:getShootPos())
+    
+    local dist3 = 0
+    local dir = O:getEyeAngles():getForward()
+    local initPos = O:getShootPos()
+    local startPos = initPos
+    local endPos = dir*10000000
+    
+    for i=0, 5 do
+        local tr3 = trace.trace(startPos, endPos, {O}, MASK.ALL, nil, false)
+        if tr3.HitPos:isInWorld() then
+            dist3 = tr3.HitPos:getDistance(initPos)
+            break
+        else
+            startPos = tr3.HitPos + dir*1
+        end
+    end
+    
+    print(dist)
+    print(dist3)
+    //print(tr2.HitPos:isInWorld())
+
+    
+    //target.SetSpeed = 1
+    //printTable(target:getNWVarTable())
+    
+--[[
+    for i=0, 31 do
+        print(target:getDTInt(i))
+    end
+]]
+--[[
+    for k, v in pairs(tr) do
+        print(""..k)
+    end
+]]
+end
+
+
+
+--[[
+hook.add("inputPressed", "kk", function(button)
+    if button == MOUSE.MOUSE4 then          
+        func()
+    end
+end)
+]]
+
+
+if O == OO then
+    if SERVER then
+        
+        hook.add("ClientInitialized", "cl_init", function(ply)
+        end)
+        
+        net.receive("keyHandler", function (len, ply)
+            local key = net.readInt(8)
+            if key == MOUSE.MOUSE4 then
+                func(key)
+            end
+        end)
+    else
+        
+        net.receive("holo", function(len)
+            net.readEntity(receivedHologram)
+        end)
+        
+        
+        hook.add("inputPressed", "", function(button)
+            net.start("keyHandler")
+            net.writeInt(button, 8)
+            net.send()
+        end)
+    end
+end
+
+
+
+

@@ -1,0 +1,26 @@
+@name Particle_all
+@inputs 
+@outputs 
+@persist I Ar:array
+@trigger 
+
+
+interval(1000)
+
+
+
+if(first()){
+    particleGravity(vec(0,0,-1000))
+    particleBounce(0.5)
+    
+    Ar = particlesList()
+    
+    #particleEffect("balloon_pop", entity():pos(), entity():pos()+vec(0,0,100))
+}
+EE=entity()
+
+I = (I + 1) % Ar:count()
+#particle(number Duration,number StartSize,number EndSize,string Mat,vector RGB,vector Position,vector Velocity)
+particle(10, 200, 0, Ar:string(I), randvec(0, 255), EE:toWorld(vec(0,0,1)), EE:up()*1000, 0, 10, 255, 100)
+
+

@@ -43,7 +43,7 @@ if(changed(owner():keyPressed("b")) & owner():keyPressed("b")) {
 }
 
 if(owner():keyPressed("e") & Active) {
-    Dir = Target:shootPos()  - owner():shootPos()  - Target:vel()*tickInterval()*10
+    Dir = Target:shootPos()  - owner():shootPos() # - Target:vel()*tickInterval()*10
     Ang = Dir:toAngle()
     owner():setEyeAngles(Dir:toAngle())
 }

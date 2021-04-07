@@ -1,0 +1,44 @@
+@name Engine
+@persist ACF:array
+interval(10)
+function void funcACF()
+{
+    Base=spawnExpression2(entity():toWorld(vec(1,1,1)),ang(0),"models/hunter/plates/plate.mdl")
+    Base:remoteSetCode("entity():setName(\"ACF Helper\") hideMyAss(1)")
+    ACF:insertEntity(Base:id(),Base)
+}
+if(first())
+{
+    funcACF()
+    dsSetScope(2)
+}
+if(dsClk("Gearbox"))
+{
+    dsSendDirect("Ratio",dsGetEntity(),entity())
+}
+if(dsClk("ACF"))
+{
+    dsSendDirect("Ratio",dsGetEntity(),ACF)
+}
+if(dsClk("Components"))
+{
+    if(dsGetNumber()==0)
+    {
+        funcACF()
+    }
+    elseif(dsGetNumber()>0)
+    {
+        foreach(B,Part:entity=ACF)
+        {
+            if(Part:id()==dsGetNumber())
+            {
+                ACF:removeEntity(dsGetNumber())
+                Part:propDelete()
+            }
+        }
+    }
+}
+if(dsClk("Gear"))
+{
+    entity(dsGetString():sub(3,dsGetString():find("n]#")-1):toNumber()):remoteSetCode(dsGetString():replace("'",toChar(34)):sub(dsGetString():find("n]#")+3,dsGetString():find("#[end of persist]#")-1)+"\n"+dsGetString():replace("'",toChar(34)):sub(dsGetString():find("#[end of persist]#")+19))
+}

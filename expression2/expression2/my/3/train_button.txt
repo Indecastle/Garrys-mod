@@ -1,30 +1,40 @@
 @name Trail
 @inputs Change Active
 @outputs 
-@persist [Switcher Switch]:entity Rev Force Who [Pos Dir]:vector
+@persist [Switcher Switch HelpProp1 HelpProp2]:entity Rev Force Who [Pos Dir]:vector
 @trigger all
 interval(10)
 if(first()) {
     
     Force = 1000
-    
+    #models/hunter/blocks/cube025x125x025.mdl
     findIncludeModel("models/props_phx/trains/tracks/track_switcher*")
     findInSphere(entity():pos(), 1000)
     Switcher = findClosest(entity():pos())
-    findClearWhiteModelList()
+    findClearBlackList()
+    findClearWhiteList()
     if(Switcher:model() == "models/props_phx/trains/tracks/track_switcher.mdl") {
+        Who = 1
         #findByModel("models/props_phx/trains/tracks/track_switch.mdl")
         findIncludeModel("models/props_phx/trains/tracks/track_switch.mdl")
         findInSphere(entity():pos(), 1000)
         Switch = findClosest(entity():pos())
-        Who = 1
     }
     elseif(Switcher:model() == "models/props_phx/trains/tracks/track_switcher2.mdl") {
+        Who = 2
         #findByModel("models/props_phx/trains/tracks/track_switch2.mdl")
         findIncludeModel("models/props_phx/trains/tracks/track_switch2.mdl")
         findInSphere(entity():pos(), 1000)
         Switch = findClosest(entity():pos())
-        Who = 2
+        
+        findClearBlackList()
+        findClearWhiteList()
+        
+        findIncludeModel("models/hunter/blocks/cube025x125x025.mdl")
+        findInSphere(entity():pos(), 1000)
+        #findSortByDistance(Switcher:pos())
+        HelpProp1 = findResult(1)
+        HelpProp2 = findResult(2)
     }
     #entity():noCollideAll(1)
     print(Switcher)
@@ -47,6 +57,14 @@ if((changed(Change) & Change) | changed(Active)) {
     }
     Switcher:setPos(Switch:toWorld(Pos))
     Switcher:setAng(Switch:toWorld(Ang))
+    
+    if (Who == 2) {
+        HelpProp1:setPos(Switch:toWorld(vec(160, -70, 4.5)))
+        HelpProp1:setAng(Switch:toWorld(ang(0, -65, 0)))
+        
+        HelpProp2:setPos(Switch:toWorld(vec(531, -59, 4.5)))
+        HelpProp2:setAng(Switch:toWorld(ang(0, -82.5, 0)))
+    }
 }
 
 #entity():applyForce(Dir*( Rev ? Force : -Force))

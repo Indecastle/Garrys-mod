@@ -1,5 +1,5 @@
 @name stealer of keypad
-@persist [O E Keypad]:entity [Players OP]:array [Button_tupples Button_tupples2]:table Distance Pressed_buttons:array
+@persist [O E Keypad]:entity [Players OP]:array [Button_tupples Button_tupples2]:table Distance Pressed_buttons:array Type_enum
 @outputs Current_Key:string
 
 if(first() | dupefinished()) {
@@ -121,6 +121,7 @@ if(changed(O:keyPressed("t")) & O:keyPressed("t"))
     local P = owner():aimEntity()
     if (P:type() == "gmod_wire_keypad" || P:type() == "keypad" || P:type() == "keypad_wire" ) {
         Keypad = P
+        Type_enum = get_type()
         print(Keypad)
         Pressed_buttons:clear()
         update_current_key()
@@ -130,31 +131,43 @@ if(changed(O:keyPressed("t")) & O:keyPressed("t"))
 local Who = keyClk()
 
 if (Who) {
-    if (changed(Who:keyPressed("e")) && Who:keyPressed("e") && Who:aimEntity() == Keypad && Who:shootPos():distance(Keypad:pos()) < Distance) {
-        local AimPos = keyClk():aimPos()
-        local LocalAimPos = Keypad:toLocal(AimPos)
-        local Vec2 = vec3_to_vec2(LocalAimPos)
-        #log_vec(LocalAimPos)
-        
-        local Type_enum = get_type()
-        local Buttons = (Type_enum == 1 ? Button_tupples : Button_tupples2)
-        for(I=1, Buttons:count()) {
-            local Tup = Buttons[I, array]
-            if (inrange(Vec2, Tup[2, vector2], Tup[3, vector2])) {
-                event_handler(Tup[1, string], Type_enum)
-                break
+    if (Who:aimEntity() == Keypad && Who:shootPos():distance(Keypad:pos()) < Distance) {
+        if (changed(Who:keyPressed("e")) && Who:keyPressed("e")) {
+            local AimPos = keyClk():aimPos()
+            local LocalAimPos = Keypad:toLocal(AimPos)
+            local Vec2 = vec3_to_vec2(LocalAimPos)
+            #log_vec(LocalAimPos)
+            local Buttons = (Type_enum == 1 ? Button_tupples : Button_tupples2)
+            for(I=1, Buttons:count()) {
+                local Tup = Buttons[I, array]
+                if (inrange(Vec2, Tup[2, vector2], Tup[3, vector2])) {
+                    event_handler(Tup[1, string], Type_enum)
+                    break
+                }
             }
-        }
-        
-        #[
-        foreach (I, Tup:array = Button_tupples) {
-            print(123)
-            if (inrange(LocalAimPos, Tup:vector(3), Tup:vector(2))) {
-                print(Tup:string(1))
-                break
+            
+            #[
+            foreach (I, Tup:array = Button_tupples) {
+                print(123)
+                if (inrange(LocalAimPos, Tup:vector(3), Tup:vector(2))) {
+                    print(Tup:string(1))
+                    break
+                }
             }
+            ]#
         }
-        ]#
+        if (changed(Who:keyPressed("pad_1")) && Who:keyPressed("pad_1")) { event_handler("1", Type_enum) }
+        if (changed(Who:keyPressed("pad_2")) && Who:keyPressed("pad_2")) { event_handler("2", Type_enum) }
+        if (changed(Who:keyPressed("pad_3")) && Who:keyPressed("pad_3")) { event_handler("3", Type_enum) }
+        if (changed(Who:keyPressed("pad_4")) && Who:keyPressed("pad_4")) { event_handler("4", Type_enum) }
+        if (changed(Who:keyPressed("pad_5")) && Who:keyPressed("pad_5")) { event_handler("5", Type_enum) }
+        if (changed(Who:keyPressed("pad_6")) && Who:keyPressed("pad_6")) { event_handler("6", Type_enum) }
+        if (changed(Who:keyPressed("pad_7")) && Who:keyPressed("pad_7")) { event_handler("7", Type_enum) }
+        if (changed(Who:keyPressed("pad_8")) && Who:keyPressed("pad_8")) { event_handler("8", Type_enum) }
+        if (changed(Who:keyPressed("pad_9")) && Who:keyPressed("pad_9")) { event_handler("9", Type_enum) }
+        if (changed(Who:keyPressed("pad_enter")) && Who:keyPressed("pad_enter")) { event_handler("OK", Type_enum) }
+        if (changed(Who:keyPressed("pad_minus")) && Who:keyPressed("pad_minus")) { event_handler("ABORT", Type_enum) }
     }
+    
 }
 

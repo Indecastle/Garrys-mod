@@ -1,0 +1,23 @@
+@name Helicopter
+@inputs Helicopter:entity ON
+@outputs 
+@persist 
+@trigger 
+
+
+if (first() | dupefinished() | ~Helicopter) {
+    holoCreate(1, Helicopter:pos(), vec(1), Helicopter:angles(), vec4(255), "models/combine_helicopter.mdl")
+    holoParent(1, Helicopter)
+    Helicopter:setAlpha(0)
+}
+
+if (~ON) {
+    if (ON) {
+        holoAnim(1, 0)
+        Helicopter:soundPlay("heli", 0, "npc/attack_helicopter/aheli_rotor_loop1.wav")
+    }
+    else {
+        holoAnim(1, 100)
+        soundStop("heli")
+    }
+}

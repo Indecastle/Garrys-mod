@@ -1,0 +1,12 @@
+--@name testing_cursor
+--@author
+--@shared
+
+hook.add("render","render",function()
+    
+    local curx,cury = render.cursorPos(player())
+    
+    if curx then
+        render.drawText(0,0,curx .. ", " .. cury)
+    end
+end)

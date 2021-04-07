@@ -1,0 +1,113 @@
+--@name
+--@author
+--@client
+
+first = true
+rendered = false
+draw = true
+x = 0
+y = 0
+countx = 256
+county = 256
+quota = 0.5
+
+lastredraw = 0
+invert = true
+progress = 0
+maxsystime = quotaMax()*quota
+
+hook.add("render","render",function()
+    
+    render.setFilterMin(1)
+    render.setFilterMag(1)
+    
+    local resx, resy = render.getResolution()
+    
+    if draw then
+    
+        local ct = timer.curtime()
+        local systime = timer.systime()
+        
+        render.selectRenderTarget("rt")
+        
+        if first then
+            render.clear()
+            first = nil
+        end
+        
+        if not rendered then
+            
+            if x == 0 and y == 0 then
+                sizex, sizey = math.ceil(1024/countx), math.ceil(1024/county)
+            end
+            
+            while timer.systime() < systime+maxsystime do
+                
+                local light = ((invert and -1 or 1)*math.cos(4*math.pi*y/county)+(invert and -1 or 1)*math.cos(4*math.pi*x/countx))%1
+                /*local light = ((x-countx/2)^2+(y-county/2)^2 <= 256*(countx/1024)*(county/1024)) and 1 or 0*/
+                /*local light = (x/countx)+(y/county)*/
+
+                
+                render.setColor(Color(280+light*40,1,light%1):hsvToRGB())
+                render.drawRect(x*sizex,y*sizey,sizex,sizey)
+                
+                if x >= countx then
+                    if y >= county then
+                        rendered = true
+                        lastredraw = ct
+                        break
+                    else
+                        x = 0
+                        y = y+1
+                    end
+                else
+                    x = x+1
+                end
+                
+            end
+            
+        end
+        
+        progress = math.floor(y/county*100)
+        
+        render.selectRenderTarget()
+        
+        render.setRenderTargetTexture("rt")
+        
+        render.setColor(Color(255,255,255,100))
+        render.drawTexturedRect(0,0,512,512)
+        
+        render.setFont("Trebuchet24")
+        if not rendered then
+            render.setColor(Color(0,0,0,255))
+            render.drawText(1,1,progress .. "%",0)
+        
+            render.setColor(Color(255,255,255,255))
+            render.drawText(0,0,progress .. "%",0)
+        end
+    else
+        render.setColor(Color(255,255,255,255))
+        render.setFont("Trebuchet24")
+        
+        render.drawText(resx/2,resy/2-36,"нажми E чтобы посмотреть кросивую преколуху.",1,1)
+        render.drawText(resx/2,resy/2-12,"если кросивая преколуха вдруг начнёт лагать,",1,1)
+        render.drawText(resx/2,resy/2+12,"то нажми E ешо раз чтобы выключить отрисовку",1,1)
+    end
+end)
+
+hook.add("tick","tick",function()
+    local ct = timer.curtime()
+    
+    if rendered and ct >= lastredraw+2 then
+        rendered = false
+        x = 0
+        y = 0
+        invert = not invert
+    end
+end)
+
+hook.add("starfallUsed","use",function(ply)
+    if ply == player() then draw = not draw end
+end)
+
+render.createRenderTarget("rt")

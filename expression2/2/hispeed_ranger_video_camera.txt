@@ -1,0 +1,48 @@
+@name HiSpeed ranger video camera
+@inputs Ranger:wirelink Screen:wirelink
+@outputs
+@persist Count Res Res2 RenderDistanceLimit Lower Lower_
+@trigger 
+
+#Unfortunately, to increase speed, values are hard-coded
+#Default res is 26x26 and range is 1500
+
+if (first()) {
+    RenderDistanceLimit = 15000
+    Lower = 1
+    Res = 256
+    
+    function wirelink:initScreen() {
+        This[1048574]=0 #Reset Screen and whatever was on it will be cleared.
+        This[1048569]=3 #Set color mode to 3
+        This[1048575]=1 #Apply changes
+        This[1048572]=Res #Set new resolution on Y (Height)
+        This[1048573]=Res #Set new resolution on X (Width)
+    }
+    
+    Res2 = Res^2
+    Lower_ = -0.5 * Lower
+    
+    Screen:initScreen()
+    Ranger[2]=RenderDistanceLimit #Sets range
+    Ranger[3]=0 #Default to 0 = true
+}
+
+
+interval(100)
+
+while(perf())
+{   
+    Count++
+    
+    Ranger[4]=(Lower_+((Count%Res)/Res)*Lower) #Sets ranger's x cord
+    Ranger[5]=(Lower_+((floor((Count/Res))%Res)/Res)*Lower)  #Sets ranger's y cord
+    Ranger[0]=1 #Traces range
+    
+    Color = (Ranger[1] < RenderDistanceLimit-1 
+                            ? hsv2rgb(Ranger[1]/RenderDistanceLimit*2000, 1, 1) # *120+130
+                            : vec())
+    Screen[Count%Res2]=rgb2digi(Color,3)
+}
+
+

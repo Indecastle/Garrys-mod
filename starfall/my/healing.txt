@@ -1,0 +1,31 @@
+--@name Healing
+--@author
+--@shared
+--@server
+
+local time1 = 0
+
+local T = find.playersByName("Mark")[1]
+print(T)
+
+//T = owner()
+
+
+hook.add("think","",function()
+    if timer.curtime() > time1 and T:isAlive() then
+        time1 = timer.curtime() + 0.4
+        
+        if prop.canSpawn() and T:getHealth() < 100 then 
+            prop.createSent(T:getPos() + Vector(0,0,10), Angle(), "item_healthkit", true, {
+                model = "models/items/healthkit.mdl",
+                Color = Color(0)
+            })
+        elseif prop.canSpawn() and T:getArmor() < 100 then 
+            prop.createSent(T:getPos() + Vector(0,0,10), Angle(), "item_battery", true, {
+                model = "models/items/battery.mdl",
+            })
+        end
+    end
+end)
+
+

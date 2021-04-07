@@ -1,0 +1,95 @@
+@name Fractals (set mandelbrot)
+@outputs Col
+@persist W:wirelink
+@persist Res Performance Zoom OffsetX OffsetY CountSet
+@persist X Y Z:complex HalfRes_ I
+
+
+if (first()) { E=entity() O=owner()
+    
+    #=================================
+    Performance = 150 # Manage to perfomance
+
+    Res = 512
+    CountSet = 100
+    
+    Zoom = 3.5
+    OffsetX = -1100
+    OffsetY = -1100
+    #=================================
+    
+    
+    function wirelink:initScreen() {
+        This[1048574]=0 #Reset Screen and whatever was on it will be cleared.
+        This[1048569]=3 #Set color mode to 3
+        This[1048575]=1 #Apply changes
+        This[1048572]=Res #Set new resolution on Y (Height)
+        This[1048573]=Res #Set new resolution on X (Width)
+    }   
+    
+    HalfRes_ = Res / 2
+    
+    W = entity():isWeldedTo():wirelink()
+    
+    W:initScreen()
+    timer("render", 10)
+}
+
+if(clk("render")) {
+    for (I_ = 1, Performance) {
+        
+        Z = Z^2 + comp((X - HalfRes_ + OffsetX*Zoom) / Res / Zoom,
+                       (Y - HalfRes_ + OffsetY*Zoom) / Res / Zoom)
+        I++
+        
+        if (I >= CountSet | abs(Z) >= 2) {
+            if (abs(Z) >= 2) {
+                Col = (CountSet - I) / CountSet
+                Color = hsv2rgb(Col*120 + 150, 1, 1)
+                W[X+Y*Res]=rgb2digi(Color,3)
+            }
+            
+            Z = comp(0.0, 0.0)
+            I = 0
+            
+            X++
+            if (Y != Res & X==Res) {X=0 Y++}
+        }
+    }
+    
+    if (Y != Res) { timer("render", 10) }
+    else { }
+}
+
+
+#[
+if(clk("render")) {
+    for (I_ = 1, Performance) {
+        
+        
+        
+        local Z = comp(0, 0)
+        local I = 0
+        while (I < 10 & abs(Z) < 2) {
+            Z = Z^2 + comp(1.0 * (X - 100) / 70,
+                           1.0 * (Y - 100) / 70)
+            I++
+        }
+        if (abs(Z) >= 2) {
+            Color = vec((50.0 - I) / 50.0)
+            W[X+Y*Res]=rgb2digi(vec(255),3)
+        }
+        
+        
+        
+        
+        
+        X++
+        if (Y != Res & X==Res) {X=0 Y++}
+    }
+    
+    if (Y != Res) { timer("render", 10) }
+    else { }
+}
+]#
+

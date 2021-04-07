@@ -12,7 +12,7 @@ if(first()|dupefinished()){
         This:boxSize()
     }]#
     Nil=findPlayerByName("Mark")
-    entity():propFreeze(0)
+    #entity():propFreeze(0)
 }
 interval(10)
 if(owner():aimEntity()==entity() & changed(owner():keyUse()) & owner():keyUse() & C==0){

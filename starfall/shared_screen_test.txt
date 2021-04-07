@@ -1,0 +1,15 @@
+--@name Shared screen test
+--@author Person8880
+--@shared
+
+if SERVER then
+    wire.adjustInputs( { "Text" }, { "string" } )
+else
+    local Text = "Bleh."
+
+    hook.add( "render", "RenderHook", function()
+        render.clear(Color(255), false)
+        render.setColor( Color(255, 255, 255, 255) )
+        render.drawText( 256, 256, Text, render.TEXT_ALIGN_CENTER )
+    end )
+end
