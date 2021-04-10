@@ -1,4 +1,4 @@
---@name Map Radar
+--@name Map Radar fail
 --@author Markiz
 --@shared
 

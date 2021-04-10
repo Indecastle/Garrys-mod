@@ -3,13 +3,13 @@
 --@shared
 
 
-local Detail = 20
+local Detail = 5
 local HalfSquare = 10
 local DistanceToSquare = 20
-local RenderDistanceLimit = 35
+local RenderDistanceLimit = 3500000
 
 local Performance = 50 // Manage to perfomance
-local Performance_Cpu_Limit = 0.5// Manage to perfomance
+local Performance_Cpu_Limit = 0.6// Manage to perfomance
 
 
 // ##### don't touch !!! ########
@@ -19,7 +19,7 @@ local dxy = HalfSquare*2 / Res_
 local SunDirection = Vector(-1,-1,-1):getNormalized()
 
 local tt = find.byModel("models/gibs/hgibs.mdl")
-local cam123 = find.closest(tt, chip():getPos())
+local cam = find.closest(tt, chip():getPos())
 // ##### don't touch !!! ########
 
 
@@ -27,8 +27,8 @@ if SERVER then
     
     // holograms.create(any pos, any ang, any model, any scale)
     // H1 = holoCreate(1, Cam:toWorld(vec(DistanceToSquare, 0, 0)), vec(0.001,2,2), Cam:angles(), vec4(0,255,0, 100))
-    local realm_holo = holograms.create(cam123:localToWorld(Vector(DistanceToSquare, 0, 0)), cam123:getAngles(), "models/holograms/cube.mdl", Vector(0.001,2,2))
-    realm_holo:setParent(cam123)
+    local realm_holo = holograms.create(cam:localToWorld(Vector(DistanceToSquare, 0, 0)), cam:getAngles(), "models/holograms/cube.mdl", Vector(0.001,2,2))
+    realm_holo:setParent(cam)
     realm_holo:setColor(Color(0,255,0, 100))
     realm_holo:setScale(Vector(0.001, HalfSquare*2, HalfSquare*2)/12)
     
@@ -76,14 +76,14 @@ else
                             I_ = 0
                             coroutine.yield()
                         end
-                        if !server_holo:isValid() or cam123 == nil or !cam123:isValid() then
+                        if !server_holo:isValid() or cam == nil or !cam:isValid() then
                             return true
                         end
                         local Pos1 = server_holo:localToWorld(Vector(0, HalfSquare - x*dxy, HalfSquare - y*dxy))
                     
-                        local startPos = cam123:getPos()
-                        local dir = (Pos1 - startPos):getNormalized()
-                        local tr = trace.trace(startPos, startPos + dir*RenderDistanceLimit, {cam123, server_holo}, MASK.ALL, nil, false)
+                        local startPos = Pos1
+                        local dir = (Pos1 - cam:getPos()):getNormalized()
+                        local tr = trace.trace(startPos, startPos + dir*RenderDistanceLimit, {cam, server_holo}, MASK.ALL, nil, false)
                         local hitPos = tr.HitPos
                         local dist = hitPos:getDistance(startPos)
                         //print(tr.HitNonWorld)
@@ -91,7 +91,7 @@ else
                         local brightness = (SunDirection:dot(hitNormal) + 1) / 2
                         
                         local color = Vector(0,0,0)
-                        if tr.HitNonWorld and dist < RenderDistanceLimit then
+                        if dist < RenderDistanceLimit-1 then
                             if tr.Entity:isValid() and tr.Entity:isPlayer() then
                                 color = Color(1,1, brightness*0.95 + 0.05):hsvToRGB()
                             elseif tr.HitSky then
@@ -109,7 +109,7 @@ else
                     end
                     //coroutine.yield()
                 end
-                print(timer.curtime() - time1)
+                //print(timer.curtime() - time1)
                 return true
             end)
     end

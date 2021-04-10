@@ -1,0 +1,97 @@
+--@name AIM
+--@author
+--@shared
+
+O = owner()
+OO = player()
+local curastate = false
+local aimed = false
+local tar = nil
+
+local screenW = 1440
+local screenH = 900
+
+
+function gethead(ent)
+    if ent:lookupBone("ValveBiped.Bip01_Head1") then
+        local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+        return pos
+    end
+    return ent:localToWorld(ent:obbCenter())
+end
+ 
+function getclosest(r)
+    local min = 999999
+    local lox
+    for i, v in ipairs(find.allPlayers())
+    do
+        local kek = gethead(v)
+        print(kek)
+        local tbl = kek:toScreen()
+        local x = tbl.x
+        local y = tbl.y
+        local dist = math.sqrt((x - screenW / 2)^2 + (y - screenH / 2)^2)
+        if v != O and dist <= r and dist < min then
+            lox = v
+            min = dist
+		        end
+    end
+    return lox
+end
+ 
+
+if O == OO then
+    if SERVER then
+    
+        hook.add("Think", "aim Markiz",	function()
+            local angle
+            if curastate then								
+                if tar != nil then
+                    angle = (gethead(tar) + tar:getVelocity() * game.getTickInterval() * 0.6 - O:getShootPos() - O:getVelocity() * game.getTickInterval() * 0.6):getAngle()
+                end
+                if angle != nil then		
+                    O:setEyeAngles(angle)      
+                end
+            end
+        end)
+        
+        hook.add("ClientInitialized", "cl_init", function(ply)
+        end)
+        
+        net.receive("keyPressedHandler", function (len, ply)
+            tar = net.readEntity()
+            curastate = true
+        end)
+        net.receive("keyReleasedHandler", function (len, ply)
+            curastate = false
+        end)
+        
+    else        
+        
+        hook.add("inputPressed", "", function(button)
+            if button == MOUSE.MOUSE4 then
+                curastate = true
+                tar = getclosest(200)
+                print(tar)
+                
+                net.start("keyPressedHandler")
+                net.writeEntity(tar)
+                net.send()
+            end
+            
+        end)
+        
+        hook.add("inputReleased", "", function(button)
+            if button == MOUSE.MOUSE4 then
+                curastate = true
+                tar = getclosest(200)
+                print(tar)
+                
+                net.start("keyReleasedHandler")
+                net.send()
+            end
+        end)
+        
+    end
+end
+

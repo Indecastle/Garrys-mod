@@ -82,18 +82,15 @@ if O == OO then
                 func(key)
             end
         end)
-    else
         
-        net.receive("holo", function(len)
-            net.readEntity(receivedHologram)
-        end)
-        
+    else        
         
         hook.add("inputPressed", "", function(button)
             net.start("keyHandler")
             net.writeInt(button, 8)
             net.send()
         end)
+        
     end
 end
 

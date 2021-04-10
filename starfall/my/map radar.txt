@@ -1,12 +1,315 @@
---@name
+--@name Map Radar client
 --@author
 --@shared
 
---[[
-Starfall Scripting Environment
+local Detail = 5
+local SizeMap = 30000
+local Z = 5000
+local Zoom = 3
+local LevelDiff = 100
 
-Github: https://github.com/thegrb93/StarfallEx
-Reference Page: http://thegrb93.github.io/Starfall/
+local Performance = 50 // Manage to perfomance
+local Performance_Cpu_Limit = 0.5 // Manage to perfomance
 
-Default Keyboard shortcuts: https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts
-]]
+
+local RenderDistanceLimit = 3500000
+
+
+local OnlyOwner = false
+
+
+
+
+// ##### don't touch !!! ########
+local O = owner()
+local OO = player()
+local isOwner = O == OO
+// ##### don't touch !!! ########
+
+if SERVER then
+    
+    local conectingPlayers = {}
+    
+    net.receive("hud_connecting", function (len, ply)
+        local isCon = net.readBool()
+        if isCon then
+            table.insert(conectingPlayers, ply)
+        else
+            table.removeByValue(conectingPlayers, ply)
+        end
+    end)
+    
+    timer.create("check_players", 2, 0, function()
+        for i, v in ipairs(conectingPlayers) do
+            if v == nil then
+                table.removeByValue(conectingPlayers, ply)
+            end
+        end
+        table.removeByValue(conectingPlayers, OO)
+        
+        net.start("conecting_players")
+        net.writeTable(conectingPlayers)
+        net.send(owner())
+    end)
+    
+else
+    local conectingPlayers = {}
+    
+    // ##### don't touch !!! ########
+    local Res_ = 1024 / Detail
+    local HalfRes_ = 1024 / 2
+    local InitPos = chip():getPos() + Vector(0,0, Z)
+    local MapDxy = SizeMap / Res_
+    local HalfSizeMap_ = SizeMap / 2
+    local SunDirection = Vector(-1,-1,-1):getNormalized()
+    local Zoom_ = 1024 * Zoom
+    local Dir = Vector(0, 0, -1)
+    local ON = false
+    local mode = 1
+    
+    local font = render.createFont("Roboto", 50, 500, true)
+    // ##### don't touch !!! ########
+    
+    
+    render.createRenderTarget("myrendertarget")
+    render.createRenderTarget("myrendertarget2")
+    local paint
+    
+    local polyDown = {
+        { x=0, y=0 },
+        { x=4, y=0 },
+        { x=2, y=4 },
+    }
+    
+    local polyUp = {
+        { x=2, y=0 },
+        { x=4, y=4 },
+        { x=0, y=4 },
+    }
+    
+    local polyRect = {
+        { x=0, y=0 },
+        { x=4, y=0 },
+        { x=4, y=4 },
+        { x=0, y=4 },
+    }
+    
+    --[[
+    local poly = {}
+    for i=1, 180 do
+        local theta = i*math.pi/180
+        poly[i] = {x=math.cos(theta)*10+10, y=math.sin(theta)*10+10}
+    end
+    ]]
+    
+    
+    function myIsInWorld(pos)
+        return not trace.trace(pos, pos, nil, nil, 20).HitWorld
+    end
+    
+    function getArrow(poly, curX, curY, scale)
+        local copyMouse = table.copy(poly)
+        
+        for i=1, #copyMouse do
+            copyMouse[i].x = copyMouse[i].x*scale + curX
+            copyMouse[i].y = copyMouse[i].y*scale + curY
+        end
+        return copyMouse
+    end
+    
+    function drawArrow(ply, curX, curY, scale)
+        render.setRenderTargetTexture()
+        local poly
+        local plyZ = ply:getPos().z
+        local OwnerZ = OO:getPos().z
+        if plyZ > OwnerZ+LevelDiff then
+            poly = polyUp
+        elseif plyZ < OwnerZ-LevelDiff then
+            poly = polyDown
+        else
+            poly = polyRect
+        end
+        copyMouse = getArrow(poly, curX, curY-20, scale)
+
+        render.drawPoly(copyMouse)
+    end
+    
+    function getOffset()
+        local eyeAngles = OO:getEyeAngles()
+        eyeAngles:setP(0)
+        local pos, _ = worldToLocal(InitPos, Angle(), OO:getPos(), eyeAngles)
+        return  -pos.y / SizeMap * Zoom_,
+                -pos.x / SizeMap * Zoom_
+    end
+    
+    function renderPlayers()
+        render.setFont(font)  
+        for i, p in ipairs(find.allPlayers()) do
+            if p != OO then
+                local eyeAngles = OO:getEyeAngles()
+                eyeAngles:setP(0)
+                local pos, ang = worldToLocal(p:getPos(), Angle(), OO:getPos(), eyeAngles)
+                local x = 512 - pos.y / SizeMap * Zoom_
+                local y = 512 - pos.x / SizeMap * Zoom_
+                render.setColor(team.getColor(p:getTeam()))
+                render.drawText(x, y, p:getName(), 0)
+                drawArrow(p, x, y, 7)
+                render.setColor(Color())
+            end
+        end
+        
+    end
+    
+    function drawConectingPlayers()
+        render.setFont("DermaLarge")
+        render.setColor(Color())
+        render.drawText(10, 260, "MapRadar players:")
+        
+        for i=1, #conectingPlayers do
+            if conectingPlayers[i]:isValid() then
+                render.setColor(team.getColor(conectingPlayers[i]:getTeam()))
+                render.drawText(10, 290 + 30*(i-1), conectingPlayers[i]:getName())
+            end
+        end
+    end
+    
+    
+    function get_coro()
+        return coroutine.wrap(function()
+                local I_ = 0
+                local time1 = timer.curtime()
+                for y=0, Res_ do
+                    for x=0, Res_ do
+                        I_ = I_ + 1
+                        if I_ == Performance then
+                            I_ = 0
+                            coroutine.yield()
+                        end
+                        
+                        local tr
+                        local startPos = InitPos + Vector(HalfSizeMap_ - x*MapDxy, HalfSizeMap_ - y*MapDxy)
+                        local endPos = startPos + Dir * RenderDistanceLimit
+                        local dist = -1
+                        for i=0, 2 do
+                            tr = trace.trace(startPos, endPos, nil, 24737, nil, false)
+                            if myIsInWorld(tr.HitPos) then
+                                dist = startPos:getDistance(tr.HitPos)
+                                break
+                            else
+                                startPos = tr.HitPos + Dir*1
+                            end
+                        end
+                        
+                        local color = Color(0,0,0)
+                        if dist != -1 then
+                            if bit.band(tr.SurfaceFlags, 8) != 0 then
+                                color = Color(0,200,200)
+                            else
+                                color = render.traceSurfaceColor(tr.HitNormal + tr.HitPos, tr.HitPos - tr.HitNormal)
+                            end
+                        end
+                        
+                        
+                        render.setColor(color)
+                        render.drawRectFast(x*Detail,Res_*Detail - y*Detail, Detail, Detail)
+                        
+                    end
+                    //coroutine.yield()
+                end
+                //print(timer.curtime() - time1)
+                return true
+            end)
+    end
+    
+    
+    
+    
+    function initHooks()
+        paint = get_coro()
+        
+        
+        
+        hook.add("renderoffscreen","",function()
+            render.selectRenderTarget("myrendertarget")
+            while quotaAverage() < quotaMax() * Performance_Cpu_Limit do
+                if paint() then
+                    hook.remove("renderoffscreen","")
+                    return
+                    //paint = get_coro()
+                end
+            end
+    
+        end)
+        
+        hook.add("drawhud","",function()    
+            if Mode != 0 then    
+                local rot = OO:getEyeAngles().y + 90
+                local x, y = getOffset()
+
+                render.selectRenderTarget("myrendertarget2")
+                render.setRenderTargetTexture("myrendertarget")
+                render.clear(Color(0,0,0,0))
+                render.drawTexturedRectRotated(512 + x, 512 + y, Zoom_, Zoom_, rot)
+                renderPlayers()
+                
+                render.selectRenderTarget()
+                render.setRenderTargetTexture("myrendertarget2")
+                render.clear(Color(0,0,0,0))
+                render.drawTexturedRect(0, 0, 256, 256)
+                
+                render.setColor(Color())
+                render.drawCircle(131, 131, 3)
+            end
+            
+            if Mode == 2 and (isOwner or !OnlyOwner) then
+                drawConectingPlayers()
+            end
+        end)    
+    end
+    
+    function hudConnecting(isCon)
+        if !ON then
+            ON = true
+            initHooks()
+        end
+        Mode = isCon and 1 or 0
+        net.start("hud_connecting")
+        net.writeBool(isCon)
+        net.send()
+    end
+    
+    hook.add("hudconnected", "", function()
+        hudConnecting(true)
+    end)
+    hook.add("huddisconnected", "", function()
+        hudConnecting(false)
+    end)
+    net.receive("conecting_players", function (len)
+        conectingPlayers = net.readTable()
+    end)
+    if render.isHUDActive() then
+        hudConnecting(true)
+    end
+    
+    hook.add("inputPressed", "", function(button)
+        if button == KEY.PAD_MULTIPLY then 
+            if !OnlyOwner or isOwner then         
+                Mode = (Mode + 1) % 3
+            else
+                Mode = (Mode + 1) % 2
+            end
+        end
+        if button == KEY.PAD_PLUS then
+            Zoom = Zoom + 1
+            Zoom_ = 1024 * Zoom
+        end
+        if button == KEY.PAD_MINUS then
+            if Zoom != 1 then
+                Zoom = Zoom - 1
+                Zoom_ = 1024 * Zoom
+            end
+        end
+    end)
+        
+    
+end

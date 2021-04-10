@@ -8,73 +8,91 @@ O=owner()
 EE=entity()
 #EE:propNotSolid(1)
 
-interval(20)
+interval(100)
 
 function number x4(Num:number) {
-    return Num ^ 100
+    return (Num^1.5)*2
 }
 
 #EE:setAlpha(0)
 #P:setAlpha(0)
 
 if(first()){
-EE:soundPlay(10,0,"d3_citadel.small_elevator_move",0),soundPitch(10,1000),soundVolume(10,0.16)
-
-P:setName("Plutonium-238")
-P=propSpawn("models/mechanics/wheels/wheel_smooth_24.mdl",EE:toWorld(vec(0)),0)
-P:propPhysicalMaterial("metal")
-P:setMass(40)
-EE:parentTo(P)
-
-holoCreate(1)
-holoModel(1,"models/holograms/hq_rcylinder.mdl")
-holoScale(1,vec(2.06,2.06,0.65))
-holoColor(1,vec(105))
-holoParent(1,P)
-holoShadow(1,1)
-
-holoCreate(2)
-holoModel(2,"models/holograms/hq_rcylinder.mdl")
-holoScale(2,vec(-2.05,-2.05,-0.5))
-holoColor(2,vec(120))
-holoParent(2,P)
-holoShadow(2,1)
-holoDisableShading(2,1)
+    EE:soundPlay(10,0,"d3_citadel.small_elevator_move",0),soundPitch(10,1000),soundVolume(10,0.16)
+    
+    P:setName("Plutonium-238")
+    P=propSpawn("models/mechanics/wheels/wheel_smooth_24.mdl",EE:toWorld(vec(0)),0)
+    P:propPhysicalMaterial("metal")
+    P:setMass(40)
+    EE:parentTo(P)
+    
+    holoCreate(1)
+    holoModel(1,"models/holograms/hq_rcylinder.mdl")
+    holoScale(1,vec(2.06,2.06,0.65))
+    holoColor(1,vec(105))
+    holoParent(1,P)
+    holoShadow(1,1)
+    
+    holoCreate(2)
+    holoModel(2,"models/holograms/hq_rcylinder.mdl")
+    holoScale(2,vec(-2.05,-2.05,-0.5))
+    holoColor(2,vec(120))
+    holoParent(2,P)
+    holoShadow(2,1)
+    holoDisableShading(2,1)
+    
+    findIncludeClass("player")
+    findIncludeClass("npc")
+    #findIncludeClass("owner")
+}
 
 findIncludeClass("player")
 findIncludeClass("npc")
-findIncludeClass("owner")
-}
-
 findInSphere(EE:pos(),800)
 
 Ar = findToArray()
 
-if (Ar:exists(1)) {DA=1}else{DA=0}
+if (Ar:exists(1)) {DA=1} 
+else {DA=0}
 
 if(DA==1){
     for(I = 1, Ar:count()){
-        local E = Ar[I,entity]
-        local Damage  = x4( (800 - E:pos():distance(EE:pos())) / 800 )
-        E:takeDamage(Damage,EE,E)
+        local P = Ar[I,entity]
+        local Damage  = x4( (800 - P:pos():distance(EE:pos())) / 800 )
+        P:takeDamage(Damage, EE, P)
     }
 }
 
 A = findResult(1)
 
-if(A:isExist()){B=1,Dis=A:pos()}else{B=0,Tic=0,Tac=0,soundStop(1),soundStop(2)}
+if(A:isExist()){
+    B=1
+    Dis=A:pos()
+}
+else{
+    B=0
+    Tic=0
+    Tac=0
+    soundStop(1)
+    soundStop(2)
+}
 
-if(B==0){Tic=0,Tac=0,soundStop(1),soundStop(2)}
+if(B==0){
+    Tic=0
+    Tac=0
+    soundStop(1)
+    soundStop(2)
+}
 
 if (Dis:distance(EE:pos())<700) {S1=1, Al=1} else {S1=0, Al=0}
 if (Dis:distance(EE:pos())<450) {S2=1, Be=1} else {S2=0, Be=0}
 if (Dis:distance(EE:pos())<250) {S3=1, Ga=1} else {S3=0, Ga=0}
 if (Dis:distance(EE:pos())<100) {S4=1, De=1} else {S4=0, De=0}
 
-if(Al==1){A:takeDamage(0.01,EE,A)}
-if(Be==1){A:takeDamage(0.05,EE,A)}
-if(Ga==1){A:takeDamage(0.2,EE,A)}
-if(De==1){A:takeDamage(0.5,EE,A)}
+#if(Al==1){A:takeDamage(0.01,EE,A)}
+#if(Be==1){A:takeDamage(0.05,EE,A)}
+#if(Ga==1){A:takeDamage(0.2,EE,A)}
+#if(De==1){A:takeDamage(0.5,EE,A)}
 
 if(S1==1){Tic=Tic+0.5}
 if(S2==1){Tic=Tic+1.5,Tac=Tac+1} 
@@ -86,7 +104,7 @@ if(Tac>20){Tac=0}
 if(Tic==20){EE:soundPlay(1,0,"Geiger.BeepLow",0)}
 if(Tac==20){EE:soundPlay(2,0,"Geiger.BeepHigh",0)}
 
-if(Dis:distance(EE:pos())>750){Tic=0}
+if (Dis:distance(EE:pos())>750) {Tic=0}
 
 particle(0.25,3,0,"sun/overlay",vec(5,25,5),P:pos()+vec(random(-9,9),random(-9,9),random(-3,3)),randvec(170,-170),1)
 particle(0.2,50,0,"sun/overlay",vec(1,15,1),P:pos(),vec(0,0,3.5),1)

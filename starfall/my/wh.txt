@@ -1,94 +1,171 @@
 --@name WH
 
---@client
+--@shared
+
+local OnlyOwner = false
 
 
-local function getBBox(verts)
-    local xmin, ymin, xmax, ymax 
+O = owner()
+OO = player()
+local isOwner = O == OO
+
+if SERVER then
+    local conectingPlayers = {}
     
-    if #verts > 0 then
-        xmin, ymin, xmax, ymax = verts[1].x, verts[1].y, verts[1].x, verts[1].y
-    
-        for i = 2, #verts do
-            if verts[i].x < xmin then xmin = verts[i].x end
-            if verts[i].y < ymin then ymin = verts[i].y end
-            if verts[i].x > xmax then xmax = verts[i].x end
-            if verts[i].y > ymax then ymax = verts[i].y end
+    net.receive("hud_connecting", function (len, ply)
+        local isCon = net.readBool()
+        if isCon then
+            table.insert(conectingPlayers, ply)
+        else
+            table.removeByValue(conectingPlayers, ply)
         end
-    end
-
-    return xmin, ymin, xmax, ymax
-end
-
-local dirs = {Vector(-1, -1, -1)
-    ,Vector(1, -1, -1)
-    ,Vector(-1, 1, -1)
-    ,Vector(-1, -1, 1)
-    ,Vector(1, 1, -1)
-    ,Vector(1, -1, 1)
-    ,Vector(-1, 1, 1)
-    ,Vector(1, 1, 1)
-}   
+    end)
     
-local O = player()
-local MaxDistance = 10000
-
-local font = render.createFont("Roboto", 15, 500, true)
-
-local oldIsPressed_PAD_MULTIPLY = false
-local ON = true
+    timer.create("check_players", 2, 0, function()
+        for i, v in ipairs(conectingPlayers) do
+            if v == nil then
+                table.removeByValue(conectingPlayers, ply)
+            end
+        end
+        table.removeByValue(conectingPlayers, O)
         
-        -------------------players------------
-hook.add("drawhud","myshook",function()
-    local newIsPressed_PAD_MULTIPLY = input.isKeyDown(KEY.PAD_MULTIPLY)
-    if oldIsPressed_PAD_MULTIPLY != newIsPressed_PAD_MULTIPLY then
-        oldIsPressed_PAD_MULTIPLY = newIsPressed_PAD_MULTIPLY
-        if oldIsPressed_PAD_MULTIPLY then
-            ON = !ON
+        net.start("conecting_players")
+        net.writeTable(conectingPlayers)
+        net.send(owner())
+    end)
+
+else
+    local conectingPlayers = {}
+
+    local function getBBox(verts)
+        local xmin, ymin, xmax, ymax 
+        
+        if #verts > 0 then
+            xmin, ymin, xmax, ymax = verts[1].x, verts[1].y, verts[1].x, verts[1].y
+        
+            for i = 2, #verts do
+                if verts[i].x < xmin then xmin = verts[i].x end
+                if verts[i].y < ymin then ymin = verts[i].y end
+                if verts[i].x > xmax then xmax = verts[i].x end
+                if verts[i].y > ymax then ymax = verts[i].y end
+            end
         end
+    
+        return xmin, ymin, xmax, ymax
     end
     
-    if ON then
-        for i, p in ipairs(find.allPlayers()) do
-            if p ~= player() then
-                //if p:getPos():getDistance( owner():getPos() ) > 1300 then continue end
-                local obbw = p:obbCenterW()
-                local obbhs = p:obbSize() / 2
-                
-                local verts = {}
-                
-                for i = 1, 8 do verts[i] = (obbw + obbhs * dirs[i]):toScreen() end
+    local dirs = {Vector(-1, -1, -1)
+        ,Vector(1, -1, -1)
+        ,Vector(-1, 1, -1)
+        ,Vector(-1, -1, 1)
+        ,Vector(1, 1, -1)
+        ,Vector(1, -1, 1)
+        ,Vector(-1, 1, 1)
+        ,Vector(1, 1, 1)
+    }   
+        
+    local O = player()
+    local MaxDistance = 10000
+    
+    local font = render.createFont("Roboto", 15, 500, true)
+    
+    local oldIsPressed_PAD_MULTIPLY = false
+    local ON = 1
             
-                local x0, y0, x1, y1 = getBBox(verts)
-                local w, h = x1 - x0, y1 - y0
-                
-                
-                //local normDistance = 1-math.clamp(O:getPos():getDistance(p:getPos()), 0, MaxDistance) / MaxDistance
-                //local distanceColor = Color(normDistance*100, 1, 1):hsvToRGB()
-                
-                
-                
-                render.setColor(Color(0,200,200))
-                render.drawRectOutline(x0, y0, w, h)
-                
-                local normHealth = math.clamp(p:getHealth(), 0, 100) / 100
-                local healthColor = Color(normHealth*100, 1, 1):hsvToRGB()
-                
-                
-                
-                render.setFont(font)
-                
-                render.setColor(team.getColor(p:getTeam()))
-                render.drawText(x0+w/2, y0-15, p:getName(), 1)
-                
-                render.setColor(healthColor)
-                render.drawText(x0+w/2, y1, ""..p:getHealth(), 1)
-                    
-                //render.setColor(healthColor)
-                //render.drawRect(x0, y0+h-2, w*normHealth, 2)
+
+    function drawConectingPlayers()
+        render.setFont("DermaLarge")
+        render.setColor(Color())
+        render.drawText(10, 10, "WH players:")
+        
+        for i=1, #conectingPlayers do
+            if conectingPlayers[i]:isValid() then
+                render.setColor(team.getColor(conectingPlayers[i]:getTeam()))
+                render.drawText(10, 40 + 30*(i-1), conectingPlayers[i]:getName())
             end
         end
     end
-    
-end)
 
+    hook.add("drawhud","myshook",function()
+        if ON != 0 then
+            for i, p in ipairs(find.allPlayers()) do
+                if p ~= player() then
+                    //if p:getPos():getDistance( owner():getPos() ) > 1300 then continue end
+                    local obbw = p:obbCenterW()
+                    local obbhs = p:obbSize() / 2
+                    
+                    local verts = {}
+                    
+                    for i = 1, 8 do verts[i] = (obbw + obbhs * dirs[i]):toScreen() end
+                
+                    local x0, y0, x1, y1 = getBBox(verts)
+                    local w, h = x1 - x0, y1 - y0
+                    
+                    
+                    //local normDistance = 1-math.clamp(O:getPos():getDistance(p:getPos()), 0, MaxDistance) / MaxDistance
+                    //local distanceColor = Color(normDistance*100, 1, 1):hsvToRGB()
+                    
+                    
+                    
+                    render.setColor(Color(0,200,200))
+                    render.drawRectOutline(x0, y0, w, h)
+                    
+                    local normHealth = math.clamp(p:getHealth(), 0, 100) / 100
+                    local healthColor = Color(normHealth*100, 1, 1):hsvToRGB()
+                    
+                    
+                    
+                    render.setFont(font)
+                    
+                    render.setColor(team.getColor(p:getTeam()))
+                    render.drawText(x0+w/2, y0-15, p:getName(), 1)
+                    
+                    render.setColor(healthColor)
+                    render.drawText(x0+w/2, y1, ""..p:getHealth(), 1)
+                        
+                    //render.setColor(healthColor)
+                    //render.drawRect(x0, y0+h-2, w*normHealth, 2)
+                end
+            end
+        end
+        
+        if ON == 2 and (isOwner or !OnlyOwner) then
+            drawConectingPlayers()
+        end
+    end)
+
+
+
+    function hudConnecting(isCon)
+        ON = isCon and 1 or 0
+        net.start("hud_connecting")
+        net.writeBool(isCon)
+        net.send()
+    end
+
+    hook.add("hudconnected", "", function ()
+        hudConnecting(true)
+    end)
+    hook.add("huddisconnected", "", function ()
+        hudConnecting(false)
+    end)
+    net.receive("conecting_players", function (len)
+        conectingPlayers = net.readTable()
+    end)
+    
+    if render.isHUDActive() then
+        hudConnecting(true)
+    end
+    
+    
+    hook.add("inputPressed", "", function(button)
+        if button == KEY.PAD_DIVIDE then 
+            if !OnlyOwner or isOwner then         
+                ON = (ON + 1) % 3
+            else
+                ON = (ON + 1) % 2
+            end
+        end
+    end)
+    
+end

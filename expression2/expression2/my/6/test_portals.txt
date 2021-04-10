@@ -14,8 +14,8 @@ if(first()){
 }
 if(O:weapon():type() == "weapon_physcannon"){
 
-    if(changed(O:keyAttack1()) & O:keyAttack1()){R["Pt1",vector] = round(O:aimPos(),2) R["Pt1_Ang",angle] = round(O:aimNormal():toAngle(),2)}
-    if(changed(O:keyAttack2()) & O:keyAttack2()){R["Pt2",vector] = round(O:aimPos(),2) R["Pt2_Ang",angle] = round(O:aimNormal():toAngle(),2)}
+    if(changed(O:keyAttack1()) & O:keyAttack1()) {R["Pt1",vector] = round(O:aimPos(),2) R["Pt1_Ang",angle] = round(O:aimNormal():toAngle(),2)}
+    if(changed(O:keyAttack2()) & O:keyAttack2()) {R["Pt2",vector] = round(O:aimPos(),2) R["Pt2_Ang",angle] = round(O:aimNormal():toAngle(),2)}
 
 }
 

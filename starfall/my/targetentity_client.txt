@@ -1,6 +1,6 @@
 --@name TargetEntity Client
 --@author
---@shared
+--@client
 
 local O = owner()
 local OO = player()
@@ -11,6 +11,10 @@ local target, targetP;
 
 local oldIsPressed = nil
 
+
+function myIsInWorld(pos)
+    return not trace.trace(pos, pos, nil, nil, 20).HitWorld
+end
 
 function func()
     local tr = O:getEyeTrace()          
@@ -29,9 +33,9 @@ function func()
     local startPos = initPos
     local endPos = dir*10000000
     
-    for i=0, 5 do
+    for i=0, 2 do
         local tr3 = trace.trace(startPos, endPos, {O}, MASK.ALL, nil, false)
-        if tr3.HitPos:isInWorld() then
+        if myIsInWorld(tr3.HitPos) then
             dist3 = tr3.HitPos:getDistance(initPos)
             break
         else
@@ -39,7 +43,7 @@ function func()
         end
     end
     
-    print(dist)
+    print(dist2)
     print(dist3)
     //print(tr2.HitPos:isInWorld())
 
