@@ -2,11 +2,279 @@
 --@author Markiz
 --@shared
 
---[[
-Starfall Scripting Environment
+local O = owner()
+local OO = player()
+local isOwner = O == OO
+local OnlyOwner = false
+local Distance = 80
+local Distance_Render = 150
 
-Github: https://github.com/thegrb93/StarfallEx
-Reference Page: http://thegrb93.github.io/Starfall/
+local Keypads = {"gmod_wire_keypad", "Keypad", "Keypad_Wire"}
 
-Default Keyboard shortcuts: https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts
-]]
+Button_tupples = {
+    {"1", Vector(-2.271484, -1.260742), Vector(-0.993408, 0.012695)},
+    {"2", Vector(-0.620117, -1.257812), Vector(0.651611, 0.009766)},
+    {"3", Vector(0.958740, -1.250000), Vector(2.240723, 0.022461)},
+    {"4", Vector(-2.261475, -2.843750), Vector(-1.011475, -1.591797)},
+    {"5", Vector(-0.570679, -2.868164), Vector(0.678406, -1.623047)},
+    {"6", Vector(1.030273, -2.859375), Vector(2.272888, -1.616211)},
+    {"7", Vector(-2.188049, -4.471680), Vector(-0.995728, -3.278320)},
+    {"8", Vector(-0.552856, -4.514648), Vector(0.678955, -3.270508)},
+    {"9", Vector(1.045227, -4.498047), Vector(2.279358, -3.283203)},
+    {"ABORT", Vector(-2.284424, 0.368164), Vector(-0.233093, 1.663086)},
+    {"OK", Vector(0.319092, 0.375977), Vector(2.280090, 1.553711)}
+}
+Button_tupples2 = {
+    {"1", Vector(-2.826904, -1.206055), Vector(-1.183350, 0.285156)},
+    {"2", Vector(-0.847168, -1.237305), Vector(0.797852, 0.282227)},
+    {"3", Vector(1.122314, -1.232422), Vector(2.760498, 0.307617)},
+    {"4", Vector(-2.820068, -3.158203), Vector(-1.173828, -1.615234)},
+    {"5", Vector(-0.844482, -3.144531), Vector(0.799072, -1.630859)},
+    {"6", Vector(1.102783, -3.141602), Vector(2.769775, -1.644531)},
+    {"7", Vector(-2.810739, -5.092773), Vector(-1.158079, -3.578125)},
+    {"8", Vector(-0.851318, -5.084961), Vector(0.817383, -3.566406)},
+    {"9", Vector(1.110594, -5.077149), Vector(2.789794, -3.511719)},
+    {"ABORT", Vector(-2.741455, 0.615235), Vector(0.233399, 2.072266)},
+    {"OK", Vector(0.427246, 0.643555), Vector(2.768066, 2.098633)}
+}
+
+function table.find(t, f) -- find element v of l satisfying f(v)
+    for _, v in ipairs(t) do
+        if v == f then
+            return v
+        end
+    end
+    return nil
+end
+
+
+
+if SERVER then
+    
+    local keypads_passes = {}
+    local conectingPlayers = {}
+    
+    function save_pass(keypad, key)
+        if keypads_passes[keypad] == nil then
+            keypads_passes[keypad] = {key}
+        else
+            if table.count(keypads_passes[keypad]) == 5 then
+                table.remove(keypads_passes[keypad], 1)
+            end
+            table.insert(keypads_passes[keypad], key)
+        end
+        //printTable(keypads_passes)
+    end
+    
+    net.receive("passHandler", function (len, ply)
+        local key = net.readString()
+        local keypad = net.readEntity()
+        if string.len(key) == 4 then
+            save_pass(keypad, key)
+        end
+    end)
+    
+    net.receive("hud_connecting", function (len, ply)
+        local isCon = net.readBool()
+        if isCon then
+            table.insert(conectingPlayers, ply)
+        else
+            table.removeByValue(conectingPlayers, ply)
+        end
+    end)
+    
+    timer.create("check_keypads", 1, 0, function()
+        for k, v in pairs(keypads_passes) do
+            if not k:isValid() then
+                keypads_passes[k] = nil
+                //table.removeByValue(keypads_passes, v)
+            end
+        end
+        
+        net.start("passes")
+        net.writeTable(keypads_passes)
+        net.send()
+    end)
+    
+    timer.create("check_players", 2, 0, function()
+        for i, v in ipairs(conectingPlayers) do
+            if v == nil then
+                table.removeByValue(conectingPlayers, ply)
+            end
+        end
+        table.removeByValue(conectingPlayers, O)
+        
+        net.start("conecting_players")
+        net.writeTable(conectingPlayers)
+        net.send()
+    end)
+    
+    
+    
+else    
+
+
+
+
+    local conectingPlayers = {}
+    local keypads_passes = {}
+    local pressed_buttons = {}
+    current_Key = ""
+    local ON = 1
+    local font = render.createFont("Roboto", 20, 500, true)
+    
+    
+    function update_current_key()
+        current_Key = table.concat(pressed_buttons, "")
+    end
+    function save_pass(keypad)
+        net.start("passHandler")
+        net.writeString(current_Key)
+        net.writeEntity(keypad)
+        net.send()
+    end
+    
+    function func1(key, tupples)
+        if table.count(pressed_buttons) == 4 then
+            if tupples == Button_tupples then
+                table.empty(pressed_buttons)
+            else
+                // nothing
+            end
+        else
+            table.insert(pressed_buttons, key)
+        end
+    end
+    
+    local event_handler = {
+        ["1"] = func1,
+        ["2"] = func1,
+        ["3"] = func1,
+        ["4"] = func1,
+        ["5"] = func1,
+        ["6"] = func1,
+        ["7"] = func1,
+        ["8"] = func1,
+        ["9"] = func1,
+        ["OK"] = function(_, _, keypad)
+                update_current_key()
+                save_pass(keypad)
+                table.empty(pressed_buttons)
+                //print(Color(255,255,0), "Key: ", Color(0,255,255), current_Key)
+            end,
+        ["ABORT"] = function()
+                update_current_key()
+                table.empty(pressed_buttons)
+            end,
+    }
+    
+    function getTupples(type) 
+        if type == "gmod_wire_keypad" then
+            return Button_tupples
+        elseif type == "Keypad" or type == "Keypad_Wire" then
+            return Button_tupples2
+        end
+    end
+    
+    function vec3_to_vec2(pos)
+        return Vector(pos.y, pos.z)
+    end
+    
+    function inrange(pos, pos1, pos2)
+        return pos.x > pos1.x and pos.y > pos1.y and
+            pos.x < pos2.x and pos.y < pos2.y
+    end
+
+    function func()
+        local tr = O:getEyeTrace()          
+        local keypad = tr.Entity 
+        local aimPos = tr.HitPos
+        local keypad_type = table.find(Keypads, keypad:getClass())
+        if keypad_type and OO:getShootPos():getDistance(aimPos) < Distance then
+            local localAimPos = keypad:worldToLocal(aimPos)
+            local vec2 = vec3_to_vec2(localAimPos)
+            local tupples = getTupples(keypad_type)
+            
+            for _, tup in ipairs(tupples) do
+                if (inrange(vec2, tup[2], tup[3])) then
+                    event_handler[tup[1]](tup[1], Type_enum, keypad)
+                    break
+                end
+            end
+        end
+    end
+    
+    function drawConectingPlayers()
+        render.setFont("DermaLarge")
+        render.setColor(Color())
+        render.drawText(10, 10, "Keypad players:")
+        
+        for i=1, #conectingPlayers do
+            if conectingPlayers[i]:isValid() then
+                render.setColor(team.getColor(conectingPlayers[i]:getTeam()))
+                render.drawText(10, 40 + 30*(i-1), conectingPlayers[i]:getName())
+            end
+        end
+    end
+    
+    hook.add("drawhud","myshook",function()
+        render.setFont(font)
+        if ON != 0 then
+            for k, v in pairs(keypads_passes) do
+                if k:isValid() and OO:getShootPos():getDistance(k:getPos()) < Distance_Render then
+                    local vec = k:localToWorld(Vector(0,3.5,-4)):toScreen()
+                    render.setColor(Color(50,255,50))
+                    for i, pass in ipairs(v) do
+                        render.drawText(vec.x,vec.y + i*15, pass, 0)
+                    end
+                        
+                    //render.setColor(healthColor)
+                    //render.drawRect(x0, y0+h-2, w*normHealth, 2)
+                end
+            end
+        end
+        
+        if ON == 2 and (isOwner or !OnlyOwner) then
+            drawConectingPlayers()
+        end
+    end)
+    
+    hook.add("inputPressed", "", function(key)
+        if key == KEY.E then
+            func(key)
+        end
+        if key == KEY.KP_DEL then 
+            if !OnlyOwner or isOwner then         
+                ON = (ON + 1) % 3
+            else
+                ON = (ON + 1) % 2
+            end
+        end
+    end)
+    
+    function hudConnecting(isCon)
+        ON = isCon and 1 or 0
+        net.start("hud_connecting")
+        net.writeBool(isCon)
+        net.send()
+    end
+    
+    hook.add("hudconnected", "", function ()
+        hudConnecting(true)
+    end)
+    hook.add("huddisconnected", "", function ()
+        hudConnecting(false)
+    end)
+    net.receive("conecting_players", function (len)
+        conectingPlayers = net.readTable()
+    end)
+    
+    if render.isHUDActive() then
+        hudConnecting(true)
+    end
+        net.receive("passes", function (len)
+            keypads_passes = net.readTable()
+    end)
+    
+end
+
