@@ -1,0 +1,28 @@
+@name Dish Transferer
+@inputs RangerData:ranger Dish_Data_Number Dish_Data_String:string Dish_Data_Table:table
+@outputs
+@persist Ent_Old:entity
+@trigger all
+
+Ent = RangerData:entity()
+
+if (Ent != entity() & (Ent != Ent_Old | ~Dish_Data_Number | ~Dish_Data_String | ~Dish_Data_Table)) {
+    if (Ent:type() == "gmod_wire_expression2") {
+        local W = Ent:wirelink()
+        W["Dish_Data_Number", number] = Dish_Data_Number
+        W["Dish_Data_String", string] = Dish_Data_String
+        W["Dish_Data_Table", table] = Dish_Data_Table
+    }
+    else {
+        local W = Ent_Old:wirelink()
+        W["Dish_Data_Number", number] = 0
+        W["Dish_Data_String", string] = ""
+        W["Dish_Data_Table", table] = table()
+    }
+    
+    if (Ent_Old != Ent) {
+        Ent_Old = Ent
+    }
+}
+
+

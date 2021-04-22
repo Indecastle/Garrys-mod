@@ -1,0 +1,17 @@
+@name Dish Satellite
+@inputs Dish_Data_Number Dish_Data_String:string Dish_Data_Table:table
+@outputs Result_Number Result_String:string Result_Table:table
+@persist I Ar:array
+@trigger all
+@model models/props_rooftop/satellitedish02.mdl
+
+if (first() | dupefinished()) {
+    Result_Number = Dish_Data_Number
+    Result_String = Dish_Data_String
+    Result_String = Dish_Data_String
+}
+
+if (~Dish_Data_Number) { Result_Number = Dish_Data_Number }
+if (~Dish_Data_String) { Result_String = Dish_Data_String }
+if (~Dish_Data_Table) { Result_Table = Dish_Data_Table }
+

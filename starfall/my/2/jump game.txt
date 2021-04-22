@@ -1,0 +1,16 @@
+--@name Jump Game
+--@author Markiz
+--@server
+
+local O = owner()
+local platformClass = "ent_jgplatform"
+
+local oldPlatform = nil
+
+timer.create("jump", 1, 0, function()
+    local ents = find.byClass(platformClass, function(ent)
+        return ent != oldPlatform
+    end)
+    
+    local newPlatform = find.closest(ents, O:getPos())
+end)

@@ -1,0 +1,16 @@
+--@name testApplyForce
+--@author
+--@shared
+
+if SERVER then 
+
+    wire.adjustInputs( { "Wheel" }, { "entity" } )
+    
+    timer.create("xui", 0.1, 0, function()
+        if wire.ports.Wheel:isValid() then
+            wire.ports.Wheel:applyForceCenter(Vector(1000,0,0))
+        end
+    end)
+    
+else
+end

@@ -1,7 +1,7 @@
 @name Teleport to player
-@inputs [WPod Wtp]:wirelink
+@inputs [WPod Wtp]:wirelink Vehicle:entity
 @outputs [LocalPosition]:vector
-@persist [Target TargetFrom Vehicle]:entity TON SoundOk AllP IsWait Ejecting [Commands Players]:array I
+@persist [Target TargetFrom]:entity TON SoundOk AllP IsWait Ejecting [Commands Players]:array I
 @trigger 
 
 interval(100)
@@ -12,8 +12,8 @@ if(first() | duped()) { LocalPosition = vec(0,0,1)
     Ejecting = 1
     Wtp["Sound",number] = 0
     
-    findByClass("prop_vehicle_*")
-    Vehicle = findClosest(entity():pos()) ### Vehicle:propFreeze(1) ####################  #Vehicle:noCollideAll(1)
+    #findByClass("prop_vehicle_*")
+    #Vehicle = findClosest(entity():pos()) ### Vehicle:propFreeze(1) ####################  #Vehicle:noCollideAll(1)
     
     printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!TPhelp\"")
     
@@ -227,7 +227,9 @@ if(clk("restart")) {
 
 
 if (clk("OK")) {
-    owner():soundPlay(20, 0.3, "buttons/button9.wav")
+    #ifdef entity:soundPlay(number, number, string)
+        owner():soundPlay(20, 0.3, "buttons/button9.wav")
+    #endif
 }
 
 if (clk("help_en")) {

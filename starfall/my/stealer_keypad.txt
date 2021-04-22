@@ -2,45 +2,79 @@
 --@author Markiz
 --@shared
 
+
+local ExceptSaveOwner = true
+local OnlyOwner = false
+local Distance = 80
+local Distance_Render = 100
+local LimitSavePass = 10
+
+local IsDevelop = false
+
+
+
+// ##### don't touch !!! ########
+
 local O = owner()
 local OO = player()
 local isOwner = O == OO
-local OnlyOwner = false
-local Distance = 80
-local Distance_Render = 150
 
 local Keypads = {"gmod_wire_keypad", "Keypad", "Keypad_Wire"}
 
 Button_tupples = {
-    {"1", Vector(-2.271484, -1.260742), Vector(-0.993408, 0.012695)},
-    {"2", Vector(-0.620117, -1.257812), Vector(0.651611, 0.009766)},
-    {"3", Vector(0.958740, -1.250000), Vector(2.240723, 0.022461)},
-    {"4", Vector(-2.261475, -2.843750), Vector(-1.011475, -1.591797)},
-    {"5", Vector(-0.570679, -2.868164), Vector(0.678406, -1.623047)},
-    {"6", Vector(1.030273, -2.859375), Vector(2.272888, -1.616211)},
-    {"7", Vector(-2.188049, -4.471680), Vector(-0.995728, -3.278320)},
-    {"8", Vector(-0.552856, -4.514648), Vector(0.678955, -3.270508)},
-    {"9", Vector(1.045227, -4.498047), Vector(2.279358, -3.283203)},
-    {"ABORT", Vector(-2.284424, 0.368164), Vector(-0.233093, 1.663086)},
-    {"OK", Vector(0.319092, 0.375977), Vector(2.280090, 1.553711)}
+    {"1", Vector(-2.1991503238678, 0), Vector(-0.95033568143845, 1.298828125)},
+    {"2", Vector(-0.59584319591522, 0), Vector(0.64439177513123, 1.296875)},
+    {"3", Vector(1, 0), Vector(2.2496118545532, 1.302734375)},
+    {"4", Vector(-2.1998481750488, 1.6025390625), Vector(-0.95399779081345, 2.900390625)},
+    {"5", Vector(-0.59157073497772, 1.6005859375), Vector(0.64341521263123, 2.9072265625)},
+    {"6", Vector(1, 1.6015625), Vector(2.2496118545532, 2.8974609375)},
+    {"7", Vector(-2.1998481750488, 3.298828125), Vector(-0.95399779081345, 4.5498046875)},
+    {"8", Vector(-0.59157073497772, 3.298828125), Vector(0.64341521263123, 4.5498046875)},
+    {"9", Vector(1, 3.298828125), Vector(2.2496118545532, 4.5498046875)},
+    {"ABORT", Vector(-2.1981415748596, -1.599609375), Vector(-0.15102256834507, -0.302734375)},
+    {"OK", Vector(0.29994156956673, -1.59765625), Vector(2.2520849704742, -0.302734375)}
 }
 Button_tupples2 = {
-    {"1", Vector(-2.826904, -1.206055), Vector(-1.183350, 0.285156)},
-    {"2", Vector(-0.847168, -1.237305), Vector(0.797852, 0.282227)},
-    {"3", Vector(1.122314, -1.232422), Vector(2.760498, 0.307617)},
-    {"4", Vector(-2.820068, -3.158203), Vector(-1.173828, -1.615234)},
-    {"5", Vector(-0.844482, -3.144531), Vector(0.799072, -1.630859)},
-    {"6", Vector(1.102783, -3.141602), Vector(2.769775, -1.644531)},
-    {"7", Vector(-2.810739, -5.092773), Vector(-1.158079, -3.578125)},
-    {"8", Vector(-0.851318, -5.084961), Vector(0.817383, -3.566406)},
-    {"9", Vector(1.110594, -5.077149), Vector(2.789794, -3.511719)},
-    {"ABORT", Vector(-2.741455, 0.615235), Vector(0.233399, 2.072266)},
-    {"OK", Vector(0.427246, 0.643555), Vector(2.768066, 2.098633)}
+    {"1", Vector(-2.7869443893433, -0.27388191223145), Vector(-1.1507804393768, 1.2175617218018)},
+    {"2", Vector(-0.82061326503754, -0.27388191223145), Vector(0.81837368011475, 1.2175617218018)},
+    {"3", Vector(1.1525144577026, -0.27388191223145), Vector(2.7871122360229, 1.2175617218018)},
+    {"4", Vector(-2.7869443893433, 1.6488265991211), Vector(-1.1507804393768, 3.1318473815918)},
+    {"5", Vector(-0.82061326503754, 1.6488265991211), Vector(0.81837368011475, 3.1318473815918)},
+    {"6", Vector(1.1525144577026, 1.6488265991211), Vector(2.7871122360229, 3.1318473815918)},
+    {"7", Vector(-2.7869443893433, 3.5755424499512), Vector(-1.1507804393768, 5.075984954834)},
+    {"8", Vector(-0.82061326503754, 3.5755424499512), Vector(0.81837368011475, 5.075984954834)},
+    {"9", Vector(1.1525144577026, 3.5755424499512), Vector(2.7871122360229, 5.075984954834)},
+    {"ABORT", Vector(-2.7869443893433, -2.070442199707), Vector(0.19112414121628, -0.62849426269531)},
+    {"OK", Vector(0.46103295683861, -2.070442199707), Vector(2.7871122360229, -0.62849426269531)},
 }
 
-function table.find(t, f) -- find element v of l satisfying f(v)
+Input_Keys = {
+    [KEY.PAD_1] = "1",
+    [KEY.PAD_2] = "2",
+    [KEY.PAD_3] = "3",
+    [KEY.PAD_4] = "4",
+    [KEY.PAD_5] = "5",
+    [KEY.PAD_6] = "6",
+    [KEY.PAD_7] = "7",
+    [KEY.PAD_8] = "8",
+    [KEY.PAD_9] = "9",
+    [KEY.PAD_ENTER] = "OK",
+    [KEY.PAD_MINUS] = "ABORT",
+    [KEY.E] = "E",
+}
+
+function table.findByValue(t, f) -- find element v of l satisfying f(v)
     for _, v in ipairs(t) do
         if v == f then
+            return v
+        end
+    end
+    return nil
+end
+
+function table.find(t, f) -- find element v of l satisfying f(v)
+    for k, v in pairs(t) do
+        if k == f then
             return v
         end
     end
@@ -58,7 +92,7 @@ if SERVER then
         if keypads_passes[keypad] == nil then
             keypads_passes[keypad] = {key}
         else
-            if table.count(keypads_passes[keypad]) == 5 then
+            if table.count(keypads_passes[keypad]) == LimitSavePass then
                 table.remove(keypads_passes[keypad], 1)
             end
             table.insert(keypads_passes[keypad], key)
@@ -98,8 +132,8 @@ if SERVER then
     
     timer.create("check_players", 2, 0, function()
         for i, v in ipairs(conectingPlayers) do
-            if v == nil then
-                table.removeByValue(conectingPlayers, ply)
+            if not v:isValid() then
+                table.removeByValue(conectingPlayers, v)
             end
         end
         table.removeByValue(conectingPlayers, O)
@@ -121,7 +155,14 @@ else
     local pressed_buttons = {}
     current_Key = ""
     local ON = 1
+    local hud_connected = false
     local font = render.createFont("Roboto", 20, 500, true)
+    local wh_keypads = {}
+    
+    
+    
+    
+    
     
     
     function update_current_key()
@@ -134,10 +175,11 @@ else
         net.send()
     end
     
-    function func1(key, tupples)
+    function number_handler(key, tupples, keypad)
         if table.count(pressed_buttons) == 4 then
             if tupples == Button_tupples then
                 table.empty(pressed_buttons)
+                //OK_handler(key, tupples, keypad)
             else
                 // nothing
             end
@@ -146,26 +188,30 @@ else
         end
     end
     
+    function OK_handler(_, _, keypad)
+        update_current_key()
+        save_pass(keypad)
+        table.empty(pressed_buttons)
+        //print(Color(255,255,0), "Key: ", Color(0,255,255), current_Key)
+    end
+    
+    function ABORT_handler()
+        update_current_key()
+        table.empty(pressed_buttons)
+    end
+    
     local event_handler = {
-        ["1"] = func1,
-        ["2"] = func1,
-        ["3"] = func1,
-        ["4"] = func1,
-        ["5"] = func1,
-        ["6"] = func1,
-        ["7"] = func1,
-        ["8"] = func1,
-        ["9"] = func1,
-        ["OK"] = function(_, _, keypad)
-                update_current_key()
-                save_pass(keypad)
-                table.empty(pressed_buttons)
-                //print(Color(255,255,0), "Key: ", Color(0,255,255), current_Key)
-            end,
-        ["ABORT"] = function()
-                update_current_key()
-                table.empty(pressed_buttons)
-            end,
+        ["1"] = number_handler,
+        ["2"] = number_handler,
+        ["3"] = number_handler,
+        ["4"] = number_handler,
+        ["5"] = number_handler,
+        ["6"] = number_handler,
+        ["7"] = number_handler,
+        ["8"] = number_handler,
+        ["9"] = number_handler,
+        ["OK"] = OK_handler,
+        ["ABORT"] = ABORT_handler,
     }
     
     function getTupples(type) 
@@ -177,30 +223,72 @@ else
     end
     
     function vec3_to_vec2(pos)
-        return Vector(pos.y, pos.z)
+        return Vector(pos.y, -pos.z)
     end
     
     function inrange(pos, pos1, pos2)
-        return pos.x > pos1.x and pos.y > pos1.y and
-            pos.x < pos2.x and pos.y < pos2.y
+        return pos.x >= pos1.x and pos.y >= pos1.y and
+            pos.x <= pos2.x and pos.y <= pos2.y
+    end
+    
+    function getPlane(dir, m0)
+        return {
+            dir.x,
+            dir.y,
+            dir.z,
+            -(dir.x*m0.x + dir.y*m0.y + dir.z*m0.z)
+        }
+    end
+    
+    function getPoint(dir, m0, plane)
+        local t = - (plane[1]*m0.x + plane[2]*m0.y + plane[3]*m0.z + plane[4]) / (plane[1]*dir.x + plane[2]*dir.y + plane[3]*dir.z)
+        return Vector(dir.x * t + m0.x,
+                        dir.y * t + m0.y,
+                        dir.z * t + m0.z)
+    end
+    
+    function getOffSetPlane(keypad_type)
+        if keypad_type == "gmod_wire_keypad" then
+            return 1.05
+        else
+            return 1.44
+        end
+    end
+    
+    function GetkeypadPoint(tr, keypad_type)
+        local dirPlane = tr.Entity:getForward()
+        local offset = getOffSetPlane(keypad_type)
+        local m0Plane = tr.Entity:localToWorld(Vector(offset,0,0))
+        local plane = getPlane(dirPlane, m0Plane)
+        
+        local dir = OO:getEyeAngles():getForward()
+        local m0 = tr.StartPos
+        
+        return getPoint(dir, m0, plane)
     end
 
-    function func()
-        local tr = O:getEyeTrace()          
+    function func(key)
+        local tr = OO:getEyeTrace()          
         local keypad = tr.Entity 
-        local aimPos = tr.HitPos
-        local keypad_type = table.find(Keypads, keypad:getClass())
-        if keypad_type and OO:getShootPos():getDistance(aimPos) < Distance then
-            local localAimPos = keypad:worldToLocal(aimPos)
-            local vec2 = vec3_to_vec2(localAimPos)
-            local tupples = getTupples(keypad_type)
-            
-            for _, tup in ipairs(tupples) do
-                if (inrange(vec2, tup[2], tup[3])) then
-                    event_handler[tup[1]](tup[1], Type_enum, keypad)
-                    break
+        //local aimPos = tr.HitPos
+        local keypad_type = table.findByValue(Keypads, keypad:getClass())
+        if key == "E" then
+            if keypad_type and OO:getShootPos():getDistance(tr.HitPos) < Distance then
+                local aimPos = GetkeypadPoint(tr, keypad_type)
+                local localAimPos = keypad:worldToLocal(aimPos)
+                local vec2 = vec3_to_vec2(localAimPos)
+                local tupples = getTupples(keypad_type)
+                
+                for _, tup in ipairs(tupples) do
+                    if (inrange(vec2, tup[2], tup[3])) then
+                        event_handler[tup[1]](tup[1], tupples, keypad)
+                        break
+                    end
                 end
+                if IsDevelop then print(vec2) end
             end
+        else
+            event_handler[key](key, tupples, keypad)
         end
     end
     
@@ -217,13 +305,24 @@ else
         end
     end
     
+    function drawKeypads()
+        render.setColor(Color(200,100,0))
+        
+        for i=1, #wh_keypads do
+            if wh_keypads[i]:isValid() then
+                local vec = wh_keypads[i]:getPos():toScreen()
+                render.drawRectFast(vec.x, vec.y, 10, 10)
+            end
+        end
+    end
+    
     hook.add("drawhud","myshook",function()
         render.setFont(font)
-        if ON != 0 then
+        if ON >= 1 then
             for k, v in pairs(keypads_passes) do
                 if k:isValid() and OO:getShootPos():getDistance(k:getPos()) < Distance_Render then
-                    local vec = k:localToWorld(Vector(0,3.5,-4)):toScreen()
-                    render.setColor(Color(50,255,50))
+                    local vec = k:localToWorld(Vector(2,3.5,-4)):toScreen()
+                    render.setColor(Color(100,200,100))
                     for i, pass in ipairs(v) do
                         render.drawText(vec.x,vec.y + i*15, pass, 0)
                     end
@@ -234,26 +333,36 @@ else
             end
         end
         
-        if ON == 2 and (isOwner or !OnlyOwner) then
+        if ON >= 2 and (isOwner or !OnlyOwner) then
+            drawKeypads()
+        end
+        
+        if ON == 3 and (isOwner or !OnlyOwner) then
             drawConectingPlayers()
         end
     end)
     
     hook.add("inputPressed", "", function(key)
-        if key == KEY.E then
-            func(key)
-        end
         if key == KEY.KP_DEL then 
             if !OnlyOwner or isOwner then         
-                ON = (ON + 1) % 3
+                ON = (ON + 1) % 4
             else
-                ON = (ON + 1) % 2
+                ON = (ON + 1) % 3
+            end
+        end
+        if not hud_connected or ON == 0 then
+        //if not ExceptSaveOwner or not isOwner then
+            local stealer_key = table.find(Input_Keys, key)
+            if stealer_key != nil then
+                try(function() func(stealer_key) end
+                    ,function(e) print(e) end)
             end
         end
     end)
     
     function hudConnecting(isCon)
         ON = isCon and 1 or 0
+        hud_connected = isCon
         net.start("hud_connecting")
         net.writeBool(isCon)
         net.send()
@@ -276,5 +385,46 @@ else
             keypads_passes = net.readTable()
     end)
     
+    timer.create("wh_keypads", 1, 0, function()
+        wh_keypads = find.all(function(e)
+                local type = e:getClass()
+                return type == "gmod_wire_keypad"
+                    or type == "Keypad_Wire"
+                    or type == "Keypad"
+            end)
+    end)
+    
+    
+    if IsDevelop and isOwner then
+        local holo1 = holograms.create(chip():getPos(), Angle(), "models/holograms/cube.mdl", Vector(0.003, 0.003, 0.003))
+        holo1:setColor(Color(255,150,0))
+        
+        timer.create("test", 0.01, 0, function()
+            local tr = OO:getEyeTrace()    
+            local keypad = tr.Entity 
+            local keypad_type = table.findByValue(Keypads, keypad:getClass())
+            local aimPos = GetkeypadPoint(tr, keypad_type)
+            if keypad_type and OO:getShootPos():getDistance(aimPos) < Distance then
+                local localAimPos = keypad:worldToLocal(aimPos)
+                local vec2 = vec3_to_vec2(localAimPos)
+                local tupples = getTupples(keypad_type)
+                
+                local toStart = true
+                for _, tup in ipairs(tupples) do
+                    if (inrange(vec2, tup[2], tup[3])) then
+                        //event_handler[tup[1]](tup[1], Type_enum, keypad)
+                        holo1:setPos(aimPos)
+                        toStart = false
+                        break
+                    end
+                end
+                if toStart then
+                    holo1:setPos(chip():getPos())
+                end
+            else
+                holo1:setPos(chip():getPos())
+            end
+        end)
+    end
 end
 

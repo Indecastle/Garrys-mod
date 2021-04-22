@@ -1,0 +1,18 @@
+--@name testApplyForce
+--@author
+--@shared
+
+if SERVER then 
+
+    wire.adjustInputs( { "Wheel" }, { "entity" } )
+    
+    timer.create("xui", 0.1, 0, function()
+        if wire.ports.Wheel:isValid() then
+            local p = wire.ports.Wheel
+            local mass = p:getMass()
+            p:applyForceCenter(Vector(0,0,mass*60))
+        end
+    end)
+    
+else
+end

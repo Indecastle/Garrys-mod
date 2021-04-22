@@ -1,0 +1,69 @@
+@name Jump Game Box
+@inputs 
+@outputs [OldPlatform OldPlatform2, CurrentPlatform]:entity Platforms:array
+@persist [O Target]:entity PlatformType:string ON Limit [CurrentPos TargetPos]:vector
+@trigger 
+##include "library/array_add"
+
+if (first() | dupefinished()) { O=owner()
+    Limit = 10
+    
+    Target = owner()
+    #Target = findPlayerByName("5ky")
+    #Target = findPlayerBySteamID("STEAM_0:0:245102061")
+    
+    
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:addEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushEntity(Ent) OK=1}
+        return OK
+    }
+    
+    runOnKeys(Target, 1)
+    Ar = array()
+    PlatformType = "ent_climbform_box"
+    
+    ON = 1
+    CurrentPos = Target:pos()
+    timer("jump", 100)
+}
+
+if (clk("jump")) {
+    if (ON) {
+        findIncludeClass(PlatformType)
+        findInSphere(Target:pos(), 3000)
+        findSortByDistance(Target:pos())
+        
+        foreach (I, P:entity = findToArray()) {
+            if (Platforms:addEnt(P)) {
+                if (Platforms:count() == Limit) {
+                    Platforms:remove(1)
+                }
+                TargetPos = P:pos() + vec(0,0,20)
+                timer("setPos", 10)
+                break
+            }
+        }
+    }
+    
+    timer("jump", 600)
+}
+
+if (clk("setPos")) {
+    if (ON) {
+        CurrentPos = CurrentPos + (TargetPos - CurrentPos) / 2
+        Target:setPos(CurrentPos)
+    }
+    timer("setPos", 10)
+}
+
+if(changed(Target:keyPressed("b")) & Target:keyPressed("b")) {
+    #ON = !ON
+}

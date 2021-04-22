@@ -1,4 +1,4 @@
-@name Muffin and Middle's Soccerball
+@name Soccerball
 @persist I Ar:array [T T2]:entity B B2 [C V]:vector M:array
 @model models/props_phx/misc/soccerball.mdl
 if (first()){

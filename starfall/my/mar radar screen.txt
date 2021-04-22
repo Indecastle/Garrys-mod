@@ -1,4 +1,4 @@
---@name Map Radar client
+--@name Map Radar Screen client
 --@author
 --@shared
 
@@ -14,6 +14,8 @@ local Performance_Cpu_Limit = 0.5 // Manage to perfomance
 
 local RenderDistanceLimit = 3500000
 
+local DistanceForStarting = 10000
+
 
 local OnlyOwner = false
 
@@ -26,35 +28,10 @@ local OO = player()
 local isOwner = O == OO
 // ##### don't touch !!! ########
 
-if SERVER then
-    
-    local conectingPlayers = {}
-    
-    net.receive("hud_connecting", function (len, ply)
-        local isCon = net.readBool()
-        if isCon then
-            table.insert(conectingPlayers, ply)
-        else
-            table.removeByValue(conectingPlayers, ply)
-        end
-    end)
-    
-    timer.create("check_players", 2, 0, function()
-        for i, v in ipairs(conectingPlayers) do
-            if not v:isValid() then
-                table.removeByValue(conectingPlayers, v)
-            end
-        end
-        table.removeByValue(conectingPlayers, OO)
-        
-        net.start("conecting_players")
-        net.writeTable(conectingPlayers)
-        net.send(owner())
-    end)
-    
+if SERVER then  
+
 else
-    local conectingPlayers = {}
-    
+
     // ##### don't touch !!! ########
     local Res_ = 1024 / Detail
     local HalfRes_ = 1024 / 2
@@ -66,6 +43,8 @@ else
     local Dir = Vector(0, 0, -1)
     local ON = false
     local mode = 1
+    local IsScreenlinked = false
+    local Screen
     
     local font = render.createFont("Roboto", 50, 500, true)
     // ##### don't touch !!! ########
@@ -121,7 +100,7 @@ else
         render.setRenderTargetTexture()
         local poly
         local plyZ = ply:getPos().z
-        local OwnerZ = OO:getPos().z
+        local OwnerZ = Screen:getPos().z
         if plyZ > OwnerZ+LevelDiff then
             poly = polyUp
         elseif plyZ < OwnerZ-LevelDiff then
@@ -134,10 +113,21 @@ else
         render.drawPoly(copyMouse)
     end
     
+    function isNearly()
+        return Screen != nil and OO:getPos():getDistance(Screen:getPos()) < DistanceForStarting
+    end
+    
+    function getScreenAngle()
+        local vecDir = Screen:getUp()*-1
+        vecDir.z = 0
+        vecDir:normalize()
+        return vecDir:getAngle()
+    end
+    
     function getOffset()
-        local eyeAngles = OO:getEyeAngles()
+        local eyeAngles = getScreenAngle()
         eyeAngles:setP(0)
-        local pos, _ = worldToLocal(InitPos, Angle(), OO:getPos(), eyeAngles)
+        local pos, _ = worldToLocal(InitPos, Angle(), Screen:getPos(), eyeAngles)
         return  -pos.y / SizeMap * Zoom_,
                 -pos.x / SizeMap * Zoom_
     end
@@ -145,34 +135,18 @@ else
     function renderPlayers()
         render.setFont(font)  
         for i, p in ipairs(find.allPlayers()) do
-            if p != OO then
-                local eyeAngles = OO:getEyeAngles()
-                eyeAngles:setP(0)
-                local pos, ang = worldToLocal(p:getPos(), Angle(), OO:getPos(), eyeAngles)
-                local x = 512 - pos.y / SizeMap * Zoom_
-                local y = 512 - pos.x / SizeMap * Zoom_
-                render.setColor(team.getColor(p:getTeam()))
-                render.drawText(x, y, p:getName(), 0)
-                drawArrow(p, x, y, 7)
-                render.setColor(Color())
-            end
+            local eyeAngles = getScreenAngle()
+            eyeAngles:setP(0)
+            local pos, ang = worldToLocal(p:getPos(), Angle(), Screen:getPos(), eyeAngles)
+            local x = 512 - pos.y / SizeMap * Zoom_
+            local y = 512 - pos.x / SizeMap * Zoom_
+            render.setColor(team.getColor(p:getTeam()))
+            render.drawText(x, y, p:getName(), 0)
+            drawArrow(p, x, y, 7)
+            render.setColor(Color())
         end
         
     end
-    
-    function drawConectingPlayers()
-        render.setFont("DermaLarge")
-        render.setColor(Color())
-        render.drawText(10, 260, "MapRadar players:")
-        
-        for i=1, #conectingPlayers do
-            if conectingPlayers[i]:isValid() then
-                render.setColor(team.getColor(conectingPlayers[i]:getTeam()))
-                render.drawText(10, 290 + 30*(i-1), conectingPlayers[i]:getName())
-            end
-        end
-    end
-    
     
     function get_coro()
         return coroutine.wrap(function()
@@ -228,7 +202,6 @@ else
         paint = get_coro()
         
         
-        
         hook.add("renderoffscreen","",function()
             render.selectRenderTarget("myrendertarget")
             while quotaAverage() < quotaMax() * Performance_Cpu_Limit do
@@ -241,11 +214,11 @@ else
     
         end)
         
-        hook.add("drawhud","",function()    
-            if Mode != 0 then    
-                local rot = OO:getEyeAngles().y + 90
+        hook.add("render","",function()   
+            if Screen != nil then
+                local rot = getScreenAngle().y + 90
                 local x, y = getOffset()
-
+    
                 render.selectRenderTarget("myrendertarget2")
                 render.setRenderTargetTexture("myrendertarget")
                 render.clear(Color(0,0,0,0))
@@ -255,61 +228,44 @@ else
                 render.selectRenderTarget()
                 render.setRenderTargetTexture("myrendertarget2")
                 render.clear(Color(0,0,0,0))
-                render.drawTexturedRect(0, 0, 256, 256)
+                render.drawTexturedRect(0, 0, 512, 512)
+                render.setColor(Color())
+                render.drawCircle(256, 256, 1)
                 
                 render.setColor(Color())
-                render.drawCircle(128, 128, 3)
-            end
-            
-            if Mode == 2 and (isOwner or !OnlyOwner) then
-                drawConectingPlayers()
             end
         end)    
     end
     
-    function hudConnecting(isCon)
-        if !ON then
-            ON = true
+    hook.add("ComponentLinked", "", function(ent)
+        Screen = ent
+        //hudConnecting(true)
+        
+    end)
+    hook.add("ComponentUnlinked", "", function()
+        Screen = nil
+        //hudConnecting(false)
+    end)
+    timer.create("checkDistance", 1, 0, function()
+        if isNearly() then
             initHooks()
+            ON = true
+            timer.remove("checkDistance")
         end
-        Mode = isCon and 1 or 0
-        net.start("hud_connecting")
-        net.writeBool(isCon)
-        net.send()
-    end
-    
-    hook.add("hudconnected", "", function()
-        hudConnecting(true)
     end)
-    hook.add("huddisconnected", "", function()
-        hudConnecting(false)
-    end)
-    net.receive("conecting_players", function (len)
-        conectingPlayers = net.readTable()
-    end)
-    if render.isHUDActive() then
-        hudConnecting(true)
-    end
     
     hook.add("inputPressed", "", function(button)
-        if button == KEY.PAD_MULTIPLY then 
-            if !OnlyOwner or isOwner then         
-                Mode = (Mode + 1) % 3
-            else
-                Mode = (Mode + 1) % 2
-            end
-        end
-        if button == KEY.PAD_PLUS then
-            Zoom = Zoom + 1
-            Zoom_ = 1024 * Zoom
-        end
-        if button == KEY.PAD_MINUS then
-            if Zoom != 1 then
-                Zoom = Zoom - 1
+        if OO:getEyeTrace().Entity == Screen then
+            if button == KEY.EQUAL then
+                Zoom = Zoom + 1
                 Zoom_ = 1024 * Zoom
+            end
+            if button == KEY.MINUS then
+                if Zoom != 1 then
+                    Zoom = Zoom - 1
+                    Zoom_ = 1024 * Zoom
+                end
             end
         end
     end)
-        
-    
 end

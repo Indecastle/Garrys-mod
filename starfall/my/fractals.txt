@@ -14,7 +14,7 @@ render.createRenderTarget("myrendertarget")
 local Performance = 250 // Manage to perfomance
 local Performance_Cpu_Limit = 0.60 // Manage to perfomance
 local Detail = 5
-local CountSet = 100 // 110
+local CountSet = 400 // 110
 
 local Zoom = 1 // 46
 local OffsetX = -400 // 375.00081406460
@@ -176,8 +176,9 @@ function initHooks()
         
         
         local curx,cury = render.cursorPos(player())
+        local tr = player():getEyeTrace()
         
-        if curx then
+        if curx and tr.Entity == render.getScreenEntity() then
             drawMouse(curx, cury)
             
             local newIsPressed_MOUSE1 = input.isMouseDown(MOUSE.MOUSE1)

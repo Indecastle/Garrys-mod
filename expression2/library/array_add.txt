@@ -1,0 +1,50 @@
+if (first() | duped()) {
+    function number my_find_substr(Str:string, SubStr:string) {
+        return Str:lower():find(SubStr:lower())
+    }
+    function entity array:my_findPlayerByName(Name:string) {
+        local OK = noentity()
+        foreach(I, P:entity = This) {
+            if(my_find_substr(P:name(), Name)) { OK = P break}
+        }
+        return OK
+    }
+    function entity array:my_findPlayerBySteamID(Name:string) {
+        local OK = noentity()
+        foreach(I, P:entity = This) {
+            if(P:steamID() == Name) { OK = P break}
+        }
+        return OK
+    }
+    function number array:checkAr(Str:string) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:string(I) == Str) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:indexEnt(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = I break}
+        } 
+        return OK
+    }
+    function number array:removeEnt(Ent:entity) {
+        local OK = 0
+        if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+        return OK
+    }
+    function number array:addEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushEntity(Ent) OK=1}
+        return OK
+    }
+}

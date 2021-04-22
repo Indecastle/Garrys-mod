@@ -3,10 +3,11 @@
 if(first()){
     
     RangerLength = 500
-    Count = 8  # 80
+    Count = 80  # 80
     
     for(I = 0, Count) {
         holoCreate(I)
+        holoColor(I, hsv2rgb(10*I, 1, 1))
     }
     
     E = entity()
@@ -16,6 +17,7 @@ local StartPos = E:pos()
 local StartDir = E:up()
 
 for(I = 0, Count) {
+    rangerFilter(players())
     local R = rangerOffset(StartPos,StartPos + StartDir * RangerLength) 
     local DirVec = (R:pos() - StartPos):normalized()
     holoPos(I, StartPos + StartDir * R:distance() / 2)

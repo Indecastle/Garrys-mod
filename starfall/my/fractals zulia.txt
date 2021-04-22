@@ -78,7 +78,7 @@ function get_coro()
                 
                 while I < CountSet and complex.abs(Z) < 2 do
                     local Z1 = complex.pow(Z,2)
-                    Z = complex.add(Z1, complex.new(-0.70176, -0.3842))
+                    Z = complex.add(Z1, complex.new(-0.66, -0.3842))
                     I = I + 1
                     I_ = I_ + 1
                     if I_ == Performance then
@@ -92,7 +92,7 @@ function get_coro()
                         Col = (CountSet - I) / CountSet
                         //Color = hsv2rgb(Col*120 + 150, 1, 1)
                         //W[X+Y*Res_]=rgb2digi(Color,3)
-                        render.setColor(Color(Col*150 + 130,1,1):hsvToRGB())
+                        render.setColor(Color(Col*360*2 + Zoom + 100,1,1):hsvToRGB())
                         render.drawRectFast(x*Detail, y*Detail, Detail, Detail)
                     end
                 else 
