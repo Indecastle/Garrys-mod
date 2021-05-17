@@ -1,0 +1,129 @@
+@name Tracer Cam 2
+@inputs Light:entity
+@outputs TestDistance
+@persist [E O Cam H1]:entity W:wirelink  [SunDirection]:vector
+@persist X Y Res HalfSquare RenderDistanceLimit Develop DistanceToHolo DistanceToSquare TickRenders R G B Ran Color:vector Cl:vector
+
+
+if (first()) { E=entity() O=owner()
+    Develop = 0
+    SunDirection = sunDirection()
+    
+    Res = 256
+    HalfSquare = 10
+    DistanceToSquare = 20
+    RenderDistanceLimit = 15000
+    TickRenders = 10 # Manage to perfomance
+    
+    function wirelink:initScreen() {
+        This[1048574]=0 #Reset Screen and whatever was on it will be cleared.
+        This[1048569]=3 #Set color mode to 3
+        This[1048575]=1 #Apply changes
+        This[1048572]=Res #Set new resolution on Y (Height)
+        This[1048573]=Res #Set new resolution on X (Width)
+    }   
+    function wirelink:drawPixel(X, Y, Color:vector, Res) {
+        This[X+Y*Res]=rgb2digi(Color,3)
+    }
+    function vector getPos1(X, Y) {
+        local One = HalfSquare*2 / Res
+        return H1:toWorld(vec(0, HalfSquare - One*X, HalfSquare - One*Y))
+    }
+    function number getBrightness(HitNormal:vector) {
+        return (SunDirection:dot(HitNormal) + 1) / 2
+    }
+    function test(Y) {
+            rangerFilter(Cam)
+            local Ranger = rangerOffset(RenderDistanceLimit, Cam:pos(), getPos1(0, Y) - Cam:pos())
+            rangerFilter(Cam)
+            local Ranger2 = rangerOffset(RenderDistanceLimit, Cam:pos(), getPos1(Res-1, Y) - Cam:pos())
+            TestDistance = Ranger:distance()
+            holoPos(2, Ranger:pos())
+            holoPos(3, Ranger2:pos())
+    }
+    
+    findByModel("models/gibs/hgibs.mdl")
+    Cam = findClosest(O:pos())
+    findByClass("gmod_wire_digitalscreen")
+    W = findClosest(O:pos()):wirelink()
+    
+    #timer("render", 10)
+    
+    W:initScreen()
+    #Color=randvec(0,255)
+    H1 = holoCreate(1, Cam:toWorld(vec(DistanceToSquare, 0, 0)), vec(0.001,2,2), Cam:angles(), vec4(0,255,0, 100))
+    holoScaleUnits(1, vec(0.001, HalfSquare*2, HalfSquare*2))
+    holoParent(1, Cam)
+    if (Develop) {
+        H2 = holoCreate(2, H1:toWorld(vec(0, HalfSquare, HalfSquare)), vec(0.5), ang(), vec(255), "icosphere3")
+        H3 = holoCreate(3, H1:toWorld(vec(0, HalfSquare, HalfSquare)), vec(0.5), ang(), vec(255), "icosphere3")
+    }
+    
+    function number lerp(Frac, Min, Max) {
+        return Min + ( Max - Min ) * Frac
+    }
+    
+    function vector textureColor(Texture:string) {
+        R = lerp(((1024-Res)/1024)*0.4,R,Ran)
+        G = lerp(((1024-Res)/1024)*0.4,G,Ran)
+        B = lerp(((1024-Res)/1024)*0.4,B,Ran)
+        Cl = vec(180)
+        Ran = random(0,20)
+        
+        if(Texture:lower():find("grass")) {Cl = vec(170 + R,171 + G,67 + B)}
+        if(Texture:lower():find("road") || Texture:lower():find("displacement")) {Cl = vec(160 + R,160 + G,160 + B)}
+        if(Texture:lower():find("concrete") || Texture:lower():find("measuregeneric")) {Cl = vec(190 + R,190 + G,190 + B)}
+        if(Texture:lower():find("rail")) {Cl = vec(190 + R,190 + G,130 + B)}
+        if(Texture:lower():find("sand")) {Cl = vec(229 + R,191 + G,154 + B)}
+        if(Texture:lower():find("water")) {Cl = vec(92 + R,163 + G,191 + B)}
+        if(Texture:lower():find("wood")) {Cl = vec(182 + R,149 + G,105 + B)}
+        if(Texture:lower():find("gravel")) {Cl = vec(218 + R,193 + G,180 + B)}
+        return Cl
+    }
+}
+
+interval(10)
+
+while(softQuota() < maxquota()*0.7 & perf()) {
+#if(clk("render")) {
+#    timer("render", 100)
+    
+    for (I_ = 1, TickRenders) {
+        local One = HalfSquare*2 / Res
+        local Pos1 = H1:toWorld(vec(0, HalfSquare - One*X, HalfSquare - One*Y))
+        
+        rangerPersist(1)
+        rangerHitWater(1)
+        rangerHitEntities(1)
+        rangerFilter(entity())
+        rangerFilter(Light)
+        
+        rangerFilter(Cam)
+        local Ranger = rangerOffset(RenderDistanceLimit, Cam:pos(), Pos1 - Cam:pos())
+        local Dist = Ranger:distance()
+        local HitNormal = Ranger:hitNormal()
+        local Brightness = (SunDirection:dot(HitNormal) + 1) / 2
+        
+        #Cock
+        if(Ranger:entity()) {Color = Ranger:entity():getColor()}
+        if(Ranger:entity():isPlayer()) {Color = teamColor(Ranger:entity():team())}
+        if(Ranger:hitWorld()) {Color = textureColor(Ranger:hitTexture())}
+        if(Ranger:hitSky()) {Color = vec(0,200,200)}
+
+        
+        #W:drawPixel(X, Y, Color, Res)
+        W[X+Y*Res]=rgb2digi((Light:getColor()/255) * Color * Brightness*0.95+0.05,3)
+        
+        X++
+        if (X == Res) {
+            X=0 
+            Y++
+            if (Develop) {
+                test(Y) 
+            }
+        }
+        if (Y==Res) {Y=0}
+    }
+}
+
+

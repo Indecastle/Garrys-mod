@@ -7,7 +7,7 @@
 interval(50)
 
 if(first()) {
-    Scale = 1
+    Scale = 0.1
     Speed = 1
     
     Delay = 400
@@ -29,6 +29,7 @@ if(first()) {
     if(IsTetka) {
         EE=entity()
         holoCreate(1)
+        holoScale(1,vec(1)*Scale)
         holoModel(1,"models/pac/female_base.mdl")
         #holoModel(1,"models/player/skeleton.mdl")
         #holoMaterial(1,"Models/effects/splodearc_sheet")
@@ -37,7 +38,7 @@ if(first()) {
         
         holoParent(1,EE)
         interval(9500)
-        holoScale(1,vec(1)*Scale)
+        
         holoColor(1,vec(225,0,225))
     }
     
@@ -67,3 +68,5 @@ if(clk("bass")) {
 I = (I+Speed)%360
 Color = hsv2rgb(I, 1, 1)
 holoColor(1, Color)
+holoScale(1,vec(1)*Scale)
+Scale += 0.01

@@ -10,6 +10,7 @@ OO = player()
 local isOwner = O == OO
 
 if SERVER then
+    setName("Generic")
     local conectingPlayers = {}
     
     net.receive("hud_connecting", function (len, ply)
@@ -40,13 +41,23 @@ else
     local O = player()
     local MaxDistance = 10000
     
-    local font = render.createFont("Verdana" // font
+    local font = render.createFont("Arial" // font
+                                    ,19 // size
+                                    ,2000 // weight
+                                    ,false // antialias
+                                    ,false // additive
+                                    ,true // shadow
+                                    ,true // outline
+                                    ,false // blur
+                                    ,false //extended
+                                    )
+    local font2 = render.createFont("Arial" // font
                                     ,20 // size
                                     ,2000 // weight
                                     ,true // antialias
                                     ,false // additive
-                                    ,false // shadow
-                                    ,true // outline
+                                    ,true // shadow
+                                    ,false // outline
                                     ,false // blur
                                     ,false //extended
                                     )
@@ -78,12 +89,13 @@ else
                     
                     local pos = (p:getPos() + Vector(0, 0, obbhs.z+10)):toScreen()
                     
+                    render.setFont(font2)
+                    render.setColor(Color(0,0,0))
+                    //render.drawText(pos.x, pos.y-10, p:getName(), 1)
 
                     render.setFont(font)
-                    
                     render.setColor(team.getColor(p:getTeam()))
                     render.drawText(pos.x, pos.y-10, p:getName(), 1)
-
                 end
             end
         end

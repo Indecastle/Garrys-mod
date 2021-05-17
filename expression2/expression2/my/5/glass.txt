@@ -3,7 +3,7 @@
 if(first()){
     
     RangerLength = 500
-    Count = 80  # 80
+    Count = 8  # 80
     
     for(I = 0, Count) {
         holoCreate(I)

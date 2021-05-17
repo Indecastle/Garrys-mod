@@ -24,9 +24,17 @@ if(StartPos!=Prop:pos() & StartAng!=Prop:angles() & !Back) {
 }
 
 if(changed(owner():keyPressed("b")) & owner():keyPressed("b")) {
-    Back = 1
-    Prop:propFreeze(1)
-    Prop:setColor(vec(230,0,0), 255)
+    if (Back) {
+        Back = 0
+        Prop:propFreeze(0)
+        Prop:setColor(vec(255), 255)
+        #Prop:propSetVelocity(vec())
+    }
+    else {
+        Back = 1
+        Prop:propFreeze(1)
+        Prop:setColor(vec(230,0,0), 255)
+    }
 }
 
 if(Tuples:exists(1) & Back) {
@@ -41,6 +49,7 @@ if(!Tuples:exists(1) & Back) {
     Back = 0
     Prop:setColor(vec(255), 255)
     Prop:propFreeze(0)
+    #Prop:propSetVelocity(vec())
 }
 
 Count = Tuples:count()

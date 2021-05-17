@@ -1,0 +1,168 @@
+@name Ragdoll Troll
+@outputs ParentedEnt:entity
+@persist [O Ragdoll Target]:entity Bone:bone BoneId GravityOn Force_ Force ForceShift ForceAlt IsNoCollideAll
+@persist ParentedEnt:entity ParentedBoneId ParentedOffSetPos:vector
+if(first() | dupefinished()) {
+    
+    Force = 500
+    ForceShift = 2000
+    ForceAlt = 200
+    
+    O = owner()
+    Target = O
+    #Target = findPlayerByName("kiril")
+    print(Target)
+    
+    
+    GravityOn = 1
+    runOnKeys(Target,1)
+    
+    function void updateTargetBone() {
+        Bone = Ragdoll:bone(BoneId)
+    }
+    function void updateNoCollide() {
+        noCollideAll(Ragdoll, IsNoCollideAll)
+    }
+    
+}
+interval(20)
+if(changed(Target:keyPressed("r")) & Target:keyPressed("r"))
+{
+    Ragdoll = Target:playerRagdoll()
+    Ragdoll:ragdollGravity(GravityOn)
+    
+    local Bone_L_hand_id = Ragdoll:bone(7)
+    local Bone_R_hand_id = Ragdoll:bone(5)
+    local Bone_L_fot_id = Ragdoll:bone(13)
+    local Bone_R_fot_id = Ragdoll:bone(14)
+    local Bone_Body_id = Ragdoll:bone(1)
+    local Bone_Head_id = Ragdoll:bone(10)
+    local Bone_Ass_id = Ragdoll:bone(0)
+    
+    Bone_L_hand_id:setMass(3)
+    Bone_R_hand_id:setMass(3)
+    Bone_L_fot_id:setMass(10)
+    Bone_R_fot_id:setMass(10)
+    Bone_Body_id:setMass(5)
+    Bone_Head_id:setMass(5)
+    Bone_Ass_id:setMass(5)
+    
+    updateTargetBone()
+    updateNoCollide()
+    ParentedEnt = noentity()
+}
+
+if(changed(Target:keyPressed("e")) & Target:keyPressed("e")) {
+    IsNoCollideAll = !IsNoCollideAll
+    noCollideAll(Ragdoll, IsNoCollideAll)
+}
+
+#[
+if(changed(Target:keyPressed("g")) & Target:keyPressed("g")) {
+    Ragdoll:setModel("models/dog.mdl")
+}
+]#
+
+if (ParentedEnt) {
+    Ragdoll:bone(ParentedBoneId):setPos(ParentedEnt:toWorld(ParentedOffSetPos))
+}
+
+if (Target:playerIsRagdoll()) {
+    if(changed(Target:keyPressed("t")) & Target:keyPressed("t"))
+    {
+        GravityOn = !GravityOn
+        Ragdoll:ragdollGravity(GravityOn)
+        #[
+        #findExcludePlayer(O)
+        #findIncludeClass("player")
+        #findIncludeClass("prop_ragdoll")
+        findByClass("prop_ragdoll")
+        #findByModel("models/player/skeleton.mdl")
+        local F = findClosest(Target:pos())
+        #F:propStatic(1)
+        #F:applyAngForce((ang(0,9999,0)))
+        #F:propGravity(0)
+        #F:setSkin(Target:getSkin())
+        #F:setBodygroup(2,2)
+        local Dir = Target:eye()
+        F:setVel(Dir*500)
+        #F:setPos(F:toWorld(vec(0,0,50)))
+        #holoCreate(1,F:attachmentPos("eyes"))
+        #holoParentAttachment(1,F,"eyes")
+        #holoScale(1, vec(10))
+        #F:applyForce(vec(0,0,1000))
+        #print(Target:pos())
+        #print(F:pos())
+        #print(F:getBodygroup())
+        #timer("123", 1000)
+        #F:ragdollGravity(0)
+        ]#
+    }
+    
+    if(Target:keyPressed("1")) { BoneId = 0 updateTargetBone() }
+    if(Target:keyPressed("2")) { BoneId = 1 updateTargetBone() }
+    if(Target:keyPressed("3")) { BoneId = 10 updateTargetBone() }
+    if(Target:keyPressed("4")) { BoneId = 7 updateTargetBone() }
+    if(Target:keyPressed("5")) { BoneId = 5 updateTargetBone() }
+    if(Target:keyPressed("6")) { BoneId = 13 updateTargetBone() }
+    if(Target:keyPressed("7")) { BoneId = 14 updateTargetBone() }
+    
+    Force_ = (Target:keyPressed("lalt") ? ForceAlt : Force)
+    Force_ = (Target:keyPressed("lshift") ? ForceShift : Force_)
+    
+    local ForceVec = vec()
+
+    if(Target:keyPressed("w")) {
+        local Dir = Target:eyeAngles():forward()
+        ForceVec = Dir
+    }
+    if(Target:keyPressed("s")) {
+        local Dir = Target:eyeAngles():forward() * -1
+        ForceVec = (ForceVec + Dir):normalized()
+    }
+    if(Target:keyPressed("a")) {
+        local Dir = Target:eyeAngles():right() * -1
+        ForceVec = (ForceVec + Dir):normalized()
+    }
+    if(Target:keyPressed("d")) {
+        local Dir = Target:eyeAngles():right()
+        ForceVec = (ForceVec + Dir):normalized()
+    }
+    if(Target:keyPressed("space")) {
+        ForceVec = (ForceVec + vec(0,0,1)):normalized()
+    }
+    if(Target:keyPressed("lcontrol")) {
+        ForceVec = (ForceVec + vec(0,0,-1)):normalized()
+    }
+    
+    if(Target:keyPressed("mouse_left")) {
+        foreach (I, B:bone = Ragdoll:bones()) {
+            B:setVel(vec())
+            #B:applyAngForce(B:angVel() * -1 * B:mass())
+        }
+        
+    }
+    if(changed(Target:keyPressed("mouse_right")) & Target:keyPressed("mouse_right")) {
+        if (ParentedEnt) { ParentedEnt = noentity() }
+        else {
+            local Bone_R = Ragdoll:bone(BoneId)
+            findExcludeEntities(array(Ragdoll, owner()))
+            findInSphere(Bone_R:pos(), 100)
+            local Target = findClosest(Bone_R:pos())
+            if (Target) {
+                ParentedEnt = Target
+                ParentedBoneId = BoneId
+                ParentedOffSetPos = Target:toLocal(Bone_R:pos())
+            }
+        }
+    }
+    if(changed(Target:keyPressed("b")) & Target:keyPressed("b")) {
+        if (ParentedEnt) {
+            Ragdoll:setPos(ParentedEnt:toWorld(ParentedOffSetPos))
+        }
+    }
+    
+    if (ForceVec != vec()) {
+        Bone:setVel(ForceVec * Force_)
+    }
+}

@@ -8,8 +8,8 @@ local OO = player()
 if O == OO then
     if SERVER then
     
-        function handler(key)
-            print("!"..key)
+        function handler(key, keyName)
+            print(""..key.." - "..keyName)
         end
         
         hook.add("ClientInitialized", "cl_init", function(ply)
@@ -17,20 +17,19 @@ if O == OO then
         
         net.receive("keyHandler", function (len, ply)
             local key = net.readInt(7)
-            handler(key)
+            local keyName = net.readString()
+            handler(key, keyName)
         end)
+        
     else
-        
-        net.receive("holo", function(len)
-            net.readEntity(receivedHologram)
-        end)
-        
-        
+    
         hook.add("inputPressed", "", function(button)
             net.start("keyHandler")
             net.writeInt(button, 7)
+            net.writeString(input.getKeyName(button))
             net.send()
         end)
+        
     end
 end
 
