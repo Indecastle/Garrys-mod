@@ -146,7 +146,7 @@ if SERVER then
     
     
 else    
-
+    setName("Generic")
 
 
 

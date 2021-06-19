@@ -10,7 +10,6 @@ OO = player()
 local isOwner = O == OO
 
 if SERVER then
-    setName("Generic")
     local conectingPlayers = {}
     
     net.receive("hud_connecting", function (len, ply)
@@ -36,6 +35,7 @@ if SERVER then
     end)
 
 else
+    setName("Generic")
     local conectingPlayers = {}
     
     local O = player()

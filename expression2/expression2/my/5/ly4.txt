@@ -1,0 +1,36 @@
+@name Ly4
+@persist RangerLength Count E:entity
+if(first()){
+    
+    RangerLength = 500
+    Count = 80  # 80
+    
+    for(I = 0, Count) {
+        holoCreate(I)
+        holoColor(I, hsv2rgb(10*I, 1, 1))
+    }
+    
+    E = entity()
+}
+
+local StartPos = E:pos()
+local StartDir = E:up()
+
+local IsHitted = 0
+for(I = 0, Count) {
+    if (IsHitted) {
+        holoAlpha(I, 0)
+    }
+    else {
+        rangerFilter(players())
+        local R = rangerOffset(StartPos,StartPos + StartDir * RangerLength) 
+        holoPos(I, StartPos + StartDir * R:distance() / 2)
+        holoAng(I, StartDir:toAngle())
+        holoScaleUnits(I, vec(R:distance(), 0.5, 0.5))
+        StartPos = R:pos()
+        if (R:hit()) { IsHitted = 1 }
+    }
+}
+
+
+interval(100)
