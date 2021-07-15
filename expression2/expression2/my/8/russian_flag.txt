@@ -1,18 +1,15 @@
 @name Russian Flag
-@persist I
+@persist I Scale
 @trigger 
 
 if(first()|dupefinished())
 {
 
-# Instructions
-
-# Spawn and place the E2 where you want it, the flag trailing behind.
-# Weld the E2 to the base of where you want it, ie turret base, hull.
-# Parent the E2 to the gate on that base with "Remove Constraints" unticked!
-# Voila, spread the cheeki!
-
-# Made by DatAmazingCheese
+    Scale = 5
+    
+    Color1 = vec(255,255,255)
+    Color2 = vec(0,57,166)
+    Color3 = vec(213,43,30)
 
     # Flag
     
@@ -21,7 +18,7 @@ if(first()|dupefinished())
     holoCreate(1)
     holoModel(1,"models/pac/jiggle/base_cloth_3.mdl")
     holoMaterial(1,"WTP/cloth_1")
-    holoColor(1,vec(255,255,255))
+    holoColor(1,Color1)
     holoAlpha(1,255)
     holoDisableShading(1,1)
     holoPos(1,entity():toWorld(vec(-0.5,0,65.57)))
@@ -29,16 +26,16 @@ if(first()|dupefinished())
     
     #Flag Bones
     
-    holoBoneScale(1,0,vec(5,1,1))
-    holoBoneScale(1,1,vec(5,1,1))
-    holoBoneScale(1,2,vec(5,1,1))
-    holoBoneScale(1,3,vec(5,1,1))
-    holoBoneScale(1,4,vec(5,1,1))
-    holoBoneScale(1,5,vec(5,1,1))
-    holoBoneScale(1,6,vec(5,1,1))
-    holoBoneScale(1,7,vec(5,1,1))
-    holoBoneScale(1,8,vec(5,1,1))
-    holoBoneScale(1,9,vec(5,1,1))
+    holoBoneScale(1,0,vec(Scale,1,1))
+    holoBoneScale(1,1,vec(Scale,1,1))
+    holoBoneScale(1,2,vec(Scale,1,1))
+    holoBoneScale(1,3,vec(Scale,1,1))
+    holoBoneScale(1,4,vec(Scale,1,1))
+    holoBoneScale(1,5,vec(Scale,1,1))
+    holoBoneScale(1,6,vec(Scale,1,1))
+    holoBoneScale(1,7,vec(Scale,1,1))
+    holoBoneScale(1,8,vec(Scale,1,1))
+    holoBoneScale(1,9,vec(Scale,1,1))
     
     holoClipEnabled(1, 1, 1)
     holoClip(1, 1, vec(0, 6.062, 0), vec(0, 90, 0), 0)
@@ -48,7 +45,7 @@ if(first()|dupefinished())
     holoCreate(2)
     holoModel(2,"models/pac/jiggle/base_cloth_3.mdl")
     holoMaterial(2,"WTP/cloth_1")
-    holoColor(2,vec(0,57,166))
+    holoColor(2,Color2)
     holoAlpha(2,255)
     holoDisableShading(2,1)
     holoPos(2,entity():toWorld(vec(-0.5,0,65.57)))
@@ -56,16 +53,16 @@ if(first()|dupefinished())
     
     #Flag Bones
     
-    holoBoneScale(2,0,vec(5,1,1))
-    holoBoneScale(2,1,vec(5,1,1))
-    holoBoneScale(2,2,vec(5,1,1))
-    holoBoneScale(2,3,vec(5,1,1))
-    holoBoneScale(2,4,vec(5,1,1))
-    holoBoneScale(2,5,vec(5,1,1))
-    holoBoneScale(2,6,vec(5,1,1))
-    holoBoneScale(2,7,vec(5,1,1))
-    holoBoneScale(2,8,vec(5,1,1))
-    holoBoneScale(2,9,vec(5,1,1))
+    holoBoneScale(2,0,vec(Scale,1,1))
+    holoBoneScale(2,1,vec(Scale,1,1))
+    holoBoneScale(2,2,vec(Scale,1,1))
+    holoBoneScale(2,3,vec(Scale,1,1))
+    holoBoneScale(2,4,vec(Scale,1,1))
+    holoBoneScale(2,5,vec(Scale,1,1))
+    holoBoneScale(2,6,vec(Scale,1,1))
+    holoBoneScale(2,7,vec(Scale,1,1))
+    holoBoneScale(2,8,vec(Scale,1,1))
+    holoBoneScale(2,9,vec(Scale,1,1))
     
     holoClipEnabled(2, 1, 1)
     holoClip(2, 1, vec(0, 6.062, 0), vec(0, -90, 0), 0)
@@ -78,7 +75,7 @@ if(first()|dupefinished())
     holoCreate(3)
     holoModel(3,"models/pac/jiggle/base_cloth_3.mdl")
     holoMaterial(3,"WTP/cloth_1")
-    holoColor(3,vec(213,43,30))
+    holoColor(3,Color3)
     holoAlpha(3,255)
     holoDisableShading(3,1)
     holoPos(3,entity():toWorld(vec(-0.5,0,65.57)))
@@ -86,16 +83,16 @@ if(first()|dupefinished())
     
     #Flag Bones
     
-    holoBoneScale(3,0,vec(5,1,1))
-    holoBoneScale(3,1,vec(5,1,1))
-    holoBoneScale(3,2,vec(5,1,1))
-    holoBoneScale(3,3,vec(5,1,1))
-    holoBoneScale(3,4,vec(5,1,1))
-    holoBoneScale(3,5,vec(5,1,1))
-    holoBoneScale(3,6,vec(5,1,1))
-    holoBoneScale(3,7,vec(5,1,1))
-    holoBoneScale(3,8,vec(5,1,1))
-    holoBoneScale(3,9,vec(5,1,1))
+    holoBoneScale(3,0,vec(Scale,1,1))
+    holoBoneScale(3,1,vec(Scale,1,1))
+    holoBoneScale(3,2,vec(Scale,1,1))
+    holoBoneScale(3,3,vec(Scale,1,1))
+    holoBoneScale(3,4,vec(Scale,1,1))
+    holoBoneScale(3,5,vec(Scale,1,1))
+    holoBoneScale(3,6,vec(Scale,1,1))
+    holoBoneScale(3,7,vec(Scale,1,1))
+    holoBoneScale(3,8,vec(Scale,1,1))
+    holoBoneScale(3,9,vec(Scale,1,1))
     
     holoClipEnabled(3, 1, 1)
     holoClip(3, 1, vec(0, -6.062, 0), vec(0, -90, 0), 0)

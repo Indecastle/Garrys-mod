@@ -2,20 +2,16 @@
 @persist J
 
 if(first()) {
-    for(I=1,100) {
-        holoCreate(I)
-        holoColor(I,vec(0))
-        holoModel(I,"models/sprops/geometry/sphere_144.mdl")
-        holoScale(I,vec(-1000))
-        holoPos(I,vec(random(-10000,10000),random(-10000,10000),-10000))
-        holoMaterial(I,"debug/debugportals")
-    }
+    holoCreate(1)
+    holoColor(1, vec(0))
+    holoModel(1, "models/sprops/geometry/sphere_144.mdl")
+    holoScale(1, vec(-1000))
+    holoPos(1, entity():pos())
+    holoMaterial(1, "debug/debugportals")
 }
 
-interval(50)
+interval(10)
 
-J = (J + 0.5) % 360
+J = (J + 1) % 360
 
-for(I=1,100) {
-    holoColor(I, hsv2rgb(J, 1, 1))
-}
+holoColor(1, hsv2rgb(J, 1, 1))

@@ -15,6 +15,7 @@ if(first()|dupefinished()){
     #entity():propFreeze(0)
 }
 interval(10)
+entity():setColor(vec(255))
 if(owner():aimEntity()==entity() & changed(owner():keyUse()) & owner():keyUse() & C==0){
     entity():soundPlay(1,1,"buttons/button17.wav")
     entity():soundPlay(2,5,"ambient/alarms/siren.wav")

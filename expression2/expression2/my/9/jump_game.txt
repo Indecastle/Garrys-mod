@@ -53,7 +53,7 @@ if (clk("jump")) {
         }
     }
     
-    timer("jump", 500)
+    timer("jump", 600)
 }
 
 if (clk("setPos")) {

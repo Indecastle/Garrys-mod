@@ -118,7 +118,7 @@ if(changed(owner():keyPressed("m")) & owner():keyPressed("m"))
 }
 
 if(clk("spam_shoot")) {
-    NPC:npcGiveWeapon("357")
+    #NPC:npcGiveWeapon("357")
     NPC:npcShoot()
     timer("spam_shoot", 100)
 }

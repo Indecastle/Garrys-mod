@@ -46,19 +46,19 @@ if (clk("jump")) {
                 if (Platforms:count() == Limit) {
                     Platforms:remove(1)
                 }
-                TargetPos = P:pos() + vec(0,0,20)
+                TargetPos = P:pos() + vec(0,0,21)
                 timer("setPos", 10)
                 break
             }
         }
     }
     
-    timer("jump", 600)
+    timer("jump", 200)
 }
 
 if (clk("setPos")) {
     if (ON) {
-        CurrentPos = CurrentPos + (TargetPos - CurrentPos) / 2
+        CurrentPos = CurrentPos + (TargetPos - CurrentPos) / 1.2
         Target:setPos(CurrentPos)
     }
     timer("setPos", 10)

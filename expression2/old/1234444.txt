@@ -7,7 +7,7 @@
 interval(50)
 
 if(first()) {
-    Scale = 0.1
+    Scale = 1
     Speed = 1
     
     Delay = 400
@@ -21,7 +21,7 @@ if(first()) {
     }
     else {
         Animation = "taunt_dance"
-        Interval = 8500
+        Interval = 7000
     }
     
     IsTetka = 1
@@ -34,7 +34,7 @@ if(first()) {
         #holoModel(1,"models/player/skeleton.mdl")
         #holoMaterial(1,"Models/effects/splodearc_sheet")
         holoAnim(1,Animation)
-        timer("anim",9500)
+        timer("anim",Interval)
         
         holoParent(1,EE)
         interval(9500)
@@ -69,4 +69,4 @@ I = (I+Speed)%360
 Color = hsv2rgb(I, 1, 1)
 holoColor(1, Color)
 holoScale(1,vec(1)*Scale)
-Scale += 0.01
+Scale += 0

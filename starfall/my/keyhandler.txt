@@ -5,31 +5,32 @@
 local O = owner()
 local OO = player()
 
-if O == OO then
-    if SERVER then
+
+if SERVER then
+
+    function handler(key, keyName)
+        print(""..key.." - "..keyName)
+    end
     
-        function handler(key, keyName)
-            print(""..key.." - "..keyName)
-        end
-        
-        hook.add("ClientInitialized", "cl_init", function(ply)
-        end)
-        
-        net.receive("keyHandler", function (len, ply)
-            local key = net.readInt(7)
-            local keyName = net.readString()
-            handler(key, keyName)
-        end)
-        
-    else
+    hook.add("ClientInitialized", "cl_init", function(ply)
+    end)
     
+    net.receive("keyHandler", function (len, ply)
+        local key = net.readInt(7)
+        local keyName = net.readString()
+        handler(key, keyName)
+    end)
+    
+else
+    if O == OO then
+
         hook.add("inputPressed", "", function(button)
             net.start("keyHandler")
             net.writeInt(button, 7)
             net.writeString(input.getKeyName(button))
             net.send()
         end)
-        
+    
     end
 end
 

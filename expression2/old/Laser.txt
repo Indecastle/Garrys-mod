@@ -11,7 +11,7 @@ if(first()) {
 }
 
 if(User:keyAttack2()){
-    User:shootTo(User:shootPos(),User:aimPos()-User:shootPos(),0,1999999999999990,0,"PhyscannonImpact")
+    User:shootTo(User:shootPos(),User:aimPos()-User:shootPos(),0,1999999999999990,0,"ToolTracer")
 }
 
 

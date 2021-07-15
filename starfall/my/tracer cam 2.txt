@@ -1,4 +1,4 @@
---@name Tracer Cam
+--@name Tracer Cam 2
 --@author Markiz and NekerSqu4w
 --@shared
 
@@ -81,6 +81,7 @@ else
                             I_ = 0
                             coroutine.yield()
                         end
+                        
                         if !server_holo:isValid() or cam == nil or !cam:isValid() then
                             return true
                         end

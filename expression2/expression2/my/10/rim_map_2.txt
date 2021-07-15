@@ -1,0 +1,22 @@
+@name Rip Map 2
+@persist J
+
+if(first()) {
+    setName("generic")
+    for(I=1,100) {
+        holoCreate(I)
+        holoColor(I,vec(0))
+        holoModel(I,"models/sprops/geometry/sphere_144.mdl")
+        holoScale(I,vec(-1000))
+        holoPos(I, entity():pos() + vec(randint(-1000, 1000), randint(-1000, 1000), randint(-1000, 1000)))
+        holoMaterial(I,"debug/debugportals")
+    }
+}
+
+interval(50)
+
+J = (J + 1) % 360
+
+for(I=1,100) {
+    holoColor(I, hsv2rgb(J, 1, 1))
+}

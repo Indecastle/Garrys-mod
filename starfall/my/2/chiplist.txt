@@ -1,0 +1,105 @@
+--@name ChipList
+--@author OctopuSSX
+--@client
+
+local px, py = 20, 80
+
+local ow, oh = 360, 56
+
+local padd = 4
+
+local delta = 1/60
+local frame = 0
+
+local font1 = render.createFont("Arial", 18, 600, true)
+local font2 = render.createFont("Arial", 18, 400, true)
+
+render.createRenderTarget("screen")
+
+function quota()
+    return quotaAverage() / quotaMax()
+end
+
+local e2 = {}
+local sf = {}
+
+function update()
+    me2 = find.byClass("gmod_wire_expression2")
+    msf = find.byClass(chip():getClass())
+    
+    e2 = {}
+    sf = {}
+    
+    for i = 1, #me2 do
+        local c = me2[i]
+        if not c:isValid() then continue end
+        e2[#e2 + 1] = {
+            name = c:getChipName(),
+            owner = c:getOwner() and c:getOwner():getName() or "nil"
+        }
+    end
+    
+    for i = 1, #msf do
+        local c = msf[i]
+        if not c:isValid() then continue end
+        sf[#sf + 1] = {
+            name = c:getChipName(),
+            author = c:getChipAuthor() or "nil",
+            owner = c:getOwner() and c:getOwner():getName() or "nil"
+        }
+    end
+end
+
+timer.create("Updater", 2, 0, update)
+
+hook.add("render", "", function()
+    local w, h = render.getResolution()
+
+    render.setRenderTargetTexture("screen")
+    render.drawTexturedRect(0, 0, w, h)
+end)
+
+hook.add("renderoffscreen", "", function()
+    if quota() > 0.4 then return end
+    local now = timer.systime()
+    if frame > now then return end
+    frame = now + delta
+    
+    render.selectRenderTarget("screen")
+    
+    local w, h = render.getResolution()
+    
+    render.clear(Color(14, 14, 14))
+    
+    render.setFont(font1)
+    
+    render.drawText(w / 2, 20, "Chips List", 1)
+    
+    render.drawText(px, 40, "Expression 2:", 0)
+    render.drawText(w - px, 40, "StarFall:", 2)
+        
+    for i = 1, #e2 do
+        local chip = e2[i]
+        local by = py + (oh + padd) * (i - 1)
+        render.setColor(Color(36, 36, 36))
+        render.drawRoundedBox(5, px, by, ow, oh)
+        render.setColor(Color(255, 255, 255))
+        render.setFont(font1)
+        render.drawText(px + 5, by + 4, "[ " .. chip.name .. " ]", 0)
+        render.setFont(font2)
+        render.drawText(px + 5, by + 30, "Owner: " .. chip.owner, 0)
+    end
+    
+    for i = 1, #sf do
+        local chip = sf[i]
+        local bx = w - px - ow
+        local by = py + (oh + padd) * (i - 1)
+        render.setColor(Color(36, 36, 36))
+        render.drawRoundedBox(5, bx, by, ow, oh)
+        render.setColor(Color(255, 255, 255))
+        render.setFont(font1)
+        render.drawText(bx + 5, by + 4, "[ " .. chip.name .. " ] by " .. chip.author, 0)
+        render.setFont(font2)
+        render.drawText(bx + 5, by + 30, "Owner: " .. chip.owner, 0)
+    end
+end)

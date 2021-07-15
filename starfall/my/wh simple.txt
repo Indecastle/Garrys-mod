@@ -10,7 +10,6 @@ OO = player()
 local isOwner = O == OO
 
 if SERVER then
-    setName("Generic")
     local conectingPlayers = {}
     
     net.receive("hud_connecting", function (len, ply)
@@ -36,6 +35,7 @@ if SERVER then
     end)
 
 else
+    setName("Generic")
     local conectingPlayers = {}
     
     local O = player()
@@ -89,9 +89,6 @@ else
                     
                     local pos = (p:getPos() + Vector(0, 0, obbhs.z+10)):toScreen()
                     
-                    render.setFont(font2)
-                    render.setColor(Color(0,0,0))
-                    //render.drawText(pos.x, pos.y-10, p:getName(), 1)
 
                     render.setFont(font)
                     render.setColor(team.getColor(p:getTeam()))

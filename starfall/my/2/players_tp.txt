@@ -1,0 +1,151 @@
+--@name Players TP
+--@author OctopuSSX
+--@shared
+
+if SERVER then
+    wire.adjustOutputs({ "From", "To", "Trigger" }, { "entity", "entity", "number" })
+
+    net.receive("tp", function(l)
+        local from = net.readEntity()
+        local to = net.readEntity()
+        wire.ports.From = from
+        wire.ports.To = to
+        wire.ports.Trigger = 1
+        wire.ports.Trigger = 0
+    end)
+    
+    return
+end
+
+local ow, oh = 100, 60
+
+local topOffset = 60
+local maxLen = 13
+local wm = 8
+local hm = 8
+
+local delta = 1/60
+local frame = 0
+
+local click = nil
+
+local header = render.createFont("Arial", 24, 700, true)
+local text = render.createFont("Arial", 14, 500, true)
+local small = render.createFont("Arial", 11, 400, true)
+
+local bgColor = Color(14, 14, 14)
+local objColor = Color(36, 36, 36)
+local selColor = Color(56, 56, 56)
+local textColor = Color(120, 30, 170)
+
+local scr = chip():getLinkedComponents()[1]
+
+function fixNum(n)
+    if n < 10 then
+        return "0" .. n
+    end
+    return n
+end
+
+function secondsToStr(sec)
+    local s = sec % 60
+    local m = math.floor(sec / 60) % 60
+    local h = math.floor(sec / 1440)
+    
+    return fixNum(h) .. ":" .. fixNum(m) .. ":" .. fixNum(s)
+end
+
+function quota()
+    return quotaAverage() / quotaMax()
+end
+
+local clk = false
+
+hook.add("inputPressed", "", function(btn)
+    if btn ~= MOUSE.MOUSE1 then return end
+    local cx, cy = render.cursorPos(player(), scr)
+    if cx == nil or player():getEyeTrace().Entity ~= scr then return end
+    clk = true
+end)
+
+hook.add("render", "", function()
+    if quota() > 0.6 then return end
+    local now = timer.systime()
+    if frame > now then return end
+    frame = now + delta
+
+    local w, h = render.getResolution()
+    
+    local cx, cy = render.cursorPos(player())
+    
+    render.clear()
+    
+    render.setBackgroundColor(bgColor)
+    
+    local rc = math.floor(w / (ow + wm))
+    
+    local margin = (w - (rc * ow)) / 2
+    
+    local players = find.allPlayers()
+    
+    render.setColor(textColor)
+    render.setFont(header)
+    render.drawText(w / 2, 20, "Players online: " .. #players .. "/" .. game.getMaxPlayers(), 1)
+    
+    for i = 1, #players do
+        local p = players[i]
+        local pos = p:getPos()
+        
+        local accent = Color((math.cos(pos.x / 500) + 1) * 60 + 80, (math.sin(pos.y / 500) + 1) * 60 + 40, (math.cos(pos.z / 500) + 1) * 60 + 60)
+        
+        local x = ((i - 1) % rc)
+        local y = math.floor((i - 1) / rc)
+        
+        local xoff = (x - rc / 2) * wm
+        
+        local xBase = x * ow + xoff + margin
+        local yBase = y * (oh + hm) + topOffset + 10
+        
+        local aimed = cx and cx > xBase and cx < (xBase + ow) and cy > yBase and cy < (yBase + oh) or false
+        
+        if aimed and clk then
+            clk = false
+            net.start("tp")
+            net.writeEntity(player())
+            net.writeEntity(p)
+            net.send()
+        end
+        
+        render.setColor(aimed and selColor or objColor)
+        
+        --render.drawRect(xBase, yBase, ow, oh)
+        render.drawRoundedBox(8, xBase, yBase, ow, oh)
+        
+        render.setColor(accent)
+        --render.drawRect(xBase, yBase, 7, oh)
+        render.drawRoundedBoxEx(8, xBase, yBase, 7, oh, true, false, true)
+        
+        render.setFont(text)
+        
+        local name = p:getName()
+        if #name > maxLen then
+            name = string.sub(name, 0, maxLen - 2) .. "..."
+        end
+        
+        render.drawText(xBase + 10, yBase + 4, name)
+        
+        local posStr = "[" .. math.round(pos.x) .. ", " .. math.round(pos.y) .. ", " .. math.round(pos.z) .. "]"
+        render.setFont(small)
+        render.drawText(xBase + 9, yBase + 34, posStr)
+        
+        render.setColor(team.getColor(p:getTeam()))
+        render.drawText(xBase + 10, yBase + 20, p:getTeamName())
+        
+        --render.drawText(xBase + 7, yBase + 30, "Time: " .. secondsToStr(p:getTimeConnected()))
+    end
+    
+    if cx == nil then return end
+    
+    render.setColor(Color(255, 255, 255))
+    render.drawCircle(cx, cy, 5)
+end)

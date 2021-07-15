@@ -1,0 +1,99 @@
+--@name AFK 2
+--@author Markiz & OctopuSSX
+--@client
+
+local AFK = chip()
+AFK = find.playersByName("mark")[1]
+/*AFK = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+print(AFK)
+
+local iterations = 20
+local timerDelay = 2 // seconds
+local Text = "ADMIN"
+local isHideTarget = true
+local ColorSpeed = 100
+local rotateSpeed = 100
+local textSize = 300
+local fontSize = 100
+local textBold = 1000
+local TextOffsetZ = 30 + 10 * textSize/100
+
+
+
+
+
+if isHideTarget and AFK == player() then return end
+
+
+// ##### don't touch !!! ########
+function pos()
+    return AFK:getEyePos() + Vector(0, 0, TextOffsetZ)
+end
+
+local _startX, _startY = 512 - iterations, 512 + iterations
+local _endX, _endY = 512, 512
+render.createRenderTarget("afkscreen0")
+render.createRenderTarget("afkscreen")
+
+local mat = material.create("UnlitGeneric")
+mat:setInt("$flags", 2^21) // translucent  -->  2097152
+mat:setTextureRenderTarget("$basetexture", "afkscreen")
+
+local text = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
+local text2 = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
+text:setMaterial("!" .. mat:getName())
+text:setSize(Vector(textSize, textSize, 1))
+text2:setMaterial("!" .. mat:getName())
+text2:setSize(Vector(textSize, textSize, 1))
+
+local font = render.createFont("Roboto", fontSize, textBold, true)
+//local font = render.setFont("ChatFont")
+render.setFont(font)
+// ##### don't touch !!! ########
+
+
+
+
+
+local isCreated = false
+function createTexture()
+    render.selectRenderTarget("afkscreen0")
+    render.clear(Color(0, 0, 0, 0))
+    for i = 1, iterations do
+        render.setColor(Color(0, 0, 0) / (iterations-i))
+        render.setFont(font)
+        render.drawSimpleText(_startX + i, _startY - i, Text, TEXT_ALIGN.CENTER, TEXT_ALIGN.CENTER)
+    end
+end
+
+
+hook.add("renderoffscreen", "", function()
+    if !isCreated then
+        isCreated = true
+        createTexture()
+    end
+    
+    render.selectRenderTarget("afkscreen")
+    render.clear(Color(0, 0, 0, 0))
+    
+    render.setRenderTargetTexture("afkscreen0")
+    render.drawTexturedRect(0, 0, 1024, 1024)
+      
+    render.setColor(Color(math.cos(timer.systime()) * ColorSpeed + 100, 100, 100):hsvToRGB())
+    //render.setColor(Color(245, 177, 29))
+    render.setFont(font)
+    render.drawSimpleText(_endX, _endY, Text, TEXT_ALIGN.CENTER, TEXT_ALIGN.CENTER)
+end)
+
+
+hook.add("think", "", function()
+    local d = (player():getEyePos() - pos()):getNormalized()
+    text:setAngles(Angle(90, timer.systime()*rotateSpeed, 0))
+    text2:setAngles(Angle(90, 180 + timer.systime()*rotateSpeed, 0))
+    text:setPos(pos())
+    text2:setPos(pos())
+end)

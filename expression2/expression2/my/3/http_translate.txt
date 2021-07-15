@@ -20,7 +20,7 @@ if(first() | duped() | dupefinished()) { Hide = 1 #setName(randint(1000):toStrin
     Delay = 500 # ms
     Queue = table()
     
-    APIkey = "trnsl.1.1.20190908T103553Z.38158ae702159ca3.f9a440fe932afd97bffb69731ce6f44c0e46f1d3"
+    APIkey = "trnsl.1.1.20190711T184435Z.85fd27bff0ef3589.8dc99aaefca71f22cd1e043992920fd09dd53ef3"
     SourceLang = "ru"
     TargetLang = "en"
     

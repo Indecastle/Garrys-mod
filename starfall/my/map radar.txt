@@ -2,7 +2,7 @@
 --@author
 --@shared
 
-local Detail = 5
+local Detail = 10
 local SizeMap = 35000
 local Z = 5000
 local Zoom = 3
@@ -243,13 +243,13 @@ else
         
         hook.add("drawhud","",function()    
             if Mode != 0 then    
-                local rot = OO:getEyeAngles().y + 90
+                local rot = OO:getEyeAngles().y*-1 - 90
                 local x, y = getOffset()
 
                 render.selectRenderTarget("myrendertarget2")
                 render.setRenderTargetTexture("myrendertarget")
                 render.clear(Color(0,0,0,0))
-                render.drawTexturedRectRotated(512 + x, 512 + y, Zoom_, Zoom_, rot)
+                render.drawTexturedRectRotatedFast(512 + x, 512 + y, Zoom_, Zoom_, rot)
                 renderPlayers()
                 
                 render.selectRenderTarget()

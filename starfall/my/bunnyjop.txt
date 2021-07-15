@@ -16,11 +16,36 @@ hook.add("permissionrequest", "", function()
     permissionSatisfied = hasPermission("console.command")
 end)
 
+local myTimer = timer.curtime()
+local changed = true
 
 //if OO == O then
-    hook.add("tick", "", function()
+    hook.add("think", "", function()
         if permissionSatisfied then
+            if input.isKeyDown(KEY.SPACE) then
             jumping = !jumping
+            
+                if player():isOnGround() then
+                    concmd("+jump")
+                    if not changed and myTimer < timer.curtime() then
+                        myTimer = timer.curtime() + 0.01
+                        changed = true
+                    end
+                end
+                
+                /*if jumping then
+                    concmd("+jump")
+                else
+                    concmd("-jump")
+                end*/
+            end
+            
+            if changed and myTimer < timer.curtime() then
+                concmd("-jump")
+                changed = false
+            end
+            
+            /*jumping = !jumping
             newIsPressed = input.isKeyDown(KEY.SPACE)
             if oldIsPressed != newIsPressed then
                 oldIsPressed = newIsPressed
@@ -35,7 +60,7 @@ end)
                 else
                     concmd("-jump")
                 end
-            end
+            end*/
         end
     end)
     

@@ -1,0 +1,67 @@
+--@name AFK 3
+--@author Markiz & OctopuSSX
+--@client
+
+local AFK = chip()
+//AFK = find.playersByName("mark")[1]
+/*AFK = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+print(AFK)
+
+local iterations = 50
+local timerDelay = 2 // seconds
+local isHideTarget = false
+local ColorSpeed = 100
+local rotateSpeed = 100
+local textSize = Vector(1, 1.5, 1) * 2
+local textOffsetZ = 30 + 5 * textSize.z + textSize.z/1.1
+
+local materialName = "debug/debugportals" // models/debug/debugwhite
+
+
+
+
+
+if isHideTarget and AFK == player() then return end
+
+
+// ##### don't touch !!! ########
+function pos()
+    return AFK:getEyePos() + Vector(0, 0, textOffsetZ)
+end
+
+local _startX, _startY = 512 - iterations, 512 + iterations
+local _endX, _endY = 512, 512
+render.createRenderTarget("afkscreen0")
+render.createRenderTarget("afkscreen")
+
+
+local Base = holograms.create(pos(), Angle(), "models/holograms/cube.mdl")
+Base:setColor(Color(0,0,0,0))
+Base:setParent(chip())
+local CharA = holograms.create(pos() + Vector(10*textSize.x, 0, 0), Angle(), "models/sprops/misc/alphanum/alphanum_a.mdl", textSize)
+local CharF = holograms.create(pos(), Angle(), "models/sprops/misc/alphanum/alphanum_f.mdl", textSize)
+local CharK = holograms.create(pos() + Vector(-10*textSize.x, 0, 0), Angle(), "models/sprops/misc/alphanum/alphanum_k.mdl", textSize)
+CharA:setMaterial(materialName)
+CharF:setMaterial(materialName)
+CharK:setMaterial(materialName)
+CharA:setParent(Base)
+CharF:setParent(Base)
+CharK:setParent(Base)
+
+
+
+
+hook.add("think", "", function()
+    local d = (player():getEyePos() - pos()):getNormalized()
+    
+    CharA:setColor(Color(math.cos(timer.systime()) * ColorSpeed + 100, 100, 100):hsvToRGB())
+    CharF:setColor(Color(math.cos(timer.systime()) * ColorSpeed + 100, 100, 100):hsvToRGB())
+    CharK:setColor(Color(math.cos(timer.systime()) * ColorSpeed + 100, 100, 100):hsvToRGB())
+    
+    Base:setAngles(Angle(0, timer.systime()*rotateSpeed, 0))
+    Base:setPos(pos())
+end)
