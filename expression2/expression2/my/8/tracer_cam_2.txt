@@ -9,7 +9,7 @@ if (first()) { E=entity() O=owner()
     Develop = 0
     SunDirection = sunDirection()
     
-    Res = 256
+    Res = 128
     HalfSquare = 10
     DistanceToSquare = 20
     RenderDistanceLimit = 15000
@@ -84,7 +84,7 @@ if (first()) { E=entity() O=owner()
 
 interval(10)
 
-while(softQuota() < maxquota()*0.7 & perf()) {
+while(softQuota() < maxquota()*0.5 & perf()) {
 #if(clk("render")) {
 #    timer("render", 100)
     
