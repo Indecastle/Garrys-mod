@@ -1,0 +1,43 @@
+--@name Dat
+--@author OctopuSSX
+--@includedir libs
+--@client
+
+dofile("libs/screen.txt")
+
+screen = ScreenRenderer:new()
+
+RMin = 372
+RMax = 421
+H = 260
+
+function getPoint(t)
+    return {
+        (RMax - RMin) * math.sin(t) + H * math.cos(((RMax-RMin) / RMin) * t),
+        (RMax - RMin) * math.cos(t) + H * math.sin(((RMax-RMin) / RMin) * t)
+    }
+end
+
+local I = 0
+local point = nil
+local hue = 0
+
+function drawPoint(h)
+    local newPoint = getPoint(I)
+    if point == nil then
+        point = newPoint
+    end
+    render.setColor(Color(math.round(I) % 320, 255, 255):hsvToRGB())
+    render.drawLine(512 + point[1], 512 + point[2], 512 + newPoint[1], 512 + newPoint[2])
+    point = newPoint
+    I = I + 0.2
+end
+
+//screen:limitFPS(60)
+screen:limitCPU(50)
+
+screen:setRenderFunction(function(w, h, d)
+    for j = 1, 50 do
+        drawPoint(hue)
+    end
+end)

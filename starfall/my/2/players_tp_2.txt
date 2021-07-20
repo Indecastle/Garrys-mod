@@ -3,15 +3,19 @@
 --@shared
 
 if SERVER then
-    wire.adjustOutputs({ "From", "To", "Trigger" }, { "entity", "entity", "number" })
+    wire.adjustOutputs({ "RequestSetPosPlayer" }, { "table" })
 
     net.receive("tp", function(l)
         local from = net.readEntity()
         local to = net.readEntity()
-        wire.ports.From = from
-        wire.ports.To = to
-        wire.ports.Trigger = 1
-        wire.ports.Trigger = 0
+        local toPos = to:getPos()
+        
+        local req = {
+            target = from,
+            toPos = toPos
+        }
+        
+        wire.ports.RequestSetPosPlayer = req
     end)
     
     return
@@ -19,7 +23,8 @@ end
 
 local ow, oh = 100, 60
 
-local topOffset = 400
+local Distance = 1000
+local topOffset = 600
 local maxLen = 13
 local wm = 8
 local hm = 8
@@ -82,7 +87,7 @@ local clk = false
 
 hook.add("inputPressed", "", function(btn)
     if btn != MOUSE.MOUSE1 then return end
-    if player():getPos():getDistance(chip():getPos()) > 500 then return end
+    if player():getPos():getDistance(chip():getPos()) > Distance then return end
     local cx, cy = render.cursorPos(player(), scr)
     if cx == nil or player():getEyeTrace().Entity ~= scr then return end
     clk = true
@@ -124,12 +129,23 @@ hook.add("renderoffscreen", "", function()
     local margin = (w - (rc * ow)) / 2
     
     local players = find.allPlayers()
+    //table.remove(players, 1)
+    //table.insert(players, players[1])
     
     render.clear(bgColor)
     
+    //render.setColor(Color(255, 255, 255))
+    //render.drawLine(w / 2, 0, w / 2, h)
+    
     render.setColor(textColor)
     render.setFont(header)
-    render.drawText(w / 2, 250, "Players online: " .. #players .. "/" .. game.getMaxPlayers(), 1)
+    render.drawText(w / 2, topOffset - 30, "Players online: " .. #players .. "/" .. game.getMaxPlayers(), 1)
+    
+    local rows = math.ceil(#players / rc) - 1
+    local mod = #players % rc
+    local mod = mod + (mod == 0 and rc or 0)
+    //print(rows)
+    local loff = mod * (ow + wm) + margin - wm * 5/4
     
     for i = 1, #players do
         local p = players[i]
@@ -139,10 +155,11 @@ hook.add("renderoffscreen", "", function()
         
         local x = ((i - 1) % rc)
         local y = math.floor((i - 1) / rc)
-        
+        //print(y)
         local xoff = (x - rc / 2) * wm
         
-        local xBase = x * ow + xoff + margin
+        local xBase = x * ow + xoff + margin + (rows == y and (w - loff) / 2 or 0)
+        --local xBase = x * ow + xoff + margin
         local yBase = y * (oh + hm) + topOffset + 10
         
         local aimed = cx and cx > xBase and cx < (xBase + ow) and cy > yBase and cy < (yBase + oh) or false
@@ -171,14 +188,14 @@ hook.add("renderoffscreen", "", function()
             name = string.sub(name, 0, maxLen - 2) .. "..."
         end
         
-        render.drawText(xBase + 10, yBase + 4, name)
-        
         local posStr = "[" .. math.round(pos.x) .. ", " .. math.round(pos.y) .. ", " .. math.round(pos.z) .. "]"
         render.setFont(small)
         render.drawText(xBase + 9, yBase + 34, posStr)
         
         render.setColor(team.getColor(p:getTeam()))
         render.drawText(xBase + 10, yBase + 20, p:getTeamName())
+        
+        render.drawText(xBase + 10, yBase + 4, name)
         
         --render.drawText(xBase + 7, yBase + 30, "Time: " .. secondsToStr(p:getTimeConnected()))
     end

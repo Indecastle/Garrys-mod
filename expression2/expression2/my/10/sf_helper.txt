@@ -1,0 +1,14 @@
+@name SF helper
+@inputs RequestSetPosPlayer:table
+@persist 
+@trigger all
+
+if (first() | dupefinished()) {
+    
+}
+
+if (~RequestSetPosPlayer) {
+    local T = RequestSetPosPlayer["target", entity]
+    local ToPos = RequestSetPosPlayer["toPos", vector]
+    T:setPos(ToPos)
+}

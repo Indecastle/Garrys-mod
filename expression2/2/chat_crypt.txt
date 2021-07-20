@@ -1,0 +1,27 @@
+@name chat2.0
+@inputs 
+@outputs 
+@persist 
+@trigger 
+interval(1)
+if (first()){
+    runOnChat(1)
+    dPanel("chat2.0",vec2(0,0),vec2(600,60))
+    dTextBox("text","chat2.0",vec2(10,30),500)
+    dButton( "say","chat2.0",vec2(510,30),vec2(80,20))
+}
+dShow("chat2.0",owner():isTyping())
+if (dClk("say")&(dSval("text")!="")) {
+    local E=dSval("text"):explode("")
+    local S=toChar(160)
+    for(I=1,E:count()) { S=S+toChar(toByte(E[I,string])-65) } 
+    concmd("say "+S)  
+}
+
+if (changed(lastSaid()) & (lastSpoke()!=owner()) & (lastSaid():index(1)==toChar(160))) {
+    local E=dSval("text"):explode("")
+    local S=""
+    
+    for(I=2,E:count()) { S=S+toChar(toByte(E[I,string])+65) }       
+    print(S)        
+}

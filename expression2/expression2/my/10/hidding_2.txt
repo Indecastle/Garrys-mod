@@ -1,0 +1,168 @@
+@name Hidding
+@model models/props_c17/lockers001a.mdl
+@outputs  HoloParent:entity [CumPosition ExitPointerPosition]:vector Activated Angle:angle
+@persist [Players Vehicles ActiveVehicles NoActiveVehicles VehicleDrivers]:array Distance [E O]:entity
+
+interval(100)
+E:setColor(vec(255))
+
+if(first() | dupefinished()) {
+    ##ifdef noDuplications()
+    #    noDuplications()
+    ##endif
+    
+    #runOnTick(1)  
+    setName("generic")
+    timer("scan",100)
+    timer("scan2",100)
+    O = owner()
+    E = entity()
+    Pressed_buttons = array()
+    Distance = 80#70
+    #runOnKey(1) runOnKeys(O, 1)
+    E:noCollideAll(0)
+    
+    HoloParent = holoCreate(1, E:toWorld(vec(0, 0, 0)))
+    holoAlpha(1, 0)
+    holoAng(1, E:angles())
+    holoParent(1, E)
+    CumPosition = HoloParent:pos()
+    
+    Activated = 1
+    
+    findByClass("prop_vehicle_prisoner_pod")
+    findSortByDistance(E:pos())
+    Vehicles = array()
+    Vehicles:pushEntity(findResult(1))
+    Vehicles:pushEntity(findResult(2))
+    Vehicles:pushEntity(findResult(3))
+    Vehicles:pushEntity(findResult(4))
+    NoActiveVehicles = Vehicles:clone()
+    foreach (I, V: entity = Vehicles) { 
+        V:setAlpha(0)
+        VehicleDrivers:pushEntity(noentity()) 
+    }
+    #foreach (I, V: entity = Vehicles) { holoCreate(I+1, V:pos()) }
+
+    
+    
+    function number my_find_substr(Str:string, SubStr:string) {
+        return Str:lower():find(SubStr:lower())
+    }
+    function entity my_findPlayerByName(Name:string) {
+        local OK = noentity()
+        foreach(I, P:entity = Players) {
+            if(my_find_substr(P:name(), Name)) { OK = P break}
+        }
+        return OK
+    }
+    function entity my_findPlayerBySteamID(Name:string) {
+        local OK = noentity()
+        foreach(I, P:entity = Players) {
+            if(P:steamID() == Name) { OK = P break}
+        }
+        return OK
+    }
+    function number array:checkAr(Str:string) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:string(I) == Str) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+    function number array:indexEnt(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This:entity(I) == Ent) { OK = I break}
+        } 
+        return OK
+    }
+    function number array:removeEnt(Ent:entity) {
+        local OK = 0
+        if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+        return OK
+    }
+    function number array:addEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushEntity(Ent) OK=1}
+        return OK
+    }
+    
+}
+
+
+if (clk("scan")){
+    findByClass("player")
+    local Players_ =findToArray()
+    if (Players:count()!=Players_:count()){
+        runOnKeys(Players_, 1)
+    }
+    Players = Players_
+    timer("scan",1000)
+}
+
+if (clk("scan2")){
+    foreach (I, V: entity = Vehicles) {
+        local Driver = V:driver()
+        if (VehicleDrivers[I, entity] != Driver) {
+            VehicleDrivers[I, entity] = Driver
+            
+            if (Driver:isValid()) {
+                ActiveVehicles:addEnt(V)
+                NoActiveVehicles:removeEnt(V)
+            }
+            else {
+                ActiveVehicles:removeEnt(V)
+                NoActiveVehicles:addEnt(V)
+            }
+        }
+    }
+    timer("scan2",100)
+}
+
+#[
+local Who = keyClk()
+if (Who) {
+    if (changed(Who:keyPressed("e")) && Who:keyPressed("e")) {
+        if (ActivePlayers:removeEnt(Who)) {
+            Who:setPos(E:toWorld(vec(50,0,0)))
+            #Who:setColor(vec4(255))
+            #Who:setAlpha(255)
+            #Who:setMaterial("")
+            #Who:weapon():setAlpha(255)
+        }
+        else {
+            if (Who:aimEntity() == E & Who:shootPos():distance(E:pos()) < Distance) {
+                if (ActivePlayers:addEnt(Who)) {
+                    #Who:setColor(vec4(0,0,0,0))
+                    #Who:setMaterial("Models/effects/vol_light001")
+                    #Who:setAng(E:angles())
+                }
+            }
+        }
+    }
+}]#
+
+
+foreach (I, V: entity = ActiveVehicles) {
+    V:setPos(E:toWorld(vec(0,0,-1000)))
+    #V:weapon():setAlpha(0)
+}
+
+foreach (I, V: entity = NoActiveVehicles) {
+    V:setPos(E:toWorld(vec(0,0,-30)))
+    V:setAng(E:toWorld(ang(0,90,0)))
+    #V:weapon():setAlpha(0)
+}
+
+#E:applyForce(vec(10,0,0)*E:mass())
+
+ExitPointerPosition = E:toWorld(vec(40, 0, -20))
+Angle = E:toWorld(ang(0, 0, 0))

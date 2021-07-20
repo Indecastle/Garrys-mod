@@ -1,0 +1,55 @@
+--@name Dat 2
+--@author OctopuSSX
+--@includedir libs
+--@client
+
+dofile("libs/screen.txt")
+
+screen = ScreenRenderer:new()
+
+RMin = 372
+RMax = 421
+H = 260
+
+function getPoint(t)
+    return { t % 1024, math.floor(t / 1024) }
+end
+
+function getLine()
+    local channels = { {}, {}, {} }
+    for i = 1, 1024 do
+        local black = 255 - math.round(math.random()) * 255
+        channels[1][i] = black
+        channels[2][i] = black
+        channels[3][i] = black
+    end
+    return channels
+end
+
+local I = 0
+local max = 1024 * 1024
+local point = nil
+local hue = 0
+
+function drawPoint(h)
+    local point = getPoint(I)
+    render.setColor(Color(0, math.round(math.random()) * 255, 255):hsvToRGB())
+    render.drawRect(point[1], point[2], 1, 1)
+    I = (I + 1) % max
+end
+
+screen:limitFPS(60)
+screen:limitCPU(0.8)
+
+screen:setRenderFunction(function(w, h, d)
+    if I >= 1024 then return end
+    I = I + 1
+    local l = getLine()
+    for j = 1, 1024 do
+        render.setColor(Color(l[1][j], l[2][j], l[3][j]))
+        render.drawRect(j, I, 1, 1)
+    end
+    /*for j = 1, 500 do
+        drawPoint(hue)
+    end*/
+end)

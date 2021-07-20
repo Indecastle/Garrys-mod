@@ -39,13 +39,14 @@ function func()
         end
     end
     
-    print(dist)
-    print(dist3)
+    //print(dist)
+    //print(dist3)
+    
     //print(tr2.HitPos:isInWorld())
 
     
     //target.SetSpeed = 1
-    //printTable(target:getNWVarTable())
+    printTable(target:getNWVarTable())
     
 --[[
     for i=0, 31 do

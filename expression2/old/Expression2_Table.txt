@@ -39,7 +39,7 @@ for(I=1,20){
     if(inrange(G:egpCursor(O),G:egpPos(180 + I)-G:egpSize(180 + I)/2, G:egpPos(180 + I)+G:egpSize(180 + I)/2)) { 
         if(O:pos():distance(G:entity():pos()) < 200){
         G:egpColor(180 + I,vec(100,0,0)) 
-    if (owner():keyPressed("b")&&changed(owner():keyPressed("b"))) {  #T[I,entity]:remove() 
+    if (owner():keyPressed("b")&&changed(owner():keyPressed("b"))) {  T[I,entity]:remove() 
         }}} 
      else { G:egpColor(180 + I,vec(100))}
 }

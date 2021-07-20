@@ -6,7 +6,7 @@
 
 if(first() | dupefinished()) { #[entity():setAng(owner():angles())]#    timer("s",100)}
 if(clk("s")) {
-    if(Door:isExist() & Door:model() == "models/props_c17/door01_left.mdl") {
+    if(Door:isValid() & Door:model() == "models/props_c17/door01_left.mdl") {
         timer("t",100)
     }
     else {

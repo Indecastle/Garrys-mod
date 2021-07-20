@@ -1,0 +1,34 @@
+@name chat_3.0
+@persist G:gtable A
+
+interval(100)
+if(first()){
+
+G=gTable("secretTop")
+if(G[1,table]["rab",number]!=1){
+G[1,table]=table()    
+G[1,table]["rab",number]=1  
+for(I=1,10){G[1,table][I,string]=""}  
+}
+
+dPanel("chat3.0",vec2(0,0),vec2(600,300))
+dTextBox("text","chat3.0",vec2(10,30),500)
+dButton( "say","chat3.0",vec2(510,30),vec2(80,20))
+
+}
+dShow("chat3.0",owner():isTyping())
+
+
+for(I=1,10){dRemove(G[1,table][I,string])}
+
+
+if((dClk("say"))&(dSval("text")!="")){
+for(I=11,1,-1){G[1,table][I+1,string]=G[1,table][I,string]}
+G[1,table][1,string]=owner():name()+": "+dSval("text")
+}
+
+for(I=1,11){dLabel(G[1,table][I,string],"chat3.0",vec2(10,I*20+40))}
+
+if(changed(G[1,table][1,string])){A=1}
+if(owner():isTyping()){A=0}
+hudDrawRect(1,0,0,3,5,vec(255,255,0),255*A)

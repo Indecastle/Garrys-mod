@@ -1,0 +1,45 @@
+--@name http helper
+--@author
+--@server
+
+if SERVER then
+    //wire.adjustInputs({ "Body", "_id" }, { "string" })
+    wire.adjustPorts({  
+                         Request = "table"
+                    },
+                    { 
+                        Response = "table",
+                        HttpCanRequest = "number",
+                    })
+    
+    
+    
+    local _id;
+    wire.ports.HttpCanRequest = 1
+    
+    hook.add("think", "", function()
+        local id = wire.ports.Request._id
+        if id ~= nil and wire.ports.Request._id ~= _id then
+            _id = wire.ports.Request._id
+            
+            if wire.ports.Request.url == nil then return end
+            local body = wire.ports.Request
+
+            wire.ports.HttpCanRequest = 0
+            
+            http.post(body.url, 
+                body.payload, 
+                function(body2, length, headers, code) // success
+                    wire.ports.Response = json.decode(body2)
+                    wire.ports.HttpCanRequest = 1
+                end, 
+                function(body2, length, headers, code) // fail
+                    wire.ports.Response = json.decode(body2)
+                    wire.ports.HttpCanRequest = 1
+                end, 
+                body.headers) // { ['Content-Type'] = "application/json" }
+        end
+    end)
+    
+    return
+end

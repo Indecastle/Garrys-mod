@@ -1,0 +1,14 @@
+--@name LibTest
+--@author OctopuSSX
+--@includedir libs
+--@client
+
+dofile("libs/screen.txt")
+
+local screen = ScreenRenderer:new()
+
+function r(w, h)
+    render.drawText(w / 2, h / 2, "Hello World", 1)
+end
+
+screen:setRenderFunction(r)

@@ -1,0 +1,167 @@
+--@name Image Display
+--@author OctopuSSX
+--@shared
+
+local URLS = {
+    rikka_ch = "https://i.imgur.com/LkF9TOb.jpg",
+    rikka_s = "https://i.imgur.com/qa3njxh.jpg",
+    rikka_c = "https://i.imgur.com/5139yCi.jpg",
+    rikka_f = "https://anime-planet.com/images/characters/rikka-takanashi-43640.jpg",
+    horny = "https://media.discordapp.net/attachments/542043404629180417/849195384470503444/paLNxVWlfEM.png",
+    malina_booba = "https://media.discordapp.net/attachments/854459216839049267/854459668261109790/O2NFX9U5dT8.jpg",
+    malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
+    custom = nil
+}
+
+local img = "rikka_c"
+
+local maxh = 12
+
+function isLookingAtChip()
+    local dir = owner():getEyeAngles():getForward()
+    local dir2 = (chip():getPos() - owner():getShootPos()):getNormalized()
+    local cos = (dir.x*dir2.x + dir.y*dir2.y + dir.z*dir2.z) / (dir:getDistance(Vector())*dir2:getDistance(Vector()))
+    // Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+    print(math.acos(cos))
+    return math.acos(cos) < 0.15
+end
+
+if SERVER then
+    chip():setNoDraw(0)
+
+    hook.add("PlayerSay", "chat", function(ply, txt)
+        if ply ~= owner() then return end
+        if not isLookingAtChip() then return end
+        
+        if txt:sub(1, 5) == "-img " then            
+            t = txt:sub(6)
+            if URLS[t] == nil then return end
+            img = t
+            
+            net.start("changeImage")
+            net.writeString(t)
+            net.send()
+        elseif txt:sub(1, 4) == "-mh " then
+            maxh = tonumber(txt:sub(5)) or 100
+            
+            net.start("setMaxH")
+            net.writeInt(maxh, 16)
+            net.send()
+        elseif txt:sub(1, 5) == "-url " then
+            url = txt:sub(6)
+            
+            net.start("setUrl")
+            net.writeString(url)
+            net.send()
+        end
+    end)
+else
+    function say(msg)
+        if player() == owner() then print(msg) end
+    end
+
+    local FPS = 5
+    local frame = 0
+    local delta = 1/FPS
+
+    local screen = holograms.create(chip():localToWorld(Vector(0, 0, 0.5)), chip():getAngles(), "models/holograms/plane.mdl")
+    screen:setParent(chip())
+    
+    render.createRenderTarget("cantload")
+    
+    local nonmat = material.create("UnlitGeneric")
+    nonmat:setTextureRenderTarget("$basetexture", "cantload")
+    nonmat:setInt("$flags", 0)
+    
+    function cantload()
+        screen:setSize(Vector(60, 60, 1))
+        screen:setMaterial("!" .. nonmat:getName())
+    end
+    
+    function setCustom(url)
+        URLS["c"] = url
+        img = "c"
+        loadImage()
+    end
+    
+    function loadImage()
+        if img == nil then return end
+        if URLS[img] == nil then return end
+        
+        URL = URLS[img]
+    
+        if not hasPermission("material.urlcreate", URL) then
+            cantload()
+            return
+        end
+    
+        local mat = material.create("UnlitGeneric")
+        
+        mat:setInt("$flags", 256)
+        
+        mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+            if m == nil then return end
+        
+            local ratio = w / h
+
+            local sh = maxh
+            local sw = sh * ratio
+            screen:setSize(Vector(sh, sw, 1))
+            
+            l(0, 0, m:getWidth(), m:getHeight())
+            
+            screen:setMaterial("!" .. mat:getName())
+        end)
+    end
+    
+    net.receive("changeImage", function(l)
+        img = net.readString()
+        
+        say("Set image to " .. img)
+        
+        loadImage()
+    end)
+    
+    net.receive("setMaxH", function(l)
+        maxh = net.readInt(16)
+        
+        say("Set height to " .. maxh)
+        
+        loadImage()
+    end)
+    
+    net.receive("setUrl", function(l)
+        url = net.readString()
+        
+        
+        say("Set custom imageas")
+        
+        setCustom(url)
+    end)
+    
+    loadImage()
+    
+    setupPermissionRequest({"material.urlcreate"}, "Load images from external websites", true)
+    
+    hook.add("permissionrequest", "perm", loadImage)
+    
+    hook.add("renderoffscreen", "cantload", function()
+        isLookingAtChip()
+        local now = timer.systime()
+        if frame > now then return end
+        frame = now + delta
+        
+        render.selectRenderTarget("cantload")
+        render.clear()
+        
+        local font = render.createFont("Arial", 50, 400, true, false, false, false, false, true)
+        render.setFont(font)
+        
+        render.drawText(512, 270, "Image source is not whitelisted!", 1)
+        render.drawText(512, 330, "Press E on the dot to allow loading!", 1)
+        
+        render.draw3DSphere(Vector(512, 512, 20), 30, 20, 20)
+        
+        // render.drawCircle(512, 512, 10)
+    end)
+end

@@ -42,7 +42,7 @@ if(changed(owner():keyPressed("b")) & owner():keyPressed("b")) {
     print("Aim " + (Active ? "Activated" : "didn't active"))
 }
 
-if(clMouseKeyPress("mouse4") & Active) {
+if(keyPress("mouse4") & Active) {
     local BonePos = Target:playerBonePos("ValveBiped.Bip01_Head1")
     Dir = BonePos - owner():shootPos() # - Target:vel()*tickInterval()*10
     Ang = Dir:toAngle()

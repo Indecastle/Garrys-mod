@@ -1,0 +1,67 @@
+--@name ScreenLib
+--@author OctopuSSX
+
+ScreenRenderer = class("ScreenRenderer")
+
+local function quota()
+    return quotaAverage() / quotaMax()
+end
+
+function ScreenRenderer:initialize()
+    self.id = math.floor(math.random(1, math.pow(2, 10)))
+    
+    render.createRenderTarget("t_" .. self.id)
+    
+    self.render = function() end
+    
+    self.postRender = function() end
+    
+    self.lastFrame = 0
+    
+    self.maxFPS = 0
+    self.maxCPU = 0
+    
+    hook.add("render", "r_" .. self.id, function()
+        local w, h = render.getResolution()
+        
+        render.setRenderTargetTexture("t_" .. self.id)
+        render.drawTexturedRect(0, 0, w, h)
+        
+        self.postRender(w, h)
+    end)
+    
+    hook.add("renderoffscreen", "ros_" .. self.id, function()
+        if self.maxCPU > 0 then
+            if quota() > self.maxCPU then return end
+        end
+    
+        local now = timer.systime()
+        local delta = now - self.lastFrame
+        if self.maxFPS > 0 then
+            if delta < 1 / self.maxFPS then return end
+        end
+        self.lastFrame = now
+    
+        render.selectRenderTarget("t_" .. self.id)
+        
+        local w, h = render.getResolution()
+        
+        self.render(w, h, delta)
+    end)
+end
+
+function ScreenRenderer:setRenderFunction(renderer)
+    self.render = renderer
+end
+
+function ScreenRenderer:setPostRenderFunction(renderer)
+    self.postRender = renderer
+end
+
+function ScreenRenderer:limitFPS(fps)
+    self.maxFPS = fps
+end
+
+function ScreenRenderer:limitCPU(cpu)
+    self.maxCPU = cpu
+end

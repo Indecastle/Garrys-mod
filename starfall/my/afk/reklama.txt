@@ -1,9 +1,9 @@
---@name AFK 10
+--@name Reklama troit5sky
 --@author Markiz & OctopuSSX
 --@client
 
 local AFK = chip()
-//AFK = find.playersByName("dud")[1]
+AFK = find.playersByName("mark")[1]
 /*AFK = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -12,44 +12,38 @@ end)[1]*/
 print(AFK)
 
 local Data = {
-    {   text={"I"}, 
+    {   text={"Garry's Mod Space"}, 
         //font = "Courier New",
-        fontSize=100, 
-        fontBold=500, 
-        align=TEXT_ALIGN.CENTER, 
+        fontSize=60, 
+        fontBold=1000, 
         bold=false,
-        //color=Color(200,50,0),
-        colorSpeed = 0.5,
+        color=Color(0,255,0),
 
     },
-    {   text={"am",}, 
-        fontSize=150, 
-        fontBold=500, 
-        marginUp=80, 
-        align=TEXT_ALIGN.CENTER, 
+    {   text={"не любишь PVP? Пропиши !build в чат",}, 
+        fontSize=57, 
+        fontBold=1000, 
+        margin=60,
         bold=false,
-        //color=Color(200,50,0), 
-        colorSpeed = 1,
+        color=Color(255,180,50) 
     },
-    {   text={"Sex Man"}, 
-        fontSize=200, 
-        fontBold=500, 
-        marginUp=150, 
-        align=TEXT_ALIGN.CENTER, 
-        bold=true,
-        //color=Color(255,255,255) 
-        colorSpeed = 2,
+    {text={"----------------------------------------------"}, fontSize=40, fontBold=1000, marginUp=50},
+    {   text={"правила: !motd",
+                "сайт: http://gm.troit5sky.ru"}, 
+        fontSize=40, 
+        fontBold=1000, 
+        marginUp=40,
     }
 }
 
-local Mode = 4 // 1, 2, 3, 4
+local Mode = 2 // 1, 2, 3, 4
 
-local isRotate = true
+local isRotate = false
 local rotateSpeed = 100
 local swaySpeed = 2
 local swayDegreesMax = 0
 
-local IsStaticVertical = true // only for Mode == 1 or 2
+local IsStaticVertical = false // only for Mode == 1 or 2
 local IsDoubleData = true
 local isHideTarget = true
 
@@ -58,7 +52,7 @@ local shadowOffset = 1
 
 local ColorSpeed = 50
 
-local textSize = 100
+local textSize = 200 // 300
 local DataOffsetZ = 34
 
 local isParentPos = true
@@ -159,7 +153,7 @@ end)
 DataOffsetZ = DataOffsetZ + 
     (   (Mode==1 or Mode==2) and 10*textSize/100 or
         Mode==3 and 0 or
-        Mode==4 and 10*textSize/100 or 
+        Mode==4 and 0 or 
         0)
     
 

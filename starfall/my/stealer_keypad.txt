@@ -48,20 +48,7 @@ Button_tupples2 = {
     {"OK", Vector(0.46103295683861, -2.070442199707), Vector(2.7871122360229, -0.62849426269531)},
 }
 
-Input_Keys = {
-    [KEY.PAD_1] = "1",
-    [KEY.PAD_2] = "2",
-    [KEY.PAD_3] = "3",
-    [KEY.PAD_4] = "4",
-    [KEY.PAD_5] = "5",
-    [KEY.PAD_6] = "6",
-    [KEY.PAD_7] = "7",
-    [KEY.PAD_8] = "8",
-    [KEY.PAD_9] = "9",
-    [KEY.PAD_ENTER] = "OK",
-    [KEY.PAD_MINUS] = "ABORT",
-    [KEY.E] = "E",
-}
+
 
 function table.findByValue(t, f) -- find element v of l satisfying f(v)
     for _, v in ipairs(t) do
@@ -146,8 +133,22 @@ if SERVER then
     
     
 else    
-    setName("Generic")
 
+    Input_Keys = {
+        [KEY.PAD_1] = "1",
+        [KEY.PAD_2] = "2",
+        [KEY.PAD_3] = "3",
+        [KEY.PAD_4] = "4",
+        [KEY.PAD_5] = "5",
+        [KEY.PAD_6] = "6",
+        [KEY.PAD_7] = "7",
+        [KEY.PAD_8] = "8",
+        [KEY.PAD_9] = "9",
+        [KEY.ENTER] = "OK",
+        [KEY.PAD_ENTER] = "OK",
+        [KEY.PAD_MINUS] = "ABORT",
+        [KEY.E] = "E",
+    }
 
 
     local conectingPlayers = {}
@@ -210,6 +211,7 @@ else
         ["7"] = number_handler,
         ["8"] = number_handler,
         ["9"] = number_handler,
+        ["Enter"] = number_handler,
         ["OK"] = OK_handler,
         ["ABORT"] = ABORT_handler,
     }
@@ -386,12 +388,15 @@ else
     end)
     
     timer.create("wh_keypads", 1, 0, function()
-        wh_keypads = find.all(function(e)
+        wh_keypads = find.byClass("gmod_wire_keypad")
+        table.add(wh_keypads, find.byClass("Keypad_Wire"))
+        table.add(wh_keypads, find.byClass("Keypad"))
+        /*wh_keypads = find.all(function(e)
                 local type = e:getClass()
                 return type == "gmod_wire_keypad"
                     or type == "Keypad_Wire"
                     or type == "Keypad"
-            end)
+            end)*/
     end)
     
     

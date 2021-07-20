@@ -12,14 +12,15 @@ if(first()){
     
     #holoScale(1,vec(1,2,3))
     holoModel(1,"models/maxofs2d/balloon_gman.mdl")
-    holoModel(1, "cone")
+    #holoModel(1, "cone")
     V1 = vec(-1,0,0):normalized()
     holoParent(1,entity())
     
     H2 = holoCreate(2, entity():toWorld(vec(30,0,10)))
     #holoScale(2,vec(1,2,3))
     holoModel(2,"models/maxofs2d/balloon_gman.mdl")
-    holoModel(2,"cone")
+    holoParent(2,entity())
+    #holoModel(2,"cone")
     
 }
 
@@ -32,12 +33,12 @@ function quaternion myquat(W:number, V:vector) {
 V2 = H:forward()
 A = (A+10)%360
 #Q = quat(0,1,A,0)
-Q1 = myquat(A,vec(0,1,0):normalized())
+Q1 = myquat(A,vec(0,0,1):normalized())
 #Q1 = quat(0,1,0,0)
 Q2 = quat(H)
 #Q2 = myquat(0,vec(10,1,0))
 
-Q = Q1*Q2
+Q = Q2*Q1
 
 #QQ = conj(Q1)/(abs(Q1)*abs(Q1))
 #Q3 = Q1*vec(1,1,0)*QQ
