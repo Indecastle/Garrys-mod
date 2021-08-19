@@ -3,7 +3,7 @@
 --@shared
 
 local URLS = {
-    rikka_ch = "https://i.imgur.com/LkF9TOb.jpg",
+    rikka_ch = "https://i.imgur.com/9UtATPQ.gif",
     rikka_s = "https://i.imgur.com/qa3njxh.jpg",
     rikka_c = "https://i.imgur.com/5139yCi.jpg",
     rikka_f = "https://anime-planet.com/images/characters/rikka-takanashi-43640.jpg",
@@ -13,16 +13,16 @@ local URLS = {
     custom = nil
 }
 
-local img = "rikka_c"
+local img = "rikka_ch"
 
-local maxh = 12
+local maxh = 12000
 
 function isLookingAtChip()
     local dir = owner():getEyeAngles():getForward()
     local dir2 = (chip():getPos() - owner():getShootPos()):getNormalized()
     local cos = (dir.x*dir2.x + dir.y*dir2.y + dir.z*dir2.z) / (dir:getDistance(Vector())*dir2:getDistance(Vector()))
     // Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
-    print(math.acos(cos))
+    //print(math.acos(cos))
     return math.acos(cos) < 0.15
 end
 
@@ -64,7 +64,7 @@ else
     local frame = 0
     local delta = 1/FPS
 
-    local screen = holograms.create(chip():localToWorld(Vector(0, 0, 0.5)), chip():getAngles(), "models/holograms/plane.mdl")
+    local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
     screen:setParent(chip())
     
     render.createRenderTarget("cantload")

@@ -1,0 +1,284 @@
+--@name vasm
+--@author VOXEL
+--@client
+
+asm_ = class("assemlber")
+local asm_memory_ = {}
+function asm_:getReg(arg)
+    if string.getChar(arg, 1) == "#" then
+        return asm_memory_[self:getReg(string.replace(arg, "#", ""))] or 0
+    end
+    if self.Reg[arg] != nil then
+        return self.Reg[arg].value
+    end
+    return tonumber(arg)
+end
+
+function asm_:setReg(arg1, arg2)
+    if string.getChar(arg1, 1) == "#" then
+        asm_memory_[self:getReg(string.replace(arg1, "#", ""))] = self:getReg(arg2)
+    end
+    if self.Reg[arg1] != nil then
+        if self.Reg[arg1].access == "-a" then
+            self.Reg[arg1].value = self:getReg(""..arg2)
+        end
+    end
+end
+
+function asm_:initialize(code)
+    self.Sleep = timer.curtime()
+    self.Stop = false
+    self.CallList = {}
+    self.JmpList = {}
+    self.Stack = {}
+    self.Code = {}
+    self.PreCode = code
+    self.Reg = {
+        eax = {value = 0, access = "-a"},
+        ebx = {value = 0, access = "-a"},
+        ecx = {value = 0, access = "-a"},
+        edx = {value = 0, access = "-a"},
+        
+        ebp = {value = 0, access = "-r"},
+        
+        r1 = {value = 0, access = "-a"},
+        r2 = {value = 0, access = "-a"},
+        r3 = {value = 0, access = "-a"},
+        r4 = {value = 0, access = "-a"},
+        r5 = {value = 0, access = "-a"},
+        r6 = {value = 0, access = "-a"},
+        r7 = {value = 0, access = "-a"},
+        r8 = {value = 0, access = "-a"},
+    }
+    self.CmdList = {
+        mov = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, a2)
+        end,
+        
+        inc = function(arg)
+            local a1 = arg[1]:trim()
+            
+            self:setReg(a1, self:getReg(a1) + 1)
+        end,
+        
+        dec = function(arg)
+            local a1 = arg[1]:trim()
+            
+            self:setReg(a1, self:getReg(a1) - 1)
+        end,
+        
+        add = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, self:getReg(a1) + self:getReg(a2))
+        end,
+        
+        sub = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, self:getReg(a1) - self:getReg(a2))
+        end,
+        
+        mul = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, self:getReg(a1) * self:getReg(a2))
+        end,
+        
+        div = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, self:getReg(a1) / self:getReg(a2))
+        end,
+        
+        pow = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, self:getReg(a1) ^ self:getReg(a2))
+        end,
+        
+        ["and"] = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, (self:getReg(a1) and self:getReg(a2)) and 1 or 0)
+        end,
+        
+        ["or"] = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, (self:getReg(a1) or self:getReg(a2)) and 1 or 0)
+        end,
+        
+        ["not"] = function(arg)
+            local a1 = arg[1]:trim()
+            
+            self:setReg(a1, self:getReg(a1) > 0 and 0 or 1)
+        end,
+        
+        xor = function(arg)
+            local a1 = arg[1]:trim()
+            local a2 = arg[2]:trim()
+            
+            self:setReg(a1, (self:getReg(a1) > 0 and self:getReg(a2)) and 1 or 0)
+        end,
+        
+        sqrt = function(arg)
+            local a1 = arg[1]:trim()
+            
+            self:setReg(a1, math.sqrt(self:getReg(a1)))
+        end,
+        
+        sin = function(arg)
+            local a1 = arg[1]:trim()
+            local v = math.sin(math.rad(self:getReg(a1)))
+            self:setReg(a1, v)
+        end,
+        
+        cos = function(arg)
+            local a1 = arg[1]:trim()
+            local v = math.cos(math.rad(self:getReg(a1)))
+            self:setReg(a1, v)
+        end,
+        
+        msg = function(arg)
+            local a1 = arg[1]:trim()
+            print(self:getReg(a1))
+        end,
+        
+        slp = function(arg)
+            local a1 = arg[1]:trim()
+            self.Sleep = timer.curtime() + self:getReg(a1)
+        end,
+        
+        push = function(arg)
+            local a1 = arg[1]:trim()
+            self.Stack[#self.Stack + 1] = self:getReg(a1)
+        end,
+        
+        pop = function(arg)
+            local a1 = arg[1]:trim()
+            if #self.Stack > 0 then
+                self:setReg(a1, self.Stack[#self.Stack])
+                self.Stack[#self.Stack] = nil
+            end
+        end,
+        
+        call = function(arg)
+            local a1 = arg[1]:trim()
+            if self.JmpList[a1] != nil then
+                self.CallList[#self.CallList + 1] = self.Reg.ebp.value
+                self.Reg.ebp.value = self.JmpList[a1]
+            end
+        end,
+        
+        ret = function(arg)
+            if #self.CallList > 0 then
+                self.Reg.ebp.value = self.CallList[#self.CallList]
+                self.CallList[#self.CallList] = nil
+            end
+        end,
+        
+        jmp = function(arg)
+            local a1 = arg[1]:trim()
+            if self.JmpList[a1] != nil then
+                self.Reg.ebp.value = self.JmpList[a1]
+            end
+        end,
+        
+        prt = function(arg)
+            print("test")
+        end,
+        
+        stop = function(arg)
+            self.Stop = true
+        end,
+        
+        rand = function(arg)
+            local a1 = arg[1]:trim()
+            self:setReg(a1, math.rand(0, 1))
+        end,
+        
+        round = function(arg)
+            local a1 = arg[1]:trim()
+            self:setReg(a1, math.round(self:getReg(a1)))
+        end,
+        
+        ceil = function(arg)
+            local a1 = arg[1]:trim()
+            self:setReg(a1, math.ceil(self:getReg(a1)))
+        end,
+    }
+    
+    self.Defines = {}
+    for k, v in pairs(self.CmdList) do self.Defines[""..k] = ""..k end
+    
+    local Counter = 0
+    
+    for k, v in pairs(string.explode("\n", code)) do
+        local cmd = string.explode(" ", v:trim())[1]:trim()
+        
+        if cmd == "#define" then
+            local arg = string.explode(",", string.explode(cmd .. " ", v)[2])
+            self.Defines[arg[1]:trim()] = arg[2]:trim()
+            continue
+        end
+        
+        if string.getChar(cmd, string.len(cmd)) == ":" then
+            self.JmpList[string.replace(cmd, ":", "")] = Counter
+            continue
+        end
+        
+        if self.CmdList[self.Defines[cmd]] != nil then
+            Counter = Counter + 1
+            local arg = {}
+            
+            if string.explode(cmd .. " ", v)[2] != nil then
+                arg = string.explode(",", string.explode(cmd .. " ", v)[2])
+            end
+            self.Code[#self.Code + 1] = {CMD = cmd, ARGS = arg}
+        else
+            if cmd != "" then
+                error("ASM.Error['Line = " .. k .. ", Opcode = '" .. (cmd or "nil") .. "']")
+            end
+        end
+    end
+end
+
+local function quotaCheck(n)
+    return math.max(quotaAverage(), quotaUsed()) < quotaMax()*n
+end
+
+function asm_:run()
+    timer.create("", 0, 0,function()
+        while self.Stop == false and self.Sleep <= timer.curtime() and quotaCheck(0.1) do
+            self.Reg.ebp.value = self.Reg.ebp.value + 1
+            local ptr = self.Reg.ebp.value
+            if self.Code[ptr] != nil then
+                self.CmdList[self.Defines[self.Code[ptr].CMD]](self.Code[ptr].ARGS)
+            end
+            if ptr > #self.Code then self.Stop = true end
+        end
+    end)
+end
+
+local asm = asm_:new(
+[[
+_INIT:
+_MAIN:
+    inc eax
+    msg eax
+jmp _MAIN
+]]
+)
+
+asm:run()

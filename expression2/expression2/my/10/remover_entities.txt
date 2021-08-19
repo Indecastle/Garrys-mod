@@ -1,0 +1,40 @@
+@name Remover entities
+@inputs 
+@outputs 
+@persist Target:entity [Ar ExcludeAr]:array
+@trigger 
+
+if (first() | dupefinished()) { O=owner()
+    Limit = 10
+    
+    Target = owner()
+    #Target = findPlayerByName("licen")
+    #Target = findPlayerBySteamID("STEAM_0:0:245102061")
+    
+    
+    findIncludePlayerProps(Target)
+    findInSphere(entity():pos(), 1000000000000)
+    ExcludeAr = findToArray()
+
+    
+
+    timer("scan",100)
+}
+
+if (clk("scan")){
+    if(findCanQuery()) {
+        findExcludeEntities(ExcludeAr)
+        findIncludePlayerProps(Target)
+        findInSphere(entity():pos(), 1000000000000)
+        local Ar_ = findToArray()
+        foreach (I, V: entity = Ar_) { 
+            V:remove()
+        }
+    }
+    timer("scan",100)
+}
+
+interval(100)
+
+    
+

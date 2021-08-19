@@ -1,0 +1,595 @@
+ --@name Minesweeper Game
+--@author Bonyoze
+--@client
+// Made by Bonyoze http://steamcommunity.com/profiles/76561198958726274/
+ 
+local width, height = 50, 50 // Max is 50, 50 | Min is 8, 8
+ 
+local bombAmt = 2499 // Max is width/height - 1
+ 
+/* ===================================================== */
+ 
+local off = {
+    Vector(-1,-1),
+    Vector(-1,0),
+    Vector(-1,1),
+    Vector(0,-1),
+    Vector(0,1),
+    Vector(1,-1),
+    Vector(1,0),
+    Vector(1,1)
+}
+ 
+function getMap()
+    local tiles, tempTiles = {}, {}
+    
+    // populate with bombs
+    
+    for w=1, width do
+        tempTiles[w] = {}
+        for h=1, height do
+            tempTiles[w][h] = 0
+        end
+    end
+    
+    for i=1, bombAmt do
+        local x = table.getKeys(tempTiles)
+        local randX = x[math.random(1,table.count(x))]
+        local y = table.getKeys(tempTiles[randX])
+        local randY = y[math.random(1,table.count(y))]
+        if not tiles[randX] then
+            tiles[randX] = {}
+        end
+        tiles[randX][randY] = "bomb"
+        tempTiles[randX][randY] = nil
+        if table.count(tempTiles[randX]) == 0 then
+            tempTiles[randX] = nil
+        end
+    end
+    
+    local mines = table.copy(tiles)
+    
+    for w=1, width do
+        if not tiles[w] then
+            tiles[w] = {}
+        end
+        for h=1, height do
+            if tiles[w][h] then
+                continue
+            end
+            local total = 0
+            for k, v in pairs(off) do
+                if tiles[w+v.x] and tiles[w+v.x][h+v.y] and tiles[w+v.x][h+v.y] == "bomb" then
+                    total=total+1
+                end
+            end
+            tiles[w][h] = total
+        end
+    end
+    
+    return {tiles, mines}
+end
+ 
+local tiles, mines = unpack(getMap())
+local revealed = {}
+local flagged = {}
+ 
+local loaded = false
+local tex = render.createMaterial("https://i.imgur.com/E1dXcX3.gif", function(_1,_2,w,h,layout) end, function() loaded = true end)
+local cursorTex = material.createFromImage("icon16/cursor.png","")
+ 
+// UV TEXTURE COORDINATES
+ 
+local uv = {}
+// field tiles
+uv["blank"] = {0,39,16,55}
+uv["bomb"] = {64,39,80,55}
+uv["wrongbomb"] = {48,39,64,55}
+uv["hitbomb"] = {32,39,48,55}
+uv["flag"] = {16,39,32,55}
+uv[0] = {0,23,16,39}
+uv[1] = {16,23,32,39}
+uv[2] = {32,23,48,39}
+uv[3] = {48,23,64,39}
+uv[4] = {64,23,80,39}
+uv[5] = {80,23,96,39}
+uv[6] = {96,23,112,39}
+uv[7] = {112,23,128,39}
+uv[8] = {128,23,144,39}
+// border tiles
+uv["topRcorner"] = {0,81,10,91}
+uv["horizontal"] = {40,81,50,91}
+uv["topLcorner"] = {10,81,20,91}
+uv["vertical"] = {134,39,144,49}
+uv["Lintersect"] = {56,81,66,91}
+uv["Rintersect"] = {66,81,76,91}
+uv["bottomLcorner"] = {20,81,30,91}
+uv["bottomRcorner"] = {30,81,40,91}
+// button
+uv["button"] = {0,55,26,81}
+uv["buttonPressed"] = {26,55,52,81}
+uv["buttonWorry"] = {52,55,78,81}
+uv["buttonLose"] = {78,55,104,81}
+uv["buttonWin"] = {104,55,130,81}
+// number sign
+uv["0"] = {0,0,13,23}
+uv["1"] = {13,0,26,23}
+uv["2"] = {26,0,39,23}
+uv["3"] = {39,0,52,23}
+uv["4"] = {52,0,65,23}
+uv["5"] = {65,0,78,23}
+uv["6"] = {78,0,91,23}
+uv["7"] = {91,0,104,23}
+uv["8"] = {104,0,117,23}
+uv["9"] = {117,0,130,23}
+uv["-"] = {130,0,143,23}
+ 
+local t = 1/1024
+ 
+for k, v in pairs(uv) do
+    for i=1, 4 do
+        uv[k][i] = t*uv[k][i]
+    end
+end
+ 
+// RENDERTARGETS
+ 
+render.createRenderTarget("bg")
+render.createRenderTarget("field")
+ 
+// VARIABLES
+ 
+local init = true
+local initVals = true
+ 
+local scaleW = 16*width
+local scaleH = 16*height
+ 
+local curX, curY
+local wS, hS, xS, yS, rS, x, y, innerX, innerY, div
+ 
+// GAME
+ 
+gameActive = true
+ 
+// BUTTON
+ 
+local buttonPos
+local buttonLose = false
+local buttonWin = false
+ 
+// SCORE COUNTER
+ 
+local lastScore = bombAmt
+local totalFlags = 0
+ 
+// TILE HOVER
+ 
+local lastHovered
+ 
+// FIELD
+ 
+local updateField = false
+ 
+// TIMER
+ 
+local updateTimer = false
+ 
+local time = 0
+ 
+timer.create("timer",1,0,function()
+    time = time+1
+    updateTimer = true
+end)
+ 
+// KEY VARIABLES
+ 
+local lastM1 = false
+local m1 = false
+local lastM2 = false
+local m2 = false
+ 
+// RENDERTARGET DRAWING
+ 
+function updateRT()
+    render.setFilterMag(1)
+    render.setFilterMin(1)
+    
+    // init rt
+    
+    if loaded and init then // sprite bg
+        init = false
+        render.selectRenderTarget("bg")
+        render.clear(Color(0,0,0,0))
+        render.setColor(Color(189,189,189))
+        render.drawRect(10,10,scaleW,42)
+        render.setColor(Color(255,255,255))
+        render.setMaterial(tex)
+        local r
+        // button
+        r = uv["button"]
+        render.drawTexturedRectUV((scaleW+20)/2-13,19,26,26,r[1],r[2],r[3],r[4])
+        
+        // score
+        local scoreStr
+        if bombAmt < 10 then
+            scoreStr = "00"..bombAmt
+        elseif bombAmt < 100 then
+            scoreStr = "0"..bombAmt
+        else
+            scoreStr = ""..bombAmt
+        end
+        local sVals = string.split(scoreStr,"")
+        r = uv[sVals[1]]
+        render.drawTexturedRectUV(17,20,13,23,r[1],r[2],r[3],r[4])
+        r = uv[sVals[2]]
+        render.drawTexturedRectUV(30,20,13,23,r[1],r[2],r[3],r[4])
+        r = uv[sVals[3]]
+        render.drawTexturedRectUV(43,20,13,23,r[1],r[2],r[3],r[4])
+        // time
+        r = uv["0"]
+        render.drawTexturedRectUV(scaleW-37,20,13,23,r[1],r[2],r[3],r[4])
+        render.drawTexturedRectUV(scaleW-24,20,13,23,r[1],r[2],r[3],r[4])
+        render.drawTexturedRectUV(scaleW-11,20,13,23,r[1],r[2],r[3],r[4])
+        
+        // border
+        r = uv["topRcorner"]
+        render.drawTexturedRectUV(0,0,10,10,r[1],r[2],r[3],r[4]) // top right corner
+        r = uv["horizontal"]
+        render.drawTexturedRectUV(10,0,scaleW,10,r[1],r[2],r[3],r[4]) // top side
+        render.drawTexturedRectUV(10,52,scaleW,10,r[1],r[2],r[3],r[4]) // top side 2
+        render.drawTexturedRectUV(10,scaleH+62,scaleW,10,r[1],r[2],r[3],r[4]) // bottom
+        r = uv["topLcorner"]
+        render.drawTexturedRectUV(scaleW+10,0,10,10,r[1],r[2],r[3],r[4]) // top left corner
+        r = uv["vertical"]
+        render.drawTexturedRectUV(0,10,10,scaleH+52,r[1],r[2],r[3],r[4]) // left side
+        render.drawTexturedRectUV(scaleW+10,10,10,scaleH+52,r[1],r[2],r[3],r[4]) // right side
+        r = uv["Lintersect"]
+        render.drawTexturedRectUV(0,52,10,10,r[1],r[2],r[3],r[4]) // left intersect
+        r = uv["Rintersect"]
+        render.drawTexturedRectUV(scaleW+10,52,10,10,r[1],r[2],r[3],r[4]) // right intersect
+        r = uv["bottomLcorner"]
+        render.drawTexturedRectUV(0,scaleH+62,10,10,r[1],r[2],r[3],r[4]) // bottom left corner
+        r = uv["bottomRcorner"]
+        render.drawTexturedRectUV(scaleW+10,scaleH+62,10,10,r[1],r[2],r[3],r[4]) // bottom left corner
+        
+        render.selectRenderTarget()
+        
+        render.selectRenderTarget("field")
+        render.clear(Color(0,0,0,0))
+        render.setMaterial(tex)
+        local r = uv["blank"]
+        for w=1, width do
+            for h=1, height do
+                render.drawTexturedRectUV(16*w-16,16*h-16,16,16,r[1],r[2],r[3],r[4])
+            end
+        end
+        render.selectRenderTarget()
+    end
+    
+    if not curX or initVals then return end
+    
+    // background drawing
+    
+    render.selectRenderTarget("bg")
+    
+    render.setRenderTargetTexture("bg")
+    render.drawTexturedRect(0,0,1024,1024)
+    render.setMaterial(tex)
+    
+    local r
+    
+    lastM1 = m1
+    m1 = player():keyDown(1)
+    lastM2 = m2
+    m2 = player():keyDown(2048)
+    
+    // update button sprite
+    
+    if m1 then
+        local cursor = Vector(curX,curY)
+        local sprite
+        if cursor:withinAABox(buttonPos,buttonPos+Vector(26,26)*div) then
+            sprite = "buttonPressed"
+            buttonLose = false
+            buttonWin = false
+        elseif not cursor:withinAABox(Vector(x+10*div,y+62*div),Vector(x+10*div+scaleW*div,y+62*div+scaleH*div)) then
+            sprite = "button"
+        else
+            sprite = "buttonWorry"
+        end
+        r = uv[sprite]
+        render.drawTexturedRectUV((scaleW+20)/2-13,19,26,26,r[1],r[2],r[3],r[4])
+    end
+    
+    if lastM1 and not m1 then
+        r = uv["button"]
+        render.drawTexturedRectUV((scaleW+20)/2-13,19,26,26,r[1],r[2],r[3],r[4])
+    end
+    
+    if buttonLose then
+        r = uv["buttonLose"]
+        render.drawTexturedRectUV((scaleW+20)/2-13,19,26,26,r[1],r[2],r[3],r[4])
+    end
+    
+    if buttonWin then
+        r = uv["buttonWin"]
+        render.drawTexturedRectUV((scaleW+20)/2-13,19,26,26,r[1],r[2],r[3],r[4])
+    end
+    
+    // update timer sprites
+    
+    if gameActive and updateTimer then
+        updateTimer = false
+        local timeStr
+        if time < 10 then
+            timeStr = "00"..time
+        elseif time < 100 then
+            timeStr = "0"..time
+        else
+            timeStr = ""..time
+        end
+        local tVals = string.split(timeStr,"")
+        r = uv[tVals[#tVals-2]]
+        render.drawTexturedRectUV(scaleW-37,20,13,23,r[1],r[2],r[3],r[4])
+        r = uv[tVals[#tVals-1]]
+        render.drawTexturedRectUV(scaleW-24,20,13,23,r[1],r[2],r[3],r[4])
+        r = uv[tVals[#tVals]]
+        render.drawTexturedRectUV(scaleW-11,20,13,23,r[1],r[2],r[3],r[4])
+    end
+    
+    // update score counter
+    
+    if lastScore != bombAmt-totalFlags then
+        lastScore = bombAmt-totalFlags
+        local scoreStr
+        local scoreVal = math.abs(lastScore)
+        if scoreVal < 10 then
+            scoreStr = "00"..scoreVal
+        elseif scoreVal < 100 then
+            scoreStr = "0"..scoreVal
+        else
+            scoreStr = ""..scoreVal
+        end
+        local sVals = string.split(scoreStr,"")
+        if lastScore != scoreVal then
+            sVals[1] = "-"
+        end
+        
+        r = uv[sVals[1]]
+        render.drawTexturedRectUV(17,20,13,23,r[1],r[2],r[3],r[4])
+        r = uv[sVals[2]]
+        render.drawTexturedRectUV(30,20,13,23,r[1],r[2],r[3],r[4])
+        r = uv[sVals[3]]
+        render.drawTexturedRectUV(43,20,13,23,r[1],r[2],r[3],r[4])
+    end
+    
+    render.selectRenderTarget()
+    
+    // game resetting
+    
+    if lastM1 and not m1 and Vector(curX,curY):withinAABox(buttonPos,buttonPos+Vector(26,26)*div) then
+        // reset game vals
+        gameActive = true
+        
+        time = 0
+        lastScore = bombAmt
+        totalFlags = 0
+        lastHovered = nil
+        updateTimer = true
+        timer.start("timer")
+        
+        tiles, mines = unpack(getMap())
+        revealed = {}
+        flagged = {}
+        init = true    
+    end
+    
+    // mine field drawing
+    
+    if not gameActive then return end
+    
+    render.selectRenderTarget("field")
+    
+    local tileS = div*16
+    
+    // tile hovering
+    
+    if lastHovered then
+        r = uv["blank"]
+        render.drawTexturedRectUV(16*lastHovered.x-16,16*lastHovered.y-16,16,16,r[1],r[2],r[3],r[4])
+    end
+    
+    if m1 then
+        local cX, cY = math.floor((curX-innerX)/tileS)+1, math.floor((curY-innerY)/tileS)+1
+        if not (flagged[cX] and flagged[cX][cY]) and not (revealed[cX] and revealed[cX][cY]) and cX >= 1 and cX <= width and cY >= 1 and cY <= height then
+            r = uv[0]
+            render.drawTexturedRectUV(16*cX-16,16*cY-16,16,16,r[1],r[2],r[3],r[4])
+            lastHovered = Vector(cX,cY)
+        else
+            lastHovered = nil
+        end
+    end
+    
+    // tile revealing
+    
+    if lastM1 and not m1 then
+        local cX, cY = math.floor((curX-innerX)/tileS)+1, math.floor((curY-innerY)/tileS)+1
+        if not (flagged[cX] and flagged[cX][cY]) and not (revealed[cX] and revealed[cX][cY]) and cX >= 1 and cX <= width and cY >= 1 and cY <= height then
+            if tiles[cX][cY] == "bomb" then
+                r = uv["hitbomb"]
+                render.drawTexturedRectUV(16*cX-16,16*cY-16,16,16,r[1],r[2],r[3],r[4])
+                for fX, v in pairs(flagged) do
+                    for fY, vv in pairs(v) do
+                        if tiles[fX][fY] == "bomb" then
+                            r = uv["bomb"]
+                            render.drawTexturedRectUV(16*fX-16,16*fY-16,16,16,r[1],r[2],r[3],r[4])
+                        else
+                            r = uv["wrongbomb"]
+                            render.drawTexturedRectUV(16*fX-16,16*fY-16,16,16,r[1],r[2],r[3],r[4])
+                        end
+                    end
+                end
+                r = uv["bomb"]
+                for bX, v in pairs(mines) do
+                    for bY, vv in pairs(v) do
+                        if bX == cX and bY == cY then
+                            continue
+                        end
+                        render.drawTexturedRectUV(16*bX-16,16*bY-16,16,16,r[1],r[2],r[3],r[4])
+                    end
+                end
+                buttonLose = true
+                gameActive = false
+            else
+                r = uv[tiles[cX][cY]]
+                render.drawTexturedRectUV(16*cX-16,16*cY-16,16,16,r[1],r[2],r[3],r[4])
+                if not revealed[cX] then
+                    revealed[cX] = {}
+                end
+                revealed[cX][cY] = 1
+                lastHovered = nil
+                if tiles[cX][cY] == 0 then
+                    local spaces = {}
+                    for k, v in pairs(off) do
+                        local x, y = cX+v.x, cY+v.y
+                        if not (flagged[x] and flagged[x][y]) and not (revealed[x] and revealed[x][y]) and (tiles[x] and tiles[x][y]) then
+                            r = uv[tiles[x][y]]
+                            render.drawTexturedRectUV(16*x-16,16*y-16,16,16,r[1],r[2],r[3],r[4])
+                            if not revealed[x] then
+                                revealed[x] = {}
+                            end
+                            revealed[x][y] = 1
+                            if tiles[x][y] == 0 then
+                                table.insert(spaces,Vector(x,y))
+                            end
+                        end
+                    end
+                    repeat
+                        for k, v in pairs(spaces) do
+                            for kk, vv in pairs(off) do
+                                local x, y = v.x+vv.x, v.y+vv.y
+                                if not (flagged[x] and flagged[x][y]) and not (revealed[x] and revealed[x][y]) and (tiles[x] and tiles[x][y]) then
+                                    r = uv[tiles[x][y]]
+                                    render.drawTexturedRectUV(16*x-16,16*y-16,16,16,r[1],r[2],r[3],r[4])
+                                    if not revealed[x] then
+                                        revealed[x] = {}
+                                    end
+                                    revealed[x][y] = 1
+                                    if tiles[x][y] == 0 then
+                                        table.insert(spaces,Vector(x,y))
+                                    end
+                                end
+                                spaces[k] = nil
+                            end
+                        end
+                    until #spaces == 0
+                end
+                local flaggedMineCount = 0
+                for bX, v in pairs(mines) do
+                    for bY, vv in pairs(v) do
+                        if (revealed[bX] and revealed[bX][bY]) or (flagged[bX] and flagged[bX][bY]) then
+                            flaggedMineCount = flaggedMineCount+1
+                        end
+                    end
+                end
+                local revealedCount = 0
+                for rX, v in pairs(revealed) do
+                    revealedCount = revealedCount+table.count(v)
+                end
+                if ((width*height)-revealedCount == bombAmt or flaggedMineCount == bombAmt) and revealedCount == (width*height)-bombAmt then
+                    r = uv["flag"]
+                    for bX, v in pairs(mines) do
+                        for bY, vv in pairs(v) do
+                            render.drawTexturedRectUV(16*bX-16,16*bY-16,16,16,r[1],r[2],r[3],r[4])
+                        end
+                    end
+                    totalFlags = bombAmt
+                    gameActive = false
+                    buttonWin = true
+                end
+            end
+        end
+    end
+    
+    // tile flagging
+    
+    if not lastM2 and m2 then
+        local cX, cY = math.floor((curX-innerX)/tileS)+1, math.floor((curY-innerY)/tileS)+1
+        if not (revealed[cX] and revealed[cX][cY]) and cX >= 1 and cX <= width and cY >= 1 and cY <= height then
+            if flagged[cX] and flagged[cX][cY] then
+                r = uv["blank"]
+                render.drawTexturedRectUV(16*cX-16,16*cY-16,16,16,r[1],r[2],r[3],r[4])
+                flagged[cX][cY] = nil
+                if table.count(flagged[cX]) == 0 then
+                    flagged[cX] = nil
+                end
+                totalFlags = totalFlags-1
+            else
+                r = uv["flag"]
+                render.drawTexturedRectUV(16*cX-16,16*cY-16,16,16,r[1],r[2],r[3],r[4])
+                if not flagged[cX] then
+                    flagged[cX] = {}
+                end
+                flagged[cX][cY] = 1
+                totalFlags = totalFlags+1
+            end
+        end
+    end
+    
+    render.selectRenderTarget()
+end
+ 
+// DRAW ON SCREEN
+ 
+function draw()
+    render.setFilterMag(1)
+    render.setFilterMin(1)
+    
+    if initVals then // calculations
+        initVals = false
+        wS, hS = (width*16+20), (72+height*16)
+        if height*16+72 > width*16+20 then
+            div = (512/hS)
+            xS = wS*div
+            yS = 512
+            x = (512-xS)/2
+            y = 0
+            rS = xS*(1024/wS)
+        else
+            div = (512/wS)
+            yS = hS*div
+            xS = 512
+            y = (512-yS)/2
+            x = 0
+            rS = yS*(1024/hS)
+        end
+        
+        innerX = x+10*div
+        innerY = y+62*div
+        
+        buttonPos = Vector(x+(width*8-3)*div,y+(19)*div)
+    end
+    
+    curX, curY = render.cursorPos()
+    
+    // draw game
+    
+    render.setColor(Color(123,123,123)) // color bg
+    render.drawRect(x,y,xS,yS)
+    render.setColor(Color(255,255,255))
+    
+    render.setMaterial()
+    render.setRenderTargetTexture("bg") // sprite bg
+    render.drawTexturedRect(x,y,rS,rS)
+    render.setRenderTargetTexture("field") // mine field
+    render.drawTexturedRect(x+10*div,y+62*div,rS,rS)
+    
+    if curX then
+        render.setMaterial(cursorTex)
+        render.drawTexturedRect(curX-3.2,curY,12,12)
+    end
+end
+ 
+hook.add("renderoffscreen","",updateRT)
+hook.add("render","",draw)

@@ -1,0 +1,61 @@
+@name brainfuck
+@inputs FuckInput
+@persist MEM:array R_MEM ITER LOOPS:array
+interval(1)
+
+if(first())
+{
+    function fuck(Code:string)
+    {
+        ITER++
+        switch(Code[ITER])
+        {
+            case "+", 
+                MEM[R_MEM, number] = MEM[R_MEM, number] + 1 
+                break
+                
+            case "-", 
+                MEM[R_MEM, number] = MEM[R_MEM, number] - 1 
+                break
+                
+            case ">", 
+                R_MEM++ 
+                break
+                
+            case "<", 
+                R_MEM-- 
+                break
+                
+            case ".", 
+                print(toUnicodeChar(MEM[R_MEM, number])) 
+                break
+                
+            case ",", 
+                MEM[R_MEM, number] = FuckInput 
+                break
+                
+            case "[", 
+                LOOPS:pushNumber(ITER) 
+                break
+                
+            case "]", 
+                if(MEM[R_MEM, number] != 0) 
+                { 
+                    ITER = LOOPS[LOOPS:count(), number] 
+                }
+                else
+                {
+                    LOOPS:remove(LOOPS:count())
+                }
+                break
+        }
+    }
+}
+#[
+This is bullshit
+++++++++++[>+>+++>+++++++>++++++++++<<<<-]>>>++++++++++++++.>++++.+.++++++++++.<<++.>>----------.++++++++++.<<.>++++++++++++++.>++.---------..+++++++.<++++++.+.>+.
+
+Hello World!
+++++++++++[>+++++++>++++++++++>+++<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.
+]#
+fuck("++++++++++[>+++++++>++++++++++>+++<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.")

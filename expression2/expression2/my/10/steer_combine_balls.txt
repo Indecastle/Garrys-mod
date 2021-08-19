@@ -1,0 +1,67 @@
+@name Steer Combine Balls
+@persist Cam:wirelink Class:string O:entity Speed Ball:entity AntiGravity:vector BallSound:string BallPos:vector
+@persist ExplosionMdl:string
+
+if (duped()) {
+    timer("dupeReset", 1000) 
+}
+
+if (clk("dupeReset")) {
+    hint("Combine Ball E2 Ready!", 25)
+    reset()   
+}
+
+if (first()) {
+    Class = "prop_combine_ball"
+    O = owner()
+    Ball = noentity()
+    Speed = 450
+    BallPos = vec()
+    BallSound = "coast.thumper_ambient"
+    ExplosionMdl = "models/props_phx/amraam.mdl"
+    Cam = entity():isWeldedTo():wirelink()
+    function entity findBall() {
+        findExcludePlayerProps("*")
+        findIncludePlayerProps(O)
+        findByClass(Class)
+        findSortByDistance(O:pos())
+        local Ball = findToArray()[1, entity]
+        Ball:setMass(50)
+        return Ball
+    }
+    
+    AntiGravity = -tickInterval() * propGravity()
+    function void entity:moveTo(Pos:vector, Speed) {
+        local Difference = Pos - This:pos()
+        local TargetVel = Difference * Speed
+        local Acceleration = TargetVel - This:vel()
+        This:applyForce( (Acceleration + AntiGravity) * This:mass() )
+    }
+    
+    runOnTick(1)
+}
+
+if (!duped()) {
+
+    Cam["Activated", number] = Ball ? 1 : 0
+    
+    if (!Ball & findCanQuery()) {
+        Ball = findBall()
+        if (Ball) {
+            Cam["Parent", entity] = Ball
+            Cam["Position", vector] = Ball:pos()   
+            Ball:soundPlay(1,0,BallSound)
+        }
+    } elseif (Ball) {
+        
+        Ball:moveTo(Ball:pos() + Cam["CamDir", vector] * (Speed * O:keySprint()), Speed)
+        soundPitch(1, 50 + Ball:vel():length())
+        BallPos = Ball:pos()   
+    }
+    
+    if (changed(Ball) & !Ball & !first()) {
+        Prop = propSpawn(ExplosionMdl, BallPos, 1)
+        Prop:propBreak()
+        soundPurge()
+    }
+}
