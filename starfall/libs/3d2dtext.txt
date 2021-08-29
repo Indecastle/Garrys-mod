@@ -1,0 +1,468 @@
+--@name 3D2D text
+--@author Markiz
+
+Text3D2D = class("Text3D2D")
+
+//local function quota()
+//    return quotaAverage() / quotaMax()
+//end
+
+
+function table.map(t, func)
+    local maped = {}
+    for i=1, #t do
+        maped[i] = func(t[i])
+    end
+    return maped
+end
+function table.sum(t, func)
+    local sum_ = 0
+    for i=1, #t do
+        sum_ = sum_ + func(t[i])
+    end
+    return sum_
+end
+function table.all(t, func)
+    for i=1, #t do
+        if not func(t[i]) then
+            return false
+        end
+    end
+    return true
+end
+function table.reduce(list, fn, init)
+    local acc = init
+    for k, v in ipairs(list) do
+        if 1 == k and not init then
+            acc = v
+        else
+            acc = fn(acc, v)
+        end
+    end
+    return acc
+end
+
+
+shortSymbols = { 
+    46, // .
+    44, // ,
+    33, // !
+    124, // |
+    45, // -
+    40, // (
+    41, // )
+    49, // 1
+    108, // l
+    105, // i
+    73, // I
+    106, // j
+    114, // r
+    123, // {
+    125, // }
+    39, // '
+    34, // "
+    58, // :
+    59, // ;
+    46, // .
+    32, //  
+}
+
+LongKirilicSymbols = {
+    208144, // А
+    208145, // Б
+    208146, // В
+    208147, // Г
+    208148, // Д
+    208149, // Е
+    208129, // Ё
+    208150, // Ж
+    208151, // З
+    208152, // И
+    208153, // Й
+    208154, // К
+    208155, // Л
+    208156, // М
+    208157, // Н
+    208158, // О
+    208159, // П
+    208160, // Р
+    208161, // С
+    208162, // Т
+    208163, // У
+    208164, // Ф
+    208165, // Х
+    208166, // Ц
+    208167, // Ч
+    208168, // Ш
+    208169, // Щ
+    208172, // Ь
+    208171, // Ы
+    208170, // Ъ
+    208173, // Э
+    208174, // Ю
+    208175, // Я
+}
+
+function checkShortSymbols(c)
+    return table.hasValue(shortSymbols, c)
+end
+
+function checkUpperCaseSymbols(c)
+    return c >= 65 and c <= 90
+        or table.hasValue(LongKirilicSymbols, c)
+end
+
+
+
+function Text3D2D:initialize(data, vars)
+    self.Data = data
+    self.Vars = vars
+
+    table.foreachi(vars, function(i, v) 
+        if v.Target == nil then v.Target = chip() end // 1, 2, 3, 4
+        if v.Mode == nil then v.Mode = 2 end // 1, 2, 3, 4
+        if v.isRotate == nil then v.isRotate = false end
+        if v.rotateSpeed == nil then v.rotateSpeed = 100 end
+        if v.swaySpeed == nil then v.swaySpeed = 2 end
+        if v.swayDegreesMax == nil then v.swayDegreesMax = 0 end
+        
+        if v.IsStaticVertical == nil then v.IsStaticVertical = false end
+        if v.IsDoubleData == nil then v.IsDoubleData = true end
+        if v.isHideTarget == nil then v.isHideTarget = true end
+        
+        if v.shadowIterations == nil then v.shadowIterations = 10 end
+        if v.shadowAlphaReverce == nil then v.shadowAlphaReverce = 0 end
+        if v.shadowOffset == nil then v.shadowOffset = 1 end
+        
+        if v.textSize == nil then v.textSize = 200 end
+        if v.DataOffsetZ == nil then v.DataOffsetZ = 34 end
+        
+        if v.isParentPos == nil then v.isParentPos = true end
+        if v.isParentAngle == nil then v.isParentAngle = true end
+    end)
+    
+    local keys = table.getKeys(vars)
+    
+    for i, k in ipairs(keys) do
+        self[k] = vars[k]
+    end
+    
+
+end
+
+
+function Text3D2D:run()
+    // ##################### don't touch !!! #####################
+
+    function pos(mode)
+        return self.Target:getEyePos() + 
+            ((self.Mode==1 or self.Mode==2) and Vector(0, 0, self.DataOffsetZ) or 
+            self.Mode==3 and self.Target:getForward()*self.DataOffsetZ or
+            self.Mode==4 and self.Target:getUp()*self.DataOffsetZ)
+    end
+    
+    
+    if self.isHideTarget and self.Target == player() then return end
+    
+    local _startX, _startY = 512 - self.shadowIterations * self.shadowOffset, 512 + self.shadowIterations * self.shadowOffset
+    local _endX, _endY = 512, 512
+    render.createRenderTarget("afkscreen0")
+    render.createRenderTarget("afkscreen")
+    
+    local mat = material.create("UnlitGeneric")
+    mat:setInt("$flags", 2^21) // translucent  -->  2097152
+    mat:setTextureRenderTarget("$basetexture", "afkscreen")
+    
+    local text = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
+    text:setMaterial("!" .. mat:getName())
+    text:setSize(Vector(self.textSize, self.textSize, 1))
+    
+    
+    local text2 = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
+    text2:setMaterial("!" .. mat:getName())
+    text2:setSize(Vector(self.textSize, self.textSize, 1))
+    if not self.IsDoubleData then
+        text2:setColor(Color(0,0,0,0))
+    end
+    
+    //local font = render.createFont("Roboto", fontSize, fontBold, true)
+    for i=1, #self.Data do
+        self.Data[i].font = render.createFont(self.Data[i].font, self.Data[i].fontSize, self.Data[i].fontBold, true)
+    end
+    
+    local isStatic = table.all(self.Data, function(V) return V.colorMode == 1 end)
+    
+    function getUChar(text, index)
+        local a = string.byte(text, index, index)
+        if a == 208 or a == 209 then
+            return string.sub(text, index, index+1), index+2, a*1000 + string.byte(text, index+1, index+1)
+        end
+        return string.sub(text, index, index), index+1, a
+    end
+    
+    function getSymbolSpace(symbol, data)
+        if checkShortSymbols(symbol) then
+            return data.symbolSpaceLevel1
+        end
+        if checkUpperCaseSymbols(symbol) then
+            return data.symbolLongSpace
+        end
+        return data.symbolOtherSpace
+    end
+    
+    function getAvg(data, i)
+        local indexSpace = 0
+        local indexText = 1
+        local SymbolSpace = 0
+        local xOffset = 0
+        local uChar, uCharNum;
+        while indexText <= #data.text[i] do
+            indexSpace = indexSpace+1
+            xOffset = xOffset + SymbolSpace
+            uChar, indexText, uCharNum = getUChar(data.text[i], indexText)
+            SymbolSpace = getSymbolSpace(uCharNum, data)
+            xOffset = xOffset + SymbolSpace
+        end
+        //uChar, indexText, uCharNum = getUChar(data.text[i], 1)
+        //SymbolSpace = getSymbolSpace(uCharNum, data)
+        xOffset = xOffset + SymbolSpace // WTF
+        return xOffset / 2
+    end
+    
+    table.foreachi(self.Data, function(i, V)
+        if V.fontSize == nil then V.fontSize = 100 end
+        if V.font == nil then V.font = "Roboto" end
+        if V.fontBold == nil then V.fontBold = 1000 end
+        //if V.margin == nil then V.margin = 50 end
+        if V.marginUp == nil then V.marginUp = 0 end
+        if V.marginDown == nil then V.marginDown = 0 end
+        if V.align == nil then V.align = TEXT_ALIGN.CENTER end
+        if V.bold == nil then V.bold = false end
+        
+        if V.color == nil and V.colorSpeed == nil then V.color = Color(255,255,255) end
+        if V.colorSpeed ~= nil and V.colorMode == nil then V.colorMode = 2 end
+        if V.colorSpeed == nil then V.colorSpeed = 0.3 end
+        if V.colorMode == nil then V.colorMode = 1 end // 1, 2, 3
+        
+        if V.rainbowSpace == nil then V.rainbowSpace = 35 end
+        if V.rainbowColorSpace == nil then V.rainbowColorSpace = 10 end
+        if V.rainbowReverse == nil then V.rainbowReverse = false end
+        V._rainbowReverse = (V.rainbowReverse and 1 or -1)
+        
+        if V.symbolSpaceLevel1 == nil and V.symbolLongSpace == nil and V.symbolOtherSpace == nil then
+            V._isAutoSymbolSpace = true
+            V.symbolSpaceLevel1 = V.fontSize / 7
+            V.symbolLongSpace = V.fontSize / 3
+            V.symbolOtherSpace = V.fontSize / 3.3
+        end
+        if V.symbolSpaceLevel1 == nil then V.symbolSpaceLevel1 = 10 end
+        if V.symbolLongSpace == nil then V.symbolLongSpace = 20 end
+        if V.symbolOtherSpace == nil then V.symbolOtherSpace = 15 end
+        
+        
+        if V.colorMode == 3 then
+            V._Avgs = {}
+            for i, t in ipairs(V.text) do
+                V._Avgs[i] = getAvg(V, i)
+            end
+        end
+    end)
+    
+    
+    //Data[1].offset = 0
+    
+    
+    self.DataOffsetZ = self.DataOffsetZ + 
+        (   (self.Mode==1 or self.Mode==2) and 10*self.textSize/100 or
+            self.Mode==3 and 0 or
+            self.Mode==4 and 0 or 
+            0)
+        
+    
+    self.InitAngle = self.Mode==1 and Angle(90,0,0) or 
+                self.Mode==2 and Angle(90,0,0) or
+                self.Mode==3 and Angle(0,0,0) or
+                self.Mode==4 and Angle(90,0,0) or
+                Angle(0,0,0)
+    
+    //local font = render.setFont("ChatFont")
+    //render.setFont(font)
+    
+    // ##################### don't touch !!! #####################
+    
+    local isCreated = false
+    local isFirstParentPos = true
+    local isFirstParentAngle = true
+    
+    function getMargin(obj, isUp)
+        return obj.margin != nil and obj.margin or (isUp and obj.marginUp or obj.marginDown)
+    end
+    
+    function getPrevMargin(j, k)
+        if (j==1 and k==1) then return getMargin(Data[j]) end
+        if k == 1 then
+            return getMargin(self.Data[j-1])
+        end
+        return getMargin(self.Data[j])
+    end
+    
+    function getOffset(j, k)
+        if (j==1 and k==1) then return 0 end
+        local marginUp, marginDown = getMargin(self.Data[j], true), getPrevMargin(j, k)
+        return math.max(marginUp, marginDown)
+    end
+    
+    
+    local averageOffset = 0
+    for j=1, #self.Data do
+        for k=1, #self.Data[j].text do
+            averageOffset = averageOffset + getOffset(j, k)
+        end
+    end
+    averageOffset = (averageOffset) / 2
+    
+    
+    
+    
+    function renderBold()
+        render.selectRenderTarget("afkscreen0")
+        render.clear(Color(0, 0, 0, 0))
+        for i = 1, self.shadowIterations do
+            render.setColor(Color(0, 0, 0) / (1 + self.shadowIterations + self.shadowAlphaReverce - i))
+            local offset = -averageOffset
+            for j=1, #self.Data do
+                render.setFont(self.Data[j].font)
+                for k=1, #self.Data[j].text do
+                    offset = offset + getOffset(j, k)
+                    if self.Data[j].bold then
+                        if self.Data[j].colorMode == 3 then
+                            //local avg = (getULength(self.Data[j], k) + 1) / 2
+                            local avg = self.Data[j]._Avgs[k]
+                            local indexSpace = 0
+                            local indexText = 1
+                            local SymbolSpace = 0
+                            local xOffset = 0
+                            local uChar, uCharNum;
+                            while indexText <= #self.Data[j].text[k] do
+                                indexSpace = indexSpace+1
+                                xOffset = xOffset + SymbolSpace
+                                uChar, indexText, uCharNum = getUChar(self.Data[j].text[k], indexText)
+                                SymbolSpace = getSymbolSpace(uCharNum, self.Data[j])
+                                xOffset = xOffset + SymbolSpace
+                                render.drawSimpleText(_startX - avg + xOffset + i*self.shadowOffset, offset + _startY - i*self.shadowOffset, uChar, self.Data[j].align, TEXT_ALIGN.CENTER)
+                            end
+                        else
+                            render.drawSimpleText(_startX + i*self.shadowOffset, offset + _startY - i*self.shadowOffset, self.Data[j].text[k], self.Data[j].align, TEXT_ALIGN.CENTER)
+                        end
+    
+                    end
+                end
+            end
+        end
+    end
+    
+    function renderText()
+    
+        render.selectRenderTarget("afkscreen")
+        render.clear(Color(0, 0, 0, 0))
+        
+        render.setRenderTargetTexture("afkscreen0")
+        render.drawTexturedRect(0, 0, 1024, 1024)
+        
+        local offset = -averageOffset
+        
+        for j=1, #self.Data do
+            if self.Data[j].colorMode == 1 then
+                render.setColor(self.Data[j].color)
+            elseif self.Data[j].colorMode == 2 then
+                render.setColor(Color(math.cos(timer.systime() * self.Data[j].colorSpeed) * 360, 1, 1):hsvToRGB())
+            end
+            
+            render.setFont(self.Data[j].font)
+            
+            for k=1, #self.Data[j].text do
+                offset = offset + getOffset(j, k)
+                if self.Data[j].colorMode == 3 then
+                    local avg = self.Data[j]._Avgs[k]
+                    local indexSpace = 0
+                    local indexText = 1
+                    local SymbolSpace = 0
+                    local xOffset = 0
+                    local uChar, uCharNum;
+                    while indexText <= #self.Data[j].text[k] do
+                        indexSpace = indexSpace+1
+                        xOffset = xOffset + SymbolSpace
+                        uChar, indexText, uCharNum = getUChar(self.Data[j].text[k], indexText)
+                        SymbolSpace = getSymbolSpace(uCharNum, self.Data[j])
+                        xOffset = xOffset + SymbolSpace
+                        render.setColor(Color(timer.systime() * self.Data[j].colorSpeed * 360 * self.Data[j]._rainbowReverse + indexSpace*self.Data[j].rainbowColorSpace, 1, 1):hsvToRGB())
+                        render.drawSimpleText(_endX - avg + xOffset, offset + _endY, uChar, self.Data[j].align, TEXT_ALIGN.CENTER)
+                    end
+                else
+                    render.drawSimpleText(_endX, offset + _endY, self.Data[j].text[k], self.Data[j].align, TEXT_ALIGN.CENTER)
+                end
+            end
+        end
+    end
+    
+    
+    hook.add("renderoffscreen", "", function()
+        if !isCreated then
+            renderBold()
+        end
+        
+        if !isStatic or !isCreated then
+            renderText()
+        end
+        
+        isCreated = true
+    end)
+    
+    
+    
+    
+    hook.add("think", "", function()
+        local eyeAngle;
+        if self.Mode == 1 then
+            local d = (-player():getForward()):getNormalized()
+            eyeAngle = d:getAngle()  + self.InitAngle
+        elseif self.Mode == 2 then
+            local d = (player():getEyePos() - pos()):getNormalized()
+            eyeAngle = d:getAngle()  + self.InitAngle
+        elseif self.Mode==3 or self.Mode==4 then
+            eyeAngle = self.Target:getAngles() + self.InitAngle
+        end
+        
+        //print(d)
+        
+        if (self.Mode==1 or self.Mode==2) and self.IsStaticVertical then
+            eyeAngle:setP(90)
+        end
+        
+        if self.isRotate then
+            eyeAngle = eyeAngle + Angle(0,  timer.systime()*self.rotateSpeed, 0)
+        end
+        
+        if self.swayDegreesMax != 0 then
+            local quat1 = eyeAngle:getQuaternion()
+            local quat2 = (Vector(0,0,1)):getQuaternionFromAxis( math.cos(timer.systime()*self.swaySpeed)*self.swayDegreesMax )
+            local quat4 = quat1 * quat2
+            eyeAngle = quat4:getEulerAngle()
+            
+        end
+        
+        //text:setAngles(eyeAngle + Angle(90, 0, math.cos(timer.systime()*rotateSpeed)*70))
+        //text:setAngles(eyeAngle + Angle(90, 90, 90))
+        
+        if self.isParentPos or isFirstParentPos then 
+            isFirstParentPos = false
+            text:setPos(pos()) 
+            if self.IsDoubleData then text2:setPos(pos()) end 
+        end
+        if self.isParentAngle or isFirstParentAngle then 
+            isFirstParentAngle = false
+            text:setAngles(eyeAngle) 
+            if self.IsDoubleData then text2:setAngles(eyeAngle + Angle(0,0,180)) end
+        end
+    end)
+end

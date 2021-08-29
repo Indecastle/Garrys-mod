@@ -3,7 +3,7 @@
 --@client
 
 local AFK = chip()
-AFK = find.playersByName("Mark")[1]
+//AFK = find.playersByName("Mark")[1]
 /*AFK = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -13,14 +13,18 @@ end)[1]*/
 
 local Data = {
     {   text={"Я люблю",
-				"лизать пизду",
-			}, 
+                "лизать пизду",
+            }, 
         //font = "Courier New",
         fontSize=100, 
         fontBold=5000, 
-        bold=false,
-        //color=Color(200,50,0),
-        colorSpeed = 0.5,
+        margin=50,
+        bold=true,
+        colorMode = 3,
+        rainbowSpace = 35,
+        rainbowColorSpace = 20,
+        rainbowReverse = false,
+        colorSpeed = 0.3,
 
     },
 /*    {   text={"Люблю",}, 
@@ -229,6 +233,17 @@ function getUChar(text, index)
     return string.sub(text, index, index), index+1
 end
 
+function getULength(text)
+    local length = #text
+    for i=1, #text do
+        local a = string.byte(text, i, i)
+        if a == 208 or a == 209 then
+            length = length - 1
+        end
+    end
+    return length
+end
+
 function renderBold()
     render.selectRenderTarget("afkscreen0")
     render.clear(Color(0, 0, 0, 0))
@@ -241,15 +256,17 @@ function renderBold()
                 offset = offset + getOffset(j, k)
                 if Data[j].bold then
                     if Data[j].colorMode == 3 then
-                        local avg = math.ceil(#Data[j].text[k] / 2)
-                        local index = 1
+                        local avg = (getULength(Data[j].text[k]) + 1) / 2
+                        local indexSpace = 0
+                        local indexText = 1
                         local uChar;
-                        for h=1, #Data[j].text[k] do
-                            uChar, index = getUChar(Data[j].text[k], index)
-                            render.drawSimpleText(_startX - avg*Data[j].rainbowSpace + h*Data[j].rainbowSpace + i*shadowOffset, offset + _startY - i*shadowOffset, Data[j].text[k][h], Data[j].align, TEXT_ALIGN.CENTER)
+                        while indexText <= #Data[j].text[k]  do
+                            indexSpace = indexSpace+1
+                            uChar, indexText = getUChar(Data[j].text[k], indexText)
+                            render.drawSimpleText(_startX - avg*Data[j].rainbowSpace + indexSpace*Data[j].rainbowSpace + i*shadowOffset, offset + _startY - i*shadowOffset, uChar, Data[j].align, TEXT_ALIGN.CENTER)
                         end
                     else
-                        render.drawSimpleText(_startX + i*shadowOffset, offset + _startY - i*shadowOffset, uChar, Data[j].align, TEXT_ALIGN.CENTER)
+                        render.drawSimpleText(_startX + i*shadowOffset, offset + _startY - i*shadowOffset, Data[j].text[k], Data[j].align, TEXT_ALIGN.CENTER)
                     end
 
                 end
@@ -280,13 +297,15 @@ function renderText()
         for k=1, #Data[j].text do
             offset = offset + getOffset(j, k)
             if Data[j].colorMode == 3 then
-                local avg = math.ceil(#Data[j].text[k] / 2)
-                local index = 1
+                local avg = (getULength(Data[j].text[k]) + 1) / 2
+                local indexSpace = 0
+                local indexText = 1
                 local uChar;
-                for h=1, #Data[j].text[k] do
-                    uChar, index = getUChar(Data[j].text[k], index)
-                    render.setColor(Color(timer.systime() * Data[j].colorSpeed * 360 * Data[j]._rainbowReverse + h*Data[j].rainbowColorSpace, 1, 1):hsvToRGB())
-                    render.drawSimpleText(_endX - avg*Data[j].rainbowSpace + h*Data[j].rainbowSpace, offset + _endY, uChar, Data[j].align, TEXT_ALIGN.CENTER)
+                while indexText <= #Data[j].text[k] do
+                    indexSpace = indexSpace+1
+                    uChar, indexText = getUChar(Data[j].text[k], indexText)
+                    render.setColor(Color(timer.systime() * Data[j].colorSpeed * 360 * Data[j]._rainbowReverse + indexSpace*Data[j].rainbowColorSpace, 1, 1):hsvToRGB())
+                    render.drawSimpleText(_endX - avg*Data[j].rainbowSpace + indexSpace*Data[j].rainbowSpace, offset + _endY, uChar, Data[j].align, TEXT_ALIGN.CENTER)
                 end
             else
                 render.drawSimpleText(_endX, offset + _endY, Data[j].text[k], Data[j].align, TEXT_ALIGN.CENTER)

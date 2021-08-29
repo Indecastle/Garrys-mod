@@ -45,7 +45,7 @@ Q = Q2*Q1
 
 
 #H2:setAng( Q:toAngle() )
-V = rotationVector(Q1)
-An1 = V:toAngle()
+#V = rotationVector(Q1)
+#An1 = V:toAngle()
 An2 = Q:toAngle()
 holoAng(2, An2)

@@ -23,7 +23,7 @@ local changed = true
     hook.add("think", "", function()
         if permissionSatisfied then
             if input.isKeyDown(KEY.SPACE) then
-            jumping = !jumping
+                //jumping = !jumping
             
                 if player():isOnGround() then
                     concmd("+jump")
