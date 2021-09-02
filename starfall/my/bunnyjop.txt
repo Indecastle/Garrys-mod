@@ -6,7 +6,7 @@ local O = owner()
 local OO = player()
 local jumping = false
 local oldIsPressed = true
-
+local newIsPressed = true
 
 
 setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
@@ -22,7 +22,13 @@ local changed = true
 //if OO == O then
     hook.add("think", "", function()
         if permissionSatisfied then
-            if input.isKeyDown(KEY.SPACE) then
+            newIsPressed = input.isKeyDown(KEY.SPACE)
+            if oldIsPressed != newIsPressed then
+                changed = true
+            end
+            
+            
+            if newIsPressed then
                 //jumping = !jumping
             
                 if player():isOnGround() then
