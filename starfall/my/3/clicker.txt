@@ -1,0 +1,75 @@
+--@name Clicker
+--@author Markiz
+--@client
+
+local O = owner()
+local OO = player()
+local jumping = false
+local oldIsPressed = true
+local newIsPressed = true
+
+
+setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+local permissionSatisfied = hasPermission("console.command")
+
+hook.add("permissionrequest", "", function()
+    permissionSatisfied = hasPermission("console.command")
+end)
+
+local myTimer = timer.curtime()
+local changed = true
+
+//if OO == O then
+    hook.add("think", "", function()
+        if permissionSatisfied then
+            newIsPressed = input.isKeyDown(KEY.SPACE)
+            if oldIsPressed != newIsPressed then
+                changed = true
+            end
+            
+            
+            if newIsPressed then
+                //jumping = !jumping
+            
+                if player():isOnGround() then
+                    concmd("+jump")
+                    if not changed and myTimer < timer.curtime() then
+                        myTimer = timer.curtime() + 0.01
+                        changed = true
+                    end
+                end
+                
+                /*if jumping then
+                    concmd("+jump")
+                else
+                    concmd("-jump")
+                end*/
+            end
+            
+            if changed and myTimer < timer.curtime() then
+                concmd("-jump")
+                changed = false
+            end
+            
+            /*jumping = !jumping
+            newIsPressed = input.isKeyDown(KEY.SPACE)
+            if oldIsPressed != newIsPressed then
+                oldIsPressed = newIsPressed
+                if !newIsPressed then
+                    concmd("-jump")
+                end
+            end
+            
+            if oldIsPressed then
+                if jumping then
+                    concmd("+jump")
+                else
+                    concmd("-jump")
+                end
+            end*/
+        end
+    end)
+    
+//end
+
+

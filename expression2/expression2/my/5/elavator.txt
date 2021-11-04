@@ -85,7 +85,7 @@ if(first() | duped() | dupefinished()) {
     LiftModel = "models/hunter/misc/lift2x2.mdl"
     Speed = 25
     Acceleration = 0.5
-    HeightLevel_ = 100
+    HeightLevel_ = HeightLevel != 0 ? HeightLevel : 100
     
     LevelTarget = 1
     Queue = array()

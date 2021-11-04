@@ -1,0 +1,91 @@
+@name Effect 0
+@persist [O E Target]:entity SoundIndex
+
+interval(50)
+
+if(first()) {
+    O = owner(), E = entity()
+    
+    Target = O
+    Target = findPlayerByName("Mark")
+    print(Target)
+    #runOnKeys(User, 1)
+}
+
+if(O:keyAttack2()){
+    local Effect = effect()
+    
+    local AimEntity = O:aimEntity()
+    local AimPos = O:aimPos()
+    
+    Effect:setEntity(AimEntity)
+    Effect:setMagnitude(5)
+    Effect:setScale(3)
+    Effect:setRadius(1)
+    Effect:setNormal(O:aimNormal())
+    
+    Effect:setFlags(5)
+    #Effect:setSurfaceProp(254)
+    #Effect:setDamageType(2^35 - 1)
+    
+    #Effect:setStart(hitPos)
+    Effect:setOrigin(AimPos + vec(0,0,50))    
+    
+    Effect:play("TeslaHitboxes")
+    
+    SoundIndex = (SoundIndex + 1) % 10
+    #AimEntity:soundPlay(SoundIndex, 2, "ambient/energy/zap" + randint(1,9) + ".wav")
+    AimEntity:soundPlay(SoundIndex, 2, "ambient/energy/spark" + randint(1,6) + ".wav")
+}
+
+#[
+effectData:setEntity(OO)
+    effectData:setMagnitude(5)
+    effectData:setScale(3)
+    effectData:setRadius(1)
+    effectData:setNormal(hitNormal)
+    
+    effectData:setFlags(5)
+    //effectData:setSurfaceProp(254)
+    //effectData:setDamageType(2^35 - 1)
+    
+    //effectData:setStart(hitPos)
+    effectData:setOrigin(hitPos + Vector(0,0,50))    
+    
+    
+    effectData:play("MuzzleFlash")
+]#
+
+## gunshotsplash
+## Explosion
+## WaterSurfaceExplosion
+## HunterDamage
+## HL1GaussReflect
+## HL1GaussWallPunchEnter
+## HL1GaussWallImpact2
+## HL1Gib
+## HL1ShellEject
+## cball_bounce
+## cball_explode
+## ManhackSparks
+## AntlionGib
+## RPGShotDown
+## BoltImpact
+## GunshipImpact
+##
+## balloon_pop
+
+
+## EjectBrass_9mm
+## EjectBrass_12Gauge
+## EjectBrass_57
+## EjectBrass_57
+
+
+## HL1GaussBeam_GMOD
+## StriderMuzzleFlash
+## AR2Tracer
+## PhyscannonImpact
+## ToolTracer
+
+

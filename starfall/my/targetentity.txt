@@ -79,7 +79,7 @@ if O == OO then
         
         net.receive("keyHandler", function (len, ply)
             local key = net.readInt(8)
-            if key == MOUSE.MOUSE4 then
+            if key == KEY.ALT then
                 func(key)
             end
         end)

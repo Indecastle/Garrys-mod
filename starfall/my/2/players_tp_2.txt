@@ -46,6 +46,14 @@ local textColor = Color(120, 30, 170)
 
 render.createRenderTarget("screen")
 
+
+//local tex = render.createMaterial("https://i.imgur.com/E1dXcX3.gif", function(_1,_2,w,h,layout) end, function() loaded = true end)
+//local cursorTex = material.createFromImage("https://img.icons8.com/ios/50/000000/cursor--v1.png","") 
+local cursorTex = render.createMaterial("https://i.imgur.com/9UtATPQ.gifg") 
+local cursor2Tex = material.createFromImage("icon16/cursor.png","") 
+// all default icons - https://wiki.facepunch.com/gmod/Silkicons
+// all default icons - https://files.facepunch.com/wiki/files/353/8d872d2846d452e.png
+
 local scr = chip():getLinkedComponents()[1]
 
 local cx, cy = nil, nil
@@ -83,7 +91,9 @@ function quota()
     return quotaAverage() / quotaMax()
 end
 
+
 local clk = false
+
 
 hook.add("inputPressed", "", function(btn)
     if btn != MOUSE.MOUSE1 then return end
@@ -92,6 +102,7 @@ hook.add("inputPressed", "", function(btn)
     if cx == nil or player():getEyeTrace().Entity ~= scr then return end
     clk = true
 end)
+
 
 hook.add("render", "", function()
     local w, h = render.getResolution()
@@ -108,11 +119,14 @@ hook.add("render", "", function()
     
     if cx == nil then return end
     
-    render.setColor(Color(255, 255, 255))
+    render.setColor(Color(255,255,255))
     //render.drawRoundedBox(8, cx / 2 - 2, cy / 2 - 2, 4, 4)
     --render.drawCircle(cx / 2, cy / 2, 3)
-    drawMouse(cx/2, cy/2, mouseScale)
+    //drawMouse(cx/2, cy/2, mouseScale)
+    render.setMaterial(cursorTex)
+    render.drawTexturedRect(cx/2,cy/2,12,12)
 end)
+
 
 hook.add("renderoffscreen", "", function()
     if quota() > 0.4 then return end

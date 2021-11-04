@@ -1,0 +1,22 @@
+--@name concmd my
+--@author Markiz
+--@client
+
+local O = owner()
+local OO = player()
+local jumping = false
+local oldIsPressed = true
+local newIsPressed = true
+
+
+setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+local permissionSatisfied = hasPermission("console.command")
+
+hook.add("permissionrequest", "", function()
+    permissionSatisfied = hasPermission("console.command")
+    
+    if permissionSatisfied then
+        concmd("say !build")
+    end
+end)
+

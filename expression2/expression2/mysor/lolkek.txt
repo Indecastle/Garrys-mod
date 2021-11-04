@@ -1,0 +1,34 @@
+@name lolkek
+@outputs  X Y G I Screen:wirelink LOL:array On Res
+@inputs
+@persist
+if(first()){
+    Res = 128
+    X= 0
+    Y= 0
+    I=1
+    Screen = entity():isWeldedTo():wirelink()
+    fileLoad("ds.txt")
+    On = 0
+    timer("lol", 2000)
+    runOnTick(1)
+    
+
+}
+
+if(clk("lol")){ 
+    On = 1 
+}
+
+if(On){
+    while(softQuota() < maxquota()*0.5 & perf()) {
+        if(X > Res-1){ X=0, Y++ }
+        if(Y > Res-1){ selfDestruct() }
+        #Screen["PixelX",number] = X
+        #Screen["PixelY",number] = Y
+        Screen[X+Y*Res] = rgb2digi(vec(toByte(fileRead()[I]),toByte(fileRead()[I+1]),toByte(fileRead()[I+2]))*2,0)
+        #Screen["PixelG",number] = rgb2digi(vec(toByte(BitMap[I]),toByte(BitMap[I+1]),toByte(BitMap[I+2]))*2,0)
+        I+=3
+        X++
+    }
+}

@@ -1,0 +1,22 @@
+@name RPG setPos missile
+@persist [O, T]:entity
+
+interval(50)
+
+if(first()) {
+    O = owner()
+     T = findPlayerByName("Use")
+    #T = findPlayerBySteamID("STEAM_0:1:206370676")
+    # T = O
+}
+
+findIncludePlayerProps(O)
+findInSphere(entity():pos(), 100)
+A = findToArray()
+for(I = 1, A:count()) {
+    E = A[I,entity]
+    if(E != O) {
+        V = E:vel():normalized()
+        E:setPos(T:pos() - (V * 300))
+    }
+}

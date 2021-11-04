@@ -1,0 +1,52 @@
+@name AutoDroid
+@inputs 
+@outputs 
+@persist CurHealth CurArmour Vector:vector
+@trigger
+
+runOnTick(10)
+findByClass("player")
+Target = findClosest(entity():pos())
+
+if(first()){
+    soundPlay(1,5,"hl1/fvox/automedic_on.wav")
+    CurHealth = owner():health()
+    CurArmour = owner():armor()
+}
+
+if(Target != owner()){
+soundPlay(1,1,"hl1/fvox/blip.wav")}
+
+if(owner():health() <= 0 && CurHealth != owner():health()){
+    soundPlay(1,5,"hl1/fvox/hev_critical_fail.wav")
+    CurHealth = owner():health()
+    timer("death", 4000)
+    
+}
+else {if(owner():health() <= 25 && CurHealth != owner():health()){
+    soundPlay(1,5,"hl1/fvox/near_death.wav")
+    CurHealth = owner():health()
+}
+else {if(owner():health() <= 45 && CurHealth != owner():health()){
+    soundPlay(1,5,"hl1/fvox/health_critical.wav")
+    CurHealth = owner():health()
+}
+else {if(owner():health() <= 75 && CurHealth != owner():health()){
+    soundPlay(1,5,"hl1/fvox/health_dropping.wav")
+    CurHealth = owner():health()
+}}}}
+
+if(owner():armor() == 0 && CurArmour != owner():armor()){
+    soundPlay(1,5,"hl1/fvox/armor_gone.wav")
+    CurArmour = owner():armor()
+}
+else {if(owner():armor() != CurArmour){
+CurArmour = owner():armor()}}
+
+if(clk("death")){
+selfDestructAll()}
+
+if(duped()){selfDestructAll()}
+
+Vector=owner():pos()-(entity():pos()-vec(sinr(curtime()*1)*100,cosr(curtime()*1)*100,105)) 
+applyForce($Vector*15+Vector)

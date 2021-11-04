@@ -1,0 +1,69 @@
+--@name GetPixel
+--@author 
+--@client
+
+
+render.createRenderTarget("screen")
+
+
+local cx, cy = nil, nil
+
+local bgColor = Color(14, 14, 14)
+
+function quota()
+    return quotaAverage() / quotaMax()
+end
+
+local clr;
+
+hook.add("render","",function()
+    local w, h = render.getResolution()
+    
+    render.setRenderTargetTexture("screen")
+    render.drawTexturedRect(0, 0, w, h)
+    
+    cx, cy = render.cursorPos(player())
+    
+    if cx then
+        cx = cx * 2
+        cy = cy * 2
+    end
+    
+    if cx == nil then return end
+    
+    render.setColor(Color(255, 255, 255))
+    render.drawCircle(cx / 2, cy / 2, 3)
+    
+    render.drawText(cx/2 + 10, cy/2 - 40, "cx: "..cx..", cy: "..cy)
+    render.drawText(cx/2 + 10, cy/2 - 20, "pixel color - "..tostring(clr))
+    
+    render.setColor(clr)
+    render.drawRect(cx/2 + 5, cy/2 + 10, 5, 5)
+end)
+
+
+local IsInit = true
+
+hook.add("renderoffscreen","",function()
+    if quota() > 0.2 then return end
+
+    render.selectRenderTarget("screen")
+
+    local w, h = render.getResolution()
+    
+    if IsInit then
+        IsInit = false
+        render.clear(bgColor)
+        
+        render.setColor(Color(255,123,75))
+        render.drawRoundedBox(0,0,0,512,512)
+        
+        render.setColor(Color(100,200,75))
+        render.drawRoundedBox(100,400,600,200,200)
+    end
+    
+    render.capturePixels()
+    clr = render.readPixel( cx or 0, cy or 0 )
+
+    --hook.remove("renderoffscreen","")
+end)

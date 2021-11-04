@@ -1,0 +1,59 @@
+@name Lightning
+@inputs 
+@outputs [O E Target]:entity Effect:effect
+@persist 
+@trigger 
+
+
+interval(500)
+
+if(first()) {
+    O = owner(), E = entity()
+    
+    Target = owner()
+    Target = findPlayerByName("Mark")
+    print(Target)
+    
+    Effect = effect()
+    
+    Effect:setScale(1)
+    Effect:setMagnitude(1)
+    Effect:setScale(3)
+    Effect:setRadius(1)
+    Effect:setEntity(Target)
+    
+    #runOnKeys(Target, 1)
+}
+
+Target = O:aimEntity()
+
+if(O:keyAttack2() & !Target:isWorld() | 1){
+    #Target:shootTo(Target:shootPos(),Target:aimPos()-Target:shootPos(),0,1999999999999990,0,"HL1GaussWallImpact2")
+    
+    
+    
+    
+    local Pos = (Target:isPlayer() ? Target:shootPos() : Target:pos())
+    
+    Effect:setStart(Pos)
+    Effect:setOrigin(Pos + vec(0,0,0))    
+    Effect:setEntity(Target)
+    
+    Effect:play("TeslaHitboxes")
+    
+    #[
+        Effect:setStart(OO:getShootPos())
+        Effect:setOrigin(OO:getShootPos())
+        Effect:setScale(1)
+        Effect:setMagnitude(100)
+        Effect:setScale(3)
+        Effect:setRadius(10)
+        Effect:setEntity(OO)
+    ]#
+
+    Target:soundPlay("1", 2, "ambient/energy/zap" + randint(1,9) + ".wav")
+    soundVolume("1", 0.5)
+    
+    # //sound = sounds.create(target, "ambient/energy/zap"..math.random(1,9)..".wav")
+}
+

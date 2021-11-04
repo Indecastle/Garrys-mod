@@ -1,0 +1,46 @@
+@name effect
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+interval(500)
+
+local VecNormal = owner():aimNormal()
+local AdditionalAngle = ang(0, 0, 0)
+VecNormal = (VecNormal:toAngle() + AdditionalAngle):forward()
+owner():effectSpawn("AR2Tracer", owner():aimPos(), owner():shootPos() + vec(0,0,-10), VecNormal, 1)
+
+## gunshotsplash
+## Explosion
+## WaterSurfaceExplosion
+## HunterDamage
+## HL1GaussReflect
+## HL1GaussWallPunchEnter
+## HL1GaussWallImpact2
+## HL1Gib
+## HL1ShellEject
+## cball_bounce
+## cball_explode
+## ManhackSparks
+## AntlionGib
+## RPGShotDown
+## BoltImpact
+## GunshipImpact
+##
+## balloon_pop
+
+
+## EjectBrass_9mm
+## EjectBrass_12Gauge
+## EjectBrass_57
+## EjectBrass_57
+
+
+## HL1GaussBeam_GMOD
+## StriderMuzzleFlash
+## AR2Tracer
+## PhyscannonImpact
+## ToolTracer
+
+

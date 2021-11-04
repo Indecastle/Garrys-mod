@@ -101,6 +101,12 @@ LongKirilicSymbols = {
     208173, // Э
     208174, // Ю
     208175, // Я
+
+    208182, // ж
+    209132, // ф
+    209136, // ш
+    209137, // щ
+    209142, // ю
 }
 
 function checkShortSymbols(c)
@@ -117,29 +123,32 @@ end
 function Text3D2D:initialize(data, vars)
     self.Data = data
     self.Vars = vars
-
-    table.foreachi(vars, function(i, v) 
-        if v.Target == nil then v.Target = chip() end // 1, 2, 3, 4
-        if v.Mode == nil then v.Mode = 2 end // 1, 2, 3, 4
-        if v.isRotate == nil then v.isRotate = false end
-        if v.rotateSpeed == nil then v.rotateSpeed = 100 end
-        if v.swaySpeed == nil then v.swaySpeed = 2 end
-        if v.swayDegreesMax == nil then v.swayDegreesMax = 0 end
-        
-        if v.IsStaticVertical == nil then v.IsStaticVertical = false end
-        if v.IsDoubleData == nil then v.IsDoubleData = true end
-        if v.isHideTarget == nil then v.isHideTarget = true end
-        
-        if v.shadowIterations == nil then v.shadowIterations = 10 end
-        if v.shadowAlphaReverce == nil then v.shadowAlphaReverce = 0 end
-        if v.shadowOffset == nil then v.shadowOffset = 1 end
-        
-        if v.textSize == nil then v.textSize = 200 end
-        if v.DataOffsetZ == nil then v.DataOffsetZ = 34 end
-        
-        if v.isParentPos == nil then v.isParentPos = true end
-        if v.isParentAngle == nil then v.isParentAngle = true end
-    end)
+    
+    
+    // ======================================================================
+    if vars.Target == nil then vars.Target = chip() end // 1, 2, 3, 4
+    if vars.Mode == nil then vars.Mode = 2 end // 1, 2, 3, 4
+    if vars.isRotate == nil then vars.isRotate = false end
+    if vars.rotateSpeed == nil then vars.rotateSpeed = 100 end
+    if vars.swaySpeed == nil then vars.swaySpeed = 2 end
+    if vars.swayDegreesMax == nil then vars.swayDegreesMax = 0 end
+    
+    if vars.IsStaticVertical == nil then vars.IsStaticVertical = false end
+    if vars.IsDoubleData == nil then vars.IsDoubleData = true end
+    if vars.isHideTarget == nil then vars.isHideTarget = true end
+    
+    if vars.shadowIterations == nil then vars.shadowIterations = 10 end
+    if vars.shadowAlphaReverce == nil then vars.shadowAlphaReverce = 0 end
+    if vars.shadowOffset == nil then vars.shadowOffset = 1 end
+    
+    if vars.textSize == nil then vars.textSize = 200 end
+    if vars.DataOffsetZ == nil then vars.DataOffsetZ = 34 end
+    
+    if vars.isParentPos == nil then vars.isParentPos = true end
+    if vars.isParentAngle == nil then vars.isParentAngle = true end
+    
+    if vars.alphaGlobal == nil then vars.alphaGlobal = 255 end
+    // ======================================================================
     
     local keys = table.getKeys(vars)
     
@@ -229,7 +238,8 @@ function Text3D2D:run()
         return xOffset / 2
     end
     
-    table.foreachi(self.Data, function(i, V)
+    for i, V in ipairs(self.Data) do
+    
         if V.fontSize == nil then V.fontSize = 100 end
         if V.font == nil then V.font = "Roboto" end
         if V.fontBold == nil then V.fontBold = 1000 end
@@ -244,21 +254,15 @@ function Text3D2D:run()
         if V.colorSpeed == nil then V.colorSpeed = 0.3 end
         if V.colorMode == nil then V.colorMode = 1 end // 1, 2, 3
         
-        if V.rainbowSpace == nil then V.rainbowSpace = 35 end
+        if V.alpha == nil then V.alpha = self.Vars.alphaGlobal end
+        
         if V.rainbowColorSpace == nil then V.rainbowColorSpace = 10 end
         if V.rainbowReverse == nil then V.rainbowReverse = false end
         V._rainbowReverse = (V.rainbowReverse and 1 or -1)
         
-        if V.symbolSpaceLevel1 == nil and V.symbolLongSpace == nil and V.symbolOtherSpace == nil then
-            V._isAutoSymbolSpace = true
-            V.symbolSpaceLevel1 = V.fontSize / 7
-            V.symbolLongSpace = V.fontSize / 3
-            V.symbolOtherSpace = V.fontSize / 3.3
-        end
-        if V.symbolSpaceLevel1 == nil then V.symbolSpaceLevel1 = 10 end
-        if V.symbolLongSpace == nil then V.symbolLongSpace = 20 end
-        if V.symbolOtherSpace == nil then V.symbolOtherSpace = 15 end
-        
+        if V.symbolSpaceLevel1 == nil then V.symbolSpaceLevel1 = V.fontSize / 6 end
+        if V.symbolLongSpace == nil then V.symbolLongSpace = V.fontSize / 3 end
+        if V.symbolOtherSpace == nil then V.symbolOtherSpace = V.fontSize / 3.3 end
         
         if V.colorMode == 3 then
             V._Avgs = {}
@@ -266,7 +270,8 @@ function Text3D2D:run()
                 V._Avgs[i] = getAvg(V, i)
             end
         end
-    end)
+        
+    end
     
     
     //Data[1].offset = 0
@@ -373,9 +378,9 @@ function Text3D2D:run()
         
         for j=1, #self.Data do
             if self.Data[j].colorMode == 1 then
-                render.setColor(self.Data[j].color)
+                render.setColor(self.Data[j].color:setA(self.Data[j].alpha))
             elseif self.Data[j].colorMode == 2 then
-                render.setColor(Color(math.cos(timer.systime() * self.Data[j].colorSpeed) * 360, 1, 1):hsvToRGB())
+                render.setColor(Color(math.cos(timer.systime() * self.Data[j].colorSpeed) * 360, 1, 1):hsvToRGB():setA(self.Data[j].alpha))
             end
             
             render.setFont(self.Data[j].font)
@@ -395,7 +400,7 @@ function Text3D2D:run()
                         uChar, indexText, uCharNum = getUChar(self.Data[j].text[k], indexText)
                         SymbolSpace = getSymbolSpace(uCharNum, self.Data[j])
                         xOffset = xOffset + SymbolSpace
-                        render.setColor(Color(timer.systime() * self.Data[j].colorSpeed * 360 * self.Data[j]._rainbowReverse + indexSpace*self.Data[j].rainbowColorSpace, 1, 1):hsvToRGB())
+                        render.setColor(Color(timer.systime() * self.Data[j].colorSpeed * 360 * self.Data[j]._rainbowReverse + indexSpace*self.Data[j].rainbowColorSpace, 1, 1):hsvToRGB():setA(self.Data[j].alpha))
                         render.drawSimpleText(_endX - avg + xOffset, offset + _endY, uChar, self.Data[j].align, TEXT_ALIGN.CENTER)
                     end
                 else

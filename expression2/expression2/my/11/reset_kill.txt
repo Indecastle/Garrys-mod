@@ -1,0 +1,36 @@
+@name Reset kill
+@inputs 
+@outputs [O Target]:entity Pos:vector CheckAlive
+@persist 
+@trigger 
+
+if (first()) {
+    
+    O = owner()
+    Target = O
+    #Target = findPlayerByName("")
+
+} 
+
+IsAlive = O:isAlive()
+
+if (!IsAlive) {
+    CheckAlive = 1
+}
+
+if (CheckAlive) {
+    if (changed(IsAlive) & IsAlive) {
+        O:setPos(Pos)
+        CheckAlive = 0
+    }
+}
+
+if (!CheckAlive) {
+    Pos = O:pos()
+}
+
+    
+
+
+
+interval(100)

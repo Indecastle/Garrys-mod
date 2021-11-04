@@ -1,0 +1,112 @@
+@name e2-remover
+@persist [E O Player]:entity [Find Players Names]:array Index Starfall
+@persist [Client Steam]:string Num On
+
+interval(100)
+
+if(first())
+{
+    #noDuplications()
+    
+    E = entity()
+    O = owner()
+    
+    Players = players()
+    
+    #DERMA
+    
+    Client = "e2remover"
+    
+    dPanel(Client,vec2(0,0),vec2(200,230))
+    dTabHolder("Holder",Client,vec2(10,30),vec2(180,190))
+    
+	dTab("Disclimer","Holder")
+	
+		dLabel("   ","Disclimer",vec2(15,30))
+		dLabel("  ","Disclimer",vec2(50,45))
+		
+		dLabel("   :)","Disclimer",vec2(30,75))
+		
+		dLabel("[] yourmomahegao","Disclimer",vec2(15,125))
+	
+    dTab("Main","Holder")
+    
+        dDropBox("Choose a player","Main",vec2(15,15),137.5)
+		dButton("Delete","Main",vec2(10,115),vec2(145,25))
+	
+    
+    dShow(Client,1)
+    
+        for(I = 1, players():count(), 1)
+        {
+            Name = Players[I,entity]:name()
+            Names[I, string] = I + ". " + Name
+        }
+
+                dArray("Choose a player", Names)
+    
+}
+
+for(I = 1, players():count())
+{
+    if(Players[I,entity]:steamID() == Steam)
+    {
+        Index = I
+    }
+}
+    
+    if(Starfall == 1)
+    {
+        findByClass("starfall_processor")
+    }
+    else
+    {
+        findByClass("gmod_wire_expression2")
+    }
+    
+    Find = findToArray()
+
+#DERMA
+
+   if(changed(O:isTyping()) & O:isTyping())
+{
+    dShow(Client,1)
+}
+   if(changed(O:isTyping()) & !O:isTyping())
+{
+    dShow(Client,0)
+}
+     
+
+if(changed(dSval("Choose a player")))
+{
+        
+    if(players():count() <= 9)
+    {
+    Num = dSval("Choose a player"):left(1):toNumber()
+    }
+        
+    if(players():count() > 9)
+    {
+    Num = dSval("Choose a player"):left(2):toNumber()
+    }
+    
+    
+        
+}
+
+if(dClk("Delete")) { On = !On }
+
+if(On)
+{
+    for(I = 1, Find:count())
+    {
+        if(Find[I,entity]:owner() == Players[Num,entity] & Players[Num,entity]:isValid())
+        {    
+        Find[I,entity]:remove()
+        printColor(vec(100,255,100), Find[I,entity]:type(), vec(255), " was deleted.", vec(255), " Owner: ", vec(255,100,100), Players[Num,entity]:name())
+        }
+    }
+
+}
+

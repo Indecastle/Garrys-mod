@@ -1,0 +1,54 @@
+@name Trees?
+@inputs 
+@outputs 
+@persist I Height LeafPlanes WidthLimit HeightLimit MinSize MaxSize Models:array
+@trigger 
+function void beamTo(Index,StartPos:vector,EndPos:vector)
+{
+    holoCreate(Index,(StartPos + EndPos) / 2)
+    holoModel(Index,"hqcylinder")
+    holoScale(Index,vec(1,1,StartPos:distance(EndPos) / 12))
+    holoAng(Index,(EndPos - StartPos):toAngle() + ang(90,0,0))
+}
+if(first() | dupefinished())
+{
+    #print(holoMaxAmount())
+    Height = 200
+    holoCreate(1,entity():toWorld(vec(0,0,Height / 2)))
+    holoModel(1,"hqcylinder")
+    holoScale(1,vec(Height / 96,Height / 96,Height / 12))
+    holoMaterial(1,"models/props_foliage/oak_tree01")
+    holoParent(1,entity())
+    
+    LeafPlanes = 15
+    WidthLimit = Height / 2
+    HeightLimit = Height / 3
+    MinSize = Height / 64
+    MaxSize = Height / 32
+    I = 0
+    
+    Models = array("hqsphere","sphere","icosphere","icosphere2","icosphere3")
+}
+while(perf() & I < LeafPlanes)
+{
+    I += 1
+    Yaw = random(-180,180)
+    YawDistance = random() * WidthLimit
+    Position = vec(sin(Yaw) * YawDistance,cos(Yaw) * YawDistance,sin(random(-180,180)) * random() * HeightLimit)
+    if(Position:z() < -HeightLimit * (3/4) | (Position:x()^2 + Position:y()^2)^0.5 > WidthLimit * (3/4))
+    {
+        BeamStart = entity():toWorld(Position + vec(0,0,Height))
+        BeamEnd = entity():toWorld(vec(0,0,(Height + Position:z()) - random(Height / 8,Height / 4)))
+        beamTo(I + 1 + LeafPlanes,BeamStart,BeamEnd)
+        holoParent(I + 1 + LeafPlanes,1)
+        holoMaterial(I + 1 + LeafPlanes,"models/props_foliage/oak_tree01")
+        holoScale(I + 1 + LeafPlanes,vec(Height / 220,Height / 220,holoScale(I + 1 + LeafPlanes):z()))
+    }
+    holoCreate(I + 1,entity():toWorld(Position + vec(0,0,Height)))
+    holoScale(I + 1,random(MinSize,MaxSize) * vec(1,1,1))
+    holoModel(I + 1,Models[random(1,Models:count() + 1),string])
+    holoMaterial(I + 1,"phoenix_storms/ps_grass")
+    holoAng(I + 1,ang(randvec(-180,180)))
+    holoParent(I + 1,1)
+    holoAlpha(I + 1,250)
+}

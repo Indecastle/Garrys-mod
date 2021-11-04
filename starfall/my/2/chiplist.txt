@@ -30,24 +30,28 @@ function update()
     e2 = {}
     sf = {}
     
-    for i = 1, #me2 do
-        local c = me2[i]
-        if not c:isValid() then continue end
-        e2[#e2 + 1] = {
-            name = c:getChipName(),
-            owner = c:getOwner() and c:getOwner():getName() or "nil"
-        }
-    end
+    try(function()
     
-    for i = 1, #msf do
-        local c = msf[i]
-        if not c:isValid() then continue end
-        sf[#sf + 1] = {
-            name = c:getChipName(),
-            author = c:getChipAuthor() or "nil",
-            owner = c:getOwner() and c:getOwner():getName() or "nil"
-        }
-    end
+        for i = 1, #me2 do
+            local c = me2[i]
+            if not c:isValid() then continue end
+            e2[#e2 + 1] = {
+                name = c:getChipName(),
+                owner = c:getOwner() and c:getOwner():getName() or "nil"
+            }
+        end
+        
+        for i = 1, #msf do
+            local c = msf[i]
+            if not c:isValid() then continue end
+            sf[#sf + 1] = {
+                name = c:getChipName(),
+                author = c:getChipAuthor() or "nil",
+                owner = c:getOwner() and c:getOwner():getName() or "nil"
+            }
+        end
+        
+    end, function() end)
 end
 
 timer.create("Updater", 2, 0, update)

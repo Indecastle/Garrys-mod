@@ -1,0 +1,63 @@
+@name Ragdoll shock
+@outputs Target:entity
+@persist [O E Target]:entity Radius SoundIndex
+
+interval(50)
+
+if(first()) {
+    O = owner(), E = entity()
+    
+    Radius = 200
+    
+    Target = O
+    Target = findPlayerByName("Mark")
+    print(Target)
+    #runOnKeys(User, 1)
+    
+    timer("shok", 10)
+    
+    findExcludeEntity(O)
+    
+    function void shockEffect(Target:entity) {
+        local Effect = effect()
+        
+        Effect:setEntity(Target)
+        Effect:setMagnitude(10)
+        #Effect:setScale(3)
+        #Effect:setRadius(1)
+        #Effect:setNormal(O:aimNormal())
+        
+        #Effect:setFlags(5)
+        #Effect:setSurfaceProp(254)
+        #Effect:setDamageType(2^35 - 1)
+        
+        #Effect:setStart(hitPos)
+        #Effect:setOrigin(AimPos + vec(0,0,50))    
+        
+        Effect:play("TeslaHitboxes")
+        
+        SoundIndex = (SoundIndex + 1) % 10
+        #Target:soundPlay(SoundIndex, 2, "ambient/energy/zap" + randint(1,9) + ".wav")
+        #Target:soundPlay(SoundIndex, 2, "ambient/energy/spark" + randint(1,6) + ".wav")
+        Target:soundPlay(SoundIndex, 2, "ambient/energy/spark" + randint(2,4) + ".wav")
+    }
+    
+    function void shockSlap(Target:entity) {
+        Target:setVel(200 * randvec())
+    }
+}
+
+
+if(clk("shok")) {
+    findIncludeClass("prop_ragdoll")
+    findIncludeClass("player")
+    findInSphere(O:pos(), Radius)
+    
+    Target = findClosest(O:pos())
+    shockEffect(Target)
+    shockSlap(Target)
+    
+    timer("shok", 500)
+}
+
+
