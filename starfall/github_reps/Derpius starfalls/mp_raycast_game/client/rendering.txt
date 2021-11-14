@@ -1,0 +1,221 @@
+resX, resY = 0, 0
+
+-- Raycasting
+function raycast(start, rA)
+    local mX, mY, mI, rX, rY, xOff, yOff, timesMissed
+    local sX, sY = start.x, start.y
+    
+    -- Hit data
+    local horizRay = {
+        hit = false,
+        hitPos = nil,
+        hitNorm = nil,
+        dist = nil
+    }
+    local vertRay = {
+        hit = false,
+        hitPos = nil,
+        hitNorm = nil,
+        dist = nil
+    }
+    
+    -- Horizontal lines
+    timesMissed = 0
+    local aTan = -1/math.tan(rA)
+    if rA > PI then -- Looking up
+        -- Initial intersection with line
+        rY = math.floor(sY/mapS)*mapS - 0.0001
+        rX = (sY - rY)*aTan + sX
+        
+        -- Offsets
+        yOff = -mapS
+        xOff = -yOff * aTan
+    elseif rA < PI then -- Looking down
+        -- Initial intersection with line
+        rY = math.floor(sY/mapS)*mapS + mapS
+        rX = (sY - rY)*aTan + sX
+        
+        -- Offsets
+        yOff = mapS
+        xOff = -yOff * aTan
+    elseif rA == 0 or rA == PI then timesMissed = maxCasts end -- Straight left or right
+    
+    while timesMissed < maxCasts do
+        mX = math.floor(rX/mapS)
+        mY = math.floor(rY/mapS)
+        mI = mY*mapX + mX
+        
+        -- If wall hit, then break
+        if mI > 0 and mI < mapX * mapY and map[mI + 1] == 1 then
+            horizRay.hit = true
+            horizRay.hitPos = {x = rX, y = rY}
+            horizRay.hitNorm = {x = 0, y = rA > PI and -1 or 1}
+            horizRay.dist = math.sqrt((rX - sX)^2 + (rY - sY)^2)
+            break
+        else
+            rX, rY = rX + xOff, rY + yOff
+            timesMissed = timesMissed + 1
+        end
+    end
+    
+    -- Vertical lines
+    timesMissed = 0
+    local nTan = -math.tan(rA)
+    if rA > PI/2 and rA < (3*PI)/2 then -- Looking left
+        -- Initial intersection with line
+        rX = math.floor(sX/mapS)*mapS - 0.0001
+        rY = (sX - rX)*nTan + sY
+        
+        -- Offsets
+        xOff = -mapS
+        yOff = -xOff * nTan
+    elseif rA < PI/2 or rA > (3*PI)/2 then -- Looking right
+        -- Initial intersection with line
+        rX = math.floor(sX/mapS)*mapS + mapS
+        rY = (sX - rX)*nTan + sY
+        
+        -- Offsets
+        xOff = mapS
+        yOff = -xOff * nTan
+    elseif rA == 0 or rA == PI then timesMissed = maxCasts end -- Straight up or down
+    
+    while timesMissed < maxCasts do
+        mX = math.floor(rX/mapS)
+        mY = math.floor(rY/mapS)
+        mI = mY*mapX + mX
+        
+        -- If wall hit, then break
+        if mI > 0 and mI < mapX * mapY and map[mI + 1] == 1 then
+            vertRay.hit = true
+            vertRay.hitPos = {x = rX, y = rY}
+            vertRay.hitNorm = {x = (rA > PI/2 and rA < (3*PI)/2) and 1 or -1, y = 0}
+            vertRay.dist = math.sqrt((rX - sX)^2 + (rY - sY)^2)
+            break
+        else
+            rX, rY = rX + xOff, rY + yOff
+            timesMissed = timesMissed + 1
+        end
+    end
+    
+    if horizRay.hit and vertRay.hit then
+        return horizRay.dist < vertRay.dist and horizRay or vertRay
+    elseif horizRay.hit then
+        return horizRay
+    else
+        return vertRay
+    end
+end
+
+-- Rendering
+function drawRays3D()
+    -- Calc the start ray angle
+    local rA = localPlayer.ang - DEGREE*(FOV/2)
+    if rA < 0 then rA = rA + 2*PI
+    elseif rA > 2*PI then rA = rA - 2*PI end
+    
+    -- Create a sorted list of players to render
+    local plrIDLookup = {}
+    local plrDists = {}
+    for k, v in pairs(players) do
+        if k == player() then continue end
+        if not AABBBetweenAngles(
+            {pos = {x = v.pos.x - localPlayer.pos.x, y = -(v.pos.y - localPlayer.pos.y)}, half = {x = localPlayer.size/2, y = localPlayer.size/2}},
+            normaliseAngle(localPlayer.ang - (FOV/2)*DEGREE),
+            normaliseAngle(localPlayer.ang + (FOV/2)*DEGREE)
+        ) then continue end
+        
+        local distToPlr = math.sqrt((v.pos.x - localPlayer.pos.x)^2 + (v.pos.y - localPlayer.pos.y)^2)
+        if distToPlr < math.sqrt(2 * localPlayer.size^2) then continue end
+        plrIDLookup[distToPlr] = k
+        plrDists[#plrDists + 1] = distToPlr
+    end
+    table.sortDesc(plrDists)
+    
+    for r = 1, RAYS do
+        -- Cast a ray for this degree increment
+        local ray = raycast(localPlayer.pos, rA)
+        if not ray.hit then continue end
+        
+        -- Calc ang offset for correcting fisheye
+        local aOff = localPlayer.ang - rA
+        if aOff < 0 then aOff = aOff + 2*PI
+        elseif aOff > 2*PI then aOff = aOff - 2*PI end
+        local flattenedDist = ray.dist*math.cos(aOff)
+        
+        -- Calc and draw a rectangle representing this ray
+        local lineH = mapS*resY/flattenedDist
+        if lineH > resY then lineH = resY end
+        
+        local shadow = math.clamp(LIGHT/(flattenedDist^LIGHTFALLOFF), 0, 1) -- Quick and easy shadow calc based on distance
+        render.setRGBA(100 * shadow, 255 * shadow, 100 * shadow, 255)
+        render.drawRect(resX/RAYS*(r - 1), (resY - lineH)/2, resX/RAYS, lineH)
+        
+        -- Loop through the players to render and see if they're in the ray's path
+        local rayDists = {}
+        local colourLookup = {}
+        
+        for i = 1, #plrDists do
+            if plrDists[i] > ray.dist then continue end
+            
+            local plr = players[plrIDLookup[plrDists[i]]]
+            
+            local hit = intersectSegment(
+                {pos = {x = plr.pos.x, y = plr.pos.y}, half = {x = localPlayer.size/2, y = localPlayer.size/2}},
+                {x = localPlayer.pos.x, y = localPlayer.pos.y},
+                {x = ray.hitPos.x - localPlayer.pos.x, y = ray.hitPos.y - localPlayer.pos.y}
+            )
+            
+            if not hit then continue end
+            
+            rayDists[#rayDists + 1] = math.sqrt((hit.pos.x - localPlayer.pos.x)^2 + (hit.pos.y - localPlayer.pos.y)^2)*math.cos(aOff)
+            colourLookup[rayDists[#rayDists]] = plr.colour
+        end
+        
+        -- Draw the closest player in that ray
+        if #rayDists > 0 then
+            table.sort(rayDists)
+            
+            local rayDist = rayDists[1]
+            lineH = mapS*resY/rayDist
+            if lineH > resY then lineH = resY end
+            
+            local shadow = math.clamp(LIGHT/(rayDist^LIGHTFALLOFF), 0, 1)
+            render.setRGBA(colourLookup[rayDist][1] * shadow, colourLookup[rayDist][2] * shadow, colourLookup[rayDist][3] * shadow, 255)
+            render.drawRect(resX/RAYS*(r - 1), (resY - lineH)/2 + lineH*0.5, resX/RAYS, lineH*0.5)
+        end
+        
+        -- Offset the ray angle
+        rA = rA + DEGREE*(FOV/RAYS)
+        if rA < 0 then rA = rA + 2*PI
+        elseif rA > 2*PI then rA = rA - 2*PI end
+    end
+end
+
+-- Frame init
+function initMap()
+    local xOff, yOff
+    for y = 0, mapY - 1 do
+        for x = 0, mapX - 1 do
+            if map[y * mapX + x + 1] == 1 then
+                render.setColor(Color(200, 200, 200))
+            else
+                render.setColor(Color(30, 30, 30))
+            end
+            
+            xOff, yOff = x * mapS, y * mapS
+            
+            render.drawRect(xOff, yOff, mapS, mapS)
+        end
+    end
+end
+
+function initDisp()
+    -- Get the display resolution
+    resX, resY = render.getResolution()
+    
+    -- Draw floor and ceiling
+    render.setColor(Color(10, 150, 255))
+    render.drawRect(0, 0, resX, resY / 2)
+    render.setColor(Color(100, 100, 100))
+    render.drawRect(0, resY / 2, resX, resY / 2)
+end

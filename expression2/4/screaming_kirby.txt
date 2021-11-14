@@ -1,0 +1,64 @@
+@name Screaming Kirby
+@persist Ent:entity Playable
+@model models/sprops/geometry/sphere_24.mdl
+ 
+if(first()) {
+    Ent = entity()
+    #Ent:removeNoCollideAll()
+    Ent:propDraw(0)
+ 
+    holoCreate(0,Ent:pos(),vec(2),ang(0),vec(253,153,167),"hq_sphere") # Body
+ 
+    holoCreate(1,Ent:pos(),-vec(2.05),ang(0),vec(0),"hq_sphere") # Body 2
+ 
+    holoCreate(2,Ent:pos()+vec(11.5,-3,0),vec(0.2,0.2,0.55),ang(0),vec(7,10,13),"hq_sphere") # Eye R
+ 
+    holoCreate(3,Ent:pos()+vec(11.5,3,0),vec(0.2,0.2,0.55),ang(0),vec(7,10,13),"hq_sphere") # Eye L
+ 
+    holoCreate(4,Ent:pos()+vec(12.2,-3,1.5),vec(0.1,0.1,0.25),ang(-14,0,0),vec(238),"hq_sphere") # Pupil R
+ 
+    holoCreate(5,Ent:pos()+vec(12.2,3,1.5),vec(0.1,0.1,0.25),ang(-14,0,0),vec(238),"hq_sphere") # Pupil L
+ 
+    holoCreate(6,Ent:pos()+vec(2,-6,-11),vec(1.7,0.9,0.6),ang(0,-10,0),vec(221,4,89),"hq_sphere") # Foot R
+ 
+    holoCreate(7,Ent:pos()+vec(2,6,-11),vec(1.7,0.9,0.6),ang(0,10,0),vec(221,4,89),"hq_sphere") # Foot L
+ 
+    holoCreate(8,Ent:pos()+vec(0,-12,-2),vec(1.1,0.6,0.6),ang(50,-90,0),vec(253,153,167),"hq_sphere") # Arm R
+ 
+    holoCreate(9,Ent:pos()+vec(0,12,-2),vec(1.1,0.6,0.6),ang(-50,-90,0),vec(253,153,167),"hq_sphere") # Arm L
+ 
+    holoCreate(10,Ent:pos()+vec(2,-6,-11),-vec(1.75,0.95,0.65),ang(0,-10,0),vec(0),"hq_sphere") # Foot R 2
+ 
+    holoCreate(11,Ent:pos()+vec(2,6,-11),-vec(1.75,0.95,0.65),ang(0,10,0),vec(0),"hq_sphere") # Foot L 2 
+ 
+    holoCreate(12,Ent:pos()+vec(0,-12,-2),-vec(1.15,0.65,0.65),ang(50,-90,0),vec(0),"hq_sphere") # Arm R 2
+ 
+    holoCreate(13,Ent:pos()+vec(0,12,-2),-vec(1.15,0.65,0.65),ang(-50,-90,0),vec(0),"hq_sphere") # Arm L 2
+ 
+    holoCreate(14,Ent:pos()+vec(10.91,0,-5),vec(0.01,0.12,0.12),ang(24,0,0),vec(7,10,13),"hq_sphere") # Mouth
+ 
+    for(I=0,14) {
+        holoParent(I,Ent)
+        holoMaterial(I,"models/ihvtest/eyeball_l")
+    }
+ 
+    Playable = 1
+    #streamDisable3D(1)
+}
+ 
+interval(1)
+ 
+
+if(Ent:vel():length() > 60) {
+    if(Playable == 1) {
+        #Ent:streamStart(0,"https://www.dropbox.com/s/9vb93fg3f4hag45/kirby.mp3?dl=1")
+        #streamRadius(0,streamMaxRadius())
+        soundPlay("1", 2, "NPC_BaseZombie.Moan1", 1)
+        Playable = 0
+        timer("wait",2000)
+    }
+}
+ 
+if(clk("wait")) {
+    Playable = 1
+}

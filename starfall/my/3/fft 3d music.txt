@@ -1,0 +1,104 @@
+--@name FFT 3d Music
+--@author
+--@shared
+//--@model models/props_lab/citizenradio.mdl
+
+if SERVER then
+    hook.add("PlayerSay", "Hey", function(ply, txt)
+        if ply==owner() and txt:sub(1, 6)=="!song " then
+            net.start("playSong")
+            net.writeString(txt:sub(7))
+            net.send()
+
+            return ""
+        end
+    end)
+    
+    return
+end
+
+
+
+local function loadSong(songURL)
+    if song then song:stop() end
+
+    bass.loadURL(songURL, "3d noblock", function(snd, err, errtxt)
+        if snd then
+            song = snd
+            snd:setFade(500, 100000)
+            snd:setVolume(2)
+            
+            pcall(snd.setLooping, snd, true) -- pcall in case of audio stream
+
+            hook.add("think", "snd", function()
+                if isValid(snd) and isValid(chip()) then
+                    snd:setPos(chip():getPos())
+                    if snd ~= nil then
+                        local data = {}
+                        snd:FFT(data, 1)
+                    end
+                end
+            end)
+        else
+            print(errtxt)
+        end
+    end)
+
+    url = nil
+end
+
+net.receive("playSong", function(len)
+    url = net.readString()
+
+    if not hasPermission("bass.loadURL", url) then
+        print("Press E to grant URL sound permission")
+        return
+    end
+
+    loadSong(url)
+end)
+
+setupPermissionRequest({"bass.loadURL"}, "URL sounds from external sites", true)
+
+hook.add("permissionrequest", "permission", function()
+    if url and hasPermission("bass.loadURL", url) then
+        loadSong(url)
+    end
+end)
+
+
+
+
+
+hook.add("render", "test", function ()
+    screenEnt = render.getScreenEntity()
+    
+    //render.draw3DWireframeBox(Vector(256), Angle(0,0,0), Vector(-256), Vector(256))
+    
+    render.setMaterial(mat)
+    //render.draw3DBox(Vector(256,256,256), Angle(), Vector(256,256,256), -Vector(256,256,256))
+
+    
+    local offset = Vector(100,100,50)
+    
+    render.draw3DLine(offset + Vector(50,50,0),   offset + Vector(50,100,0))
+    render.draw3DLine(offset + Vector(50,100,0),  offset + Vector(100,100,0))
+    render.draw3DLine(offset + Vector(100,100,0), offset + Vector(100,50,0))
+    render.draw3DLine(offset + Vector(100,50,0),  offset + Vector(50,50,0))
+    
+    render.draw3DLine(offset + Vector(50,50,0),   offset + Vector(100,100,0))
+    render.draw3DLine(offset + Vector(100,50,0),  offset + Vector(50,100,0))
+    
+    render.setColor(Color(200,100,50))
+    render.draw3DSphere(offset + Vector(75,75,0), 15, 100, 100)
+    
+    local angRotate = Angle(0, timer.curtime()*50, 0)
+    
+    //render.setColor(Color(0,0,0,0))
+    render.setColor(Color(255,255,255))
+    render.setMaterial(tex)
+    //render.draw3DBeam(Vector(256,256,100), Vector(256,512,150), 256, 0, 1)
+    render.draw3DBox(Vector(256), angRotate, Vector(-128,-128,0), Vector(128,128,0))     
+     
+    
+end)

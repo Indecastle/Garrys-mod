@@ -1,0 +1,19 @@
+@name Clear after kill npc
+@inputs 
+@outputs [T T1]:entity X S:string
+@persist 
+@trigger 
+
+interval(1000)
+
+findIncludeClass("weapon")
+findIncludeClass("item_ammo")
+findIncludeClass("healthvial")
+findInSphere(entity():pos(), 10000)
+Ar = findToArray()
+
+foreach (I, Ent:entity = Ar) {
+    if (!Ent:owner():isValid()) {
+        Ent:remove()
+    }
+}

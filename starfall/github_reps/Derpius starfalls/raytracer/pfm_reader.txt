@@ -1,0 +1,174 @@
+PFM = {}
+
+PFM.reading = {}
+PFM.doneReading = {}
+PFM.drawn = {}
+
+function PFM.new(path)
+    return {
+        path = path,
+        width = 0,
+        height = 0,
+        channels = 0,
+        data = {}
+    }
+end
+
+function readFloat(bytes, big)
+    if big then
+        bytes = string.byte(bytes, 1, 1)*2^24 + string.byte(bytes, 2, 2)*2^16 + string.byte(bytes, 3, 3)*2^8 + string.byte(bytes, 4, 4)
+    else
+        bytes = string.byte(bytes, 1, 1) + string.byte(bytes, 2, 2)*2^8 + string.byte(bytes, 3, 3)*2^16 + string.byte(bytes, 4, 4)*2^24
+    end
+    
+    local sign = bit.rshift(bit.band(bytes, 0x80000000), 31) == 0 and 1 or -1
+    local exponent = bit.rshift(bit.band(bytes, 0x7F800000), 23) - 127
+    local mantissa = bit.band(bytes, 0x7FFFFF)
+    
+    if mantissa == 0 then return 0 end
+    return sign * math.pow(2, exponent) * (1 + mantissa/2^23)
+end
+
+function PFM.read(img)
+    -- load bytes from file
+    local bytes = file.read(img.path)
+    coroutine.yield()
+    
+    -- get channels from header
+    if string.sub(bytes, 1, 2) == "PF" then
+        img.channels = 3
+    elseif string.sub(bytes, 1, 2) == "Pf" then
+        img.channels = 1
+    else
+        throw("PFM header invalid")
+    end
+    
+    -- read the width, height, and ratio as strings
+    img.width, img.height, img.ratio = "", "", ""
+    local pntr = (bytes[3] == "\n" or bytes[3] == " ") and 4 or 3
+    local stage = 1
+    while true do
+        if bytes[pntr] == "\n" or bytes[pntr] == " " then
+            stage = stage + 1
+        elseif tonumber(bytes[pntr]) ~= nil or bytes[pntr] == "-" or bytes[pntr] == "." then
+            if stage == 1 then img.width = img.width..bytes[pntr]
+            elseif stage == 2 then img.height = img.height..bytes[pntr]
+            elseif stage == 3 then img.ratio = img.ratio..bytes[pntr] end
+        else
+            throw("PFM header invalid")
+        end
+        
+        pntr = pntr + 1
+        if stage == 3 and bytes[pntr] == "\n" then break end
+    end
+    
+    bytes = string.sub(bytes, pntr + 1)
+    
+    -- convert strings to numbers and throw if invalid
+    img.width, img.height, img.ratio = tonumber(img.width), tonumber(img.height), tonumber(img.ratio)
+    if not img.width or not img.height or not img.ratio then throw("PFM header invalid") end
+    
+    -- get endian from scale
+    local bigEndian = img.ratio >= 0
+    img.ratio = math.abs(img.ratio)
+    
+    -- read the data into an array
+    img.data = {}
+    pntr = 1
+    if img.channels == 3 then
+        for y = img.height, 1, -1 do
+            img.data[y] = {}
+            for x = 1, img.width do
+                yield(0.6)
+                img.data[y][x] = Vector(
+                    readFloat(string.sub(bytes, pntr, pntr + 3), bigEndian),
+                    readFloat(string.sub(bytes, pntr + 4, pntr + 7), bigEndian),
+                    readFloat(string.sub(bytes, pntr + 8, pntr + 11), bigEndian)
+                )
+                pntr = pntr + 12
+            end
+        end
+    else
+        for y = img.height, 1, -1 do
+            img.data[y] = {}
+            for x = 1, img.width do
+                yield(0.6)
+                img.data[y][x] = readFloat(string.sub(bytes, pntr, pntr + 3), bigEndian)
+                pntr = pntr + 4
+            end
+        end
+    end
+    
+    coroutine.yield(img)
+end
+
+function PFM.draw(path)
+    coroutine.yield()
+    
+    local img = PFM.doneReading[path]
+    local scale = img.width >= img.height and 1024/img.width or 1024/img.height
+
+    if img.channels == 3 then
+        for y = 1, #img.data do
+            for x = 1, #img.data[y] do
+                yield(0.1)
+                render.setColor(img.data[y][x]:getColor())
+                render.drawRectFast(x - 1*scale, y - 1*scale, scale, scale)
+            end
+        end
+    elseif img.channels == 1 then
+        for y = 1, #img.data do
+            for x = 1, #img.data[y] do
+                yield(0.1)
+                render.setColor(Color(img.data[y][x], img.data[y][x], img.data[y][x]))
+                render.drawRectFast(x - 1*scale, y - 1*scale, scale, scale)
+            end
+        end
+    else throw("image channels invalid, should be 1 (greyscale) or 3 (RGB)") end
+end
+
+function PFM.loadAsync(path, drawToRT)
+    if PFM.reading[path] then return end
+    PFM.reading[path] = true
+
+    local read = coroutine.create(PFM.read)
+    coroutine.resume(read, PFM.new(path))
+    
+    hook.add("think", "PFM.readFromFile."..path, function()
+        if coroutine.status(read) == "suspended" then
+            local img = coroutine.resume(read)
+            
+            if img then
+                PFM.reading[path] = nil
+                PFM.doneReading[path] = img
+                print("File "..path.." loaded!")
+                hook.remove("think", "PFM.readFromFile."..path)
+            end
+        end
+    end)
+    
+    if drawToRT then
+        if not render.renderTargetExists(path) then
+            render.createRenderTarget(path)
+        elseif not PFM.drawn[path] then
+            return
+        end
+        PFM.drawn[path] = nil
+        
+        local draw = coroutine.create(PFM.draw)
+        coroutine.resume(draw, path)
+        
+        hook.add("renderoffscreen", "PFM.drawToRT."..path, function()
+            if PFM.doneReading[path] and coroutine.status(draw) == "suspended" then
+                render.selectRenderTarget(path)
+                coroutine.resume(draw)
+                render.selectRenderTarget()
+            end
+            
+            if coroutine.status(draw) == "dead" then
+                PFM.drawn[path] = true
+                hook.remove("renderoffscreen", "PFM.drawToRT."..path)
+            end
+        end)
+    end
+end

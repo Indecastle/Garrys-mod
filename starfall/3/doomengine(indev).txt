@@ -1,0 +1,205 @@
+--@name DoomEngine(inDev)
+--@author
+--@shared
+
+if CLIENT and owner() then
+    local I = 0
+
+    local res = 12
+    local nextFrame = false
+    local PlayerX = 4.29
+    local PlayerY = 15.48
+    
+    local PlayerA = -8.9
+    
+    local FOV = math.pi / 2
+    local DEPTH = 15
+    local SPEED = 80        
+    local CAMERA_SPEED = 50
+    local BORN_TIME     = timer.systime()
+    local CurrentTime   = 0
+    local FrameTime     = 1
+
+    local FPS = 0
+    local lastTime = 0
+    local palette = {
+        ['#'] = Color(100, 100, 100),
+        ['@'] = Color(0, 255, 0),
+        ['%'] = Color(255, 0, 0)
+    }
+    
+    local map = {}
+    
+    table.insert(map,"################")
+    table.insert(map,"#..........#...#")
+    table.insert(map,"#..........#...#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#.....###......#")
+    table.insert(map,"#.....###......#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#..............#")
+    table.insert(map,"#..............#")
+    table.insert(map,"################")
+
+    render.createRenderTarget("view")
+    render.createRenderTarget("buffer")
+    
+    function quotaCheck (n)
+        return math.max(quotaAverage(), quotaUsed()) < n
+    end
+    
+    function screenTask()
+
+        
+        if input.isKeyDown(45) and nextFrame then --W
+            PlayerX = PlayerX + math.sin(PlayerA) * SPEED * FrameTime
+            PlayerY = PlayerY + math.cos(PlayerA) * SPEED * FrameTime
+     
+            if map[math.round(PlayerX)][math.round(PlayerY)] == '#' then
+            
+                PlayerX = PlayerX - math.sin(PlayerA) * SPEED * FrameTime
+                PlayerY = PlayerY - math.cos(PlayerA) * SPEED * FrameTime
+            end
+        end
+        
+        if input.isKeyDown(42) and nextFrame then --S
+            PlayerX = PlayerX - math.sin(PlayerA) * SPEED * FrameTime
+            PlayerY = PlayerY - math.cos(PlayerA) * SPEED * FrameTime
+     
+            if map[math.round(PlayerX)][math.round(PlayerY)] == '#' then
+            
+                PlayerX = PlayerX + math.sin(PlayerA) * SPEED * FrameTime
+                PlayerY = PlayerY + math.cos(PlayerA) * SPEED * FrameTime
+            end
+        end
+        
+        if input.isKeyDown(41) and nextFrame then --A
+            PlayerA = PlayerA - CAMERA_SPEED * FrameTime;
+        end
+        
+        if input.isKeyDown(43) and nextFrame then --D
+            PlayerA = PlayerA + CAMERA_SPEED * FrameTime
+        end
+        
+        render.setColor(Color(255, 255, 255))
+        
+        if nextFrame then
+            render.selectRenderTarget("buffer")
+            
+            render.setRenderTargetTexture("view")
+            render.drawTexturedRect(0, 0, 1024, 1024)
+            
+            render.selectRenderTarget()
+            nextFrame = false
+            FPS = 1 / (timer.systime() - lastTime)
+            lastTime = timer.systime()
+        end
+        
+        render.setRenderTargetTexture("buffer")
+        render.drawTexturedRect(0, 0, 1024 * 512/res, 1024 * 512/res)
+        render.drawText(15, 15, string.format("X %f\nY %f\nAngle %f\nFPS %f", PlayerX, PlayerY, PlayerA,FPS))
+
+    end
+    
+    function backgroundTask()
+        FrameTime = CurrentTime
+        CurrentTime = (timer.systime() - BORN_TIME + 0.05)
+        FrameTime = CurrentTime - FrameTime
+        
+        render.setFilterMag(1)
+
+        render.selectRenderTarget("view")
+    
+        while quotaCheck(0.005) do
+            
+            local x = I % res
+            local y = math.floor(I / res)
+            
+            local RayAngle = ( PlayerA - FOV/2 ) + (x / res) * FOV
+            local EyeX = math.sin( RayAngle )
+            local EyeY = math.cos( RayAngle )
+            
+            local DistanceToWall = 0
+
+            local HitWall = false
+        
+            while !HitWall and DistanceToWall < DEPTH do
+                DistanceToWall = DistanceToWall + 0.1
+                
+                TestX = PlayerX + EyeX * DistanceToWall 
+                TestY = PlayerY + EyeY * DistanceToWall 
+                
+                if map[math.round(TestX)][math.round(TestY)] != '.' then
+                    HitWall = true
+                    ColorNum = palette[map[math.round(TestX)][math.round(TestY)]]
+                end
+
+            end  
+
+            Ceiling = (res/2) - res / DistanceToWall 
+            Floor = res - Ceiling
+         
+            Shade = Color(0,0,0)
+         
+            if DistanceToWall <= DEPTH / 3.0 then        
+                Shade = Color(150, 150, 150) + ColorNum
+            elseif DistanceToWall < DEPTH / 2 then
+                Shade = Color(100, 100, 100) + ColorNum
+            elseif DistanceToWall < DEPTH / 1.5 then    
+                Shade = Color(50, 50, 50) + ColorNum  
+            elseif DistanceToWall < DEPTH then           
+                Shade = Color(25, 25, 25)                                         
+            else
+                Shade = Color(0, 0, 0)
+            end
+ 
+            if y <= Ceiling then
+                render.setColor(Color(0,150,255))
+                render.drawRectFast(x, y, 1, 1)
+            elseif y > Ceiling and y <= Floor then
+                render.setColor(Shade)
+                render.drawRectFast(x, y, 1, 1)
+            else    
+                b = 1 - (y - res / 2) / (res / 2)
+                if b < 0.25 then       
+                   Shade = Color(60, 60, 60)
+                elseif b < 0.5 then   
+                    Shade = Color(50, 50, 50)
+                elseif b < 0.75 then  
+                    Shade = Color(40, 40, 40)
+                elseif b < 0.9 then   
+                    Shade = Color(20, 20, 20)
+                else                 
+                    Shade = Color(10, 10, 10)
+                end
+                
+                render.setColor(Shade)
+                render.drawRectFast(x, y, 1, 1)
+            end
+           
+            if I == res^2 - 1 then
+                nextFrame = true
+            end
+            
+            I = (I + 1) % res^2
+              
+        end
+
+        render.selectRenderTarget()
+        
+    end
+    
+    function liveTask()
+        backgroundTask()
+        screenTask()
+    end
+            
+    hook.add("render", "liveTask", liveTask)
+    hook.add("renderOffscreen", "backgroundTask", backgroundTask)
+end

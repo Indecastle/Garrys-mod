@@ -1,0 +1,132 @@
+BlockType = class("BlockType")
+function BlockType:initialize(name, bSolid, textures)
+    self.name = name
+    self.bSolid = bSolid
+    
+    self.textures = textures
+end
+
+blockTypes = {
+    [0] =   BlockType:new("air", false),
+    BlockType:new("bedrock", true, {"bedrock", "bedrock", "bedrock", "bedrock", "bedrock", "bedrock"}),
+    BlockType:new("grass", true, {"grass", "grass", "grass", "dirt", "grass", "grass"}),
+    BlockType:new("dirt", true, {"dirt", "dirt", "dirt", "dirt", "dirt", "dirt"}),
+    BlockType:new("stone", true, {"stone", "stone", "stone", "stone", "stone", "stone"})
+}
+
+seed = 69
+
+chunks = {}
+activeChunks = {}
+
+spawnPos = Vector(0)
+player = Player:new()
+
+playerChunk = ChunkCoord:new(0, 0)
+playerLastChunk = ChunkCoord:new(0, 0)
+
+function Start()
+    spawnPos = Vector(VoxelData.worldSizeVoxels/2, VoxelData.worldSizeVoxels/2, VoxelData.chunkHeight + 2)
+    playerChunk, playerLastChunk = GetChunkCoordsFromPos(spawnPos), GetChunkCoordsFromPos(spawnPos)
+    
+    GenerateWorld()
+    
+    hook.add("calcview", "", function(pos, ang, fov, znear, zfar)
+        player.transform.angle = ang
+        return {
+            origin = player.transform.position,
+            angles = ang,
+            fov = fov,
+            znear = znear,
+            zfar = zfar,
+            drawviewer = true
+        }
+    end)
+    
+    STATE = 2
+end
+
+function Update()
+    --player.transform.position = player.transform.position + Vector(0.1, 0, 0)
+    
+    playerChunk = GetChunkCoordsFromPos(player.transform.position)
+    
+    if not playerChunk:Equals(playerLastChunk) then CheckViewDistance() end
+    
+    playerLastChunk = GetChunkCoordsFromPos(player.transform.position)
+end
+
+function GenerateWorld()
+    for x = math.floor(spawnPos.x/VoxelData.chunkWidth) - VoxelData.renderDist, math.floor(spawnPos.x/VoxelData.chunkWidth) + VoxelData.renderDist do
+        if x < 0 or x >= VoxelData.worldSizeChunks then continue end
+        chunks[x] = {}
+        for y = math.floor(spawnPos.y/VoxelData.chunkWidth) - VoxelData.renderDist, math.floor(spawnPos.y/VoxelData.chunkWidth) + VoxelData.renderDist do
+            if y < 0 or y >= VoxelData.worldSizeChunks then continue end
+            CreateChunk(x, y)
+        end
+    end
+    
+    player.transform.position = spawnPos
+end
+
+function CheckViewDistance()
+    for x = playerChunk.x - VoxelData.renderDist, playerChunk.x + VoxelData.renderDist do
+        for y = playerChunk.y - VoxelData.renderDist, playerChunk.y + VoxelData.renderDist do
+            if IsChunkInWorld(ChunkCoord:new(x, y)) then
+                if not chunks[x] then chunks[x] = {} end
+                
+                if not chunks[x][y] then
+                    CreateChunk(x, y)
+                elseif not chunks[x][y].active then
+                    chunks[x][y]:SetActive(true)
+                    activeChunks[#activeChunks + 1] = ChunkCoord:new(x, y)
+                end
+            end
+        end
+    end
+    
+    for i = #activeChunks, 1, -1 do
+        if
+            activeChunks[i].x < playerChunk.x - VoxelData.renderDist or activeChunks[i].x > playerChunk.x + VoxelData.renderDist or
+            activeChunks[i].y < playerChunk.y - VoxelData.renderDist or activeChunks[i].y > playerChunk.y + VoxelData.renderDist
+        then
+            chunks[activeChunks[i].x][activeChunks[i].y]:SetActive(false)
+            table.remove(activeChunks, i)
+        end
+    end
+end
+
+function GetVoxel(pos)
+    -- Constant pass
+    if not IsVoxelInWorld(pos) then return 0 end -- return air for world edge
+    if pos.z == 0 then return 1 end -- return bedrock for world floor
+    
+    -- Basic Terrain Pass
+    local height = math.floor(Get2DPerlin(pos.x, pos.y, 0, biomes.default.terrainScale) * biomes.default.terrainHeight) + biomes.default.terrainBaseHeight
+    if pos.z > height then return 0 end
+    
+    local voxelVal = 0
+    
+    if pos.z < height - 7 then voxelVal = 4 -- If below the grass and dirt line, return stone
+    elseif pos.z < height then voxelVal = 3 -- If below the grass line, but above the stone line, return dirt
+    elseif pos.z == height then voxelVal = 2 end -- If the top block of the height, return grass
+    
+    return voxelVal
+end
+
+function GetChunkCoordsFromPos(pos)
+    return ChunkCoord:new(math.floor(pos.x/VoxelData.chunkWidth), math.floor(pos.y/VoxelData.chunkWidth))
+end
+
+function CreateChunk(x, y)
+    chunks[x][y] = Chunk:new(ChunkCoord:new(x, y))
+    activeChunks[#activeChunks + 1] = ChunkCoord:new(x, y)
+end
+
+function IsChunkInWorld(coord)
+    return coord.x >= 0 and coord.x < VoxelData.worldSizeChunks and coord.y >= 0 and coord.y < VoxelData.worldSizeChunks
+end
+
+function IsVoxelInWorld(pos)
+    return pos.x >= 0 and pos.x < VoxelData.worldSizeVoxels and pos.y >= 0 and pos.y < VoxelData.worldSizeVoxels and pos.z >= 0 and pos.z < VoxelData.chunkHeight
+end

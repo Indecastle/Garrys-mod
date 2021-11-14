@@ -1,0 +1,111 @@
+lastPlrsNetworked = {}
+
+-- Player join net message
+net.receive("plrJoin", function(len, plr)
+    print("Player " .. plr:getName() .. " joined")
+    players[plr] = {
+        pos = {x = spawnX, y = spawnY},
+        ang = spawnAng,
+        colour = {team.getColor(plr:getTeam()).r, team.getColor(plr:getTeam()).g, team.getColor(plr:getTeam()).b}
+    }
+    lastPlrsNetworked[plr] = true
+    
+    net.start("spawn")
+    net.writeTable({
+        maxCasts = maxCasts,
+        mapX = mapX,
+        mapY = mapY,
+        map = map,
+        spawnX = spawnX,
+        spawnY = spawnY,
+        spawnAng = spawnAng
+    })
+    net.send(plr)
+    
+    net.start("plrJoined")
+    net.writeEntity(plr)
+    net.writeFloat(spawnX)
+    net.writeFloat(spawnY)
+    net.writeFloat(spawnAng)
+    net.writeUInt(team.getColor(plr:getTeam()).r, 8)
+    net.writeUInt(team.getColor(plr:getTeam()).g, 8)
+    net.writeUInt(team.getColor(plr:getTeam()).b, 8)
+    net.send()
+end)
+
+-- Player leave
+net.receive("plrLeave", function(len, plr)
+    print("Player " .. plr:getName() .. " left")
+    players[plr] = nil
+    lastPlrsNetworked[plr] = nil
+    
+    net.start("plrLeft")
+    net.writeEntity(plr)
+    net.send()
+end)
+
+-- Player data updated
+net.receive("plrUpdate", function(len, plr)
+    if players[plr] == nil then return end
+
+    players[plr].pos = {x = net.readFloat(), y = net.readFloat()}
+    players[plr].ang = net.readFloat()
+    lastPlrsNetworked[plr] = false
+end)
+
+-- Accept request for a copy of player data
+net.receive("getPlrs", function(len, plr)
+    local stream = {}
+    local count = 0
+    for k, v in pairs(players) do
+        if k == plr then continue end
+        
+        stream[#stream + 1] = k
+        stream[#stream + 1] = v.pos.x
+        stream[#stream + 1] = v.pos.y
+        stream[#stream + 1] = v.ang
+        stream[#stream + 1] = v.colour[1]
+        stream[#stream + 1] = v.colour[2]
+        stream[#stream + 1] = v.colour[3]
+        count = count + 1
+    end
+    
+    net.start("givePlrs")
+    net.writeUInt(count, 16)
+    for i = 1, #stream, 7 do
+        net.writeEntity(stream[i])
+        net.writeFloat(stream[i + 1])
+        net.writeFloat(stream[i + 2])
+        net.writeFloat(stream[i + 3])
+        net.writeUInt(stream[i + 4], 8)
+        net.writeUInt(stream[i + 5], 8)
+        net.writeUInt(stream[i + 6], 8)
+    end
+    net.send(plr)
+end)
+
+hook.add("tick", "onTick", function()
+    local stream = {}
+    local count = 0
+    for k, v in pairs(players) do
+        if not lastPlrsNetworked[k] then
+            lastPlrsNetworked[k] = true
+            
+            stream[#stream + 1] = k
+            stream[#stream + 1] = v.pos.x
+            stream[#stream + 1] = v.pos.y
+            stream[#stream + 1] = v.ang
+            count = count + 1
+        end
+    end
+    
+    net.start("plrsUpdated")
+    net.writeUInt(count, 16)
+    for i = 1, #stream, 4 do
+        net.writeEntity(stream[i])
+        net.writeFloat(stream[i + 1])
+        net.writeFloat(stream[i + 2])
+        net.writeFloat(stream[i + 3])
+    end
+    net.send()
+end)

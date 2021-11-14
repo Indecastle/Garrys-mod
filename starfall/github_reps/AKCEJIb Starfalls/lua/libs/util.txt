@@ -1,0 +1,150 @@
+--@name Library of utilities
+--@author AKCEJIb
+--@include ./class.txt
+
+--[[
+
+    Utilities library by AKCEJIb
+    Version: 1.0
+    Date: 15.07.2019
+    
+]]--
+
+require("class.txt")
+
+--[[------------------------------------------------------------------------]]--
+
+--[[
+
+    List that can easily return boolean value if item exists
+    Example:
+    local tbl = Set {"Foo", "Bar", "FooBar"}
+    
+    if tbl["FooBar"] then
+        -- Do Something
+    end
+    Comment:
+    If the table 'tbl' has value 'FooBar' it's return true
+    
+]]--
+
+local function Set (list)
+
+  local set = {}
+  for _, l in ipairs(list) do set[l] = true end
+  return set
+
+end
+
+
+
+--[[------------------------------------------------------------------------]]--
+
+
+
+--[[
+
+    Creating particle class
+    It's have simple physics
+    
+]]--
+local Particle3D = Class("Particle3D")
+
+function Particle3D:constructor(vectorPos, angle, scale, lifeTime, xv, yv, zv, clr, type, gravity)
+
+    --[[
+        Particle class constructor
+        Params:
+        vectorPos       - Vector()      -- Particle position
+        angle           - Angle()       -- Particle angle
+        scale           - Number        -- Particle start scale
+        lifeTime        - Number        -- Particle life time
+        xv, yv, zv      - Number        -- Particle velocity by 3 axles
+        clr             - Color()       -- Particle color
+        type            - String        -- Particle model (can be: box, wfBox, sphere, wfSphere. Prefix 'wf' means wireframe)
+        gravity         - Boolean       -- True = enable gravity for particle 
+    ]]--
+    
+    self.pos = vectorPos or Vector(0, 0, 0)
+    self.ang = angle or Angle(0, 0, 0)
+    self.scale = scale or 0
+    self.x_vel = xv or 0
+    self.y_vel = yv or 0
+    self.z_vel = zv or 0
+    self.color = clr or Color(0, 0, 0)
+    self.type = type or "box"
+    self.gravity = gravity or false
+    self.fallTime = 0
+    self.onGround = false
+    self.lifeTime = lifeTime
+end
+
+function Particle3D:draw()
+    
+    --[[
+        Draw method with different models
+    ]]--
+    
+    render.setColor(self.color)
+    if self.type == "wfBox" then
+        local _minusSize = Vector(-self.scale/2, -self.scale/2, -self.scale/2)
+        local _plusSize = Vector(self.scale/2, self.scale/2, self.scale/2)    
+        render.draw3DWireframeBox(self.pos, self.ang, _minusSize, _plusSize)
+    elseif self.type == "sphere" then
+        render.draw3DSphere(self.pos, self.scale, 50, 50)
+    elseif self.type == "wfSphere" then
+        render.draw3DWireframeSphere(self.pos, self.scale, 10, 10)
+    else
+        local _minusSize = Vector(-self.scale/2, -self.scale/2, -self.scale/2)
+        local _plusSize = Vector(self.scale/2, self.scale/2, self.scale/2)    
+        render.draw3DBox(self.pos, self.ang, _minusSize, _plusSize)
+    end
+    
+end
+
+function Particle3D:calcGravity()
+    
+     --[[
+        Calculate particle gravity
+    ]]--   
+    
+    if self.pos[2] + self.scale + 0.2 * self.fallTime + self.y_vel <= 512 then
+        self.onGround = false
+        self.fallTime = self.fallTime + timer.frametime()
+        self.pos = self.pos + Vector(self.x_vel, 0.2 * self.fallTime + self.y_vel, self.z_vel)    
+    else
+        self.onGround = true
+        self.fallTime = 0       
+    end
+    
+end
+
+function Particle3D:setColor(color)
+    self.color = color or Color(0, 0, 0)
+end
+
+function Particle3D:think()
+        
+    --[[
+        Calculate lifetime of particle
+    ]]--        
+        
+    if self.gravity ~= true then
+        self.scale = self.scale - timer.frametime() * 30
+        self.pos = self.pos + Vector(self.x_vel, self.y_vel, self.z_vel)
+    else
+        self:calcGravity()
+        self.lifeTime = self.lifeTime - 0.01
+        self.scale = self.scale - timer.frametime() * 5
+    end
+    
+end
+
+--[[------------------------------------------------------------------------]]--
+
+return 
+{
+    Class = Class,
+    Set = Set,
+    Particle3D = Particle3D
+}

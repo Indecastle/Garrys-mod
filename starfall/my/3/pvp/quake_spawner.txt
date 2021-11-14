@@ -1,0 +1,126 @@
+--@name Quake Spawner
+--@author Markiz
+
+QuakeSpawner = class("quake_spawner")
+
+-- Example
+/*
+--@name Spawner Heal
+--@author Markiz
+--@include ./quake_spawner.txt
+--@server
+
+dofile("./quake_spawner.txt")
+
+local Vars = {
+    Radius = Vector(100),
+    Limit = 1,
+    Interval = 5,  -- sek
+    
+    OffsetZ = Vector(0, 0, 20),
+    OffsetX = Vector(-5,0,0),
+    
+    Class = "item_healthkit",
+    Model = "models/items/healthkit.mdl",
+    
+    E = chip(),
+    O = owner()
+}
+*/
+
+function QuakeSpawner:initialize(vars)
+    for k, v in pairs(vars) do
+        self[k] = v
+    end
+    
+    /*
+    self.Radius = vars.Radius
+    self.Limit = vars.Limit
+    self.Interval = vars.Interval
+    self.OffsetZ = vars.OffsetZ
+    self.OffsetX = vars.OffsetX
+    self.Class = vars.Class
+    self.Model = vars.Model
+    self.E = vars.E
+    self.O = vars.O
+    */
+    
+    // ======================================================================
+    if self.Radius == nil then self.Radius = Vector(100) end
+    if self.Limit == nil then self.Limit = 1 end
+    if self.Interval == nil then self.Interval = 5 end
+    if self.OffsetZ == nil then self.OffsetZ = Vector(0, 0, 20) end
+    if self.OffsetX == nil then self.OffsetX = Vector() end
+    if self.Class == nil then self.Class = "item_healthkit" end
+    if self.Model == nil then self.Model = "models/items/healthkit.mdl" end  --  or (nil / "")
+    if self.E == nil then self.E = chip() end
+    if self.O == nil then self.O = owner() end
+    
+    if self._nextTime == nil then self._nextTime = timer.systime() end
+    if self._oldCount == nil then self._oldCount = 0 end
+    // ======================================================================
+end
+
+function QuakeSpawner:GetAng()
+    return Angle(0, timer.systime()*50, 0)
+end
+
+function QuakeSpawner:GetPos()
+    local reflectedOrigin = localToWorld(self.OffsetX, Angle(), self.E:getPos(), self.E:localToWorldAngles(self:GetAng()))
+    return reflectedOrigin + self.OffsetZ + Vector(0, 0, math.sin(timer.systime()*2)*5)
+end
+
+function QuakeSpawner:FindEnts()
+    local ents = find.inBox(self.E:getPos() - self.Radius, self.E:getPos() + self.Radius, function(e)
+        return e:getOwner() == self.O and e:getClass() == self.Class
+    end)
+    
+    return ents
+end
+
+function QuakeSpawner:CreateEnt()
+    pcall(function()
+        prop.createSent(self:GetPos(), self:GetAng(), self.Class, true, {
+            model = self.Model,
+            //Color = Color(math.random(255), 1, 1):rgbToHSV()
+        })
+    end)
+end
+
+/*
+timer.create("Spawner RPG", Interval, 0, function()
+    local ents = FindEnts()
+    
+    if #ents < Limit then
+        prop.createSent(GetPos(), GetAng(), Class, true, {
+            model = Model,
+            //Color = Color(math.random(255), 1, 1):rgbToHSV()
+        })
+    end
+end)
+*/
+
+function QuakeSpawner:run()
+    hook.add("think","",function()
+        local ents = self:FindEnts()
+        
+        for i, e in ipairs(ents) do
+            e:setPos(self:GetPos())
+            e:setAngles(self:GetAng())
+            e:setFrozen(true)
+        end
+        
+        if #ents < self.Limit then
+            if #ents < self._oldCount then
+                self._nextTime = timer.systime() + self.Interval
+            end
+        
+            if self._nextTime < timer.systime() then
+                self._nextTime = timer.systime() + self.Interval
+                self:CreateEnt(ents)
+            end
+        end
+    
+        self._oldCount = #ents
+    end)
+end

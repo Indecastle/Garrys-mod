@@ -1,0 +1,149 @@
+--@name Music Visualizer 2
+--@author
+--@client
+--@include github_reps/Sevii77/lib/gui2.lua
+
+
+local url3 = "https://play.sas-media.ru/play_256"
+local url4 = "http://air.radiorecord.ru:8102/rock_128" -- not working
+local url5 = "http://radio-srv1.11one.ru/record192k.mp3"
+local url6 = "http://sv.wargaming.fm:8051/128"
+
+local url = url6
+
+
+local buffers = {"RT", "RT2"}
+local buffernum = 1
+render.createRenderTarget("RT")
+render.createRenderTarget("RT2")
+local centerTransform = Matrix()
+centerTransform:setTranslation(Vector(512, 512, 0))
+
+
+GUI = require("github_reps/Sevii77/lib/gui2.lua")
+local gui = GUI(512, 512)
+
+local settings = {
+    volume = 1,
+    mindist = 1000,
+    maxdist = 1200
+}
+
+local soundData
+
+function start() 
+    bass.loadURL(url,"3d", function(snd)
+        soundData = snd
+        hook.add("render", "", function()
+            snd:setPos(render.getScreenEntity():getPos())
+            local n = 64
+            local fft = snd:getFFT(n)
+
+            local nextbuffer = (buffernum % #buffers) + 1
+            render.setRenderTargetTexture(buffers[buffernum])
+            render.selectRenderTarget(buffers[nextbuffer])
+            render.clear(Color(0, 0, 0, 255))
+            render.setColor(Color(255, 255, 255, 200))
+            render.drawTexturedRect(-15, -15, 1054, 1054)
+            render.setColor(Color((timer.curtime() * 10 + 180) % 360 - 180, 1, 1):hsvToRGB())
+
+            render.pushMatrix(centerTransform)
+            local function fftToRadius(i) return 200-math.log10(i)*(fft[i] or 0)*1000 end
+            local startr = fftToRadius(2)
+            local lx, ly = startr, 0
+            for i = 3, n do
+                local r = fftToRadius(i)
+                local theta = (i - 2) * 2 * math.pi / (n - 1)
+                local x, y = r * math.cos(theta), r * math.sin(theta)
+                render.drawLine(x, y, lx, ly)
+                lx = x
+                ly = y
+            end
+            render.drawLine(startr, 0, lx, ly)
+
+            render.popMatrix()
+            render.selectRenderTarget()
+
+            render.setColor(Color(255, 255, 255, 255))
+            render.setRenderTargetTexture(buffers[nextbuffer])
+            render.drawTexturedRect(0, 0, 512, 512)
+            buffernum = nextbuffer
+            
+            gui:think()
+            gui:render(0, 0)
+            
+            soundData:setVolume(settings.volume)
+        end)
+    end) 
+end
+
+do
+    local frame = gui:create("frame")
+    frame.pos = Vector(0, -20)
+    frame.size = Vector(512, 50)
+    frame.dragable = false
+    frame.closeable = false
+    frame.dragbarSize = false
+    --frame.collapseOnClose = true
+    frame.minSize = Vector(200, 50)
+    
+    local volume = gui:create("slider", frame.inner)
+    volume.mainColor = "primaryColorDark"
+    local normal_color = volume.activeColor
+    local red = Color(220, 60, 80)
+    volume.pos = Vector(0, 0)
+    volume.height = 20
+    volume.dock = GUI.DOCK.TOP
+    volume.style = 2
+    volume.cornerStyle = 0
+    volume.text = "Volume %s"
+    volume.min = 0
+    volume.max = 11
+    volume.round = 1
+    volume.value = settings.volume
+    volume.onChange = function(self, val)
+        settings.volume = val / 11 * 10
+        
+        local v = math.max(0, val - 7) / 5
+        local clr = normal_color * (1 - v) + red * v
+        self.activeColor = clr
+        self.hoverColor = clr * 1.2
+    end
+end
+
+local perms = {
+    --"render.screen",
+    "bass.loadURL",
+    --"sound.create",
+    --"sound.modify"
+}
+
+setupPermissionRequest({"bass.loadURL"}, "URL sounds from external sites", true)
+
+if url and hasPermission("bass.loadURL", url) then
+    start(url)
+end
+
+if hasPermission("render.screen") then
+    hook.add("render", "perms", function()
+        render.drawSimpleText(256, 256, "Press e to listen to epic songs", 1, 1)
+    end)
+end
+
+hook.add("permissionrequest", "perms", function()
+    --if permissionRequestSatisfied() then
+    if hasPermission("bass.loadURL", url) then
+        hook.remove("permissionrequest", "perms")
+        hook.remove("render", "perms")
+        
+        start(url)
+    end
+end)
+
+/*
+hook.add("permissionrequest", "permission", function()
+    if url and hasPermission("bass.loadURL", url) then
+        start(url)
+    end
+end)
+*/

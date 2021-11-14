@@ -1,5 +1,5 @@
 @name Detector RPG
-@outputs IgnoreEnt:array Count IsEnable
+@outputs [IgnoreEnt Rockets]:array Count IsEnable
 
 interval(100)
 

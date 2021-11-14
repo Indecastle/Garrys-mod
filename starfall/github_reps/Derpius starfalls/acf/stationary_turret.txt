@@ -1,0 +1,126 @@
+--@name Stationary ACF Controller
+--@author Derpius
+--@shared
+
+local owner, seat, scopeEnt = owner(), nil, nil
+
+if SERVER then
+    local QuatLib = {}
+    function QuatLib.Angle(a, b)
+        local dot = a:dot(b);
+        return dot > 1 and 0 or math.deg(math.acos(math.min(math.abs(dot), 1)) * 2)
+    end
+    
+    function QuatLib.RotateTowards(from, to, maxDegreesDelta)
+        local angle = QuatLib.Angle(from, to)
+        if angle == 0 then return to end
+        return math.slerpQuaternion(from, to, math.min(1, maxDegreesDelta / angle))
+    end
+
+    local rate = 2 // Degrees of rotation per tick
+    
+    net.receive("RequestSeat", function()
+        net.start("GiveEnts")
+        net.writeEntity(isValid(seat) and seat or entity(0))
+        net.writeEntity(isValid(scopeEnt) and scopeEnt or entity(0))
+        net.send(owner)
+    end)
+    
+    local base = nil
+    wire.adjustInputs({"Base", "Seat", "Scope"}, {"Entity", "Entity", "Entity"})
+    hook.add("input", "", function(name, val)
+        if name == "Base" then base = val
+        elseif name == "Seat" and seat ~= val then
+            seat = val
+            net.start("GiveEnts")
+            net.writeEntity(isValid(seat) and seat or entity(0))
+            net.writeEntity(isValid(scopeEnt) and scopeEnt or entity(0))
+            net.send(owner)
+        elseif name == "Scope" and scopeEnt ~= val then
+            scopeEnt = val
+            net.start("GiveEnts")
+            net.writeEntity(isValid(seat) and seat or entity(0))
+            net.writeEntity(isValid(scopeEnt) and scopeEnt or entity(0))
+            net.send(owner)
+        end
+    end)
+    
+    wire.adjustOutputs({"Fire"}, {"normal"})
+    hook.add("think", "", function()
+        if base and isValid(base) and owner:inVehicle() and owner:getVehicle() == seat then
+            local start = base:getAngles():getQuaternion()
+            local target = owner:getEyeAngles():getQuaternion()
+            
+            base:setAngles(QuatLib.RotateTowards(start, target, rate):getEulerAngle())
+        end
+        
+        wire.ports["Fire"] = (owner:keyDown(IN_KEY.ATTACK) and owner:inVehicle() and owner:getVehicle() == seat) and 1 or 0
+    end)
+elseif player() == owner then
+    enableHud(owner, true)
+    
+    local offset, scopeFOV, scopeFOVZoom, toggle = {x = 0, y = 0}, 45, 15, false
+    net.receive("GiveEnts", function()
+        seat = net.readEntity()
+        scopeEnt = net.readEntity()
+    end)
+
+    function calcScopeOffset(resX, resY)
+        local localisedAng = scopeEnt:worldToLocalAngles(seat:localToWorldAngles(eyeAngles()))
+        
+        offset.x = localisedAng.y * (resX / 90)
+        offset.y = -localisedAng.p * (resY / 90)
+    end
+    
+    render.createRenderTarget("scopeRT")
+    local reticle = material.load("cw2/reticles/scope_leo")
+    local scope = material.load("cw2/effects/lensring")
+    
+    hook.add("renderscene", "drawScopeRT", function()
+        if not toggle or not owner:inVehicle() or owner:getVehicle() ~= seat or not scopeEnt or not isValid(scopeEnt) then return end
+        local zoom = input.isMouseDown(MOUSE.RIGHT)
+        
+        render.selectRenderTarget("scopeRT")
+        render.renderView({
+            origin = scopeEnt:getPos(),
+            angles = scopeEnt:getAngles(),
+            w = 1024,
+            h = 1024,
+            fov = zoom and scopeFOVZoom or scopeFOV,
+            drawviewmodel = false,
+            drawviewer = true,
+        })
+    end)
+    
+    hook.add("drawhud", "drawScopeToHUD", function()
+        if not toggle or not owner:inVehicle() or owner:getVehicle() ~= seat or not scopeEnt or not isValid(scopeEnt) then toggle = false; return end
+        
+        local resX, resY = render.getResolution()
+        local scopeSize = resY*0.8
+        calcScopeOffset(resX, resY)
+        
+        -- Black background
+        render.setColor(Color(0, 0, 0))
+        render.drawRect(0, 0, resX, resY)
+    
+        -- Scope rendertarget
+        render.setColor(Color(255, 255, 255))
+        render.setRenderTargetTexture("scopeRT")
+        render.drawTexturedRect(resX/2 - scopeSize/2 + offset.x, resY/2 - scopeSize/2 + offset.y, scopeSize, scopeSize)
+        
+        -- CW2.0 Scope
+        render.setMaterial(reticle)
+        render.drawTexturedRect(resX/2 - scopeSize/2 + offset.x, resY/2 - scopeSize/2 + offset.y, scopeSize, scopeSize)
+        render.setMaterial(scope)
+        render.drawTexturedRect(resX/2 - scopeSize/2 + offset.x, resY/2 - scopeSize/2 + offset.y, scopeSize, scopeSize)
+    end)
+    
+    hook.add("inputPressed", "handleGUIInput", function(key)
+        if not owner:inVehicle() or owner:getVehicle() ~= seat or not scopeEnt or not isValid(scopeEnt) then return end
+        
+        if key == KEY.SHIFT then toggle = not toggle end
+    end)
+    
+    net.start("RequestSeat")
+    net.send()
+end

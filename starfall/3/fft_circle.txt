@@ -1,0 +1,52 @@
+--@name FFT Circle
+--@author EGR
+--@client
+
+local n = 32
+local fft = {}
+local url = 'https://play.sas-media.ru/play_256'
+local mul = 50
+local fftmul=500
+local NumSegment = 2
+local high = 100
+local sound;
+
+function quota()
+    return quotaAverage() / quotaMax()
+end
+
+function start()
+    bass.loadURL( url, '3d noblock', function(Sound)
+        Sound:play()
+        sound = Sound
+        //hook.add("think","",function()
+        //    Sound:setPos(chip():getPos()+Vector(0,0,high))
+        //    fft=Sound:getFFT(6)
+        //end)
+    end)
+    
+    hook.add("postdrawopaquerenderables",'',function()
+        if sound == nil then return end
+        sound:setPos(chip():getPos()+Vector(0,0,high))
+        fft=sound:getFFT(6)
+        //if quota() > 0.5 then return end
+        for i=1,n do
+            local deg = (math.pi / n *i)*2
+            local x = math.sin(deg)
+            local y = math.cos(deg)
+            local pos = Vector(0,x,y+high/mul)*mul
+            local ang = Angle(0,0,-deg * 180/math.pi)
+            
+            render.setColor(Color((timer.curtime()*10)%360 + 360 / n * i,1,1):hsvToRGB())
+            render.draw3DBox( chip():localToWorld(pos), chip():getAngles()+ang,Vector(), Vector(10,10,10+(fft[i%(n/NumSegment)] or 0)*fftmul) )  
+        end
+    end)
+end
+
+setupPermissionRequest({"bass.loadURL"}, "URL sounds from external sites", true)
+
+hook.add("permissionrequest", "permission", function()
+    if url and hasPermission("bass.loadURL", url) then
+        start(url)
+    end
+end)

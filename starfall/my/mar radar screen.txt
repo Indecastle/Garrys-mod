@@ -3,16 +3,17 @@
 --@shared
 
 local Detail = 5
-local SizeMap = 35000
-local Z = 5000
-local Zoom = 3
+local SizeMap = 20000
+local Z = 1000
+local Zoom = 1
 local LevelDiff = 100
 
 local Performance = 50 // Manage to perfomance
-local Performance_Cpu_Limit = 0.5 // Manage to perfomance
+local Performance_Cpu_Limit = 0.3 // Manage to perfomance
 
 
 local RenderDistanceLimit = 3500000
+local Filtering = false
 
 local DistanceForStarting = 10000
 
@@ -164,7 +165,7 @@ else
                         local startPos = InitPos + Vector(HalfSizeMap_ - x*MapDxy, HalfSizeMap_ - y*MapDxy)
                         local endPos = startPos + Dir * RenderDistanceLimit
                         local dist = -1
-                        for i=0, 2 do
+                        for i=0, 10 do
                             tr = trace.trace(startPos, endPos, nil, 24737, nil, false)
                             if myIsInWorld(tr.HitPos) then
                                 dist = startPos:getDistance(tr.HitPos)
@@ -222,6 +223,12 @@ else
                 render.selectRenderTarget("myrendertarget2")
                 render.setRenderTargetTexture("myrendertarget")
                 render.clear(Color(0,0,0,0))
+                
+                if Filtering then
+                    render.setFilterMin(1)
+                    render.setFilterMag(1)
+                end
+                
                 render.drawTexturedRectRotated(512 + x, 512 + y, Zoom_, Zoom_, rot)
                 renderPlayers()
                 

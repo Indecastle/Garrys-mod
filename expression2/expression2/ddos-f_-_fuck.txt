@@ -1,0 +1,10 @@
+@name F - FUCK
+@persist [E H]:entity S Z I [G1 G2 G3 G4 G5 G6 G7 G8]:array
+@inputs O:entity
+runOnTick(1)
+I++
+while(softQuota() < maxquota()){#G1 = entity():soundFFT(1), G2 = entity():soundFFT(cos(G1[1,number])*10), G3 = entity():soundFFT(4*random(0,100)), G4 = entity():soundFFT(10),G5 = entity():soundFFT(random(0,100)), G6 = entity():soundFFT(cos(G6[1,number])*random(0,100)), G7 = entity():soundFFT(random(0,100)), G8 = entity():soundFFT(10)
+#holoCreate(I*2)
+#holoPos(I*2,randvec(0,1000)*sin(I*cos(entity():soundFFT(cos(G1[1,number])*random(0,100))[1,number])*10)*tan(I*13)/cos(I*cos(entity():soundFFT(cos(G1[1,number])*random(0,100))[1,number])*10))
+#holoAng(I*2,ang(sin(I*cos(G1[1,number])*10)*tan(I*13)/cos(I*cos(entity():soundFFT(cos(G1[1,number])*random(0,100))[1,number])*10)))
+}

@@ -4,7 +4,7 @@
 @persist 
 @trigger 
 
-if (first()) {
+if (first() + dupefinished()) {
     
     O = owner()
     Target = O

@@ -1,0 +1,104 @@
+--@name My Test Gui
+--@author
+--@include github_reps/Sevii77/lib/gui21.txt
+--@client
+
+local GUI = require("github_reps/Sevii77/lib/gui21.txt")
+local gui = GUI(512, 512)
+
+-- Use this for hud
+-- local w, h = render.getGameResolution()
+-- local gui = GUI(w, h)
+
+local text_block = "Satisfied conveying an dependent contented he gentleman agreeable do be. Warrant private blushes removed an in equally totally if. Delivered dejection necessary objection do mr prevailed. Mr feeling do chiefly cordial in do. Water timed folly right aware if oh truth. Imprudence attachment him his for sympathize. Large above be to means. Dashwood do provided stronger is. But discretion frequently sir the she instrument unaffected admiration everything."
+local debug_rendering = false
+local direct_rendering = false
+
+do
+    local body = gui:create("frame")
+    body.pos = Vector(4, 56)
+    body.size = Vector(250, 250)
+    body.title = "Fancy Example"
+    body.collapseOnClose = true
+    body.minSize = Vector(150, 250)
+    
+    do
+        local page = gui:create("base", body.inner)
+        page.h = 50
+        page.dock = GUI.DOCK.TOP
+        
+        -- Text
+        local s = ""
+        for k, v in pairs(string.split(text_block, " ")) do
+            s = s .. v .. (k % 10 == 0 and "\n" or " ")
+        end
+        
+        local text = gui:create("text", page)
+        text.text = s
+        text:setAlignment(0, 3)
+    end
+end
+
+do -- Grid
+    local body = gui:create("frame")
+    body.pos = Vector(258, 260)
+    body.size = Vector(250, 196)
+    body.title = "Grid"
+    body.collapseOnClose = true
+    body.minSize = Vector(150, 100)
+    
+    local grid = gui:create("grid", body.inner)
+    grid.itemSize = Vector(50, 50)
+    grid.dock = GUI.DOCK.FILL
+    grid:setDockMargin(5, 5, 5, 5)
+    
+    for i = 1, 10 do
+        local button = gui:create("button")
+        button.text = tostring(i)
+        grid:addItem(button)
+    end
+end
+
+
+hook.add("render", "", function()
+    --render.setBackgroundColor(Color(0, 0, 0, 0))
+    
+    gui:think()
+    
+    if direct_rendering then
+        gui:renderDirect()
+    else
+        gui:render()
+    end
+    
+    gui:renderCursor()
+    
+    if debug_rendering then
+        gui:renderDebug()
+    end
+    if mask_rendering then
+        gui:renderMasks()
+    end
+    
+    render.setRGBA(255, 255, 255, 255)
+    render.drawSimpleText(0, 0, tostring(math.round(quotaAverage() * 1000000)))
+    render.drawSimpleText(0, 20, tostring(math.round(ramAverage() / 1024)) .. " KiB")
+    
+    render.drawSimpleText(512, 0, tostring(gui._focus_object and gui._focus_object.object), 2)
+end)
+
+hook.add("drawHUD", "", function()
+    gui:think()
+    gui:renderHUD()
+    gui:renderCursor(10)
+    
+    if debug_rendering then
+        gui:renderDebug()
+    end
+    if mask_rendering then
+        gui:renderMasks()
+    end
+    
+    render.setRGBA(255, 255, 255, 255)
+    render.drawSimpleText(0, 35, tostring(math.round(quotaAverage() * 1000000)))
+end)

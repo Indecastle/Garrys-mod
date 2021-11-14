@@ -41,6 +41,17 @@ function table.reduce(list, fn, init)
     end
     return acc
 end
+function table.filter(t, func)
+    local maped = {}
+    local j = 1
+    for i=1, #t do
+        if func(t[i]) then
+            maped[j] = t[i]
+            j = j + 1
+        end
+    end
+    return maped
+end
 
 
 shortSymbols = { 
@@ -163,7 +174,7 @@ end
 function Text3D2D:run()
     // ##################### don't touch !!! #####################
 
-    function pos(mode)
+    function pos()
         return self.Target:getEyePos() + 
             ((self.Mode==1 or self.Mode==2) and Vector(0, 0, self.DataOffsetZ) or 
             self.Mode==3 and self.Target:getForward()*self.DataOffsetZ or
@@ -182,16 +193,16 @@ function Text3D2D:run()
     mat:setInt("$flags", 2^21) // translucent  -->  2097152
     mat:setTextureRenderTarget("$basetexture", "afkscreen")
     
-    local text = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
-    text:setMaterial("!" .. mat:getName())
-    text:setSize(Vector(self.textSize, self.textSize, 1))
+    local holoText = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
+    holoText:setMaterial("!" .. mat:getName())
+    holoText:setSize(Vector(self.textSize, self.textSize, 1))
     
     
-    local text2 = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
-    text2:setMaterial("!" .. mat:getName())
-    text2:setSize(Vector(self.textSize, self.textSize, 1))
+    local holoText2 = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
+    holoText2:setMaterial("!" .. mat:getName())
+    holoText2:setSize(Vector(self.textSize, self.textSize, 1))
     if not self.IsDoubleData then
-        text2:setColor(Color(0,0,0,0))
+        holoText2:setColor(Color(0,0,0,0))
     end
     
     //local font = render.createFont("Roboto", fontSize, fontBold, true)
@@ -432,7 +443,7 @@ function Text3D2D:run()
             local d = (-player():getForward()):getNormalized()
             eyeAngle = d:getAngle()  + self.InitAngle
         elseif self.Mode == 2 then
-            local d = (player():getEyePos() - pos()):getNormalized()
+            local d = (player():getEyePos() - holoText:getPos()):getNormalized()
             eyeAngle = d:getAngle()  + self.InitAngle
         elseif self.Mode==3 or self.Mode==4 then
             eyeAngle = self.Target:getAngles() + self.InitAngle
@@ -461,13 +472,13 @@ function Text3D2D:run()
         
         if self.isParentPos or isFirstParentPos then 
             isFirstParentPos = false
-            text:setPos(pos()) 
-            if self.IsDoubleData then text2:setPos(pos()) end 
+            holoText:setPos(pos()) 
+            if self.IsDoubleData then holoText2:setPos(pos()) end 
         end
         if self.isParentAngle or isFirstParentAngle then 
             isFirstParentAngle = false
-            text:setAngles(eyeAngle) 
-            if self.IsDoubleData then text2:setAngles(eyeAngle + Angle(0,0,180)) end
+            holoText:setAngles(eyeAngle) 
+            if self.IsDoubleData then holoText2:setAngles(eyeAngle + Angle(0,0,180)) end
         end
     end)
 end

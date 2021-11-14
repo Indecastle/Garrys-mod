@@ -1,0 +1,24 @@
+--@name Spawner Heal
+--@author Markiz
+--@include ./quake_spawner.txt
+--@server
+
+dofile("./quake_spawner.txt")
+
+local Vars = {
+    Radius = Vector(100),
+    Limit = 2,
+    Interval = 1,  -- sek
+    
+    OffsetZ = Vector(0, 0, 20),
+    OffsetX = Vector(-5,0,0),
+    
+    Class = "item_healthkit",
+    Model = "models/items/healthkit.mdl",
+    
+    E = chip(),
+    O = owner(),
+}
+
+obj = QuakeSpawner:new(Vars)
+obj:run()

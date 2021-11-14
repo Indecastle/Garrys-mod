@@ -16,7 +16,7 @@ hook.add("permissionrequest", "", function()
     permissionSatisfied = hasPermission("console.command")
     
     if permissionSatisfied then
-        concmd("say !build")
+        concmd("ulx votemap 3")
     end
 end)
 

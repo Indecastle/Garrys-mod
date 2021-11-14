@@ -1,0 +1,29 @@
+--@name E2SF Lock Doors
+--@author Markiz
+--@server
+
+-- getNWVarTable
+
+wire.adjustInputs({"Closed"}, {"Number"})
+wire.adjustOutputs({"Doors"}, {"Array"})
+
+local E = chip()
+
+function getDoors()
+    /*local doors = find.byClass("prop_door_rotating", function(e)
+        return !e:getNWVar("Closed")
+    end)*/
+    /*local doors = find.all(function(e)
+        return e:getClass() == "prop_door_rotating" and e:getNWVar("Closed")
+    end)*/
+    local isClosed = wire.ports.Closed==1 and true or false
+    local doors = find.inSphere(E:getPos(), 1000, function(e)
+        return e:getClass() == "prop_door_rotating" and e:getNWVar("Closed") == isClosed
+    end)
+    wire.ports.Doors = doors
+end
+
+
+--timer.create("getDoors", 0.5, 0, getDoors)
+
+hook.add("think", "", getDoors)

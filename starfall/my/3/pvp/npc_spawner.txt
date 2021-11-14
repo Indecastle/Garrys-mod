@@ -1,0 +1,238 @@
+--@name Spawner NPC
+--@author Markiz
+
+NpcSpawner = class("npc_spawner")
+
+-- Example
+--[[
+--@name Spawner Combine
+--@author Markiz
+--@include ../npc_spawner.txt
+--@server
+
+dofile("../npc_spawner.txt")
+
+local Vars = {
+    Limit = 5,
+    Interval = 1.2,  -- sek
+
+    SpawnRadius = 200,
+    CanSpawnRadius = 20,
+    CanSpawnBottomDistance = 10, -- need better CanSpawnRadius
+    SpawnUnder = false,
+    SpawnOnFloorAlways = true,
+    
+    OffsetZ = Vector(0, 0, 0),
+    OffsetX = Vector(-5,0,0),
+    
+    --Class = "CombineElite",
+    --Class = "npc_combine_s",
+    Class = "npc_turret_floor",
+    --CheckClass = "npc_combine_s",
+    --Class = "npc_helicopter",
+    --Class = "npc_clawscanner",
+    
+    --Weapon = "shotgun",
+    --Weapon = "ar2",
+    Weapon = "",
+    
+    Model = "models/combine/super_soldier.mdl",
+    
+    E = chip(),
+    O = owner(),
+}
+
+obj = NpcSpawner:new(Vars)
+obj:run()
+]]
+
+local dirs = {
+    Vector(0, 0, 1),
+    --Vector(0, 0, -1),
+    Vector(0, 1, 0),
+    Vector(0, -1, 0),
+    Vector(1, 0, 0),
+    Vector(-1, 0, 0),
+}
+
+
+function NpcSpawner:initialize(vars)
+    for k, v in pairs(vars) do
+        self[k] = v
+    end
+    
+    /*
+    self.Limit = vars.Limit
+    self.Interval = vars.Interval
+    self.OffsetZ = vars.OffsetZ
+    self.OffsetX = vars.OffsetX
+    self.Class = vars.Class
+    self.Model = vars.Model
+    self.E = vars.E
+    self.O = vars.O
+    */
+    
+    // ======================================================================
+    if self.SpawnRadiusH == nil then self.SpawnRadiusH = 100 end
+    if self.SpawnRadiusV == nil then self.SpawnRadiusV = 100 end
+    if self.CanSpawnRadius == nil then self.CanSpawnRadius = 20 end
+    if self.CanSpawnBottomDistance == nil then self.CanSpawnBottomDistance = 100 end
+    if self.SpawnUnder == nil then self.SpawnUnder = true end
+    if self.SpawnOnFloorAlways == nil then self.SpawnOnFloorAlways = false end
+    if self.SetFrozen == nil then self.SetFrozen = false end
+    if self.Limit == nil then self.Limit = 1 end
+    if self.Interval == nil then self.Interval = 5 end
+    if self.OffsetZ == nil then self.OffsetZ = Vector(0, 0, 20) end
+    if self.OffsetX == nil then self.OffsetX = Vector() end
+    --if self.RelationShip == nil then self.RelationShip = "hate" end
+    if self.Class == nil then self.Class = "npc_combine_s" end
+    if self.CheckClass == nil then self.CheckClass = self.Class end
+    if self.Model == nil then self.Model = "models/items/healthkit.mdl" end  --  or (nil / "")
+    --if self.Weapon == nil then self.Weapon = "" end
+    if self.E == nil then self.E = chip() end
+    if self.O == nil then self.O = owner() end
+    
+    if self._nextTime == nil then self._nextTime = timer.systime() end
+    if self._oldCount == nil then self._oldCount = 0 end
+    // ======================================================================
+end
+
+
+function NpcSpawner:GetAng()
+    return Angle(0, timer.systime()*50, 0)
+end
+
+
+function NpcSpawner:GetRandVector()
+    return Vector(
+        math.rand(-self.SpawnRadiusH, self.SpawnRadiusH), 
+        math.rand(-self.SpawnRadiusH, self.SpawnRadiusH), 
+        math.rand(self.SpawnUnder and -self.SpawnRadiusV or 0, self.SpawnRadiusV))
+end
+
+
+function NpcSpawner:IsPosInWorld(pos)
+    for i, d in ipairs(dirs) do
+        local tr = trace.trace(pos, pos + d*(self.CanSpawnRadius+0.1), nil, MASK.ALL, nil, false)
+        local dist = pos:getDistance(tr.HitPos)
+        
+        local npc = find.inSphere(pos, self.CanSpawnRadius, function(e)
+            return e:isNPC()
+        end)
+        
+        if !(pos + d*self.CanSpawnRadius):isInWorld() or dist < self.CanSpawnRadius or #npc != 0 then
+            return false
+        end
+    end
+
+    return true
+end
+
+
+function NpcSpawner:VerifyOnFloor(pos)
+    local tr = trace.trace(pos, pos + Vector(0,0,-1)*(self.CanSpawnBottomDistance+0.1), nil, MASK.ALL, nil, false)
+    local dist = pos:getDistance(tr.HitPos)
+    /*if dist > self.CanSpawnBottomDistance then
+        return false
+    end*/
+    
+    return dist < self.CanSpawnBottomDistance
+end
+
+
+function NpcSpawner:GetPosOnFloor(pos)
+    local tr = trace.trace(pos, pos + Vector(0,0,-1)*(self.CanSpawnBottomDistance+0.1), nil, MASK.ALL, nil, false)
+    return tr.HitPos + self.OffsetZ
+end
+
+
+function NpcSpawner:GetPos()
+    while true do
+        local pos = self.E:getPos() + self.OffsetZ + self:GetRandVector()
+        if self.SpawnOnFloorAlways then
+            if !self:VerifyOnFloor(pos) then
+                continue
+            end
+            pos = self:GetPosOnFloor(pos)
+            if self:IsPosInWorld(pos) then
+                return pos
+            end
+        else
+            if self:IsPosInWorld(pos) and self:VerifyOnFloor(pos) then
+                return pos
+            end
+        end
+    end
+end
+
+
+function NpcSpawner:FindEnts()
+    //local ents = find.inBox(self.E:getPos() - self.SpawnRadius, self.E:getPos() + self.SpawnRadius, function(e)
+    //    return e:getOwner() == self.O and e:getClass() == self.CheckClass
+    //end)
+    local ents = find.byClass(self.CheckClass, function(e)
+        return e:getOwner() == self.O
+    end)
+    
+    
+    return ents
+end
+
+function NpcSpawner:AddRelationShip(npc)
+    if self.RelationShip ~= nil then
+        for i, p in ipairs(find.allPlayers()) do
+            npc:addEntityRelationship(p, self.RelationShip, 99)
+            --npc:addRelationship("player D_LI 99")
+        end
+    end
+end
+
+
+function NpcSpawner:CreateEnt()
+    pcall(function()
+        local npc = prop.createSent(self:GetPos(), self:GetAng(), self.Class, true, {
+            model = self.Model,
+            //Color = Color(math.random(255), 1, 1):rgbToHSV()
+            --weapon = self.Weapon,
+        })
+        
+        if self.Weapon ~= nil then
+            npc:giveWeapon(self.Weapon)
+        end
+        
+        npc:setFrozen(self.SetFrozen)
+        
+        self:AddRelationShip(npc)
+    end)
+end
+
+
+function NpcSpawner:run()
+    hook.add("think","",function()
+        local ents = self:FindEnts()
+        
+        if self.FixWeapon then
+            for i, e in ipairs(ents) do
+                //e:setPos(self:GetPos())
+                //e:setAngles(self:GetAng())
+                //e:setFrozen(true)
+                e:giveWeapon(self.Weapon)
+                --self:AddRelationShip(e)
+            end
+        end
+        
+        
+        if #ents < self.Limit then
+            if #ents < self._oldCount then
+                self._nextTime = timer.systime() + self.Interval
+            end
+        
+            if self._nextTime < timer.systime() then
+                self._nextTime = timer.systime() + self.Interval
+                self:CreateEnt(ents)
+            end
+        end
+    
+        self._oldCount = #ents
+    end)
+end

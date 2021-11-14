@@ -1,0 +1,175 @@
+--@name PNG Writer Lib
+--@author Derpius
+--@client
+
+-- Here we see some nice python code that was horribly mutilated into Lua, press F
+if player() == owner() then
+
+-- some CRC32 code I found online
+crc_table = {}
+for i = 0, 255 do
+    local c = i
+    for _ = 1, 8 do
+        if bit.band(c, 1) ~= 0 then c = bit.bxor(0xEDB88320, bit.rshift(c, 1))
+        else c = bit.rshift(c, 1) end
+    end
+    crc_table[i] = c
+end
+--printTable(crc_table)
+
+function update_crc(crc, buf)
+    local c = crc
+    for i = 1, #buf do
+        c = bit.bxor(crc_table[bit.band(bit.bxor(c, string.byte(buf[i])), 0xFF)], bit.rshift(c, 8))
+    end
+    return c
+end
+
+function crc32(buf)
+    return bit.bxor(update_crc(0xFFFFFFFF, buf), 0xFFFFFFFF)
+end
+
+function bytesToString(bytes)
+    local ret = ""
+    for i = 1, #bytes do
+        ret = ret..string.char(bytes[i])
+    end
+    return ret
+end
+
+function numToBytes(num, length, bigEndian)
+    bigEndian = bigEndian == nil and true or bigEndian
+    ret = ""
+    
+    if bigEndian then
+        for i = 0, length - 1 do
+            ret = string.char(bit.rshift(bit.band(num, 0xFF * 256^i), i * 8))..ret
+        end
+    else
+        for i = 0, length - 1 do
+            ret = ret..string.char(bit.rshift(bit.band(num, 0xFF * 256^i), i * 8))
+        end
+    end
+    
+    return ret
+end
+
+PNG = {}
+function PNG:new(imgArray, depth)
+    if #imgArray < 1 or #imgArray[1] < 1 then throw("Attempted to create PNG from empty image") end
+    
+    ret = {
+        _img = {},
+        depth = depth,
+        width = #imgArray[1],
+        height = #imgArray,
+        _colourType = 2, -- I'm just gonna assume that the image is colour type 2 cause the entire tracer works that way, orig python code had a function to choose one
+        _makeHeader = self._makeHeader,
+        _makeIDATChunk = self._makeIDATChunk,
+        _makePNG = self._makePNG,
+        save = self.save
+    }
+    
+    for i = 1, #imgArray do
+        for j = 1, #imgArray[1] do
+            ret._img[#ret._img + 1] = imgArray[i][j]
+        end
+    end
+    
+    return ret
+end
+
+function PNG._makeHeader(self)
+    if self.width > 4294967295 or self.height > 4294967295 then throw("Image size overflow") end
+    if self.depth ~= 8 and self.depth ~= 16 then throw("Invalid bit depth, expected 8 or 16") end
+    
+    -- write width and height as 4 bytes each
+    local hdr = numToBytes(self.width, 4)..numToBytes(self.height, 4)
+    
+    -- write the bit depth and colour type
+    hdr = hdr..string.char(self.depth)..string.char(self._colourType)
+    
+    -- write the other values I'm not handling
+    hdr = hdr..string.rep(string.char(0), 3)
+    
+    -- get the length of the header, and prepend the IHDR flag
+    local length = #hdr
+    hdr = "IHDR"..hdr
+    
+    -- return the completed header
+    return numToBytes(length, 4)..hdr..numToBytes(crc32(hdr), 4)
+end
+
+function PNG._makeIDATChunk(self)
+    local chunk = ""
+    for i = 1, #self._img do
+        --if self._colourTypeFromPixel(self._img[i]) != self._colourType: raise Exception("Image has inconsistent colour types")
+        if #self._img[i] ~= 3 then throw("Image has invalid colour types") end
+
+        if (i - 1) % self.width == 0 then chunk = chunk..string.char(0) end
+
+        -- Iterate over the values of the pixel
+        for _, colour in pairs(self._img[i]) do
+            -- Calculate a colour from the float that fits the bit depth and append to the chunk
+            chunk = chunk..numToBytes(math.round(colour * (2^self.depth - 1)), self.depth/8)
+        end
+    end
+    
+    -- Compress the chunk data, compute the length, and add the header specifier
+    for i = 1, #chunk do
+        print(string.sub(bit.tohex(string.byte(chunk[i])), -2))
+    end
+    chunk = fastlz.compress(chunk)
+    local length = #chunk
+    chunk = "IDAT"..chunk
+
+    return numToBytes(length, 4)..chunk..numToBytes(crc32(chunk), 4)
+end
+
+function PNG._makePNG(self)
+    if #self._img ~= self.width * self.height then throw("Pixels do not match specified dimensions") end
+
+    -- Define a variable with the PNG signature
+    local png = string.char(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+
+    -- Build the header from the above and append to the PNG
+    png = png..self:_makeHeader()
+
+    -- Create IDAT chunk
+    png = png..self:_makeIDATChunk()
+
+    -- Create the IEND chunk
+    png = png..numToBytes(0, 4).."IEND"..numToBytes(crc32("IEND"), 4)
+
+    return png
+end
+
+function PNG.save(self, name)
+    -- My python lib could save anywhere, this isn't required for the tracer so the name is appended to a known filepath
+    --if not os.path.exists(os.path.dirname(path)): raise Exception("Invalid path")
+    --if os.path.splitext(path)[1] != ".png": path += ".png"
+    
+    -- Sanetize the name
+    name = string.replace(name, "/", "")
+    name = string.replace(name, "\\", "")
+
+    local f = file.open("renders/"..name..".png", "w")
+    if not f then throw("failed to open/create file '".."renders/"..name..".png".."'") end
+    --local png = self:_makePNG()
+    f:write(self:_makePNG())
+    --[[for i = 1, #png do
+        print(string.sub(bit.tohex(string.byte(png[i])), -2))
+        f:writeByte(string.byte(png[i]))
+    end]]
+    f:close()
+end
+
+img = {
+    {{1, 0, 0}, {0, 1, 1}, {0, 0.5, 0}, {0, 0, 1}},
+    {{1, 0, 0}, {0, 1, 1}, {0, 0.5, 0}, {0, 0, 1}},
+}
+
+png = PNG:new(img, 8)
+png:save("test")
+
+end

@@ -1,0 +1,130 @@
+--@name SoundVisual
+--@author AKCEJIb
+--@include libs/hsv.txt
+--@include libs/class.txt
+
+require("libs/hsv.txt")
+require("libs/class.txt")
+if SERVER then return end
+
+local Particle = Class()
+
+
+function Particle:constructor (x, y, scale, xv, yv, clr)
+    -- Just standard assignment, we want to make sure we get all the properties.
+    -- If one of the params is nil, then the default value, 0, will be assigned.
+    self.x = x or 0
+    self.y = y or 0
+    self.scale = scale or 0
+    self.x_vel = xv or 0
+    self.y_vel = yv or 0
+    self.color = clr or Color(0, 0, 0)
+end
+-- A think method, we'll use this to change particle states.
+function Particle:think ()
+    -- We draw first, then change state.
+
+    self:draw()
+
+    self.x = self.x + self.x_vel
+    self.y = self.y + self.y_vel
+
+    self.y_vel = self.y_vel
+    self.scale = self.scale - math.random(0.20, 0.4)
+end
+
+-- draw method so that each pixel can be drawn by itself.
+function Particle:draw ()
+    render.setColor(self.color)
+    render.drawTexturedRectRotated(self.x, self.y, self.scale, self.scale,0)
+end
+-- Little table to store some information about the display.
+local game = {}
+game.particles = {}
+
+local cos, sin = math.cos, math.sin
+local fftTable = {}
+if song then song:stop() end
+-- SoundLoad
+hook.add("permissionrequest", "permission", function()
+    bass.loadURL("https://play.sas-media.ru/play_256", "3d", function(snd, err, errtext)
+        if snd then
+        song = snd
+        snd:setFade(500,1500)
+        snd:setVolume(1)
+        hook.add("think", "snd", function()
+            snd:setPos(chip():getPos())
+            fftTable = snd:getFFT(2)
+        end)
+        end
+    end)
+end)
+
+local angle,ang = 0,0
+local t = timer.systime()
+local t2 = timer.systime()
+render.createRenderTarget("TestTarg")
+
+hook.add("render","fftRender", function()
+    t = (fftTable[2] or 512)/4
+    render.setRenderTargetTexture("TestTarg")
+    render.drawTexturedRect(0-t*1024/2,0-t*1024/2,512+t*1024,512+t*1024)
+
+    render.selectRenderTarget("TestTarg")
+    render.clear(Color(10,10,10))
+    
+    if #fftTable >= 512 then
+    local count = #fftTable/3
+    for i=1, count do
+
+    --local x,y = cos(math.rad((i/count)*360))*250, sin(math.rad((i/count)*360))*250
+    --local x1,y1 = cos(math.rad((i/count)*360+ang))*250, sin(math.rad((i/count)*360-ang))*250
+    --local x2,y2 = cos(math.rad((i/count)*360-ang))*250, sin(math.rad((i/count)*360+ang))*250
+    --local angle = math.atan2(y,x)*180/math.pi
+
+    local x, y = i*3, 512
+    local color = Color(HSVToRGB((i/count)*359,1,1,100))
+    --local color = Color(0,0,255,100)
+    local color2 = Color(255,255,255,255)
+    -- Lighting
+
+    --local angle = math.atan2(y,x)/math.pi*180
+    --render.setTexture(mater)
+    
+    render.setTexture()
+    render.setColor(color)
+    render.drawTexturedRectRotated(512+x-2,y,3,6+fftTable[i]*400,-angle)
+    render.drawTexturedRectRotated(512-x+2,y,3,6+fftTable[i]*400,-angle)
+    
+    render.setTexture()
+    render.setColor(color2)
+    render.drawTexturedRectRotated(512+x-2,y,1,5+fftTable[i]*400,-angle)
+    render.drawTexturedRectRotated(512-x+2,y,1,5+fftTable[i]*400,-angle)
+
+   
+    if fftTable[i]> 0.02 then
+        local nP = Particle(512-x+2,y-fftTable[i]*400/2,3,0, -fftTable[i]*400/16,color)
+        local nP1 = Particle(512+x-2,y-fftTable[i]*400/2,3,0, -fftTable[i]*400/16,color)
+        local nP2 = Particle(512+x-2,y+fftTable[i]*400/2,3,0, fftTable[i]*400/16,color)
+        local nP3 = Particle(512-x+2,y+fftTable[i]*400/2,3,0, fftTable[i]*400/16,color)
+        table.insert(game.particles, nP)
+        table.insert(game.particles, nP1)
+        table.insert(game.particles, nP2)
+        table.insert(game.particles, nP3)
+    end
+
+
+    if timer.systime() > t2 then
+
+        for k, v in pairs(game.particles) do
+            -- Now iterate over all our particles and check if they should be removed.
+            v:think()
+            if v.scale <= 0 then table.remove(game.particles, k) end
+            end
+
+            -- Increase our timer for our next draw time.
+            t2 = timer.systime() + (1 / 120)
+            end
+        end
+    end
+end)

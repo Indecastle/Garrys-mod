@@ -1,0 +1,92 @@
+--@name Tank Controller
+--@author Derpius
+--@shared
+
+if SERVER then
+    --@include ./turret.txt
+    --@include ./hull.txt
+
+    wire.adjustInputs({"WheelsLeft", "WheelsRight", "Turret", "Cannon", "Scope", "Seat", "DriverCam"}, {"array", "array", "entity", "entity", "entity", "entity", "entity"})
+    wire.adjustOutputs({"Fire", "FireMGs"}, {"number", "number"})
+    
+    local lastFrame = timer.curtime()
+    deltaTime = 0
+    
+    turretConfig = {
+        rate = 10,
+        force = 1000000,
+        smoothness = 3000
+    }
+    
+    cannonConfig = {
+        rate = 4,
+        elevation = 60,
+        depression = 5,
+        force = 1000000,
+        smoothness = 3000
+    }
+    
+    seatEnt = nil
+    scopeEnt = nil
+    seated = false
+    
+    hook.add("think", "measureDeltaTime", function()
+        local thisFrame = timer.curtime()
+        deltaTime = thisFrame - lastFrame
+        lastFrame = thisFrame
+    end)
+    
+    -- Update seating
+    hook.add("input", "onSeatChange", function(name, val)
+        if name == "Seat" then
+            seatEnt = isValid(val) and val or nil
+        elseif name == "Scope" then
+            scopeEnt = isValid(val) and val or nil
+        end
+    end)
+    
+    hook.add("think", "updateSeated", function()
+        seated = seatEnt == owner():getVehicle() and seatEnt ~= nil
+    end)
+    
+    dofile("./turret.txt")
+    dofile("./hull.txt")
+    
+    hook.add("ClientInitialized", "networkEnts", function(plr)
+        net.start("sendEnts")
+        net.writeEntity(seatEnt)
+        net.writeEntity(scopeEnt)
+        net.writeEntity(isValid(wire.ports["DriverCam"]) and wire.ports["DriverCam"] or entity(0))
+        net.send(plr)
+    end)
+end
+
+if CLIENT then
+    --@include ./gui.txt
+    
+    scopeConfig = {
+        pos = Vector(0, 0, 0)
+    }
+    
+    seatEnt = nil
+    scopeEnt = nil
+    driverCam = nil
+    seated = false
+    
+    net.receive("sendEnts", function()
+        seatEnt = net.readEntity()
+        scopeEnt = net.readEntity()
+        driverCam = net.readEntity()
+    end)
+    
+    hook.add("think", "updateSeated", function()
+        local wasSeated = seated
+        seated = seatEnt == player():getVehicle() and seatEnt ~= nil
+        
+        if wasSeated ~= seated then
+            enableHud(player(), seated)
+        end
+    end)
+    
+    dofile("./gui.txt")
+end

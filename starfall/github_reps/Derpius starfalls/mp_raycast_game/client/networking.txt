@@ -1,0 +1,99 @@
+net.receive("spawn", function(len, _)
+    local data = net.readTable()
+    
+    -- Map stuff
+    maxCasts = data.maxCasts
+    mapX     = data.mapX
+    mapY     = data.mapY
+    map      = data.map
+    
+    localPlayer.pos   = {x = data.spawnX, y = data.spawnY}
+    localPlayer.ang   = data.spawnAng
+    localPlayer.delta = {x = math.cos(data.spawnAng), y = math.sin(data.spawnAng)}
+end)
+
+net.receive("plrJoined", function(len, _)
+    local plr = net.readEntity()
+    players[plr] = {
+        pos = {x = net.readFloat(), y = net.readFloat()},
+        ang = net.readFloat(),
+        colour = {net.readUInt(8), net.readUInt(8), net.readUInt(8)}
+    }
+    
+    if plr == player() then
+        hook.run("joining")
+    end
+end)
+
+net.receive("plrLeft", function(len, _)
+    plr = net.readEntity()
+    players[plr] = nil
+    
+    if plr == player() then
+        hook.run("left")
+    end
+end)
+
+net.receive("plrsUpdated", function(len, _)
+    local count = net.readUInt(16)
+    for i = 1, count do
+        local plr = net.readEntity()
+    
+        if players[plr] then
+            players[plr].pos = {x = net.readFloat(), y = net.readFloat()}
+            players[plr].ang = net.readFloat()
+        else -- discard player data if invalid
+            net.readFloat()
+            net.readFloat()
+            net.readFloat()
+        end
+    end
+end)
+
+net.receive("givePlrs", function(len, _)
+    local count = net.readUInt(16)
+    for i = 1, count do
+        local plr = net.readEntity()
+        
+        if players[plr] then
+            net.readFloat()
+            net.readFloat()
+            net.readFloat()
+            net.readUInt(8)
+            net.readUInt(8)
+            net.readUInt(8)
+            continue
+        end
+        
+        players[plr] = {
+            pos = {x = net.readFloat(), y = net.readFloat()},
+            ang = net.readFloat(),
+            colour = {net.readUInt(8), net.readUInt(8), net.readUInt(8)}
+        }
+    end
+    
+    hook.run("joined")
+end)
+
+function networkPlayer()
+    net.start("plrUpdate")
+    net.writeFloat(localPlayer.pos.x)
+    net.writeFloat(localPlayer.pos.y)
+    net.writeFloat(localPlayer.ang)
+    net.send()
+end
+
+function joinServer()
+    net.start("plrJoin")
+    net.send()
+end
+
+function leaveServer()
+    net.start("plrLeave")
+    net.send()
+end
+
+function getPlrsOnServer()
+    net.start("getPlrs")
+    net.send()
+end

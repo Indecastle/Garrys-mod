@@ -19,7 +19,7 @@ function func()
     
     //local kek = target.Password 
     
-    local tr2 = trace.trace(O:getShootPos(), O:getShootPos() + O:getEyeAngles():getForward()*10000000, {O}, MASK.ALL, nil, false)
+    local tr2 = trace.trace(O:getShootPos(), O:getShootPos() + O:getEyeAngles():getForward()*100, {O}, MASK.ALL, nil, false)
     local dist = tr.HitPos:getDistance(O:getShootPos())
     local dist2 = tr2.HitPos:getDistance(O:getShootPos())
     
@@ -40,13 +40,14 @@ function func()
     end
     
     //print(dist)
-    //print(dist3)
+    //print(dist2)
     
     //print(tr2.HitPos:isInWorld())
 
     
     //target.SetSpeed = 1
-    printTable(target:getNWVarTable())
+    //printTable(target:getNWVarTable())
+    //target:use(nil, 1)
     
 --[[
     for i=0, 31 do

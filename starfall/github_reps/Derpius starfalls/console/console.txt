@@ -1,0 +1,450 @@
+if SERVER then
+    hook.add("ComponentLinked", "onScreenAttached", function(screen)
+        screen:setComponentLocksControls(true)
+    end)
+end
+
+if CLIENT then
+--if player() ~= owner() then return end
+
+console = {initialised = false}
+
+--[[----------------------------------------------------------
+    Validation Functions
+------------------------------------------------------------]]
+function console:validateCoords(row, col)
+    if row < 1 or row > self.rows or col < 1 or col > self.cols then
+        throw("Invalid indexes for console")
+    end
+end
+
+--[[----------------------------------------------------------
+    Basic Writing
+------------------------------------------------------------]]
+function console:pushLines(ammount)
+    if ammount < 0 then
+        throw("Attempted to push lines down")
+    end
+    
+    local newText = {}
+    for i = ammount + 1, self.rows do
+        newText[i - ammount] = self.text[i]
+    end
+    for i = #newText + 1, self.rows do
+        newText[i] = string.rep(" ", self.cols)
+    end
+    
+    self.text = newText
+    self.inputRow = self.inputRow - ammount
+    self.caret.row = self.caret.row - ammount
+end
+
+function console:writeChar(row, col, char)
+    self:validateCoords(row, col)
+    self.text[row] = string.setChar(self.text[row], col, char)
+end
+
+function console:writeLine(row, line)
+    -- If the row exceeds the terminal then push rows
+    if row > self.rows then
+        local ammount = row - self.rows
+        self:pushLines(ammount)
+        row = row - ammount
+    end
+    self:validateCoords(row, 1)
+    
+    if #line <= self.cols then
+        self.text[row] = line..string.rep(" ", self.cols - #line)
+        return 1
+    end
+    
+    -- This will only happen if the line overflows
+    local overflow = math.ceil(#line/self.cols) - 1
+    
+    -- Push text up to fit
+    if row + overflow > self.rows then
+        local ammount = row + overflow - self.rows
+        self:pushLines(ammount)
+        row = row - ammount
+    end
+    
+    self:validateCoords(row + overflow, 1)
+    
+    for i = 0, overflow do
+        local rowText = string.sub(line, i*self.cols + 1, i*self.cols + self.cols)
+        self.text[row + i] = rowText..string.rep(" ", self.cols - #rowText)
+    end
+    
+    return overflow + 1
+end
+
+--[[----------------------------------------------------------
+    Caret Functions
+------------------------------------------------------------]]
+function console:posToCaret(pos)
+    local col = (#self.activeLine + pos) % self.cols
+    if col == 0 then col = self.cols end
+    
+    local row = math.floor((#self.activeLine + pos - 1) / self.cols) + self.inputRow
+    
+    return row, col
+end
+
+function console:caretToPos(caret)
+    local row, col = caret.row - self.inputRow, caret.col
+    
+    return row*(self.cols) + col - #self.activeLine
+end
+
+function console:moveCaret(pos)
+    -- Clamp position to input buffer and assign to pointer
+    self.inputPointer = math.clamp(pos, 1, #self.inputBuffer + 1)
+    
+    -- Calculate 2D coords from position in input buffer and assign to caret
+    self.caret.row, self.caret.col = self:posToCaret(self.inputPointer)
+end
+
+--[[----------------------------------------------------------
+    Advanced Writing
+------------------------------------------------------------]]
+function console:print(text)
+    if text == nil then return end
+
+    local lines = string.explode("\n", tostring(text))
+    local linesWrote = 0
+    
+    for _, line in pairs(lines) do
+        linesWrote = linesWrote + self:writeLine(self.inputRow + linesWrote, line)
+    end
+    
+    self:writeLine(self.inputRow + linesWrote, self.activeLine..self.inputBuffer)
+    self.inputRow = self.inputRow + linesWrote
+    self:moveCaret(self.inputPointer)
+end
+
+--[[----------------------------------------------------------
+    Utility
+------------------------------------------------------------]]
+function console:clearInput()
+    self:writeLine(self.inputRow, self.activeLine)
+    self.caret = {row = self.inputRow, col = #self.activeLine + 1}
+    
+    for i = self.inputRow + 1, self.inputRow + self.inputOverflow do
+        self:writeLine(i, "")
+    end
+    
+    self.inputBuffer = ""
+    self.inputPointer = 1
+    self.inputOverflow = 0
+end
+
+function console:clearScreen()
+    for i = 1, self.rows do
+        self.text[i] = string.rep(" ", self.cols)
+    end
+    
+    self.caret = {row = 1, col = #self.activeLine + 1}
+    self:writeLine(1, self.activeLine)
+    
+    self.inputBuffer = ""
+    self.inputPointer = 1
+    self.inputRow = 1
+    self.inputOverflow = 0
+end
+
+function console.removeWhitespace(text)
+    for i = #text, 1, -1 do
+        if text[i] ~= " " then return string.sub(text, 1, i) end
+    end
+    
+    return ""
+end
+
+--[[----------------------------------------------------------
+    Input Buffer
+------------------------------------------------------------]]
+function console:saveBuffer()
+    if self.inputBuffer == "" then return end
+
+    if #self.inputHistory < self.inputHistoryMax then
+        self.inputHistory[#self.inputHistory + 1] = self.inputBuffer
+        self.inputHistoryPointer = #self.inputHistory + 1
+        return
+    end
+
+    for i = 2, self.inputHistoryMax do
+        self.inputHistory[i - 1] = self.inputHistory[i]
+    end
+    
+    self.inputHistory[self.inputHistoryMax] = self.inputBuffer
+    self.inputHistoryPointer = self.inputHistoryMax + 1
+end
+
+function console:changeBuffer(up)
+    if #self.inputHistory <= 0 then return end
+    
+    local move = up and -1 or 1
+    
+    if self.inputHistoryPointer + move < 1 or self.inputHistoryPointer + move > #self.inputHistory + 1 then return end
+    
+    self.inputHistoryPointer = self.inputHistoryPointer + move
+    
+    if self.inputHistoryPointer == #self.inputHistory + 1 then
+        self.inputBuffer = ""
+        self:moveCaret(1)
+        return
+    end
+    
+    self.inputBuffer = self.inputHistory[self.inputHistoryPointer]
+    self:moveCaret(#self.inputBuffer + 1)
+end
+
+function console:inputKey(key)
+    local buffer = string.toTable(self.inputBuffer)
+    table.insert(buffer, self.inputPointer, key)
+    self.inputBuffer = table.concat(buffer, "")
+    
+    self:moveCaret(self.inputPointer + 1)
+end
+
+function console:deleteKey(backwards)
+    if self.inputPointer == 1 and backwards then return end
+    self.inputBuffer = string.setChar(self.inputBuffer, self.inputPointer + (backwards and -1 or 0), "")
+    self:moveCaret(self.inputPointer + (backwards and -1 or 0))
+end
+
+--[[----------------------------------------------------------
+    Run Each Render Loop
+------------------------------------------------------------]]
+function console:handleInput()
+    if not self.ctrlDown and not self.rCtrlDown then
+        for k, v in pairs(self.keys) do
+            if not v then continue end
+            
+            local key = input.getKeyName(k)
+            if self.keyAliases[key] then key = self.keyAliases[key] end
+            
+            if #key == 1 then
+                -- Make sure we aren't gonna overflow the screen (yes this method is a bit hacky)
+                if self.inputRow == 1 then
+                    local oldPos = self.inputPointer
+                    self:moveCaret(#self.inputBuffer + 1)
+                    if self.caret.row == self.rows + 1 then
+                        self:moveCaret(oldPos)
+                        return
+                    end
+                    
+                    self:moveCaret(oldPos)
+                end
+                
+                -- Handle shift
+                if self.shifting or self.rShifting then
+                    if self.keyUpper[key] then key = self.keyUpper[key]
+                    else key = string.upper(key) end
+                end
+                
+                -- Write the char
+                self:inputKey(key)
+            elseif key == "BACKSPACE" or key == "DEL" then
+                -- Delete the char
+                self:deleteKey(key == "BACKSPACE")
+            elseif key == "ENTER" or key == "KP_ENTER" then
+                self:print(self.activeLine..self.inputBuffer)
+                self:onEnter(self.inputBuffer)
+                self:saveBuffer()
+                self:clearInput()
+            elseif key == "LEFTARROW" or key == "RIGHTARROW" then
+                self:moveCaret(self.inputPointer + (key == "LEFTARROW" and -1 or 1))
+            elseif key == "UPARROW" or key == "DOWNARROW" then
+                self:changeBuffer(key == "UPARROW")
+            elseif self.keyFuncs[key] then
+                self.keyFuncs[key](self.inputBuffer)
+            end
+            
+            self.keys[k] = false
+        end
+    else
+        for k, v in pairs(self.keys) do
+            if not v then continue end
+            
+            local key = input.getKeyName(k)
+            if self.keyAliases[key] then key = self.keyAliases[key] end
+            
+            if #key == 1 then
+                if not self.shifting and not self.rShifting then
+                    if key == "v" then
+                        self:print("Can't paste as it's impossible to read clipboard")
+                    elseif key == "c" then
+                        if player() ~= owner() then
+                            self:print("SF doesn't allow setting clipboard for clients other than owner")
+                        else
+                            setClipboardText(self.inputBuffer)
+                        end
+                    end
+                end
+            end
+            
+            self.keys[k] = false
+        end
+    end
+    
+    -- Write the new input buffer
+    local oldOverflow = self.inputOverflow
+    self.inputOverflow = self:writeLine(self.inputRow, self.activeLine..self.inputBuffer) - 1
+    
+    for i = self.inputRow + self.inputOverflow + 1, self.inputRow + oldOverflow do
+        self:writeLine(i, "")
+    end
+    
+    if self.caret.row <= self.rows then
+        self:writeChar(
+            self.caret.row,
+            self.caret.col,
+            self.cursorOn and (self.inputBuffer[self.inputPointer] == "" and " " or self.inputBuffer[self.inputPointer]) or "|"
+        )
+    end
+end
+
+function console:drawConsole()
+    render.drawText(10, 10, table.concat(self.text, "\n"))
+end
+
+--[[----------------------------------------------------------
+    Bindable Events
+------------------------------------------------------------]]
+function console:onEnter(text) end
+
+--[[----------------------------------------------------------
+    Initialisation
+------------------------------------------------------------]]
+function console:init(rows, cols, fontSize)
+    self.text = {}
+    
+    for i = 1, rows do
+        self.text[i] = string.rep(" ", cols)
+    end
+    
+    self.rows = rows
+    self.cols = cols
+    
+    self.inputBuffer = ""
+    self.inputPointer = 1
+    self.inputRow = 1
+    self.inputOverflow = 0
+    
+    self.inputHistory = {}
+    self.inputHistoryMax = 20
+    self.inputHistoryPointer = 1
+    
+    self.activeLine = "> "
+    
+    self.caret = {row = 1, col = 1}
+    
+    self.font = render.createFont("Courier New", fontSize, 400, true, false, false, false, false, true)
+    
+    self.keys = {}
+    self.keyAliases = {
+        ["SPACE"] = " ",
+        ["SEMICOLON"] = ";",
+        ["KP_INS"] = "0",
+        ["KP_END"] = "1",
+        ["KP_DOWNARROW"] = "2",
+        ["KP_PGDN"] = "3",
+        ["KP_LEFTARROW"] = "4",
+        ["KP_5"] = "5",
+        ["KP_RIGHTARROW"] = "6",
+        ["KP_HOME"] = "7",
+        ["KP_UPARROW"] = "8",
+        ["KP_PGUP"] = "9",
+        ["KP_ENTER"] = "ENTER",
+        ["KP_SLASH"] = "/",
+        ["KP_MULTIPLY"] = "*",
+        ["KP_MINUS"] = "-",
+        ["KP_PLUS"] = "+",
+        ["KP_DEL"] = ".",
+    }
+    self.keyFuncs = {}
+    self.keyUpper = {
+        ["1"] = "!",
+        ["2"] = '"',
+        --["3"] = "", SF EDITOR DOESN'T SUPPORT GBP SYMBOL, CAN'T FUCKING DO SHIFTED 3 HAHAHAHAHAHAAaHAAHAHAHAashhahssdhdsjfkahsdgjk;lh
+        ["4"] = "$",
+        ["5"] = "%",
+        ["6"] = "^",
+        ["7"] = "&",
+        ["8"] = "*",
+        ["9"] = "(",
+        ["0"] = ")",
+        ["-"] = "_",
+        ["="] = "+",
+        ["["] = "{",
+        ["]"] = "}",
+        [";"] = ":",
+        ["'"] = "@",
+        ["#"] = "~",
+        ["\\"] = "|",
+        [","] = "<",
+        ["."] = ">",
+        ["/"] = "?",
+    }
+    self.shifting = false
+    self.rShifting = false
+    self.ctrlDown = false
+    self.rCtrlDown = false
+    
+    self.cursorOn = false
+    
+    self:writeLine(1, self.activeLine)
+    
+    hook.add("inputPressed", "onKeyPressed", function(key)
+        console.keys[key] = true
+        
+        if input.getKeyName(key) == "SHIFT" then
+            self.shifting = true
+        elseif input.getKeyName(key) == "RSHIFT" then
+            self.rShifting = true
+        elseif input.getKeyName(key) == "CTRL" then
+            self.ctrlDown = true
+        elseif input.getKeyName(key) == "RCTRL" then
+            self.rCtrlDown = true
+        end
+    end)
+    hook.add("inputReleased", "onKeyReleased", function(key)
+        console.keys[key] = false
+        
+        if input.getKeyName(key) == "SHIFT" then
+            self.shifting = false
+        elseif input.getKeyName(key) == "RSHIFT" then
+            self.rShifting = false
+        elseif input.getKeyName(key) == "CTRL" then
+            self.ctrlDown = false
+        elseif input.getKeyName(key) == "RCTRL" then
+            self.rCtrlDown = false
+        end
+    end)
+    
+    self:moveCaret(1)
+    self.initialised = true
+end
+
+console:init(10, 10, 16)
+
+cursorCountdown = 99
+hook.add("render", "main", function()
+    render.setFont(console.font)
+    
+    if input.isControlLocked() and console.initialised and render.cursorPos(player(), render.getScreenEntity()) then
+        console:handleInput()
+        
+        if cursorCountdown == 0 then
+            console.cursorOn = not console.cursorOn
+        end
+    end
+    console:drawConsole()
+    
+    cursorCountdown = (cursorCountdown - 1) % 99
+end)
+
+
+console:print("this is a\ntest")
+end

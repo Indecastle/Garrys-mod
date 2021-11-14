@@ -1,0 +1,76 @@
+@name Colored Text Renderer Function
+@inputs Egp:wirelink
+
+# https://github.com/Potat05/My-Garry-s-Mod-E2/blob/main/EGPColoredText.txt
+
+
+
+
+# This whole thing only works if you are using an EGP object count instead of hard-coding the object numbers in.
+
+
+# Draws colored text
+# Color is assigned by hex color codes '#RRGGBB'
+# Use '\' if you don't want it to become colorized
+# #FFFFFF is the default color
+# Returns the new object count
+# The font is Lucida Console because all characters are the same width
+function number wirelink:egpColoredText(ObjectStartCount:number, String:string, Position:vector2, Scale:number, Centered:number) {
+    # For some reason I can't just use regex "(?<!\\)#[0-9A-F]{6}"
+    # That would make my life way easier buy noooo E2 doesn't want to work :(
+    
+    
+    # Get texts & colors
+    local Texts = array()
+    local Colors = array(vec(255))
+    local SI = 1
+    for(I=1, String:length(), 1) {
+        if(String[I] == "#" & String[I-1] != "\\") {
+            
+            Texts:pushString(String:sub(SI, I-1))
+            
+            Colors:pushVector(vec(
+                String:sub(I+1, I+2):toNumber(16),
+                String:sub(I+3, I+4):toNumber(16),
+                String:sub(I+5, I+6):toNumber(16)
+            ))
+            
+            SI = I+7
+        }
+    }
+    Texts:pushString(String:sub(SI))
+    
+    if(Texts[1, string]:length() == 0) {
+        Texts:removeString(1)
+        Colors:removeVector(1)
+    }
+    
+    # Draw texts
+    local AX = (Centered == 0 ? 0 : -((Texts:concat(""):length()*Scale*0.62)/2))
+    for(I=0, Texts:count(), 1) {
+        if(Texts[I, string]:length() != 0) {
+            This:egpText(ObjectStartCount, Texts[I, string], Position+vec2(AX, 0))
+            This:egpFont(ObjectStartCount, "Lucida Console")
+            This:egpColor(ObjectStartCount, Colors[I, vector])
+            This:egpSize(ObjectStartCount, Scale)
+            ObjectStartCount++
+        }
+        AX += Texts[I, string]:length()*Scale*0.62
+    }
+    
+    return ObjectStartCount
+}
+
+if(first() | duped()) {
+    Egp:egpClear()
+    local MSG = "#5651FBThe #FFAAFFquick brown fox #B40C7Fjumped #39D162over #796006the #67C1DBlazy #168322dog#FFFFFF."
+    Egp:egpColoredText(1, MSG, vec2(256, 256-16), 16, 1)
+}
+
+# 1 Line Version
+
+
+# https://github.com/Potat05/My-Garry-s-Mod-E2/blob/main/EGPColoredText.txt
+function number wirelink:egpColoredText(ObjectStartCount:number, String:string, Position:vector2, Scale:number, Centered:number) {
+    local Texts = array(), local Colors = array(vec(255)), local SI = 1, for(I=1, String:length(), 1) {if(String[I] == "#" & String[I-1] != "\\") {Texts:pushString(String:sub(SI, I-1)), Colors:pushVector(vec(String:sub(I+1, I+2):toNumber(16),String:sub(I+3, I+4):toNumber(16),String:sub(I+5, I+6):toNumber(16))), SI = I+7}}, Texts:pushString(String:sub(SI)), if(Texts[1, string]:length() == 0) {Texts:removeString(1), Colors:removeVector(1)}, local AX = (Centered == 0 ? 0 : -((Texts:concat(""):length()*Scale*0.62)/2)), for(I=0, Texts:count(), 1) {if(Texts[I, string]:length() != 0) {This:egpText(ObjectStartCount, Texts[I, string], Position+vec2(AX, 0)), This:egpFont(ObjectStartCount, "Lucida Console"), This:egpColor(ObjectStartCount, Colors[I, vector]), This:egpSize(ObjectStartCount, Scale), ObjectStartCount++}, AX += Texts[I, string]:length()*Scale*0.64}, return ObjectStartCount
+}

@@ -1,0 +1,113 @@
+--@name 3DWireframeBox
+--@client
+
+local tex = render.createMaterial("https://i.imgur.com/9UtATPQ.gif")
+tex:setInt("$flags", bit.bor(2^8))
+//tex:setTexture("$basetexture","phoenix_storms/ps_grass.vmt")
+
+mat = material.create("UnlitGeneric")
+//mat:setInt("$flags",138414080)
+//mat:setInt("$flags", bit.bxor(bit.bor(2^11, 2^22, 2^27)))
+mat:setInt("$flags", bit.bxor(bit.bor(2^11, 2^22, 2^27, 2^22)))
+mat:setTexture("$basetexture","gm_construct/grass1")
+//mat:setTexture("$basetexture2","gm_construct/grass2")
+//mat:setTexture("$detail","gm_construct/grass_clouds")
+//mat:setTexture("$surfaceprop","grass")
+//mat:setTexture("$detailscale","0.0025")
+//mat:setTexture("$detailblendfactor","0.3")
+//mat:setTexture("$detailblendmode","0")
+
+/*
+"LightmappedGeneric"
+{
+    "$basetexture" "gm_construct/grass1"
+    "$basetexture2" "gm_construct/grass2"
+    "$surfaceprop" "grass"
+
+    "$color2" "[1.5 1.6 1.5]"
+
+    "$detail" "maxofs2d/terrain_detail"
+    "$detailscale" "0.0025"
+    "$detailblendfactor" "0.3"
+    "$detailblendmode" "0"
+}
+*/
+local screenEnt
+
+
+local holo1 = holograms.create(chip():getPos() + Vector(0,8,40), Angle(), "models/spacecode/sfchip.mdl", Vector(1.4))
+//holo1:setColor(Color(0,0,0,0))
+
+function get3dHoloData(screenEnt)
+    local localOrigin = screenEnt:worldToLocal(eyePos()) + Vector(0, 0, 0)
+    local reflectedOrigin = screenEnt:localToWorld(localOrigin * Vector(1, -1, -1))  
+    
+    local localAng = screenEnt:worldToLocalAngles(eyeAngles())
+    local reflectedAngle = screenEnt:localToWorldAngles(Angle(-localAng.p, localAng.y, -localAng.r + 180))
+    
+    return {
+        reflectedOrigin = reflectedOrigin,
+        reflectedAngle = reflectedAngle,
+    }
+end
+
+function drawHolo(holo, viewData) end
+
+hook.add("render", "test", function ()
+    screenEnt = render.getScreenEntity()
+    
+    //render.draw3DWireframeBox(Vector(256), Angle(0,0,0), Vector(-256), Vector(256))
+    
+    render.setMaterial(mat)
+    //render.draw3DBox(Vector(256,256,256), Angle(), Vector(256,256,256), -Vector(256,256,256))
+
+    
+    local offset = Vector(100,100,50)
+    
+    render.draw3DLine(offset + Vector(50,50,0),   offset + Vector(50,100,0))
+    render.draw3DLine(offset + Vector(50,100,0),  offset + Vector(100,100,0))
+    render.draw3DLine(offset + Vector(100,100,0), offset + Vector(100,50,0))
+    render.draw3DLine(offset + Vector(100,50,0),  offset + Vector(50,50,0))
+    
+    render.draw3DLine(offset + Vector(50,50,0),   offset + Vector(100,100,0))
+    render.draw3DLine(offset + Vector(100,50,0),  offset + Vector(50,100,0))
+    
+    render.setColor(Color(200,100,50))
+    render.draw3DSphere(offset + Vector(75,75,0), 15, 100, 100)
+    
+    local angRotate = Angle(0, 0, 0)
+    
+    //render.setColor(Color(0,0,0,0))
+    render.setColor(Color(255,255,255))
+    render.setMaterial(tex)
+    //render.draw3DBeam(Vector(256,256,100), Vector(256,512,150), 256, 0, 1)
+    render.draw3DBox(Vector(256), angRotate, Vector(-128,-128,0), Vector(128,128,0))
+    
+    local viewData = get3dHoloData(screenEnt)
+    
+    local k = screenEnt:worldToLocal(eyePos())
+    
+    render.pushViewMatrix({
+                type = "3D",
+                origin = viewData.reflectedOrigin + Vector(0, 0, 0),
+                angles = viewData.reflectedAngle:setY(-viewData.reflectedAngle.y),
+                //fov = 90,
+                //aspect = 1,
+            })
+            
+     
+    //render.setLightingMode(1)
+    
+    //render.enableClipping(true)
+    //local clipNormal = screenEnt:getUp()
+    //render.pushCustomClipPlane(clipNormal, (screenEnt:getPos() + clipNormal):dot(clipNormal))
+    
+    holo1:setAngles(Angle(45, timer.curtime() * 100, 0))
+    holo1:setPos(chip():getPos() + Vector(0,8,40))
+    
+    holo1:draw()
+    
+    //drawHolo(holo1, holoData)
+    
+    //render.popCustomClipPlane()
+end)

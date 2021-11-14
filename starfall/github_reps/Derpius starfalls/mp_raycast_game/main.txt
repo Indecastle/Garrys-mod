@@ -1,0 +1,131 @@
+--@name Multiplayer 2D Raycaster Game
+--@author Derpius
+--@shared
+
+--@include ./utility.txt
+
+require("./utility.txt")
+
+if SERVER then
+--@includedir ./server
+
+-- Map
+maxCasts = 8 -- Maximum number of times a ray can fail to hit a wall
+mapX, mapY, mapS = 8, 8, 32
+map = {
+    1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 1, 0, 0, 0, 0, 1,
+    1, 0, 1, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 1, 0, 1,
+    1, 0, 1, 0, 0, 0, 0, 1,
+    1, 0, 1, 0, 0, 0, 0, 1,
+    1, 0, 1, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1,
+}
+
+-- Players
+players = {}
+spawnX, spawnY, spawnAng = 50, 50, PI*0.5
+
+
+requiredir("./server")
+end
+
+if CLIENT then
+--if player() != owner() then throw("Sorry, doesn't work for other players atm") end
+--@includedir ./client
+
+players = {}
+clientJoined = false
+
+-- Graphics
+FOV = 75
+RAYS = FOV*4
+LIGHT = 5
+LIGHTFALLOFF = 0.5
+
+-- Player
+localPlayer = {
+    pos = {x = 0, y = 0},
+    ang = 0,
+    movSpeed = 50,
+    rotSpeed = 3,
+    size = 10,
+    delta = {x = 0, y = 0}
+}
+
+-- Map
+maxCasts = 8 -- Maximum number of times a ray can fail to hit a wall
+mapX, mapY, mapS = 8, 8, 32
+map = {
+    1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1,
+}
+
+-- Engine
+lastFrameTime = nil
+deltaTime = nil
+
+requiredir("./client")
+
+hook.add("joining", "onJoin", function()
+    getPlrsOnServer()
+end)
+
+hook.add("joined", "onFinishJoin", function()
+    lastFrameTime = timer.curtime()
+    hook.add("drawhud", "render", function()
+        -- Measure delta time
+        local curtime = timer.curtime()
+        deltaTime = curtime - lastFrameTime
+        lastFrameTime = curtime
+        
+        -- If delta time is too high then drop the frame
+        if deltaTime > 1 then
+            --print("EXTREME LAG DETECTED ON PLAYER " .. player():getName() .. ", DROPPING FRAME.")
+            return
+        end
+        
+        -- Player
+        handleInput()
+        
+        -- Render scene as 3D
+        initDisp()
+        drawRays3D()
+        
+        --[[
+        if player() == owner() then
+            -- Draw the debug map
+            initMap()
+            drawPlayer()
+            
+            -- Draw other players on the map
+            for k, v in pairs(players) do
+                if k ~= player() then
+                    drawPlayer(v.pos.x, v.pos.y, false)
+                end
+            end
+        end
+        ]]
+    end)
+    
+    hook.add("tick", "network", function()
+        -- Network the local player
+        networkPlayer()
+    end)
+    
+    hook.add("left", "onLeave", function()
+        hook.remove("render", "render")
+        hook.remove("tick", "network")
+        hook.remove("left", "onLeave")
+    end)
+end)
+
+joinServer()
+end

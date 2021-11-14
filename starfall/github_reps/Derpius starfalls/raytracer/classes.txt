@@ -1,0 +1,306 @@
+Material = {}
+function Material:new(albedo, ior, alpha, reflect)
+    return {
+        albedo = albedo,
+        ior = ior,
+        alpha = alpha,
+        reflect = reflect
+    }
+end
+
+-- Vismesh tracing library
+function parsePPM(path)
+    local data = file.read(path)
+    if not data then throw("Failed to read PPM file "..path) end
+    
+    if string.sub(data, 1, 2) ~= "P6" then throw("PPM reader requires P6 format") end
+    local dims = string.split(string.split(data, "\n")[2], " ")
+    print("Loaded PPM")
+    return {
+        pixels = table.concat(string.split(data, "\n"), "\n", 4),
+        width = tonumber(dims[1]),
+        height = tonumber(dims[2])
+    }
+end
+
+vistrace = {}
+vistrace.ppmMats = {
+    --default = parsePPM("raytracer_materials/missingtexture.ppm")
+}
+vistrace.entCache = {}
+
+function vistrace.getPixel(u, v, mat)
+    if not vistrace.ppmMats[mat] then
+        -- check if the texture exists as a ppm
+        local path = "raytracer_materials/"..material.getTexture(mat, "$basetexture")..".ppm"
+        
+        if not file.exists(path) then
+            -- if the texture doesn't exist use the default
+            mat = "default"
+        else
+            -- if we do have it load it into a material object (caching dimensions)
+            vistrace.ppmMats[mat] = parsePPM(path)
+        end
+    end
+    
+    local pntr = (math.floor(vistrace.ppmMats[mat].height*v)*vistrace.ppmMats[mat].width + math.floor(vistrace.ppmMats[mat].width*u))*3 + 1
+    return Vector(string.byte(vistrace.ppmMats[mat].pixels, pntr, pntr + 2))/255
+end
+
+function vistrace.calcAABB(meshes, pos, ang)
+    local min, max = Vector(0), Vector(0)
+    
+    for i = 1, #meshes do
+        for j = 1, #meshes[i].triangles do
+            local vert = meshes[i].triangles[j].pos:getRotated(ang)
+            
+            if vert.x < min.x then min.x = vert.x end
+            if vert.y < min.y then min.y = vert.y end
+            if vert.z < min.z then min.z = vert.z end
+            
+            if vert.x > max.x then max.x = vert.x end
+            if vert.y > max.y then max.y = vert.y end
+            if vert.z > max.z then max.z = vert.z end
+        end
+    end
+    
+    return min + pos, max + pos
+end
+
+function vistrace.rayAABB(orig, dir, m, n, min, max)
+    n = n - m*(min + max)/2
+
+    local k = Vector(math.abs(m.x), math.abs(m.y), math.abs(m.z))*(max - min)/2
+    local t1, t2 = -n - k, -n + k
+    
+    local tNear, tFar = math.max(math.max(t1.x, t1.y), t1.z), math.min(math.min(t2.x, t2.y), t2.z)
+    
+    return not (tNear > tFar or tFar < 0)
+end
+
+function vistrace.traceEnt(origin, direction, ent)
+    local hit, t, u, v, hitVert = false, math.huge
+    local hitI, tI, uI, vI, hitVertI, meshI = false, math.huge
+    local hitJ, tJ, uJ, vJ, v0J, v1J, v2J = false, math.huge
+    local edge1, edge2, h, a, f, s, q
+    
+    
+    local adjOrig, adjDir = (origin - vistrace.entCache[ent].pos):getRotated(vistrace.entCache[ent].rotAng), direction:getRotated(vistrace.entCache[ent].rotAng)
+    
+    for i = 1, #vistrace.entCache[ent].meshes do
+        meshI = vistrace.entCache[ent].meshes[i]
+        -- Mesh intersect cause function overhead
+        for j = 1, #meshI.triangles - 2, 3 do
+            v0J, v1J, v2J = meshI.triangles[j].pos, meshI.triangles[j+1].pos, meshI.triangles[j+2].pos
+            edge1, edge2 = v1J - v0J, v2J - v0J
+
+            h = adjDir:cross(edge2)
+            a = edge1:dot(h)
+            if a > -EPSILON and a < EPSILON then continue end
+            
+            f = 1/a
+            s = adjOrig - v0J
+            uJ = f*s:dot(h)
+            if uJ < 0 or uJ > 1 then continue end
+            
+            q = s:cross(edge1)
+            vJ = f*adjDir:dot(q)
+            if vJ < 0 or uJ + vJ > 1 then continue end
+            
+            tJ = f*edge2:dot(q)
+            if tJ > EPSILON and tJ < tI then
+                tI = tJ
+                hitI = true
+                uI = uJ
+                vI = vJ
+                hitVertI = {i = i, j = j}
+            end
+        end
+        
+        if tI < t then
+            hit = true
+            t = tI
+            u = uI
+            v = vI
+            hitVert = hitVertI
+        end
+    end
+    if not hit then return false end
+    
+    return true, t, u, v, hitVert, ent:localToWorld(adjOrig + adjDir*t)
+end
+
+function vistrace.trace(origin, direction, entList)
+    local m = 1/direction
+    local n = m*origin
+
+    local hit, t, u, v, hitVert, hitPos = false, math.huge
+    local hitI, tI, uI, vI, hitVertI, hitPosI
+    
+    -- loop through the list of ents to trace
+    for i = 1, #entList do
+        -- if a cache of the ent's properties hasn't been created yet, do it now
+        if not vistrace.entCache[entList[i]] then
+            -- transpose the transformation matrix here cause SF is gay and using a function uses more CPU
+            local m = entList[i]:getMatrix():toTable()
+            
+            local new = {}
+            for row = 1, 4 do
+                new[row] = {}
+                for col = 1, 4 do
+                    new[row][col] = m[col][row]
+                end
+            end
+            
+            vistrace.entCache[entList[i]] = {
+                meshes = mesh.getModelMeshes(entList[i]:getModel()),
+                pos = entList[i]:getPos(),
+                rotAng = Matrix(new):getAngles()
+            }
+            vistrace.entCache[entList[i]].min, vistrace.entCache[entList[i]].max = vistrace.calcAABB(
+                vistrace.entCache[entList[i]].meshes,
+                vistrace.entCache[entList[i]].pos,
+                entList[i]:getAngles()
+            )
+        end
+    
+    
+        if vistrace.rayAABB(origin, direction, m, n, vistrace.entCache[entList[i]].min, vistrace.entCache[entList[i]].max) then
+            hitI, tI, uI, vI, hitVertI, hitPosI = vistrace.traceEnt(origin, direction, entList[i])
+            
+            if hitI and tI < t then
+                hit = true
+                t = tI
+                u = uI
+                v = vI
+                hitVert = {ent = entList[i], i = hitVertI.i, j = hitVertI.j}
+                hitPos = hitPosI
+            end
+        end
+    end
+    
+    if not hit then return {hit = false} end
+    
+    local v0 = vistrace.entCache[hitVert.ent].meshes[hitVert.i].triangles[hitVert.j]
+    local v1 = vistrace.entCache[hitVert.ent].meshes[hitVert.i].triangles[hitVert.j+1]
+    local v2 = vistrace.entCache[hitVert.ent].meshes[hitVert.i].triangles[hitVert.j+2]
+    local colour = hitVert.ent:getColor()
+    return {
+        hit = true,
+        hitPos = hitPos,
+        hitNormal = (v0.normal + v1.normal + v2.normal)/3,
+        u = (1 - u - v)*v0.u + u*v1.u + v*v2.u,
+        v = (1 - u - v)*v0.v + u*v1.v + v*v2.v,
+        hitMaterial = vistrace.entCache[hitVert.ent].meshes[hitVert.i].material,
+        reflectance = 0,
+        colour = Vector(colour.r/255, colour.g/255, colour.b/255),
+        alpha = colour.a/255,
+        ior = 1.5
+    }
+end
+
+Ray = {}
+-- Mathematical sphere intersect for dem smooth normals
+function sphereIntersect(centre, radius, ray)
+    local localOrig = ray.origin - centre
+    
+    local a = ray.direction:dot(ray.direction)
+    local b = 2 * localOrig:dot(ray.direction)
+    local c = localOrig:dot(localOrig) - radius^2
+    local discriminant = b^2 - 4*a*c
+    
+    if discriminant < 0 then return false end
+    
+    local t1 = (-b - math.sqrt(discriminant))/(2*a)
+    local t2 = (-b + math.sqrt(discriminant))/(2*a)
+    
+    local t = nil
+    if t1 < 0 and t2 < 0 then return false end
+    
+    if t1 < 0 then t = t2
+    elseif t2 < 0 then t = t2
+    else t = math.min(t1, t2) end
+    
+    return true, ray.origin + t*ray.direction, (localOrig + t*ray.direction):getNormalized()
+end
+
+function Ray.trace(self, objs, spheres)
+    local found = find.inRay(self.origin, self.origin + self.direction:getNormalized()*self.maxDist)
+    for i = #found, 1, -1 do
+        if objs[found[i]] then table.remove(found, i) end
+    end
+
+    traceData = trace.trace(self.origin, self.origin + self.direction:getNormalized()*self.maxDist, found, nil, nil, true)
+    
+    if spheres[traceData.Entity] then
+        -- check for mathematically perfect sphere intersect
+        local hit, hitpos, hitnorm = sphereIntersect(traceData.Entity:getPos(), spheres[traceData.Entity], self)
+        
+        -- if it didnt intersect with the perfect sphere, retrace but ignore the sphere
+        if not hit then
+            found[#found + 1] = traceData.Entity
+            traceData = trace.trace(self.origin, self.origin + self.direction:getNormalized()*self.maxDist, found, nil, nil, true)
+        else
+            traceData = {
+                Hit = hit,
+                HitPos = hitpos,
+                HitNormal = hitnorm,
+                Entity = traceData.Entity
+            }
+        end
+    end
+    
+    self.hit = traceData.Hit
+    self.hitPos = traceData.HitPos
+    self.hitDist = self.origin:getDistance(self.hitPos)
+    self.hitNormal = traceData.HitNormal
+    
+    if self.hit then
+        local colour = traceData.Entity:getColor()
+        self.hitMat = Material:new(
+            Vector(colour.r/255, colour.g/255, colour.b/255),
+            1.5,
+            colour.a/255,
+            traceData.Entity:getMaterial() == "debug/env_cubemap_model" and 1 or 0
+        )
+    end
+end
+
+function Ray:new(origin, direction)
+    return {
+        origin = origin,
+        direction = direction,
+        maxDist = 9999,
+        hit = false,
+        hitPos = Vector(0),
+        hitNormal = Vector(1),
+        hitDist = 0,
+        hitMat = Material:new(Vector(0), 1.5, 1, 0),
+        trace = self.trace
+    }
+end
+
+Light = {}
+function Light.getLightDir(self, point)
+    return (point - self.pos):getNormalized()
+end
+
+function Light:new(pos, intensity, colour)
+    return {
+        pos = pos,
+        intensity = intensity,
+        colour = colour,
+        getLightDir = self.getLightDir
+    }
+end
+
+Camera = {}
+function Camera:new(pos, ang, res, fov, planeDist)
+    return {
+        res = res,
+        planeDist = planeDist,
+        fov = fov,
+        pos = pos,
+        ang = ang
+    }
+end

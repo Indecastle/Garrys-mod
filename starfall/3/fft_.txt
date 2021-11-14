@@ -1,0 +1,65 @@
+--@name FFT 
+--@author
+--@client
+--@model models/props_lab/citizenradio.mdl
+
+local fft={}
+
+//mat2 = material.create("UnlitGeneric")
+//mat = material.create("UnlitGeneric")
+//mat:setInt("$flags",138414080)
+//mat:setInt("$flags", bit.bxor(bit.bor(2^11, 2^22, 2^27, 2^22)))
+//mat:setTexture("$basetexture","gm_construct/grass1")
+
+local url1 = "http://radio.licen777.ru/chechnya"
+local url2 = "http://radio.licen777.ru/stream"
+local url3 = "https://play.sas-media.ru/play_256"
+local url4 = "http://air.radiorecord.ru:8102/rock_128"
+
+local url = url3
+
+function start() 
+    bass.loadURL( url, "3d noblock", function(Sound)
+        //Sound:setVolume(0.2)
+        Sound:play()
+        hook.add("think","",function()
+            Sound:setPos(chip():getPos())
+            fft=Sound:getFFT(6)
+        end)
+    end)
+    
+                    
+    hook.add("render","",function()      
+        render.setColor(Color(188,1,(fft[5] or 0)*20):hsvToRGB()) 
+        render.draw3DBox(Vector(0,512,0),Angle(),Vector(),Vector(512*2))
+                    
+        render.setColor(Color(188,1,(fft[6] or 0)*20):hsvToRGB()) 
+        render.draw3DBox(Vector(512,512,0),Angle(0,0,90),Vector(),Vector(512))
+        render.draw3DBox(Vector(-512,512,0),Angle(0,0,90),Vector(),Vector(512))
+                        
+        render.setColor(Color(188,1,(fft[7] or 0)*20):hsvToRGB()) 
+        render.draw3DBox(Vector(0,0,0),Angle(0,0,90),Vector(),Vector(512))  
+                    
+        render.setColor(Color(188,1,(fft[10] or 0)*20):hsvToRGB()) 
+        render.draw3DBox(Vector(0,512,512),Angle(0,0,90),Vector(),Vector(512))
+        
+        render.setMaterial(mat)
+        render.draw3DBox(Vector(256,256,256), Angle(), Vector(256,256,256), -Vector(256,256,256))
+                    
+        for i=0,50,1 do
+            render.setMaterial()
+            render.setColor(Color(i*4,1,1):hsvToRGB())
+            render.draw3DBox(Vector(0+i*10,512,250),Angle(),Vector(),Vector(10,-50-(fft[i+1] or 0)*700,10))
+        end
+    end)
+end
+
+
+
+setupPermissionRequest({"bass.loadURL"}, "URL sounds from external sites", true)
+
+hook.add("permissionrequest", "permission", function()
+    if url and hasPermission("bass.loadURL", url) then
+        start(url)
+    end
+end)

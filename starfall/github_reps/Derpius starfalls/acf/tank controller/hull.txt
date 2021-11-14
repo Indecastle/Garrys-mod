@@ -1,0 +1,38 @@
+local torque = 60
+local reverseTorque = 30
+local steerTorque = 100
+
+function handleInput(steerPercentage)
+    local horizontal = (owner():keyDown(IN_KEY.MOVERIGHT) and 1 or 0) - (owner():keyDown(IN_KEY.MOVELEFT) and 1 or 0)
+    local vertical = (owner():keyDown(IN_KEY.FORWARD) and 1 or 0) - (owner():keyDown(IN_KEY.BACK) and 1 or 0)
+    
+    -- no movement
+    if vertical == 0 and horizontal == 0 then return 0, 0 end
+    
+    local vertTorque = owner():keyDown(IN_KEY.BACK) and reverseTorque or torque
+    
+    -- no steering
+    if horizontal == 0 then return vertical * vertTorque, vertical * vertTorque end
+    
+    -- neutral steering
+    if vertical == 0 then return horizontal * steerTorque, -horizontal * steerTorque end
+    
+    -- steering on the move
+    local forward = 1
+    if vertical < 0 then forward = -1 end -- invert reverse steering
+    return horizontal > 0 and vertical * vertTorque + steerTorque * forward or 0, horizontal < 0 and vertical * vertTorque + steerTorque * forward or 0
+end
+
+hook.add("think", "rotateWheels", function()
+    if not seated then return end
+    
+    local leftT, rightT = handleInput(0.4)
+    if not leftT then return end
+    
+    for i = 1, #wire.ports["WheelsLeft"] do
+        wire.ports["WheelsLeft"][i]:applyTorque(Vector(0, leftT * torque, 0):getRotated(wire.ports["WheelsLeft"][i]:getAngles()))
+    end
+    for i = 1, #wire.ports["WheelsRight"] do
+        wire.ports["WheelsRight"][i]:applyTorque(Vector(0, rightT * torque, 0):getRotated(wire.ports["WheelsRight"][i]:getAngles()))
+    end
+end)

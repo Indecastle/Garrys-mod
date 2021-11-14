@@ -2,10 +2,10 @@
 --@author
 --@shared
 
-local Detail = 10
+local Detail = 5
 local SizeMap = 35000
-local Z = 5000
-local Zoom = 3
+local Z = 3000
+local Zoom = 1
 local LevelDiff = 100
 
 local Performance = 50 // Manage to perfomance
@@ -13,6 +13,7 @@ local Performance_Cpu_Limit = 0.5 // Manage to perfomance
 
 
 local RenderDistanceLimit = 3500000
+local Filtering = false
 
 
 local OnlyOwner = false
@@ -209,7 +210,6 @@ else
                             end
                         end
                         
-                        
                         render.setColor(color)
                         render.drawRectFast(x*Detail,Res_*Detail - y*Detail, Detail, Detail)
                         
@@ -249,12 +249,19 @@ else
                 render.selectRenderTarget("myrendertarget2")
                 render.setRenderTargetTexture("myrendertarget")
                 render.clear(Color(0,0,0,0))
+                
+                if Filtering then
+                    render.setFilterMin(1)
+                    render.setFilterMag(1)
+                end
+                
                 render.drawTexturedRectRotatedFast(512 + x, 512 + y, Zoom_, Zoom_, rot)
                 renderPlayers()
                 
                 render.selectRenderTarget()
                 render.setRenderTargetTexture("myrendertarget2")
                 render.clear(Color(0,0,0,0))
+                  
                 render.drawTexturedRect(0, 0, 256, 256)
                 
                 render.setColor(Color())

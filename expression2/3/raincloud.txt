@@ -1,0 +1,356 @@
+@name rainCloud
+@inputs 
+@outputs Status:string Test:vector Lightning:table TargetPos:vector
+@persist DripNoises:array Status:string Time
+@persist NumRaindrops RainFallSpeed RainSplashDuration RainColor:vector RainAlpha RainWidth RainHeight RainTailToBodyRatio CloudHeight
+@persist Cloud CloudEntity:entity UnusedDrops:array FallingDrops:array PuddleEnt:entity PuddleDropGrowthFactor PuddleDropStartSize PuddleDepth
+@persist HoloI LastI DepressedUser:entity
+@persist LightningZigDistance LightningZigWidth Target:entity TargetPos:vector Lightning:table
+@trigger 
+
+interval(100)
+
+if (first()){
+    NumRaindrops = 20
+    RainFallSpeed = 75 #units/sec
+    RainSplashDuration = 0.5 #in seconds
+    
+    RainColor = vec(50, 50, 255)
+    RainAlpha = 100
+    
+    RainWidth = 2
+    RainHeight = 5
+    RainTailToBodyRatio = 2/3 #1 would be all tail and 0 would be all body
+    
+    CloudHeight = 150
+    
+    PuddleDropGrowthFactor = 10 #each drip is divided by this #bigger numbers mean slower growth
+    PuddleDropStartSize = 40 #number of drops that a new puddle is created with
+    PuddleDepth = 5
+    
+    LightningZigDistance = 100
+    LightningZigWidth = 25
+    
+    #cloud will get created on first so need to persist
+    CloudModel = "models/props_forest/cliff_wall_07.mdl" #I like this for model but its bounding box is all screwed up
+    #CloudModel = "models/hunter/blocks/cube8x8x025.mdl"
+    CloudModelCenterOffset = vec(0, 50, 0) #found empirically #for many models probably is just vec(0,0,0)
+    #CloudModelCenterOffset = vec(0, 0, 0)
+    CloudColor = vec(25, 25, 25)
+    CloudAlpha = 254
+    
+    #beamMaterial("models/alyx/emptool_glow")
+    #beamColor(vec(230, 230, 255))
+}
+
+if (first()){
+    DripNoises = array()
+    #DripNoises:pushString("ambient/water/distant_drip1.wav")
+    #DripNoises:pushString("ambient/water/distant_drip2.wav")
+    #DripNoises:pushString("ambient/water/distant_drip3.wav")
+    #DripNoises:pushString("ambient/water/distant_drip4.wav")
+    #DripNoises:pushString("ambient/water/drip1.wav")
+    #DripNoises:pushString("ambient/water/drip2.wav")
+    #DripNoises:pushString("ambient/water/drip3.wav")
+    #DripNoises:pushString("ambient/water/drip4.wav")
+    #DripNoises:pushString("ambient/drips1.wav")
+    #DripNoises:pushString("ambient/drips2.wav")
+    #DripNoises:pushString("ambient/drips3.wav")
+    #DripNoises:pushString("player/footsteps/dirt4.wav")
+    #DripNoises:pushString("player/footsteps/fs_fm_paint_08.wav")
+    DripNoises:pushString("misc/clap_single_1.wav")
+    #DripNoises:pushString("misc/clap_single_2.wav")
+    
+    Puddle = 0
+    
+    HoloI = 0
+    LastI = 1
+}
+
+if (first()){    
+    
+    function number createHolo(HoloModel:string, Color:vector, Alpha:number){
+        HoloI += 1
+        holoCreate(HoloI)
+        holoModel(HoloI, HoloModel)
+        holoColor(HoloI, Color, Alpha)
+        holoAng(HoloI, ang(0,0,0)) #prevents rotation if chip spawned at angle
+        
+        return HoloI
+    }
+    function number createHolo(HoloModel:string, Color:vector){
+        createHolo(HoloModel, Color, 255)
+        
+        return HoloI
+    }
+    function number createHolo(HoloModel:string){
+        return createHolo(HoloModel, randvec(0, 255))
+    }
+    function number createHolo(){
+        return createHolo("cube")   
+    }
+    
+    
+    function entity createRaindrop(){
+        SizeFactor = randint(5, 10)/10
+        Tail = createHolo("hq_cone", RainColor, RainAlpha)
+        Body = createHolo("hq_dome", RainColor, RainAlpha)
+        
+        Height = RainHeight*RainTailToBodyRatio
+        holoPos(Tail, entity():pos() + vec(0, 0, Height*SizeFactor))
+        holoScaleUnits(Tail, vec(RainWidth, RainWidth, Height)*SizeFactor)
+        
+        Height = RainHeight*(1 - RainTailToBodyRatio)
+        holoPos(Body, entity():pos() + vec(0, 0, Height*SizeFactor))
+        holoAng(Body, ang(0, 0, -180))
+        holoScaleUnits(Body, vec(RainWidth, RainWidth, Height)*SizeFactor)
+        
+        Parent = createHolo("hq_torus_thick", RainColor)
+        holoPos(Parent, entity():pos() + vec(0, 0, SizeFactor))
+        holoScaleUnits(Parent, vec(RainWidth*2, RainWidth*2, RainWidth)*SizeFactor)
+        ParentEntity = holoEntity(Parent)
+        holoParent(Tail, Parent)
+        holoParent(Body, Parent)
+        
+        rangerFilter(holoEntity(Tail))
+        rangerFilter(holoEntity(Body))
+        rangerFilter(ParentEntity)
+        
+        ParentEntity["hit", number] = 0
+        ParentEntity["tail", number] = Tail
+        ParentEntity["body", number] = Body
+        
+        return ParentEntity
+    }
+    
+    function string array:sample(){
+        return This[randint(1, This:count()), string]
+    }
+    function number array:any(){
+        return (This:count() > 0)
+    }
+    function number array:none(){
+        return !This:any()
+    }
+    function number array:indexOfEntity(E:entity){ #returns -1 if not found
+        for(I = 1, This:count()){
+            if (This[I, entity] == E){
+                return I
+            }
+        }
+        return -1
+    }
+    function number array:lastNumber(){
+        return This[This:count(), number]
+    }
+    function number table:lastIndex(){
+        return This:keys():lastNumber()
+    }
+    
+    function entity acquireRaindrop(){
+        if (UnusedDrops:none()){
+            return noentity()
+        }
+        
+        Drop = UnusedDrops:popEntity()
+        FallingDrops:pushEntity(Drop)
+        Drop["hit", number] = 0
+        
+        Drop:setAlpha(0) #technically this is the "splash"
+        
+        return Drop
+    }
+    function void entity:splashRaindrop(){
+        Index = holoIndex(This)
+        #soundStop(Index)
+        This:soundPlay(Index, 1, DripNoises:sample())
+        This:setAlpha(RainAlpha)
+        This["hit", number] = 1
+    }
+    function void entity:returnRaindrop(){
+        Index = holoIndex(This)
+        
+        FallingDrops:removeEntity(FallingDrops:indexOfEntity(This))
+        UnusedDrops:pushEntity(This)
+        holoPos(Index, entity():pos())
+    }
+    
+    function number entity:inPuddle(){
+        if (!PuddleEnt:isValid()){
+            return 0
+        }
+        
+        DropPos = Drop:pos()
+        PuddlePos = PuddleEnt:pos()
+        
+        #if the puddle is below the drop
+        if (PuddlePos:z() > DropPos:z()){
+            #then we can assume the drop will trickle into the puddle
+            DropPos:setZ(0)
+            PuddlePos:setZ(0)
+        }
+        
+        return (DropPos:distance(PuddlePos) <= PuddleEnt["scale-factor", number]*PuddleDropGrowthFactor)
+    }
+    
+    Status = "init"
+    Time = systime()
+    DepressedUser = owner()
+}
+
+Time = systime()
+ElapsedTime = $Time
+
+if (Status == "init"){
+    #setup cloud
+    Cloud = createHolo(CloudModel, CloudColor, CloudAlpha) 
+    CloudEntity = holoEntity(Cloud)
+    rangerFilter(CloudEntity)
+    CloudParent = createHolo()
+    Box = holoEntity(Cloud):boxMin()
+    holoScaleUnits(CloudParent, vec(abs(Box:x()), abs(Box:y()), abs(Box:z())))
+    holoPos(CloudParent, holoEntity(Cloud):pos() + CloudModelCenterOffset)
+    holoMaterial(Cloud, "phoenix_storms/black_chrome")
+    
+    holoAlpha(CloudParent, 0)
+    
+    holoParent(Cloud, CloudParent)
+    Cloud = CloudParent
+    CloudEntity = holoEntity(CloudParent)
+    rangerFilter(CloudEntity)
+    
+    #CloudEntity:streamStart(1, "http://k007.kiwi6.com/hotlink/5jmzzm9qjm/Luis_Fonsi_-_Despacito_ft._Daddy_Yankee.mp3")
+   
+    Status = "setup rain"
+}elseif (Status == "setup rain"){
+    UnusedDrops = array()
+    FallingDrops = array()
+
+    for(I = LastI, NumRaindrops){
+        if (!perf()){
+            LastI = I
+            break
+        }
+        
+        UnusedDrops:pushEntity(createRaindrop())
+    }
+    
+    Status = "raining"
+}elseif (Status == "raining"){
+    #init a new raindrop
+    NewDrop = acquireRaindrop()
+    if (NewDrop != noentity()){
+        #holoPos(holoIndex(NewDrop), CloudEntity:pos() + randvec(vec(0,0,0), CloudEntity:boxMax()):setZ(0))
+        holoPos(holoIndex(NewDrop), CloudEntity:pos() + randvec(0, CloudEntity:boxSize():length()):setZ(0) - CloudEntity:boxSize()/2)
+    }
+    
+    FallDistance = vec(0, 0, RainFallSpeed)*ElapsedTime
+    for(I = LastI, FallingDrops:count()){
+        if (!perf()){
+            LastI = I
+            break
+        }
+        
+        Drop = FallingDrops[I, entity]
+        
+        if (Drop["hit", number]){
+            if (Drop["splash-end", number] <= Time){
+                Drop:returnRaindrop()
+            }
+        }else{
+            
+            NewPos = Drop:pos() - FallDistance
+            #NewPos = Drop:pos()
+            Ranger = rangerOffset(Drop:pos(), NewPos)
+            
+            if (Ranger:hit()){
+                holoPos(holoIndex(Drop), Ranger:position())
+                Drop:splashRaindrop()
+                Drop["splash-end", number] = Time + RainSplashDuration
+                
+                #if we have a puddle currently
+                if (PuddleEnt:isValid()){
+                    Puddle = holoIndex(PuddleEnt)
+                    
+                    #if the drop landed in the puddle
+                    if (Drop:inPuddle()){
+                        PuddleEnt["scale-factor", number] = PuddleEnt["scale-factor", number] + 1/PuddleDropGrowthFactor
+                        holoScaleUnits(Puddle, (PuddleEnt:boxSize()*PuddleEnt["scale-factor", number]):setZ(PuddleDepth))
+                    }elseif (randint(10) == 5){ 
+                        #otherwise 1 in 10 chance to reset puddle
+                        holoDelete(Puddle)
+                        Puddle = 0
+                    }
+                }else{
+                    if (!Ranger:entity():isPlayer()){ #don't want to form puddles in midair
+                        #no puddle so we will create one
+                        Puddle = createHolo("models/props_junk/garbage_bag001a.mdl", RainColor, RainAlpha)
+                        PuddleEnt = holoEntity(Puddle)
+                        PuddleEnt["scale-factor", number] = PuddleDropStartSize/PuddleDropGrowthFactor
+                        holoScaleUnits(Puddle, (PuddleEnt:boxSize()*PuddleEnt["scale-factor", number]):setZ(PuddleDepth))
+                        holoPos(Puddle, Ranger:position())
+                    }
+                }
+                
+            }else{
+                holoPos(holoIndex(Drop), NewPos)
+            }
+        }
+    }
+
+}
+
+#holoPos(Cloud, entity():pos() + vec(0,0,CloudHeight))
+holoPos(Cloud, DepressedUser:pos() + vec(0,0,CloudHeight))
+
+if (DepressedUser:keyUse()){
+    if (DepressedUser:aimEntity():isValid()){
+        Target = DepressedUser:aimEntity()
+    }else{
+        TargetPos = DepressedUser:aimPos()
+    }
+}
+
+if (Target:isValid()){
+    if (Target:isPlayer()){
+        TargetPos = Target:shootPos()
+    }else{
+        TargetPos = Target:boxCenterW()
+    }
+}
+
+if (TargetPos:length() > 0){
+    if (Lightning:count() == 0){
+        Start = DepressedUser:shootPos() - vec(0,0,5)
+        Lightning:pushVector(Start)
+        #beamPoint(1, Start)
+    }
+    
+    LightningLastIndex = Lightning:lastIndex()
+    StartPos = Lightning[1, vector]
+    CurrentPos = Lightning[LightningLastIndex, vector]
+    
+    Test = CurrentPos
+    
+    LeftToTravel = TargetPos - CurrentPos
+    if (LeftToTravel:length() < LightningZigDistance){
+        if (Target:isPlayer()){
+            DepressedUser = Target
+            concmd("ulx ragdoll " + Target:name())
+        }
+        #beamPoint(LightningLastIndex + 1, TargetPos)
+        Lightning:clear()
+        Target = noentity()
+        TargetPos = vec(0,0,0)
+    }else{
+        Right = (TargetPos - StartPos):normalized():cross(vec(0,0,1))
+        if (mod(LightningLastIndex, 2) == 0){
+            Right = -Right
+        }
+        Dest = CurrentPos + Right*LightningZigWidth + LeftToTravel:normalized()*LightningZigDistance
+        #beamPoint(LightningLastIndex + 1, Dest)
+        Lightning:pushVector(Dest)
+    }
+}else{
+    #beamClear()
+}

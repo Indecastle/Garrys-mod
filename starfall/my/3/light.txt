@@ -1,0 +1,88 @@
+--@name Light
+--@author
+--@client
+
+local O = player()
+local OO = owner()
+local E = chip()
+local worldE = game.getWorld()
+
+if O ~= OO then return end
+
+local effectData = effect:create()
+
+//effectData:setStart(OO:getShootPos())
+//effectData:setOrigin(OO:getShootPos())
+
+//effectData:setEntity(OO)
+//effectData:setMagnitude(1)
+//effectData:setScale(3)
+//effectData:setRadius(1)
+//effectData:setDamageType(2^32 - 1)
+
+
+local sound;
+
+//local holo = holograms.create(Vector(), Angle(), "models/holograms/cube.mdl", Vector(1,1,1))
+
+//holo:addEffects(bit.bor(EF.NODRAW, EF.FOLLOWBONE))
+
+local light = light.create(Vector(),300,5,Color(0,0,0))
+
+timer.create("kek", 0.01, 0, function()
+    local tr = OO:getEyeTrace()
+    local target = tr.Entity 
+    local hitPos = tr.HitPos
+    local hitNormal = tr.HitNormal
+    
+    //print(target)
+    if target == worldE then return end 
+    
+    
+    //holo:setPos(tr.HitPos)
+    
+    local pos = target:isPlayer() and target:getShootPos() or target:getPos()
+    
+
+    
+    effectData:play("TeslaHitboxes")
+    
+    
+    
+end)
+
+
+
+/*
+## gunshotsplash
+## Explosion
+## WaterSurfaceExplosion
+## HunterDamage
+## HL1GaussReflect
+## HL1GaussWallPunchEnter
+## HL1GaussWallImpact2
+## HL1Gib
+## HL1ShellEject
+## cball_bounce
+## cball_explode
+## ManhackSparks
+## AntlionGib
+## RPGShotDown
+## BoltImpact
+## GunshipImpact
+##
+## balloon_pop
+
+
+## EjectBrass_9mm
+## EjectBrass_12Gauge
+## EjectBrass_57
+## EjectBrass_57
+
+
+## HL1GaussBeam_GMOD
+## StriderMuzzleFlash
+## AR2Tracer
+## PhyscannonImpact
+## ToolTracer
+*/

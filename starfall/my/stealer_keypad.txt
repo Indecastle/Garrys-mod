@@ -90,7 +90,7 @@ if SERVER then
     net.receive("passHandler", function (len, ply)
         local key = net.readString()
         local keypad = net.readEntity()
-        if string.len(key) == 4 then
+        if string.len(key) >= 2 then
             save_pass(keypad, key)
         end
     end)

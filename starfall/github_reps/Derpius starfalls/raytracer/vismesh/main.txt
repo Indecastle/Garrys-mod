@@ -1,0 +1,219 @@
+--@name Vismesh ray library testing
+--@author Derpius
+--@client
+
+if player() ~= owner() then throw("Using locally stored textures, so it's not gonna work for you") end
+
+hitHolo = holograms.create(
+    chip():getPos(),
+    Angle(0),
+    "models/sprops/geometry/sphere_3.mdl",
+    Vector(0.5)
+)
+
+EPSILON = 2.22044604925031308e-16
+
+function parsePPM(path)
+    local data = file.read(path)
+    if not data then throw("Failed to read PPM file "..path) end
+    
+    if string.sub(data, 1, 2) ~= "P6" then throw("PPM reader requires P6 format") end
+    local dims = string.split(string.split(data, "\n")[2], " ")
+    return {
+        pixels = table.concat(string.split(data, "\n"), "\n", 4),
+        width = tonumber(dims[1]),
+        height = tonumber(dims[2])
+    }
+end
+
+vistrace = {}
+vistrace.ppmMats = {
+    default = parsePPM("raytracer_materials/missingtexture.ppm")
+}
+vistrace.entCache = {}
+
+function vistrace.getPixel(u, v, mat)
+    if not vistrace.ppmMats[mat] then
+        -- check if the texture exists as a ppm
+        local path = "raytracer_materials/"..material.getTexture(mat, "$basetexture")..".ppm"
+        
+        if not file.exists(path) then
+            -- if the texture doesn't exist use the default
+            mat = "default"
+        else
+            -- if we do have it load it into a material object (caching dimensions)
+            vistrace.ppmMats[mat] = parsePPM(path)
+        end
+    end
+    
+    local pntr = (math.floor(vistrace.ppmMats[mat].height*v)*vistrace.ppmMats[mat].width + math.floor(vistrace.ppmMats[mat].width*u))*3 + 1
+    return Vector(string.byte(vistrace.ppmMats[mat].pixels, pntr, pntr + 2))/255
+end
+
+function vistrace.calcAABB(meshes, pos, scale, ang)
+    local min, max = Vector(0), Vector(0)
+    
+    for i = 1, #meshes do
+        for j = 1, #meshes[i].triangles do
+            local vert = (meshes[i].triangles[j].pos*scale):getRotated(ang)
+            
+            if vert.x < min.x then min.x = vert.x end
+            if vert.y < min.y then min.y = vert.y end
+            if vert.z < min.z then min.z = vert.z end
+            
+            if vert.x > max.x then max.x = vert.x end
+            if vert.y > max.y then max.y = vert.y end
+            if vert.z > max.z then max.z = vert.z end
+        end
+    end
+    
+    return min + pos, max + pos
+end
+
+function vistrace.rayAABB(orig, dir, m, n, min, max)
+    n = n - m*(min + max)/2
+
+    local k = Vector(math.abs(m.x), math.abs(m.y), math.abs(m.z))*(max - min)/2
+    local t1, t2 = -n - k, -n + k
+    
+    local tNear, tFar = math.max(math.max(t1.x, t1.y), t1.z), math.min(math.min(t2.x, t2.y), t2.z)
+    
+    return not (tNear > tFar or tFar < 0)
+end
+
+function vistrace.traceEnt(origin, direction, ent)
+    local hit, t, u, v, hitVert = false, math.huge
+    local hitI, tI, uI, vI, hitVertI, meshI = false, math.huge
+    local hitJ, tJ, uJ, vJ, v0J, v1J, v2J = false, math.huge
+    local edge1, edge2, h, a, f, s, q
+    
+    
+    local adjOrig, adjDir = ((origin - vistrace.entCache[ent].pos)/vistrace.entCache[ent].scale):getRotated(vistrace.entCache[ent].rotAng), direction:getRotated(vistrace.entCache[ent].rotAng)
+    
+    for i = 1, #vistrace.entCache[ent].meshes do
+        meshI = vistrace.entCache[ent].meshes[i]
+        -- Mesh intersect cause function overhead
+        for j = 1, #meshI.triangles - 2, 3 do
+            v0J, v1J, v2J = meshI.triangles[j].pos, meshI.triangles[j+1].pos, meshI.triangles[j+2].pos
+            edge1, edge2 = v1J - v0J, v2J - v0J
+
+            h = adjDir:cross(edge2)
+            a = edge1:dot(h)
+            if a > -EPSILON and a < EPSILON then continue end
+            
+            f = 1/a
+            s = adjOrig - v0J
+            uJ = f*s:dot(h)
+            if uJ < 0 or uJ > 1 then continue end
+            
+            q = s:cross(edge1)
+            vJ = f*adjDir:dot(q)
+            if vJ < 0 or uJ + vJ > 1 then continue end
+            
+            tJ = f*edge2:dot(q)
+            if tJ > EPSILON and tJ < tI then
+                tI = tJ
+                hitI = true
+                uI = uJ
+                vI = vJ
+                hitVertI = {i = i, j = j}
+            end
+        end
+        
+        if tI < t then
+            hit = true
+            t = tI
+            u = uI
+            v = vI
+            hitVert = hitVertI
+        end
+    end
+    if not hit then return false end
+    
+    return true, t, u, v, hitVert, ent:localToWorld((adjOrig + adjDir*t)*vistrace.entCache[ent].scale)
+    
+    
+end
+
+function vistrace.trace(origin, direction, entList)
+    local m = 1/direction
+    local n = m*origin
+
+    local hit, t, u, v, hitVert, hitPos = false, math.huge
+    local hitI, tI, uI, vI, hitVertI, hitPosI
+    
+    -- loop through the list of ents to trace
+    for i = 1, #entList do
+        -- if a cache of the ent's properties hasn't been created yet, do it now
+        if not vistrace.entCache[entList[i]] then
+            -- transpose the transformation matrix here cause SF is gay and using a function uses more CPU
+            local m = entList[i]:getMatrix():toTable()
+            
+            local new = {}
+            for row = 1, 4 do
+                new[row] = {}
+                for col = 1, 4 do
+                    new[row][col] = m[col][row]
+                end
+            end
+            
+            vistrace.entCache[entList[i]] = {
+                meshes = mesh.getModelMeshes(entList[i]:getModel()),
+                pos = entList[i]:getPos(),
+                scale = entList[i]:getScale(),
+                rotAng = Matrix(new):getAngles()
+            }
+            vistrace.entCache[entList[i]].min, vistrace.entCache[entList[i]].max = vistrace.calcAABB(
+                vistrace.entCache[entList[i]].meshes,
+                vistrace.entCache[entList[i]].pos,
+                vistrace.entCache[entList[i]].scale,
+                entList[i]:getAngles()
+            )
+        end
+    
+    
+        if vistrace.rayAABB(origin, direction, m, n, vistrace.entCache[entList[i]].min, vistrace.entCache[entList[i]].max) then
+            hitI, tI, uI, vI, hitVertI, hitPosI = vistrace.traceEnt(origin, direction, entList[i])
+            
+            if hitI and tI < t then
+                hit = true
+                t = tI
+                u = uI
+                v = vI
+                hitVert = {ent = entList[i], i = hitVertI.i, j = hitVertI.j}
+                hitPos = hitPosI
+            end
+        end
+    end
+    
+    if not hit then return {hit = false} end
+    
+    local v0 = vistrace.entCache[hitVert.ent].meshes[hitVert.i].triangles[hitVert.j]
+    local v1 = vistrace.entCache[hitVert.ent].meshes[hitVert.i].triangles[hitVert.j+1]
+    local v2 = vistrace.entCache[hitVert.ent].meshes[hitVert.i].triangles[hitVert.j+2]
+    return {
+        hit = true,
+        hitPos = hitPos,
+        hitNormal = (v0.normal + v1.normal + v2.normal)/3,
+        u = (1 - u - v)*v0.u + u*v1.u + v*v2.u,
+        v = (1 - u - v)*v0.v + u*v1.v + v*v2.v,
+        hitMaterial = vistrace.entCache[hitVert.ent].meshes[hitVert.i].material,
+    }
+end
+
+obj = holograms.create(
+    chip():getPos() + chip():getForward()*50 + chip():getRight()*10,
+    Angle(0),
+    "models/hunter/plates/plate5x5.mdl",
+    Vector(1)
+)
+data = {}
+
+hook.add("think", "", function()
+    data = vistrace.trace(chip():getPos(), chip():getForward(), {obj})
+    
+    if data.hit then
+        chip():setColor(vistrace.getPixel(data.u, data.v, data.hitMaterial):getColor())
+        hitHolo:setPos(data.hitPos)
+    end
+end)

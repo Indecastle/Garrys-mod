@@ -1,0 +1,23 @@
+@name fire Inquisition 
+@inputs 
+@outputs 
+@persist O:entity FIRE:array
+@trigger 
+
+if(first()){
+    O = owner()
+    #particleGravity(vec(0,0,0))
+    runOnTick(1)
+    #materials/particles/flamelet1.vmt
+    FIRE = array(
+        "particles/flamelet1.vmt",
+        "particles/flamelet2.vmt",
+        "particles/flamelet3.vmt",
+        "particles/flamelet4.vmt"
+    )
+    
+}
+if(O:keyUse()){
+    #particle(number Duration,number StartSize,number EndSize,string Mat,vector RGB,vector Position,vector Velocity,number Pitch,number RollDelta,number StartAlpha,number EndAlpha)
+    particle(1.5,0,20,FIRE[floor(random(1,4)),string],vec(255),O:attachmentPos("eyes"),O:eye() * 150,1,0,255,0)
+}

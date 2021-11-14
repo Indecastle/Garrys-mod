@@ -1,0 +1,125 @@
+--@name Piss
+--@author
+--@server
+
+--- Press Shift+E to piss
+
+local cum = false
+local decal, color
+if cum then
+    color = Color(200,200,200,100)
+    decal = "PaintSplatPink"
+else
+    color = Color(200,200,40,100)
+    decal = "BeerSplash"
+end
+
+local peter = class("peter")
+local pp = class("pp")
+
+local tasks = {}
+local function task(f)
+    if tasks[1]==nil then
+        hook.add("think","taskprocess",function()
+            while quotaAverage()<quotaMax()*0.5 and holograms.canSpawn() do
+                table.remove(tasks,1)()
+                if tasks[1]==nil then
+                    hook.remove("think","taskprocess")
+                    break
+                end
+            end
+        end)
+    end
+    tasks[#tasks+1] = f
+end 
+
+function pp:initialize(peter)
+    self.peter = peter
+    task(function()
+        self.ppholo = holograms.create(peter:getPos(),Angle(),"models/holograms/rcylinder_thick.mdl")
+        self.ppholo:setParent(owner())
+        self.ppholo:setNoDraw(true)
+        self.ppholo:suppressEngineLighting(true)
+        self.ppholo:setScale(Vector(0.1,0.1,0.5))
+        self.ppholo:setColor(color)
+        self.peter.availablepp[self] = true
+    end)
+end
+
+function pp:start(pos, vel)
+    self.ppholo:setPos(pos)
+    self.ppholo:setVelocity(vel)
+    self.vel = vel
+    self.ppholo:setParent()
+    self.ppholo:setNoDraw(false)
+    self.peter.availablepp[self] = nil
+    self.peter.usedpp[self] = true
+end
+
+function pp:stop()
+    self.ppholo:setNoDraw(true)
+    self.ppholo:setVel(Vector())
+    self.ppholo:setPos(self.peter:getPos())
+    self.ppholo:setParent(owner())
+    self.ppholo:setScale(Vector(0.1,0.1,0.5))
+    self.peter.availablepp[self] = true
+    self.peter.usedpp[self] = nil
+end
+
+local dt = timer.frametime()
+function pp:think()
+    self.vel = self.vel + physenv.getGravity()*dt
+    local vell = self.vel:getLength()
+    if vell>5000 then self:stop() return end
+    self.ppholo:setVel(self.vel)
+
+    local pos = self.ppholo:getPos()
+    local up = self.vel/vell
+    local forward, right = up:getBasis()
+    local m = Matrix()
+    m:setForward(forward) m:setRight(-right) m:setUp(up)
+    self.ppholo:setAngles(m:getAngles())
+    self.ppholo:setScale(Vector(0.1,0.1,0.5+vell/100))
+    
+    local tr = trace.trace(pos, pos+up*10, owner())
+    if tr.Hit then
+        trace.decal(decal, pos, pos+up*10)
+        self:stop()
+    end
+end
+
+function peter:initialize()
+    self.availablepp = {}
+    self.usedpp = {}
+    for i=1, 100 do
+        pp:new(self)
+    end
+    self.pcount = 0
+end
+
+function peter:getPos()
+    local bonepos, boneang = owner():getBonePosition(0)
+    return bonepos+boneang:getUp()*5
+end
+
+function peter:think()
+    if owner():keyDown(IN_KEY.USE) and owner():keyDown(IN_KEY.SPEED) then
+        if self.pcount==0 then
+            local p = next(self.availablepp)
+            if p then
+                p:start(self:getPos(), owner():getAimVector()*400)
+            end
+        end
+        self.pcount = (self.pcount+1)%3
+    end
+
+    local i = 0
+    for p in next, self.usedpp do
+        i = i + 1
+        p:think()
+    end
+end
+
+local mypeter = peter:new()
+hook.add("think","",function() mypeter:think() end)
+

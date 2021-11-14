@@ -1,0 +1,24 @@
+--@name Spawner Ammo AR2
+--@author Markiz
+--@include ../quake_spawner.txt
+--@server
+
+dofile("../quake_spawner.txt")
+
+local Vars = {
+    Radius = Vector(100),
+    Limit = 1,
+    Interval = 5,  -- sek
+    
+    OffsetZ = Vector(0, 0, 20),
+    OffsetX = Vector(0,0,0),
+    
+    Class = "arccw_ammo_ar2_large",
+    Model = "",
+    
+    E = chip(),
+    O = owner(),
+}
+
+obj = QuakeSpawner:new(Vars)
+obj:run()

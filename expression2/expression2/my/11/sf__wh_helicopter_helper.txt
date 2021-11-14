@@ -1,0 +1,60 @@
+@name WH helicopter SF helper
+@inputs SittingPlayers2:array
+@outputs [SittingPlayers Helicopters]:array
+@persist [E O HudSF]:entity [Radius]:vector [Players]:array
+@trigger 
+
+
+if (first() | dupefinished()) {
+    #include "library/array_add"
+    E = entity(), O = owner()
+    
+    HudSF = E:isWeldedTo()
+    
+    Radius = vec(10000)
+    
+    timer("using", 10)
+}
+
+interval(100)
+
+Players = players()
+
+if(clk("using")) {
+    timer("using", 200)
+    
+    foreach (I, P:entity = SittingPlayers2) {
+        if (!SittingPlayers:checkAr(P)) {
+            HudSF:use(P)
+        }
+    }
+    
+    foreach (I, P:entity = SittingPlayers) {
+        if (!SittingPlayers2:checkAr(P)) {
+            HudSF:use(P)
+        }
+    }
+    
+    SittingPlayers = SittingPlayers2
+    #[
+    foreach (I, P:entity = Players) {
+        Veh = P:vehicle():isWeldedTo()
+        if (Veh:type() == "lunasflightschool_ah6") {
+            if (SittingPlayers:addEnt(P)) {
+                P:use(HudSF)
+            }
+        }
+    }
+    
+    foreach (I, P:entity = SittingPlayers) {
+        Veh = P:vehicle():isWeldedTo()
+        if (Veh:type() == "lunasflightschool_ah6") {
+            if (SittingPlayers:removeEnt(P)) {
+                P:use(HudSF)
+            }
+        }
+    }
+    ]#
+    
+}
+

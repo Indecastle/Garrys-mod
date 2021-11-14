@@ -1,0 +1,187 @@
+@name ranger shock
+@inputs [Target]:entity HitPos:vector
+@outputs [Ranger]:entity [HitPos]:vector ShockingEnts:table
+@persist [O E NE World Target Prop]:entity Radius SoundIndex ShockingTime
+
+if(first() | dupefinished()) {
+    O = owner(), E = entity(), NE = noentity(), World = world()
+    
+    ShockingTime = 5 # seconds
+    
+    
+    timer("shock", 10)
+    timer("shocking", 10)
+    runOnLast(1)
+    
+    function number table:indexEnt(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This[I, array]:entity(1) == Ent) { OK = I break}
+        } 
+        return OK
+    }
+    function number table:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This[I, array]:entity(1) == Ent) { OK = 1 break }
+        }
+        return OK
+    }
+    function number table:addEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushArray(array(Ent, curtime() + ShockingTime)) OK=1 }
+        else {
+            for(I=1,This:count()) {
+                if(This[I, array]:entity(1) == Ent) { This[I, array][2, number] = curtime() + ShockingTime break }
+            }
+        }
+        return OK
+    }
+    function number table:removeEnt(Ent:entity) {
+        local OK = 0
+        if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+        return OK
+    }
+    
+    
+    function void shockEffect(Target:entity, Magnitude, SoundType) {
+        local Effect = effect()
+        
+        Effect:setEntity(Target)
+        Effect:setMagnitude(Magnitude)
+        #Effect:setScale(3)
+        #Effect:setRadius(10)
+        #Effect:setNormal(O:aimNormal())
+        
+        #Effect:setFlags(5)
+        #Effect:setSurfaceProp(254)
+        #Effect:setDamageType(2^35 - 1)
+        
+        Effect:setStart(Target:pos())
+        Effect:setOrigin(Target:pos())    
+        
+        Effect:play("TeslaHitboxes")
+        
+        SoundIndex = (SoundIndex + 1) % 20
+        #Target:soundPlay(SoundIndex, 2, "ambient/energy/zap" + randint(1,9) + ".wav")
+        #Target:soundPlay(SoundIndex, 2, "ambient/energy/spark" + randint(1,6) + ".wav")
+        
+        local SoundPath = ""
+        local SoundVolume = 0
+        switch (SoundType) {
+            case 1,
+                SoundPath = "ambient/energy/spark" + randint(2,3) + ".wav"
+                SoundVolume = 0.2
+                break
+            case 2,
+                SoundPath = "ambient/energy/spark" + randint(1,6) + ".wav"
+                SoundVolume = 0.6
+                break
+            default,
+                SoundPath = "ambient/energy/zap" + randint(1,9) + ".wav"
+                SoundVolume = 1
+        }
+        Target:soundPlay(SoundIndex, 2, SoundPath)
+        soundVolume(SoundIndex, SoundVolume)
+    }
+    
+    function number isPlayerOrNPC(Target:entity) {
+        return Target:isPlayer() | Target:isNPC()
+    }
+    function void shockSlap(Target:entity, Force) {
+        local Vec = randvec():setZ(0):normalized()
+        #Target:setVel(Force * Vec:setZ(random()):normalized())
+        
+        if (isPlayerOrNPC(Target)) {
+            #ifdef entity:setVel(vector)
+            Target:setVel(Force * 100 * Vec)
+            #endif
+            
+        }
+        elseif (Target:type() == "prop_ragdoll") {
+            #ifdef entity:setVel(vector)
+            Target:setVel(Force * 300 * Vec)
+            #endif
+        }
+        else {
+            #ifdef entity:applyForce(vector)
+            Target:applyForce(Force * 20 * Vec * Target:mass())
+            #endif
+        }
+    }
+    function void shockDamage(Target:entity) {
+        #ifdef entity:takeDamage(number)
+        if (isPlayerOrNPC(Target)) {
+            Target:takeDamage(5)
+        }
+        else {
+            Target:takeDamage(10)
+        }
+        #endif
+    }
+    
+    Ranger = E:isWeldedTo()
+    
+    Prop = propSpawn("models/hunter/plates/plate.mdl", E:pos() + vec(0,0,10), 1)
+    Prop:propNotSolid(1)
+    Prop:setAlpha(0)
+    #Prop:propStatic(1)
+}
+
+
+#ifdef last()
+if(last()) {
+    #ifdef entity:remove()
+    Prop:remove()
+    #else
+        #ifdef entity:propBreak()
+        Prop:propBreak()
+        #endif
+    #endif
+}
+#endif
+
+#rangerFilter(Prop)
+#R2 = rangerOffset(1000, Ranger:pos(), Ranger:forward())
+#Trace = newFTrace(E:pos(), E:forward()*-1, 1000)
+#local Tracedata=tsRayIntersection(E:pos(), E:forward()*-1)
+#Target2 = Trace:getEntity()
+HitPos = (Target:isPlayer() ? E:pos() + vec(0,0,-100) : HitPos)
+
+Prop:setPos(HitPos)
+
+interval(10)
+
+if(clk("shock")) { 
+    timer("shock", 100)
+    
+    if (!isPlayerOrNPC(Target)) {
+        shockEffect(Prop, 2, 1)
+    }
+    if (Target != World & HitPos != vec()) {
+        ShockingEnts:addEnt(Target)
+        shockSlap(Target, 1)
+        shockDamage(Target)
+    }
+    
+    local CurTime = curtime()
+    for (I=1, ShockingEnts:count()) {
+        local Ar = ShockingEnts[I, array]
+        if(Ar:number(2) < CurTime) {
+            ShockingEnts:removeEnt(Ar:entity(1))
+        }
+    }
+}
+
+if(clk("shocking")) { 
+    timer("shocking", 300)
+    
+    for (I=1, ShockingEnts:count()) {
+        local Ar = ShockingEnts[I, array]
+        local T = Ar:entity(1)
+        
+        shockEffect(T, 10, 2)
+        shockSlap(T, 2)
+        shockDamage(T)
+    }
+}

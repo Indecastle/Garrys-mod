@@ -1,0 +1,229 @@
+--@name WH for Helicopter
+--@author Markiz
+--@shared
+--@include libs/my_methods.txt
+
+dofile("libs/my_methods.txt")
+
+local OnlyOwner = false
+
+
+O = owner()
+OO = player()
+local isOwner = O == OO
+
+
+function table.filter(t, func)
+    local maped = {}
+    local j = 1
+    for i=1, #t do
+        if func(t[i]) then
+            maped[j] = t[i]
+            j = j + 1
+        end
+    end
+    return maped
+end
+
+
+if SERVER then
+    local conectingPlayers = {}
+    local sittingPlayers = {}
+    
+    wire.adjustOutputs({"SittingPlayers"}, {"Array"})
+    
+    
+    net.receive("hud_connecting", function (len, ply)
+        local isCon = net.readBool()
+        if isCon then
+            table.insert(conectingPlayers, ply)
+        else
+            table.removeByValue(conectingPlayers, ply)
+        end
+    end)
+    
+    timer.create("check_players", 2, 0, function()
+        for i, v in ipairs(conectingPlayers) do
+            if not v:isValid() then
+                table.removeByValue(conectingPlayers, v)
+            end
+        end
+        table.removeByValue(conectingPlayers, O)
+        
+        net.start("conecting_players")
+        net.writeTable(conectingPlayers)
+        net.send(owner())
+    end)
+    
+    timer.create("check_sitting_players", 0.5, 0, function()
+        sittingPlayers = find.allPlayers(function(p)
+            local veh = p:getVehicle()
+            return veh:isValid() and veh:isWeldedTo() 
+                and (veh:isWeldedTo():getClass() == "lunasflightschool_ah6"
+                    or veh:isWeldedTo():getClass() == "lunasflightschool_ah6_troop"
+                    or veh:isWeldedTo():getClass() == "lunasflightschool_bf109"
+                    or veh:isWeldedTo():getClass() == "lunasflightschool_cessna"
+                    or veh:isWeldedTo():getClass() == "lunasflightschool_rebelheli"
+                    or veh:isWeldedTo():getClass() == "lunasflightschool_combineheli"
+                    or veh:isWeldedTo():getClass() == "lunasflightschool_p47d"
+                    or veh:isWeldedTo():getClass() == "lunasflightschool_spitfire")
+        end)
+        
+        local godPlayers = find.allPlayers(function(p)
+            return p:getNWVar("_Kyle_Buildmode")
+        end)
+        
+        net.start("sitting_players")
+        net.writeTable(sittingPlayers)
+        net.writeTable(godPlayers)
+        net.send()
+        
+        wire.ports.SittingPlayers = sittingPlayers
+    end)
+
+else
+    local conectingPlayers = {}
+    local sittingPlayers = {}
+    local godPlayers = {}
+
+    local function getBBox(verts)
+        local xmin, ymin, xmax, ymax 
+        
+        if #verts > 0 then
+            xmin, ymin, xmax, ymax = verts[1].x, verts[1].y, verts[1].x, verts[1].y
+        
+            for i = 2, #verts do
+                if verts[i].x < xmin then xmin = verts[i].x end
+                if verts[i].y < ymin then ymin = verts[i].y end
+                if verts[i].x > xmax then xmax = verts[i].x end
+                if verts[i].y > ymax then ymax = verts[i].y end
+            end
+        end
+    
+        return xmin, ymin, xmax, ymax
+    end
+    
+    local dirs = {Vector(-1, -1, -1)
+        ,Vector(1, -1, -1)
+        ,Vector(-1, 1, -1)
+        ,Vector(-1, -1, 1)
+        ,Vector(1, 1, -1)
+        ,Vector(1, -1, 1)
+        ,Vector(-1, 1, 1)
+        ,Vector(1, 1, 1)
+    }   
+        
+    local O = player()
+    local MaxDistance = 10000
+    
+    local font = render.createFont("Roboto", 15, 500, true)
+    
+    local oldIsPressed_PAD_MULTIPLY = false
+    local ON = 1
+            
+
+    function drawConectingPlayers()
+        render.setFont("DermaLarge")
+        render.setColor(Color())
+        render.drawText(10, 10, "WH players:")
+        
+        for i=1, #conectingPlayers do
+            if conectingPlayers[i]:isValid() then
+                render.setColor(team.getColor(conectingPlayers[i]:getTeam()))
+                render.drawText(10, 40 + 30*(i-1), conectingPlayers[i]:getName())
+            end
+        end
+    end
+
+    hook.add("drawhud","myshook",function()
+        local isInHelicopter = table.any(sittingPlayers, function(p)
+            return p == OO
+        end)
+        if ON != 0 and isInHelicopter then
+            for i, p in ipairs(find.allPlayers()) do
+                if p ~= player() then
+                    //if p:getPos():getDistance( owner():getPos() ) > 1300 then continue end
+                    local obbw = p:obbCenterW()
+                    local obbhs = p:obbSize() / 2
+                    
+                    local verts = {}
+                    
+                    for i = 1, 8 do verts[i] = (obbw + obbhs * dirs[i]):toScreen() end
+                
+                    local x0, y0, x1, y1 = getBBox(verts)
+                    local w, h = x1 - x0, y1 - y0
+                    
+                    
+                    //local normDistance = 1-math.clamp(O:getPos():getDistance(p:getPos()), 0, MaxDistance) / MaxDistance
+                    //local distanceColor = Color(normDistance*100, 1, 1):hsvToRGB()
+                    
+                    if table.any(godPlayers, function(pp) return pp == p end) then
+                        render.setColor(Color(0,200,200))
+                    else
+                        render.setColor(Color(0,200,0))
+                    end
+                    render.drawRect(x0, y0, w, h)
+                    
+                    local normHealth = math.clamp(p:getHealth(), 0, 100) / 100
+                    local healthColor = Color(normHealth*100, 1, 1):hsvToRGB()
+                    
+                    
+                    
+                    render.setFont(font)
+                    
+                    render.setColor(team.getColor(p:getTeam()))
+                    render.drawText(x0+w/2, y0-15, p:getName(), 1)
+                    
+                    render.setColor(healthColor)
+                    render.drawText(x0+w/2, y1, ""..p:getHealth(), 1)
+                        
+                    //render.setColor(healthColor)
+                    //render.drawRect(x0, y0+h-2, w*normHealth, 2)
+                end
+            end
+        end
+        
+        if ON == 2 and (isOwner or !OnlyOwner) then
+            drawConectingPlayers()
+        end
+    end)
+
+
+
+    function hudConnecting(isCon)
+        ON = isCon and 1 or 0
+        net.start("hud_connecting")
+        net.writeBool(isCon)
+        net.send()
+    end
+
+    hook.add("hudconnected", "", function ()
+        hudConnecting(true)
+    end)
+    hook.add("huddisconnected", "", function ()
+        hudConnecting(false)
+    end)
+    net.receive("conecting_players", function (len)
+        conectingPlayers = net.readTable()
+    end)
+    net.receive("sitting_players", function (len)
+        sittingPlayers = net.readTable()
+        godPlayers = net.readTable()
+    end)
+    
+    if render.isHUDActive() then
+        hudConnecting(true)
+    end
+    
+    
+    hook.add("inputPressed", "", function(button)
+        if button == KEY.PAD_DIVIDE then 
+            if !OnlyOwner or isOwner then         
+                ON = (ON + 1) % 3
+            else
+                ON = (ON + 1) % 2
+            end
+        end
+    end)
+    
+end

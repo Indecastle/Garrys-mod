@@ -1,0 +1,76 @@
+render.createRenderTarget("scopeRT")
+local reticule = material.load("cw2/reticles/scope_leo")
+local scope = material.load("cw2/effects/lensring")
+
+local toggle = false
+local scopeSize = 500
+
+local scopeFOV = 45
+
+local offset = {x = 0, y = 0}
+
+function getEyeAngles()
+    if player():inVehicle() then
+        return seatEnt:localToWorldAngles(player():getEyeAngles())
+    end
+    
+    return player():getEyeAngles()
+end
+
+function calcOffset(resX, resY)
+    local localisedAng = scopeEnt:worldToLocalAngles(getEyeAngles())--:rotateAroundAxis(Vector(0, 0, 1), 180)
+    
+    offset.x = localisedAng.y * (scopeSize / 90)
+    offset.y = -localisedAng.p * (scopeSize / 90*6)
+end
+
+hook.add("renderscene", "drawScopeRT", function()
+    if not toggle or not seated then return end
+    if not isValid(scopeEnt) then scopeEnt = chip() end
+    
+    render.selectRenderTarget("scopeRT")
+    render.renderView({
+        origin = scopeEnt:getPos() + scopeEnt:getForward()*scopeConfig.pos.x + scopeEnt:getRight()*scopeConfig.pos.y + scopeEnt:getUp()*scopeConfig.pos.z,
+        angles = scopeEnt:getAngles(),
+        w = 1024,
+        h = 1024,
+        fov = scopeFOV,
+        drawviewmodel = false,
+        drawviewer = true,
+    })
+end)
+
+hook.add("calcview", "driverView", function()
+    if not seated or not isValid(driverCam) then return end
+    
+    return {origin = driverCam:getPos(), angles = getEyeAngles()}
+end)
+
+hook.add("drawhud", "drawScopeToHUD", function()
+    if not toggle or not seated then return end
+    
+    local resX, resY = render.getResolution()
+    scopeSize = resY*0.8
+    calcOffset(resX, resY)
+    
+    -- Black background
+    render.setColor(Color(0, 0, 0))
+    render.drawRect(0, 0, resX, resY)
+
+    -- Scope rendertarget
+    render.setColor(Color(255, 255, 255))
+    render.setRenderTargetTexture("scopeRT")
+    render.drawTexturedRect(resX/2 - scopeSize/2 + offset.x, resY/2 - scopeSize/2 + offset.y, scopeSize, scopeSize)
+    
+    -- CW2.0 Scope
+    render.setMaterial(reticule)
+    render.drawTexturedRect(resX/2 - scopeSize/2 + offset.x, resY/2 - scopeSize/2 + offset.y, scopeSize, scopeSize)
+    render.setMaterial(scope)
+    render.drawTexturedRect(resX/2 - scopeSize/2 + offset.x, resY/2 - scopeSize/2 + offset.y, scopeSize, scopeSize)
+end)
+
+hook.add("inputPressed", "handleGUIInput", function(key)
+    if not seated then return end
+    
+    if key == KEY.SHIFT then toggle = not toggle end
+end)

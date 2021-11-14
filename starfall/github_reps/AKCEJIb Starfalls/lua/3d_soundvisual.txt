@@ -1,0 +1,368 @@
+--@name 3D SoundVisual
+--@author AKCEJIb
+--@shared
+--@include ./libs/util.txt
+
+--[[
+    
+    3D Sound Visualisator by AKCEJIb
+    Version: 1.0
+    Date: 15.07.2019
+    
+    Permissions:
+    
+    - Disable url sound whitelist:
+    sf_permission_cl bass.loadURL urlwhitelist 2
+    
+    - Allow download from external sites
+    sf_permission_cl bass.loadURL client 3
+    
+    Type this commands to console. Give this commands to friends.
+    
+    Usage:
+    1. Place this chip on ground.
+    2. Place 'Starfall - Component' on ground.
+    3. RMB to 'Starfall - Component'.
+    4. RMB to chip on ground from step 1.
+]]--
+
+if CLIENT then
+    
+    --[[
+        Basic defines
+    ]]--
+
+    local Utils = require("libs/util.txt")
+    local Particle3D = Utils.Particle3D -- Load Particle3D class from Utils
+    
+    local V3D = {}
+    V3D.particles = {}
+    V3D.drawTimer = timer.curtime()
+    V3D.lightning = 0
+    local sqrt, cos, sin, rand = math.sqrt, math.cos, math.sin, math.random
+    
+    
+    function createParticle(vectorPos, angle, scale, lifetime, xv, yv, zv, clr, type, gravity)
+    
+        --[[
+            Create particle function
+            With the entry in the table
+            Params:
+            vectorPos       - Vector()      -- Particle position
+            angle           - Angle()       -- Particle angle
+            scale           - Number        -- Particle start scale
+            lifeTime        - Number        -- Particle life time
+            xv, yv, zv      - Number        -- Particle velocity by 3 axles
+            clr             - Color()       -- Particle color
+            type            - String        -- Particle model (can be: box, wfBox, sphere, wfSphere. Prefix 'wf' means wireframe)
+            gravity         - Boolean       -- True = enable gravity for particle 
+        ]]--
+        
+        local particle3D = Particle3D(vectorPos, angle, scale, lifetime, xv, yv, zv, clr, type, gravity)
+        table.insert(V3D.particles, particle3D)
+        
+    end
+    
+    --[[
+    
+        Logic variables and hooks
+    
+    ]]--
+    
+    
+    V3D.url = "https://play.sas-media.ru/play_256" -- Put your link here
+    V3D.fft = nil
+    V3D.song = nil
+    V3D.oldfft = {}
+    
+    if V3D.song ~= nil then V3D.song:stop() end
+    
+    -- Trying to load sound from URL
+    setupPermissionRequest({"bass.loadURL"}, "URL sounds from external sites", true) -- Calling permission, Press E button
+    
+    hook.add("permissionrequest", "permission", function()
+        bass.loadURL(V3D.url, "3d", function(snd, err, errtext)
+            if snd then
+                V3D.song = snd
+                snd:setFade(500,1500)
+                snd:setVolume(1)
+                hook.add("think", "calculateMoving", CalcBlock)
+            end
+        end)
+    end)
+    
+    
+    
+    function CalcBlock()
+        
+        V3D.song:setPos(chip():getPos())
+                
+        V3D.oldfft = V3D.fft or V3D.song:getFFT(3)
+        V3D.fft = V3D.song:getFFT(3)
+        V3D.fft = #V3D.fft == 0 and { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } or V3D.fft
+        
+         if timer.curtime() > V3D.drawTimer then
+            
+            if V3D.fft then
+            
+                --[[
+                    Turn On Light in room :D
+                    Shit code, I know :D
+                ]]--
+                
+                local _fftLowSum = 
+                    V3D.fft[1] + V3D.fft[2] + V3D.fft[3]
+                    + V3D.fft[4] + V3D.fft[5] + V3D.fft[6]
+                    + V3D.fft[7] + V3D.fft[8]+ V3D.fft[9]
+                    
+                if _fftLowSum * 100 > 40 then
+                
+                    V3D.lightning = _fftLowSum
+                    
+                else
+                
+                    V3D.lightning = 0
+                    
+                end
+                
+                local indx = 0
+                
+                for x=0, 15 do
+                
+                    indx = (x + 1) -- You can change discretization step
+                    
+                    if (V3D.fft[indx] * 100 - V3D.oldfft[indx] * 100) > 6 then
+                    
+                        local rnd = rand(0, 11)
+                        local val = (rnd < 5) and "wfBox" or ((rnd < 7) and "box" or ((rnd < 11) and "sphere" or "wfSphere")) --let's randomise particles
+                        -- Down side right
+                        createParticle(
+                            Vector(16 / 2 + 16 * 16 + x * 16, 500 - (V3D.fft[indx] * 300),  16 + 16 / 2),
+                            Angle(), 12, 1.5,
+                            0, 0, V3D.fft[indx] * 50,
+                            Color((x * 360) / 16, 1, 1):hsvToRGB() , val, false
+                        )
+                        -- Down side left
+                        createParticle(
+                            Vector(16 / 2 + 16 * 15 - x * 16, 500 - (V3D.fft[indx] * 300),  16 + 16 / 2),
+                            Angle(), 12, 1.5,
+                            0, 0, V3D.fft[indx] * 50,
+                            Color((x * 360) / 16, 1, 1):hsvToRGB() , val, false
+                        )
+                        
+                        -- Right side down
+                        createParticle(
+                            Vector(500 - (V3D.fft[indx] * 300), 16 / 2 + 16 * 16 + 16 * x, 16  + 16 / 2), 
+                            Angle(), 12, 1.5, 
+                            0, 0, V3D.fft[indx] * 50, 
+                            Color((x * 360) / 16, 1, 1):hsvToRGB() , val, false
+                        )
+                        -- Right side up
+                        createParticle(
+                            Vector(500 - (V3D.fft[indx] * 300), 16 / 2 + 16 * 15 - 16 * x, 16  + 16 / 2), 
+                            Angle(), 12, 1.5, 
+                            0, 0, V3D.fft[indx] * 50, 
+                            Color((x * 360) / 16, 1, 1):hsvToRGB() , val, false
+                        )
+                        
+                        -- Left side down
+                        createParticle(
+                            Vector(9 + (V3D.fft[indx] * 300), 16 / 2 + 16 * 16 + 16 * x, 16  + 16 / 2), 
+                            Angle(), 12, 1.5, 
+                            0, 0, V3D.fft[indx] * 50, 
+                            Color((x * 360) / 16, 1, 1):hsvToRGB() , val, false
+                        )
+                        -- Left side up
+                        createParticle(
+                            Vector(9 + (V3D.fft[indx] * 300), 16 / 2 + 16 * 15 - 16 * x, 16  + 16 / 2), 
+                            Angle(), 12, 1.5, 
+                            0, 0, V3D.fft[indx]*50, 
+                            Color((x * 360) / 16, 1, 1):hsvToRGB() , val, false
+                        )
+                        
+                        -- Up side right
+                        createParticle(
+                            Vector(16 / 2 + 16 * 16 + x * 16, 9 + (V3D.fft[indx] * 300),  16 + 16 / 2), 
+                            Angle(), 12, 1.5, 
+                            0, 0, V3D.fft[indx] * 50, 
+                            Color((x * 360) / 16, 1, 1):hsvToRGB() , val, false
+                        )
+                        -- Up side left
+                        createParticle(
+                            Vector(16 / 2 + 16 * 15 - x * 16, 9 + (V3D.fft[indx] * 300),  16 + 16 / 2), 
+                            Angle(), 12, 1.5, 
+                            0, 0, V3D.fft[indx] * 50,
+                            Color((x * 360) / 16, 1, 1):hsvToRGB() , val, false
+                        )
+         
+                    end
+                    
+                end
+                
+            end
+            
+            V3D.drawTimer = timer.curtime() + 0.01 -- Limit number of creations by time :)
+            
+        end
+        
+        --[[
+            Update particles
+        ]]--
+        for k, v in pairs(V3D.particles) do
+        
+            v:think() -- Update scale/lifeTime of particle
+            
+            --[[
+                Delete from list condition
+                Can be:
+                v.scale <= 0
+                v.lifeTime <= 0
+                v.onGround == true
+            ]]--
+            
+            if v.scale <= 0 then table.remove(V3D.particles, k) end
+            
+        end
+        
+        setName("Sound Visualisator 3D\nParticles count: "..#V3D.particles)
+    end
+    
+    local depcoef = 0.5 -- Depth of back wall coefficient (How far is the back wall from the screen on bass drop)
+    
+    hook.add("render","draw3Dfeild", function() 
+        
+        render.enableDepth(true)
+        --[[
+            Walls
+        ]]--
+        render.setMaterial()
+        
+        render.setColor(Color(70 / (V3D.lightning + 1), 70, 70) * (V3D.lightning + 1))
+        -- Up
+        render.draw3DQuad(
+            Vector(0, 0, 64 + (512 * V3D.lightning) / depcoef),
+            Vector(0, 0, 0),
+            Vector(512, 0, 0),
+            Vector(512, 0, 64 + (512 * V3D.lightning) / depcoef)
+        ) 
+        -- Down
+        render.draw3DQuad(
+            Vector(512, 512, 64 + (512 * V3D.lightning) / depcoef),
+            Vector(512, 512, 0),
+            Vector(0, 512, 0),
+            Vector(0, 512, 64 + (512 * V3D.lightning) / depcoef)
+        ) 
+        -- Back
+        render.setColor(Color(50 / (V3D.lightning + 1), 50, 50) * (V3D.lightning + 1))
+        render.draw3DQuad(
+            Vector(0, 0, 64 + (512 * V3D.lightning) / depcoef),
+            Vector(512, 0, 64 + (512 * V3D.lightning) / depcoef),
+            Vector(512, 512, 64 + (512 * V3D.lightning) / depcoef),
+            Vector(0, 512, 64 + (512 * V3D.lightning) / depcoef)
+        ) 
+        
+        render.setColor(Color(60 / (V3D.lightning + 1), 60, 60) * (V3D.lightning + 1))
+        -- Left
+        render.draw3DQuad(
+            Vector(0, 0 ,0),
+            Vector(0, 0, 64 + (512 * V3D.lightning) / depcoef),
+            Vector(0, 512, 64 +(512 * V3D.lightning) / depcoef),
+            Vector(0, 512, 0)
+        ) 
+        -- Right
+        render.draw3DQuad(
+            Vector(512, 0, 64 + (512 * V3D.lightning) / depcoef),
+            Vector(512, 0, 0),
+            Vector(512, 512 ,0),
+            Vector(512, 512, 64 + (512 * V3D.lightning) / depcoef)
+        ) 
+        
+        --[[
+            FFT Columns
+        ]]--
+        
+        render.setMaterial()
+        if V3D.fft then
+        
+            local indx = 0
+            for x=0, 15 do
+         
+                indx = (x + 1) -- You can change discretization step
+                
+                render.setColor(Color((x * 360) / 16, 1, 1):hsvToRGB())
+                -- Down right
+                render.draw3DBox(
+                    Vector(16 / 2 + 16 * 16 + 16 * x, 512 - 9, 16  + 16 / 2), 
+                    Angle(), 
+                    Vector(-8, -8 - (V3D.fft[indx] * 300), -8), 
+                    Vector(8, 8, 8)
+                )
+                -- Down left
+                render.draw3DBox(
+                    Vector(16 / 2 + 16 * 15 - 16 * x, 512 - 9, 16  + 16 / 2), 
+                    Angle(), 
+                    Vector(-8, -8 - (V3D.fft[indx] * 300), -8), 
+                    Vector(8, 8, 8)
+                )
+                -- Right down
+                render.draw3DBox(
+                    Vector(512 - 9, 16 / 2 + 16 * 16 + 16 * x, 16  + 16 / 2), 
+                    Angle(), 
+                    Vector(-8 - (V3D.fft[indx] * 300), -8 , -8), 
+                    Vector(8, 8, 8)
+                )
+                -- Right up
+                render.draw3DBox(
+                    Vector(512 - 9, 16 / 2 + 16 * 15 - 16 * x, 16  + 16 / 2), 
+                    Angle(), 
+                    Vector(-8 - (V3D.fft[indx] * 300), -8 , -8), 
+                    Vector(8, 8, 8)
+                )
+                -- Left down
+                render.draw3DBox(
+                    Vector(9, 16 / 2 + 16 * 16 + 16 * x, 16  + 16 / 2), 
+                    Angle(), 
+                    Vector(-8 , -8 , -8), 
+                    Vector(8 + (V3D.fft[indx] * 300), 8, 8)
+                )
+                -- Left up
+                render.draw3DBox(
+                    Vector(9, 16 / 2 + 16 * 15 - 16 * x, 16  + 16 / 2), 
+                    Angle(), 
+                    Vector(-8 , -8 , -8), 
+                    Vector(8 + (V3D.fft[indx] * 300), 8, 8)
+                )
+                -- Up right
+                render.draw3DBox(
+                    Vector(16 / 2 + 16 * 16 + 16 * x, 9, 16  + 16 / 2), 
+                    Angle(), 
+                    Vector(-8, -8, -8), 
+                    Vector(8, 8 + (V3D.fft[indx] * 300), 8)
+                )
+                -- Up left
+                render.draw3DBox(
+                    Vector(16 / 2 + 16 * 15 - 16 * x, 9, 16  + 16 / 2), 
+                    Angle(), 
+                    Vector(-8, -8, -8), 
+                    Vector(8, 8 + (V3D.fft[indx] * 300), 8)
+                )
+                
+            end
+            
+        end
+        
+        -- Render particles
+        for k, v in pairs(V3D.particles) do
+        
+            v:draw() 
+            
+        end
+        
+    end)
+    
+else
+    
+  
+    -- ToDo: Chat commands
+
+end

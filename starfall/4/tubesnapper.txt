@@ -1,0 +1,95 @@
+--@name TubeSnapper
+--@author Sparky
+--@server
+
+local function isTube(e)
+    //return string.match(e:getModel(), "models/hunter/tubes/tube")
+    return string.match(e:getModel(), "models/hunter/tubes/tube4x4x5.mdl")
+end
+local function isBend(e)
+    return e:getModel() == "models/hunter/tubes/tubebend4x4x90.mdl"
+end
+local function getM(e1, e2)
+    local m1, m2
+    if isBend(e1) then
+        m1 = e1:getMatrix()
+        m1:rotate(Angle(0,0,-90))
+    else
+        m1 = e1:getMatrix()
+    end
+    m2 = e2:getMatrix()
+    return m1, m2
+end
+
+local function angleDiff(axis, vec1, vec2)
+    local D = math.asin(math.clamp(axis.x*(vec1.y*vec2.z - vec1.z*vec2.y) + axis.y*(vec1.z*vec2.x - vec1.x*vec2.z) + axis.z*(vec1.x*vec2.y - vec1.y*vec2.x),-1,1))
+    if vec1:dot(vec2)>0 then
+        return D
+    else
+        if D>0 then return math.pi-D else return -math.pi-D end
+    end
+end
+
+local tubeEnd = chip():isWeldedTo()
+
+local collide, collide2
+local function nextTube(e)
+    e:getPhysicsObject():enableMotion(false)
+
+    local m1, m2 = getM(tubeEnd, e)
+    local dir1, dir2 = m1:getUp(), m2:getUp()
+    local axis, mag
+
+    axis = dir2:cross(dir1):getNormalized()
+    if axis[1]~=axis[1] then return end
+    mag = math.acos(math.clamp(dir2:dot(dir1), -1, 1))
+
+    local rot = Matrix()
+    rot:setAxisAngle(axis, mag)
+    m2 = rot * m2
+
+    mag = angleDiff(dir1, m1:getForward(), m2:getForward())
+    local snap = math.pi/8
+    axis = dir1
+    mag = math.round(mag/snap)*snap - mag
+    
+    rot = Matrix()
+    rot:setAxisAngle(axis, mag)
+    m2 = rot * m2
+
+    e:setAngles(m2:getAngles())
+    
+    local pos1, pos2
+    if isBend(tubeEnd) then
+        pos1 = tubeEnd:localToWorld(Vector(0.007, 94.893, -0.011))
+    else
+        local mins, maxs = tubeEnd:getPhysicsObject():getAABB()
+        pos1 = tubeEnd:localToWorld(Vector(0,0,maxs[3]))
+    end
+    if isBend(e) then
+        pos2 = e:localToWorld(Vector(0.001, -0.015, -94.903))
+    else
+        local mins, maxs = e:getPhysicsObject():getAABB()
+        pos2 = e:localToWorld(Vector(0,0,mins[3]))
+    end
+    e:setPos(e:getPos() + (pos1 - pos2))
+    
+    tubeEnd:removeCollisionListener()
+    tubeEnd = e
+    tubeEnd:addCollisionListener(collide)
+end
+
+local nextcollide = 0
+function collide(t)
+    if timer.curtime()<nextcollide then return end
+    nextcollide = timer.curtime()+0.1
+    local e = t.HitEntity
+    if isTube(e) or isBend(e) then
+        nextTube(e)
+    end
+end
+
+tubeEnd:addCollisionListener(collide)
+hook.add("remove","",function()
+    tubeEnd:removeCollisionListener()
+end)

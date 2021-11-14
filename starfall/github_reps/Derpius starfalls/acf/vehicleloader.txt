@@ -1,0 +1,179 @@
+--@name Tank OBJ Loader
+--@author Derpius
+--@shared
+
+local ASYNC_PARSE = false -- enable this if it quotas loading the obj
+
+local MODEL = "https://www.dropbox.com/s/ojgjbw7ib7hzn0c/cromwell.obj?dl=1"
+local TEXTURE = ""
+
+local TANK = {}
+
+function yield(percent)
+    percent = percent or 0.2
+    while quotaTotalUsed()/quotaMax() >= percent or quotaTotalAverage()/quotaMax() >= percent do coroutine.yield() end
+end
+
+if SERVER then
+    wire.adjustOutputs({"WheelsLeft", "WheelsRight", "Turret"}, {"array", "array", "entity"})
+
+    function createProps(data)
+        -- parse data
+        print("parsing OBJ")
+        local obj = mesh.parseObj(data, ASYNC_PARSE, true)
+        
+        -- iterate over objects to find physmeshes and axes
+        print("parsing objects")
+        local physmeshes, axes, offsets = {}, {}, {}
+        for k, v in pairs(obj) do
+            local args = string.split(string.split(k, "_")[1], ".")
+            
+            -- handle axes
+            if args[1] == "axis" then
+                -- build axis of rotation
+                local axis = Vector(0)
+                if args[4] == "x" then axis[2] = 1
+                elseif args[4] == "y" then axis[1] = 1
+                else axis[3] = 1 end
+                
+                axes[#axes + 1] = {e1 = args[2], e2 = args[3], axis = v[1].pos + axis}
+                
+                offsets[args[2]] = v[1].pos
+                continue
+            end
+            
+            local category, type, index = unpack(args)
+            if type ~= "physmesh" then continue end
+            index = tonumber(index)
+            
+            if not physmeshes[category] then physmeshes[category] = {} end
+            physmeshes[category][index] = v
+            yield(0.5)
+        end
+        
+        print("creating props")
+        for k, v in pairs(physmeshes) do
+            for i = 1, #v do
+                -- convert MeshVertex data to vert table
+                -- hashmap solution for duplicate checking (uses a lot of memory but super fast)
+                local existingVerts, newMesh = {}, {}
+                for j = 1, #v[i] do
+                    local pos = v[i][j].pos
+                    if existingVerts[pos[1]] and existingVerts[pos[1]][pos[2]] and existingVerts[pos[1]][pos[2]][pos[3]] then continue end
+                    newMesh[#newMesh + 1] = pos - (offsets[k] or Vector(0))
+                    
+                    existingVerts[pos[1]] = existingVerts[pos[1]] or {}
+                    existingVerts[pos[1]][pos[2]] = existingVerts[pos[1]][pos[2]] or {}
+                    existingVerts[pos[1]][pos[2]][pos[3]] = existingVerts[pos[1]][pos[2]][pos[3]] or true
+                    yield(0.5)
+                end
+                v[i] = newMesh
+            end
+            
+            while not prop.canSpawn() do coroutine.yield() end
+            TANK[k] = prop.createCustom(chip():getPos() + (offsets[k] or Vector(0)), Angle(), v, true)
+            TANK[k]:setMass(1000)
+        end
+        
+        -- nocollide turret with hull and send to port
+        constraint.nocollide(TANK.turret, TANK.hull, 0, 0)
+        wire.ports["Turret"] = TANK.turret
+        
+        -- add axis contraints and move wheels to wire
+        local wheelsL, wheelsR = {}, {}
+        for i = 1, #axes do
+            constraint.axis(TANK[axes[i].e1], TANK[axes[i].e2], 0, 0, Vector(0), axes[i].axis)
+            if axes[i].e1 ~= "turret" and axes[i].e1 ~= "hull" then -- it's a wheel, make spherical and no collide
+                TANK[axes[i].e1]:setNocollideAll(true)
+                TANK[axes[i].e1]:setPhysMaterial("jalopy_tire")
+                --TANK[axes[i].e1]:setFriction(3)
+                
+                local wheel = TANK[axes[i].e1]
+                if wheel:getPos()[2] - TANK.hull:getPos()[2] < 0 then wheelsR[#wheelsR + 1] = wheel
+                else wheelsL[#wheelsL + 1] = wheel end
+            end
+        end
+        wire.ports["WheelsLeft"], wire.ports["WheelsRight"] = wheelsL, wheelsR
+        
+        -- network to clients after delay
+        timer.create("sendProps", 1, 1, function()
+            net.start("sendProps")
+            net.writeUInt(#table.getKeys(TANK), 32)
+            for k, v in pairs(TANK) do
+                net.writeString(k)
+                net.writeEntity(v)
+            end
+            net.send()
+        end)
+        
+        coroutine.yield(true)
+    end
+
+    -- serverside we load the obj data, but not the textures, and create the custom props with the physmeshes
+    http.get(MODEL, function(data, len, headers, status)
+        if status ~= 200 then print("Failed to get model: "..tostring(status)); return end
+        
+        -- create props
+        local co = coroutine.create(createProps)
+        coroutine.resume(co, data)
+        hook.add("think", "safespawn", function()
+            if coroutine.resume(co) then hook.remove("think", "safespawn") end
+        end)
+    end, function(reason) print("Failed to get model: "..reason) end)
+else
+    local MAT = material.load("models/debug/debugwhite")
+
+    function createMeshes(data)
+        -- parse data
+        local obj = mesh.parseObj(data, true, true)
+        
+        -- iterate over objects and create vismeshes
+        local vismeshes, offsets = {}, {}
+        for k, v in pairs(obj) do
+            local args = string.split(string.split(k, "_")[1], ".")
+        
+            -- handle axes
+            if args[1] == "axis" then
+                offsets[args[2]] = v[1].pos
+                continue
+            end
+        
+            local category, type = unpack(args)
+            if type ~= "vismesh" then continue end
+            
+            vismeshes[category] = v
+        end
+        
+        for k, v in pairs(vismeshes) do
+            if offsets[k] then -- offset object origin to axis origin
+                for i = 1, #v do
+                    v[i].pos = v[i].pos - offsets[k]
+                    yield(0.6)
+                end
+            end
+            
+            TANK[k]:setMesh(mesh.createFromTable(v))
+            TANK[k]:setMeshMaterial(MAT)
+            TANK[k]:setColor(Color(115, 125, 80, 255))
+        end
+        
+        coroutine.yield(true)
+    end
+    
+    net.receive("sendProps", function()
+        for i = 1, net.readUInt(32) do
+            TANK[net.readString()] = net.readEntity()
+        end
+    
+        -- clientside we load the obj data and textures
+        http.get(MODEL, function(data, len, headers, status)
+            if status ~= 200 then print("Failed to get model: "..tostring(status)); return end
+            
+            local co = coroutine.create(createMeshes)
+            coroutine.resume(co, data)
+            hook.add("think", "slowmesh", function()
+                if coroutine.resume(co) then hook.remove("think", "slowmesh") end
+            end)
+        end, function(reason) print("Failed to get model: "..reason) end)
+    end)
+end

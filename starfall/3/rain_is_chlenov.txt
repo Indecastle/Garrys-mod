@@ -1,0 +1,106 @@
+--@name Rain is chlenov
+--@author
+--@client
+
+//Tables
+local lines   = {}
+local splashs = {}
+
+//Splash Settings
+local splashSizeSpeed   = 1000
+local splashStartSize   = 0
+local splashMul         = 2
+
+//Line Settings
+local minimumLineLength = 15
+local maximumLineLength = 55
+
+//Render settings and const and huita
+local freg              = 1/10
+local fregT             = 0
+
+local BORN_TIME     = timer.systime()
+local TICK_RATE     = 3
+local TICK_INTERVAL = 1 / TICK_RATE 
+local CurrentTime   = 0
+
+//Other variable
+local i = 0
+
+render.createRenderTarget("1")
+    
+function screenTask()
+    //SelectRT
+    render.selectRenderTarget("1")
+    render.setColor(Color(0, 0, 0,50))
+    render.drawRect(0, 0, 1024, 1024)
+    
+    //Freg alg
+    if fregT < timer.systime() then
+        table.insert(lines, {
+            x       = math.random(0, 512),
+            y       = -maximumLineLength,
+            length  = math.random(minimumLineLength, maximumLineLength)
+        })
+        
+        fregT = timer.systime() + freg
+    end
+    
+    //Draw Lines and spawn splashs
+    i = 1
+    while i <= #lines do
+        if lines[i].y < 510 then
+            render.setColor(Color(255, 255, 255, 255/maximumLineLength * lines[i].length ))
+            render.drawLine(lines[i].x, lines[i].y, lines[i].x, lines[i].y+lines[i].length)
+            
+            lines[i].y = lines[i].y + ((lines[i].length*25) * FrameTime)
+            
+            i = i + 1
+        else
+            table.insert(splashs, {
+                x       = lines[i].x - splashStartSize/2,
+                y       = lines[i].y - splashStartSize/2,
+                maxSize = lines[i].length * splashMul,
+                size    = splashStartSize
+            })
+            
+            table.remove(lines, i)
+            
+        end
+    end
+
+    //Draw Splashes
+    i = 1
+    while i <= #splashs do
+        if splashs[i].size < splashs[i].maxSize then 
+            render.setColor(Color(255,255,255,50 - (50/splashs[i].maxSize * splashs[i].size)))
+            render.drawRoundedBox(splashs[i].size/2, splashs[i].x - splashs[i].size/2, splashs[i].y - splashs[i].size/2, splashs[i].size, splashs[i].size)
+            
+            splashs[i].size = splashs[i].size + (splashSizeSpeed * FrameTime)
+            
+            i = i + 1
+        else
+            table.remove(splashs, i)
+        end
+    end
+    
+    //DrawRT
+    render.selectRenderTarget()
+    render.setColor(Color(255, 255, 255))
+    render.setRenderTargetTexture('1')
+    render.drawTexturedRect(0, 0, 1024, 1024)
+end
+
+function backgroundTask()
+    FrameTime = CurrentTime
+    CurrentTime = (timer.systime() - BORN_TIME + 0.05)
+    FrameTime = CurrentTime - FrameTime
+end
+
+function liveTask()
+    backgroundTask()
+    screenTask()
+end
+        
+hook.add("render", "liveTask", liveTask)
+hook.add("renderOffscreen", "backgroundTask", backgroundTask)

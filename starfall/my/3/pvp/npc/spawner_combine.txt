@@ -1,0 +1,65 @@
+--@name Spawner Combine
+--@author Markiz
+--@include ../npc_spawner.txt
+--@server
+
+dofile("../npc_spawner.txt")
+
+local Vars = {
+    Limit = 10,
+    Interval = 0.05,  -- sek
+
+    SpawnRadiusH = 300, -- horizontal
+    SpawnRadiusV = 10, -- vertical
+    CanSpawnRadius = 10,
+    CanSpawnBottomDistance = 10, -- need better CanSpawnRadius
+    SpawnUnder = false,
+    SpawnOnFloorAlways = true,
+    SetFrozen = true,
+    
+    OffsetZ = Vector(0, 0, 1),
+    OffsetX = Vector(-5,0,0),
+    
+    RelationShip = "hate", -- String of the relationship. ("hate", "fear", "like", "neutral")
+    
+    //Class = "npc_antlionguard",
+    //Class = "npc_fastzombie",
+    
+    --Class = "npc_combine_s",
+    --Class = "npc_turret_floor",
+    --Class = "npc_stalker",
+    --Class = "npc_metropolice",
+    --Class = "npc_helicopter",
+    --Class = "npc_clawscanner",
+    
+    --Class = "CombineElite",
+    --CheckClass = "npc_combine_s",
+    
+    --Class = "npc_monk",
+    --Class = "Rebel",
+    --CheckClass = "npc_citizen",
+    
+    Class = "VortigauntSlave",
+    CheckClass = "npc_vortigaunt",
+    
+    --Weapon = "shotgun",
+    --Weapon = "ar2",
+    --Weapon = "smg1",
+    --Weapon = "Annabelle",
+    --Weapon = "lfsmissilelauncher",
+    --Weapon = "crossbow",
+    --Weapon = "stunstick",
+    
+    --aWWeapon = "arccw_go_m9",
+    --Weapon = "weapon_lfsmissilelauncher",
+    
+    --Model = "models/combine/super_soldier.mdl",
+    
+    FixWeapon = false,
+    
+    E = chip(),
+    O = owner(),
+}
+
+obj = NpcSpawner:new(Vars)
+obj:run()

@@ -1,0 +1,51 @@
+VoxelData = {
+    chunkWidth = 16,
+    chunkHeight = 128,
+    blockScale = 1,
+    worldSizeChunks = 3,
+    renderDist = 2,
+    verts = {
+        Vector(0, 0, 0),
+        Vector(1, 0, 0),
+        Vector(1, 0, 1),
+        Vector(0, 0, 1),
+        Vector(0, 1, 0),
+        Vector(1, 1, 0),
+        Vector(1, 1, 1),
+        Vector(0, 1, 1),
+    },
+    tris = {
+        {1, 4, 2, 2, 4, 3}, -- back
+        {6, 7, 5, 5, 7, 8}, -- front
+        {4, 8, 3, 3, 8, 7}, -- top
+        {2, 6, 1, 1, 6, 5}, -- bottom
+        {5, 8, 1, 1, 8, 4}, -- left
+        {2, 3, 6, 6, 3, 7}, -- right
+    },
+    uvs = {
+        {u = 0, v = 0},
+        {u = 0, v = 1},
+        {u = 1, v = 0},
+        {u = 1, v = 0},
+        {u = 0, v = 1},
+        {u = 1, v = 1},
+    },
+    faceChecks = {
+        Vector(0, -1, 0),
+        Vector(0, 1, 0),
+        Vector(0, 0, 1),
+        Vector(0, 0, -1),
+        Vector(-1, 0, 0),
+        Vector(1, 0, 0),
+    },
+}
+
+VoxelData.worldSizeVoxels = VoxelData.worldSizeChunks * VoxelData.chunkWidth
+
+function Get2DPerlin(x, y, offset, scale)
+    return math.clamp(perlin:noise((x + 0.1)/VoxelData.chunkWidth*scale + offset, (y + 0.1)/VoxelData.chunkWidth*scale + offset)/1.1 + 0.5, 0, 1)
+end
+
+function Get3DPerlin(x, y, z, offset, scale, threshold)
+    return math.clamp(perlin:noise((x + 0.1)*scale + offset, (y + 0.1)*scale + offset, (z + 0.1)*scale + offset)/1.1 + 0.5, 0, 1) > threshold
+end

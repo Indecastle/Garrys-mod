@@ -1,0 +1,36 @@
+--@name HDRI mapping explanation
+--@client
+
+frontHolo = holograms.create(chip():getPos(), Angle(0), "models/sprops/geometry/sphere_3.mdl", Vector(1))
+
+function getPitch(N)
+    if N.x == 0 and N.y == 0 then
+        return math.pi/2 * math.sign(N.z)
+    end
+    
+    return math.asin(math.abs(N.z)) * math.sign(N.z)
+end
+
+function getYaw(N)
+    if N.y == 0 then
+        if N.x >= 0 then return 0 end
+        if N.x < 0 then return math.pi end
+    end
+    
+    return math.acos((N*Vector(1, 1, 0)):getNormalized():dot(Vector(1, 0, 0))) * math.sign(N.y)
+end
+
+hook.add("think", "", function()
+    frontHolo:setPos(chip():getPos() + chip():getForward()*15)
+end)
+
+hook.add("render", "", function()
+    local fwrd = chip():getForward()
+    local resX, resY = render.getResolution()
+    
+    
+    local y = resY/2 - ((getPitch(fwrd)*2)/math.pi) * resY/2
+    local x = resX/2 + (getYaw(fwrd)/math.pi) * resX/2
+    
+    render.drawCircle(x, y, 10)
+end)

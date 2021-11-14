@@ -1,0 +1,139 @@
+--@name SF in SF in GLua in Source Engine
+--@author Derpius
+--@shared
+
+--@include ./console.txt
+require("./console.txt")
+
+if CLIENT then
+setSoftQuota(0.9)
+
+interpreterMode = false
+
+function newPrint(...)
+    args = {...}
+    for i = 1, #args do args[i] = tostring(args[i]) end
+
+    console:print(table.concat(args, " "))
+end
+
+function newPrintTable(tbl)
+    if type(tbl) ~= "table" then
+        throw("Attempted to printTable something other than a table")
+    end
+
+    for k, v in pairs(tbl) do
+        if type(v) ~= "table" then
+            console:print(tostring(k)..": "..tostring(v))
+        else
+            for k, v in pairs(v) do
+                console:print("    "..tostring(k)..": "..tostring(v))
+            end
+        end
+    end
+end
+
+-- Sandboxing
+SANDBOX = {}
+
+function resetSandbox()
+    SANDBOX = table.copy(getfenv())
+    SANDBOX._G.console = nil
+    SANDBOX._G.print = newPrint
+    SANDBOX._G.printTable = newPrintTable
+    function SANDBOX._G.exit() throw("EXITCONSOLE") end
+end
+
+function sandboxCall(func)
+    func = setfenv(func, SANDBOX)
+    out = func()
+    if out ~= nil then console:print(out)
+    elseif interpreterMode then console:print("nil") end
+end
+
+-- Bind functions to console
+function console:onEnter(text)
+    if text == "" or text == nil then return end
+    
+    if not interpreterMode then
+        if text == "clear" then
+            self:saveBuffer(); self:clearScreen()
+        elseif string.sub(text, 1, 4) == "lua " then
+            -- Extract filepath
+            local path = self.removeWhitespace(string.sub(text, 5))
+            
+            -- Check file exists and is valid
+            if not hasPermission("file.exists") then
+                self:print("Requires permission to check if a file exists on your client")
+                return
+            end
+            if not file.exists(path) then
+                self:print("Invalid filepath or file does not exist")
+                return
+            end
+            
+            -- Check file ends in .bf
+            if string.sub(path, -4) ~= ".lua" and string.sub(path, -4) ~= ".txt" then
+                self:print("File invalid, not a lua or text file")
+                return
+            end
+            
+            if not hasPermission("file.read") then
+                self:print("Requires permission to read a file from your client")
+                return
+            end
+            local contents = file.read(path)
+            
+            if not contents then
+                self:print("Error reading file")
+                return
+            end
+            
+            local func = loadstring(contents, "Console")
+            if type(func) == "string" then self:print(func)
+            else
+                resetSandbox() -- We reset the sandbox when running a file cause it wants to be self contained
+                try(
+                    function() sandboxCall(func) end,
+                    function(e)
+                        if type(e) == "string" then self:print(e)
+                        elseif string.sub(e.message, -11) == "EXITCONSOLE" then return
+                        else self:print(e.message) end
+                    end
+                )
+            end
+        elseif text == "lua" then
+            self.activeLine = ">>> "
+            resetSandbox()
+            
+            self:print("Lua interpreter version 0.1.1\ntype exit() to leave the interpreter")
+            
+            interpreterMode = true
+        elseif text == "help" then
+            self:print("Use 'help' to bring up this message,")
+            self:print("'clear' to clear the screen,")
+            self:print("'lua' to enter the lua interpreter,")
+            self:print("and 'lua file_path' to load a .txt or .lua file from data folder to run as lua\n")
+        end
+    else
+        local func = loadstring("return "..text, "Console")
+        if type(func) == "string" then func = loadstring(text, "Console") end
+        if type(func) == "string" then self:print(func)
+        else
+            try(
+                function() sandboxCall(func) end,
+                function(e)
+                    if type(e) == "string" then self:print(e)
+                    elseif string.sub(e.message, -11) == "EXITCONSOLE" then
+                        self.activeLine = "> "
+                        interpreterMode = false
+                    else self:print(e.message) end
+                end
+            )
+        end
+    end
+end
+
+console:init(30, 100, 16)
+console:print("Press E to start using, then try typing 'help'")
+end

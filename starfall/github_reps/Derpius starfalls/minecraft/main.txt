@@ -1,0 +1,46 @@
+--@name Minecraft (Very WIP)
+--@author Derpius
+--@client
+
+if player() ~= owner() then throw("laggy af boi") end
+
+function yield(percent)
+    percent = percent or 0.2
+    if quotaTotalUsed()/quotaMax() >= percent or quotaTotalAverage()/quotaMax() >= percent then coroutine.wait(0.05) end
+end
+
+--@include ./player.txt
+--@include ./world.txt
+--@include ./voxel_data.txt
+--@include ./chunk.txt
+--@include ./atlas_generator.txt
+--@include ./perlin.txt
+--@include ./biome_attributes.txt
+
+require("./perlin.txt")
+require("./atlas_generator.txt")
+
+require("./biome_attributes.txt")
+
+require("./player.txt")
+
+require("./voxel_data.txt")
+require("./chunk.txt")
+require("./world.txt")
+
+STATE = 0
+local start = coroutine.create(Start)
+
+local mats = {
+    grass = "phoenix_storms/ps_grass",
+    dirt = "models/props_wasteland/dirtwall001a",
+    stone = "models/props_wasteland/rockcliff02c",
+    bedrock = "phoenix_storms/black_brushes",
+}
+
+GenerateTextureAtlas(mats, 64)
+
+hook.add("think", "gameloop", function()
+    if STATE == 1 then coroutine.resume(start)
+    elseif STATE == 2 then Update() end
+end)

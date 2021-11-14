@@ -64,7 +64,7 @@ hook.add("render", "", function()
 end)
 
 hook.add("renderoffscreen", "", function()
-    if quota() > 0.4 then return end
+    if quota() > 0.05 then return end
     local now = timer.systime()
     if frame > now then return end
     frame = now + delta

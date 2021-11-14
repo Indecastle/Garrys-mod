@@ -1,0 +1,85 @@
+@name Minecraft
+@inputs 
+@outputs 
+@persist [EE Ow]:entity [Props Materials Menu]:array MaterialSelect:string Flag Id MenuStatus
+@trigger 
+
+if(first())
+{
+    EE=entity()
+    Ow=owner()
+    Id = 0
+    Flag = 1
+    MenuStatus = 1
+    Materials = array(  "phoenix_storms/wood_dome",
+                        "phoenix_storms/concrete3",
+                        "phoenix_storms/Fender_wood",
+                        "phoenix_storms/MetalSet_1-2",
+                        "models/props_canal/canal_bridge_railing_01c",
+                        "models/props/CS_militia/roofbeams01",
+                        "WTP/camoflage_2",
+                        "WTP/wood_2",
+                        "phoenix_storms/future_vents",
+                        "phoenix_storms/pack2/train_floor")
+    MaterialSelect = Materials[1,string]
+    holoCreate(0)
+    holoMaterial(0,"models/wireframe")
+    
+}
+runOnTick(1)
+if(Ow:weapon():type()== "weapon_crowbar")
+{
+    AimPos = round(Ow:aimPos()/12)*12
+    holoPos(0,AimPos)
+    #building mode
+    if(Ow:keyUse() && changed(Ow:keyUse()) && Flag==1 )
+    {
+        Props[Id,entity] = propSpawn("models/holograms/cube.mdl",AimPos,1)
+        Props[Id,entity]:setMaterial(MaterialSelect)
+        Id++
+        Flag = 0
+        timer("Spawn",100)
+    }
+    #remove
+    if(Ow:keyAttack2()&& changed(Ow:keyAttack2()))
+    {
+        Ow:aimEntity():remove()
+    }
+    #menu
+    if(Ow:keyReload() && changed(Ow:keyReload()))
+    {
+        if(MenuStatus == 1){
+            for(I=1,10)
+            {
+                Menu[I,entity] = propSpawn("models/holograms/cube.mdl",AimPos,1)
+                Menu[I,entity]:setMaterial(Materials[I,string])
+                Menu[I,entity]:setPos(Ow:toWorld(vec(sin(I*20)*50,cos(I*20)*50,50)))
+            }
+            MenuStatus = 0  
+        }else{
+            for(I=1,10)
+            {
+                Menu[I,entity]:remove()
+            }
+            MenuStatus = 1
+        }
+    }
+    #selectMaterials
+    if(Ow:keyAttack1() && changed(Ow:keyAttack1()))
+    {
+        for(I=1,10)
+        {
+            if(Ow:aimEntity() == Menu[I,entity])
+            {
+                MaterialSelect = Materials[I,string]
+            }
+        }
+    }
+}else{
+    holoPos(0,EE:pos())
+}
+
+if(clk("Spawn"))
+{
+    Flag=1
+}

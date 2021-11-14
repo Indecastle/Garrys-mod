@@ -1,11 +1,14 @@
-@name Lags
+# Lags
+@name Generic
 @inputs 
 @outputs 
 @persist 
 @trigger 
 
 #interval(1)
-for(I=1,20) {
-    holoCreate(I,entity():pos(),vec(1))    
-    holoMaterial(I,"materials/models/debug/debugwhite.vmt")
+if (dupefinished()) {
+    for(I=1,100) {
+        holoCreate(I,entity():pos(),vec(1))    
+        holoMaterial(I,"materials/models/debug/debugwhite.vmt")
+    }
 }

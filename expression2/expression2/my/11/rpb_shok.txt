@@ -1,0 +1,196 @@
+@name RPG shock
+@inputs [Ranger Target]:entity HitPos:vector
+@outputs [Target2]:entity [HitPos]:vector [ShockingEnts RpgActives]:table
+@persist [O E NE World Target Prop]:entity Radius SoundIndex ShockingTime
+
+if(first() | dupefinished()) {
+    O = owner(), E = entity(), NE = noentity(), World = world()
+    
+    ShockingTime = 3 # seconds
+    Radius = 200
+    
+    
+    #timer("shock", 10)
+    timer("shocking", 10)
+    timer("rpg", 10)
+    runOnLast(1)
+    
+    function number table:indexEnt(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This[I, array]:entity(1) == Ent) { OK = I break}
+        } 
+        return OK
+    }
+    function number table:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This[I, array]:entity(1) == Ent) { OK = 1 break }
+        }
+        return OK
+    }
+    function number table:addEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushArray(array(Ent, curtime() + ShockingTime)) OK=1 }
+        else {
+            for(I=1,This:count()) {
+                if(This[I, array]:entity(1) == Ent) { This[I, array][2, number] = curtime() + ShockingTime break }
+            }
+        }
+        return OK
+    }
+    function number table:removeEnt(Ent:entity) {
+        local OK = 0
+        if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+        return OK
+    }
+    function number table:addRPG(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushArray(array(Ent, Ent:pos())) OK=1 }
+        return OK
+    }
+    
+    
+    function void shockEffect(Target:entity, Magnitude) {
+        local Effect = effect()
+        
+        Effect:setEntity(Target)
+        Effect:setMagnitude(Magnitude)
+        #Effect:setScale(3)
+        #Effect:setRadius(10)
+        #Effect:setNormal(O:aimNormal())
+        
+        #Effect:setFlags(5)
+        #Effect:setSurfaceProp(254)
+        #Effect:setDamageType(2^35 - 1)
+        
+        Effect:setStart(Target:pos())
+        Effect:setOrigin(Target:pos())    
+        
+        Effect:play("TeslaHitboxes")
+        
+        SoundIndex = (SoundIndex + 1) % 20
+        #Target:soundPlay(SoundIndex, 2, "ambient/energy/zap" + randint(1,9) + ".wav")
+        #Target:soundPlay(SoundIndex, 2, "ambient/energy/spark" + randint(1,6) + ".wav")
+        Target:soundPlay(SoundIndex, 2, "ambient/energy/spark" + randint(2,4) + ".wav")
+        soundVolume(SoundIndex, 0.2)
+    }
+    
+    function number isPlayerOrNPC(Target:entity) {
+        return Target:isPlayer() | Target:isNPC()
+    }
+    function void shockSlap(Target:entity, Force) {
+        local Vec = randvec():setZ(0):normalized()
+        #Target:setVel(Force * Vec:setZ(random()):normalized())
+        
+        if (isPlayerOrNPC(Target)) {
+            #ifdef entity:setVel(vector)
+            Target:setVel(Force * 100 * Vec)
+            #endif
+            
+        }
+        elseif (Target:type() == "prop_ragdoll") {
+            #ifdef entity:setVel(vector)
+            Target:setVel(Force * 300 * Vec)
+            #endif
+        }
+        else {
+            #ifdef entity:applyForce(vector)
+            Target:applyForce(Force * 20 * Vec * Target:mass())
+            #endif
+        }
+    }
+    function void shockDamage(Target:entity) {
+        #ifdef entity:takeDamage(number)
+        if (isPlayerOrNPC(Target)) {
+            Target:takeDamage(5)
+        }
+        else {
+            Target:takeDamage(10)
+        }
+        #endif
+    }
+    
+    function void shockSphere(Pos:vector) {
+        findClearWhiteList()
+        findClearBlackList()
+        
+        findIncludeClass("player")
+        findIncludeClass("vehicle")
+        findIncludeClass("prop_ragdoll")
+        
+        findExcludeClass("lunasflightschool_missile")
+        findIncludeClass("lunasflightschool")
+        
+        findInSphere(Pos, Radius)
+        local Ar = findToArray()
+        foreach (I, Ent:entity = Ar) {
+            ShockingEnts:addEnt(Ent)
+            
+            shockEffect(Ent, 20)
+            shockSlap(Ent, 1)
+            #shockDamage(Ent)
+        }
+    }
+}
+
+
+#ifdef last()
+if(last()) {}
+#endif
+
+interval(10)
+
+
+if(clk("shocking")) { 
+    timer("shocking", 400)
+    
+    for (I=1, ShockingEnts:count()) {
+        local Ar = ShockingEnts[I, array]
+        local T = Ar:entity(1)
+        
+        shockEffect(T, 20)
+        #shockSlap(T, 2)
+        #shockDamage(T)
+    }
+}
+
+if (clk("rpg")) {
+    timer("rpg", 100)
+    
+    findClearWhiteList()
+    findClearBlackList()
+    
+    findIncludeClass("grenade_ar2")
+    findIncludeClass("rpg_missile")
+    findIncludeClass("lunasflightschool_missile")
+    findIncludeClass("arccw_rpg7_he")
+    findIncludeClass("arccw_rpg7_tandem")
+    findIncludeClass("lunasflightschool_missile")
+    findInSphere(entity():pos(), 10000000)
+
+    foreach (I, Ent:entity = findToArray()) {
+        RpgActives:addEnt(Ent)
+    }
+}
+
+
+local CurTime = curtime()
+for (I=1, ShockingEnts:count()) {
+    local Ar = ShockingEnts[I, array]
+    if(Ar:number(2) < CurTime) {
+        ShockingEnts:removeEnt(Ar:entity(1))
+    }
+}
+
+for (I=1, RpgActives:count()) {
+    local Ar = RpgActives[I, array]
+    local MissileEnt = Ar:entity(1)
+    local Pos = Ar:vector(2)
+    if (MissileEnt:isValid()) { 
+        Ar[2, vector] = MissileEnt:pos() 
+    } else {
+        shockSphere(Pos)
+        RpgActives:remove(I)
+    }
+}

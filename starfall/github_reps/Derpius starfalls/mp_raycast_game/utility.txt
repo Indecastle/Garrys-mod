@@ -1,0 +1,92 @@
+PI = 3.14159265358979323846
+EPSILON = 1e-8
+DEGREE = PI/180
+
+-- Maths
+function sign(num)
+    return num < 0 and -1 or 1
+end
+
+-- Points
+function clonePoint(point)
+    return {x = point.x, y = point.y}
+end
+
+function normalisePoint(point)
+    local length = point.x^2 + point.y^2
+    
+    if length > 0 then
+        length = math.sqrt(length)
+        local inverseLength = 1.0/length
+        point.x = point.x * inverseLength
+        point.y = point.y * inverseLength
+    else
+        point.x = 1
+        point.y = 0
+    end
+    
+    return length
+end
+
+function localisePoint(point, origin)
+    point.x = point.x - origin.x
+    point.y = point.y - origin.y
+end
+
+function lerpPoint(pointA, pointB, t)
+    return {
+        x = math.lerp(t, pointA.x, pointB.x),
+        y = math.lerp(t, pointA.y, pointB.y)
+    }
+end
+
+-- Angles
+function normaliseAngle(angle)
+    if angle < 0 then angle = angle + 2*PI
+    elseif angle > 2*PI then angle = angle - 2*PI end
+    
+    return angle
+end
+
+function angleBetweenAngles(angle, startAng, endAng)
+    local angle = angle - startAng
+    endAng = endAng - startAng
+    
+    -- Normalise angles
+    angle = normaliseAngle(angle)
+    endAng = normaliseAngle(endAng)
+    
+    return angle <= endAng and angle >= 0
+end
+
+-- Get the angle of a point based on the unit circle
+function angleOfPoint(point)
+    -- Make sure the point has magentude
+    if point.x == 0 and point.y == 0 then return 0 end
+    
+    -- Calc the angle of the point and correct for quadrant
+    local ang = math.atan(point.y/point.x)
+    if point.x < 0 then
+        ang = ang + PI
+    elseif point.y < 0 then
+        ang = ang + 2*PI
+    end
+    
+    return ang
+end
+
+-- Returns whether a localised point is within an angle range from origin
+function pointBetweenAngles(point, startAng, endAng)
+    return angleBetweenAngles(angleOfPoint(point), startAng, endAng)
+end
+
+-- AABBs
+-- Returns whether a localised axis aligned bounding box is visible in an angle from its origin
+function AABBBetweenAngles(AABB, startAng, endAng)
+    return (
+        pointBetweenAngles({x = AABB.pos.x - AABB.half.x, y = -AABB.pos.y + AABB.half.y}, startAng, endAng) or -- Top left corner
+        pointBetweenAngles({x = AABB.pos.x + AABB.half.x, y = -AABB.pos.y + AABB.half.y}, startAng, endAng) or -- Top right corner
+        pointBetweenAngles({x = AABB.pos.x - AABB.half.x, y = -AABB.pos.y - AABB.half.y}, startAng, endAng) or -- Bottom left corner
+        pointBetweenAngles({x = AABB.pos.x + AABB.half.x, y = -AABB.pos.y - AABB.half.y}, startAng, endAng)    -- Bottom right corner
+    )
+end

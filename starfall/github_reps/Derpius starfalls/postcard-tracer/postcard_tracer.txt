@@ -1,0 +1,55 @@
+--@name Starfall Postcard Tracer (613 chars excluding directives)
+--@author Derpius
+v=Vector c,r,o,s,h,b,f,e,i,a,u=chip(),render,coroutine,256,128,2048,1,trace.trace,1e9,math.max,v(-.3,.4,.9)w,g=r.selectRenderTarget,c:getPos()
+r.createRenderTarget("r")u:normalize()t=o.wrap(function()for x=0,s do for y=0,s do
+d=v(h,h-x,h-y):getRotated(c:getAngles())z=e(g,g+d*i,c)p=z.HitPos n=z.HitNormal j=a((u-d):getNormalized():dot(n),0)
+l=z.Entity:getColor()/s*a(n:dot(u),.5)*(e(p+n*.3,p+u*i).HitSky and 1 or .5)*Color(j,j,j)l.a=1
+r.setColor(l*h)r.drawRect(x,y,1,1)end o.yield()end f=nil end)hook.add("render","",function()w("r")if f then t()end
+w()r.setRenderTargetTexture("r")r.drawTexturedRect(0,0,b,b)end)
+
+
+--[[ Pretty version (removes all the character saving techniques to make the program easy to read)
+-- ^ remove one of these brackets and comment out the postcard code to verify that they do the same thing
+
+res = 256
+
+chipPos = chip():getPos()
+sunDir = Vector(-0.3,0.4,0.9):getNormalized()
+
+render.createRenderTarget("rt")
+
+
+notFinished = true
+traceScene = coroutine.wrap(function()
+    for x = 0, res do
+        for y = 0, res do
+            direction = Vector(res / 2, res / 2 - x, res / 2 - y):getRotated(chip():getAngles())
+            ray = trace.trace(
+                chipPos,
+                chipPos + direction * 1e9,
+                chip()
+            )
+            
+            hitPos, hitNorm = ray.HitPos, ray.HitNormal -- would use locals here but the code above can't due to the number of chars to define
+            phong = math.max((sunDir - direction):getNormalized():dot(hitNorm),0)
+            colour = ray.Entity:getColor() / res * math.max(hitNorm:dot(sunDir), 0.5) * (trace.trace(hitPos + hitNorm * 0.3, hitPos + sunDir * 999999).HitSky and 1 or 0.5) * Color(phong, phong, phong)
+            colour.a = 1
+            
+            render.setColor(colour * res / 2)
+            render.drawRect(x, y, 1, 1)
+        end
+        coroutine.yield()
+    end
+    notFinished = false
+end)
+
+hook.add("render", "",function()
+    render.selectRenderTarget("rt")
+    if notFinished then traceScene()end
+    render.selectRenderTarget()
+    
+    render.setRenderTargetTexture("rt")
+    render.drawTexturedRect(0, 0, 2048, 2048)
+end)
+
+--]]

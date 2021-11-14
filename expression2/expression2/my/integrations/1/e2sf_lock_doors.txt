@@ -1,0 +1,39 @@
+@name E2SF Lock Doors
+@inputs Doors:array ButtonTrigger
+@persist [E O]:entity OldDoors:array
+
+
+if (first() | dupefinished()) {
+    reset()
+    #include "library/array_add"
+    O = owner(), E = entity()
+    timer("useDoors", 1000)
+}
+
+if (~ButtonTrigger) {
+    OldDoors = array()
+    #print(1)
+}
+
+if(clk("useDoors")) {
+    timer("useDoors", 1)
+    
+    
+    #foreach (I, D:entity = Doors) {
+    #    D:use(O)
+    #}
+    
+    foreach (I, P:entity = Doors) {
+        if (!OldDoors:checkAr(P)) {
+            P:use(O)
+        }
+    }
+    
+    OldDoors = Doors
+}
+
+if (~Doors) {
+    #print(Doors:count())
+}
+
+

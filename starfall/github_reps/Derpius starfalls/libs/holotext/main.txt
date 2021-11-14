@@ -1,0 +1,388 @@
+--[[
+    3D text class using holos by Derpius
+    
+    Can be used for screens too by calling :draw() on each char using "textObj.chars[i][2]:draw()" (note you'll need to handle characters that don't have models)
+]]
+
+-- these were baked with the other script found in this folder, they're the width of the char, and the x position of the min of the AABB
+-- (all of this was calculated from the vismesh, as the actual OBB and AABB calculated by GMod, using the physmesh, is completely out due to poor physmeshes)
+local bounds = {
+    ["4"] = {9.060001373291, -4.5300002098083},
+    ["S"] = {9.2200021743774, -4.6100001335144},
+    ["5"] = {7.7999999523163, -3.8999989032745},
+    ["R"] = {9.9000010490417, -4.9499988555908},
+    ["T"] = {10.160000801086, -5.0799999237061},
+    ["s"] = {7.0199999809265, -3.5099990367889},
+    ["N"] = {9.1400022506714, -4.5700001716614},
+    ["r"] = {5.6000008583069, -2.7999999523163},
+    ["t"] = {5.6399998664856, -2.8199989795685},
+    ["8"] = {8.5000009536743, -4.25},
+    ["n"] = {7.5200018882751, -3.7599999904633},
+    ["9"] = {8.4800009727478, -4.2399997711182},
+    ["6"] = {8.4600009918213, -4.2300000190735},
+    ["X"] = {10.200000762939, -5.0999999046326},
+    ["w"] = {12.100001335144, -6.0500011444092},
+    ["Y"] = {10.039999961853, -5.0199999809265},
+    ["V"] = {10.859999656677, -5.4299998283386},
+    [":"] = {1.9200010895729, -0.96000003814697},
+    ["x"] = {8.7400007247925, -4.3699998855591},
+    ["<"] = {9.2800006866455, -4.6399998664856},
+    ["y"] = {8.7399997711182, -4.3699998855591},
+    ["v"] = {8.7399997711182, -4.3699998855591},
+    ["Z"] = {9.3400011062622, -4.6699991226196},
+    [">"] = {9.2800006866455, -4.6399998664856},
+    ["{"] = {7.5600008964539, -3.7799999713898},
+    ["?"] = {6.8000001907349, -3.4000000953674},
+    ["z"] = {7.2200009822845, -3.6099989414215},
+    ["|"] = {1.4000011086464, -0.70000004768372},
+    ["@"] = {13.620000839233, -6.8099999427795},
+    ["~"] = {10.460000991821, -5.2300000190735},
+    ["_"] = {10.540000915527, -5.2699990272522},
+    ["A"] = {10.859999656677, -5.4299988746643},
+    ["\""] = {4.8600001335144, -2.4300000667572},
+    ["$"] = {8.060001373291, -4.0300002098083},
+    ["a"] = {7.6000008583069, -3.7999999523163},
+    ["%"] = {15.319999694824, -7.6599988937378},
+    ["B"] = {9.0400009155273, -4.5199999809265},
+    ["D"] = {10.120000839233, -5.0599999427795},
+    ["c"] = {7.2600011825562, -3.6300001144409},
+    ["E"] = {7.8800010681152, -3.9399991035461},
+    ["b"] = {7.9200010299683, -3.9599990844727},
+    ["d"] = {7.9200010299683, -3.960000038147},
+    ["("] = {4.8400011062622, -2.4200000762939},
+    ["e"] = {8.1400012969971, -4.0700001716614},
+    [")"] = {4.8400008678436, -2.419998884201},
+    ["&"] = {11.579999923706, -5.7899990081787},
+    ["="] = {9.5400009155273, -4.7699999809265},
+    ["/"] = {7.1600019931793, -3.5799999237061},
+    ["+"] = {10.100001335144, -5.0499992370605},
+    ["H"] = {9.1600017547607, -4.5799999237061},
+    ["-"] = {5.0199999809265, -2.5099990367889},
+    ["g"] = {7.9200010299683, -3.960000038147},
+    ["I"] = {4.7200019359589, -2.3599998950958},
+    ["F"] = {7.660001039505, -3.8299999237061},
+    ["*"] = {7.8000011444092, -3.9000000953674},
+    ["}"] = {7.5600011348724, -3.7799990177155},
+    ["]"] = {4.1800019741058, -2.0899999141693},
+    ["h"] = {7.5200018882751, -3.7599999904633},
+    [","] = {3.4400001764297, -1.7199990749359},
+    ["["] = {4.1800019741058, -2.0899999141693},
+    ["i"] = {1.7200001478195, -0.86000007390976},
+    ["f"] = {5.7800011634827, -2.8900001049042},
+    ["J"] = {5.6400008201599, -2.8199999332428},
+    ["'"] = {1.7800000905991, -0.89000004529953},
+    ["^"] = {10.480000972748, -5.2399997711182},
+    ["#"] = {10.340001106262, -5.1700000762939},
+    ["L"] = {7.5799999237061, -3.7899990081787},
+    ["!"] = {1.8000000715256, -0.90000003576279},
+    ["k"] = {8.0799999237061, -4.0399990081787},
+    ["M"] = {10.680002212524, -5.3400001525879},
+    ["j"] = {4.780002117157, -2.3900001049042},
+    [";"] = {3.4400001764297, -1.7199990749359},
+    ["q"] = {7.9200010299683, -3.960000038147},
+    ["C"] = {9.9400010108948, -4.9699997901917},
+    ["l"] = {1.5200011134148, -0.7600000500679},
+    ["0"] = {8.2800006866455, -4.1399998664856},
+    ["W"] = {14.800001144409, -7.4000010490417},
+    ["m"] = {13.120001792908, -6.5599999427795},
+    ["1"] = {6.4800000190735, -3.2399990558624},
+    ["u"] = {7.5200009346008, -3.7599999904633},
+    ["Q"] = {11.359999656677, -5.6799988746643},
+    ["G"] = {10.660000801086, -5.3299999237061},
+    ["K"] = {9.5800008773804, -4.7899990081787},
+    ["P"] = {7.82000207901, -3.9100000858307},
+    ["O"] = {11.120000839233, -5.5599999427795},
+    ["o"] = {8.2799997329712, -4.1399998664856},
+    ["3"] = {7.8800001144409, -3.9399991035461},
+    ["U"] = {9.1600008010864, -4.5799999237061},
+    ["2"] = {8.0799999237061, -4.0399990081787},
+    ["7"] = {8.1800012588501, -4.0900011062622},
+    ["."] = {1.9200001358986, -0.95999908447266},
+    ["p"] = {7.9200010299683, -3.9599990844727},
+}
+
+-- Maps every supported char to an SProps model suffix
+local charMapper = {
+    a = "l_a",
+    b = "l_b",
+    c = "l_c",
+    d = "l_d",
+    e = "l_e",
+    f = "l_f",
+    g = "l_g",
+    h = "l_h",
+    i = "l_i",
+    j = "l_j",
+    k = "l_k",
+    l = "l_l",
+    m = "l_m",
+    n = "l_n",
+    o = "l_o",
+    p = "l_p",
+    q = "l_q",
+    r = "l_r",
+    s = "l_s",
+    t = "l_t",
+    u = "l_u",
+    v = "l_v",
+    w = "l_w",
+    x = "l_x",
+    y = "l_y",
+    z = "l_z",
+    A = "a",
+    B = "b",
+    C = "c",
+    D = "d",
+    E = "e",
+    F = "f",
+    G = "g",
+    H = "h",
+    I = "i",
+    J = "j",
+    K = "k",
+    L = "l",
+    M = "m",
+    N = "n",
+    O = "o",
+    P = "p",
+    Q = "q",
+    R = "r",
+    S = "s",
+    T = "t",
+    U = "u",
+    V = "v",
+    W = "w",
+    X = "x",
+    Y = "y",
+    Z = "z",
+    ["0"] = "0",
+    ["1"] = "1",
+    ["2"] = "2",
+    ["3"] = "3",
+    ["4"] = "4",
+    ["5"] = "5",
+    ["6"] = "6",
+    ["7"] = "7",
+    ["8"] = "8",
+    ["9"] = "9",
+    ["."] = "prd",
+    [","] = "com",
+    [":"] = "colon",
+    [";"] = "scolon",
+    ["?"] = "qmark",
+    ["!"] = "xmark",
+    ['"'] = "quote",
+    ["~"] = "tilde",
+    ["<"] = "lessthan",
+    [">"] = "greaterthan",
+    ["_"] = "underscore",
+    ["@"] = "atsign",
+    ["#"] = "pdsign",
+    ["$"] = "dlsign",
+    ["%"] = "pcnt",
+    ["^"] = "crt",
+    ["&"] = "and",
+    ["'"] = "apost",
+    ["("] = "lpar",
+    [")"] = "rpar",
+    ["["] = "lbracket",
+    ["]"] = "rbracket",
+    ["{"] = "lcbracket",
+    ["}"] = "rcbracket",
+    ["|"] = "bar",
+    ["+"] = "plu",
+    ["-"] = "min",
+    ["*"] = "ast",
+    ["/"] = "div",
+    ["="] = "equal",
+}
+
+local HoloText = class("HoloText")
+function HoloText:initialize(text, pos, ang, scale, colour)
+    -- Handle missing arguments
+    text = text or ""
+    pos = pos or Vector(0)
+    ang = ang or Angle(0)
+    scale = scale or Vector(1)
+    colour = colour or Color(255)
+
+    -- Set member variables
+    self.transform = {pos = pos, ang = ang, scale = scale}
+    self.colour = colour
+    self.mat = "sprops/sprops_plastic"
+    self.chars = {}
+    self.text = text
+    
+    self.kerning = 1.1
+    self.spaceWidth = 7
+    self.lineHeight = 10
+    
+    -- Create chars
+    self:_populateChars()
+end
+
+function HoloText:_populateChars()
+    local offset = 0
+    local newlines = 0
+    local letterAng = self.transform.ang:rotateAroundAxis(self.transform.ang:getUp(), 180) -- need to rotate the desired angle 180 degrees about the vertical direction, due to sprops letters being backwards
+    for i = 1, #self.text do
+        if self.text[i] == " " then -- spaces
+            offset = offset + self.spaceWidth * self.transform.scale[1]
+            self.chars[i] = {" "}
+            continue
+        elseif self.text[i] == "\n" then -- newlines
+            newlines = newlines + 1
+            offset = 0
+            self.chars[i] = {"\n"}
+            continue
+        end
+        
+        local char = charMapper[self.text[i]] -- convert the char to an SProps model suffix
+        if not char then throw("HoloText: Char '"..self.text[i].."' not supported") end -- throw an error if no mapping found
+        
+        self.chars[i] = {
+            self.text[i],
+            holograms.create(
+                -- note, offsetting by the vismesh AABB min x (bounds[text[i]][2]), to correct for the missaligned origins of sprops models
+                self.transform.pos + Vector(
+                    (offset - bounds[self.text[i]][2]) * self.transform.scale[1],
+                    0,
+                    -self.lineHeight * newlines * self.transform.scale[3]):getRotated(self.transform.ang
+                ),
+                letterAng,
+                "models/sprops/misc/alphanum/alphanum_"..char..".mdl",
+                self.transform.scale
+            )
+        }
+        self.chars[i][2]:setColor(self.colour)
+        
+        offset = offset + (bounds[self.text[i]][1] + self.kerning) -- increment the offset for the next letter's starting position
+    end
+end
+
+function HoloText:_applyTransform(mode)
+    -- basically a slimmed down version of the create chars code in the constructor, except it updates the existing ones
+    local offset = 0
+    local newlines = 0
+    local letterAng = self.transform.ang:rotateAroundAxis(self.transform.ang:getUp(), 180)
+    for i = 1, #self.chars do
+        if self.chars[i][1] == " " then
+            offset = offset + self.spaceWidth * self.transform.scale[1]
+            continue
+        elseif self.chars[i][1] == "\n" then
+            newlines = newlines + 1
+            offset = 0
+            continue
+        end
+        
+        self.chars[i][2]:setPos(self.transform.pos + Vector(
+            (offset - bounds[self.chars[i][1]][2]) * self.transform.scale[1],
+            0,
+            -self.lineHeight * newlines * self.transform.scale[3]
+        ):getRotated(self.transform.ang))
+        
+        if mode == 1 then self.chars[i][2]:setAngles(letterAng)
+        elseif mode == 2 then self.chars[i][2]:setScale(self.transform.scale) end
+        
+        offset = offset + (bounds[self.chars[i][1]][1] + self.kerning)
+    end
+end
+
+-- Transform getters and setters
+function HoloText:getPos() return self.transform.pos end
+function HoloText:setPos(pos)
+    if self.transform.pos == pos then return end
+    self.transform.pos = pos
+    self:_applyTransform(0)
+end
+
+function HoloText:getAngles() return self.transform.ang end
+function HoloText:setAngles(ang)
+    if self.transform.ang == ang then return end
+    self.transform.ang = ang
+    self:_applyTransform(1)
+end
+
+function HoloText:getScale() return self.transform.scale end
+function HoloText:setScale(scale)
+    if self.transform.scale == scale then return end
+    self.transform.scale = scale
+    self:_applyTransform(2)
+end
+
+-- Rendering getters and setters
+function HoloText:getColour() return self.colour end
+function HoloText:setColour(colour)
+    if self.colour == colour then return end
+    self.colour = colour
+    
+    for i = 1, #self.chars do
+        if self.chars[i][1] == " " then continue end
+        self.chars[i][2]:setColor(colour)
+    end
+end
+
+-- Alias functions cause I actually think about people using the other spellings unlike most programmers
+function HoloText:getColor() return self:getColour() end
+function HoloText:setColor(colour) return self:setColour(colour) end
+
+function HoloText:getMaterial() return self.mat end
+function HoloText:setMaterial(mat)
+    if self.mat == mat then return end
+    self.mat = mat
+    
+    for i = 1, #self.chars do
+        if not charMapper[self.chars[i][1]] then continue end
+        self.chars[i][2]:setMaterial(mat)
+    end
+end
+
+-- Text getters and setters
+function HoloText:getText() return self.text end
+function HoloText:setText(text)
+    if self.text == text then return end
+    self.text = text or ""
+    
+    -- remove all holos and clear the chars array
+    for k, v in pairs(self.chars) do
+        if v[2] then v[2]:remove() end
+    end
+    self.chars = {}
+    
+    -- repopulate holos
+    self:_populateChars()
+end
+
+function HoloText:getKerning() return self.kerning end
+function HoloText:setKerning(kerning)
+    if self.kerning == kerning then return end
+    self.kerning = kerning
+    self:_applyTransform(0)
+end
+function HoloText:getSpaceWidth() return self.spaceWidth end
+function HoloText:setSpaceWidth(width)
+    if self.spaceWidth == width then return end
+    self.spaceWidth = width
+    self:_applyTransform(0)
+end
+function HoloText:getLineHeight() return self.lineHeight end
+function HoloText:setLineHeight(height)
+    if self.lineHeight == height then return end
+    self.lineHeight = height
+    self:_applyTransform(0)
+end
+
+return HoloText
+
+--[[
+-- Code to test the library
+local text = HoloText:new("This text will change in 5 seconds...", chip():getPos() + chip():getUp() * 5, chip():getAngles(), Vector(0.5), Color(230, 0, 0))
+text:setMaterial("models/debug/debugwhite")
+
+timer.create("textchange", 5, 1, function() text:setText("Changed!") end)
+
+hook.add("think", "", function()
+    text:setPos(chip():getPos() + chip():getUp() * 5)
+    text:setAngles(chip():getAngles())
+end)
+]]

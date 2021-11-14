@@ -1,0 +1,127 @@
+COMMANDS = {
+    loadHDRI = {
+        desc = "loads a .pfm HDRI into memory (this can take a while)",
+        func = function(path)
+            if not path then
+                print("No path specified")
+                return
+            end
+        
+            if not file.exists(path) then
+                print("File "..path.." does not exist")
+                return
+            end
+            
+            if string.sub(path, -4) ~= ".pfm" then
+                print("Invalid file format, not a .pfm")
+                return
+            end
+            
+            PFM.loadAsync(path)
+            print("Loading the file (this may take some time)")
+        end
+    },
+    listHDRIs = {
+        desc = "lists all loaded HDRIs",
+        func = function()
+            print("===== The following files are loaded =====")
+            for k, _ in pairs(PFM.doneReading) do
+                print(k)
+            end
+            print("==========================================")
+        end
+    },
+    selectHDRI = {
+        desc = "selects a HDRI from memory to use in the render",
+        func = function(path)
+            if not path then
+                print("No path specified")
+                return
+            end
+        
+            if not PFM.doneReading[path] then
+                print("File "..path.." is not loaded")
+                return
+            end
+            
+            HDRI = PFM.doneReading[path]
+            print("HDRI chosen")
+        end
+    },
+    setRes = {
+        desc = "sets the resolution of the camera, takes 'resX resY'",
+        func = function(resX, resY)
+            resX, resY = tonumber(resX), tonumber(resY)
+            if not resX or not resY then
+                print("Arguments not numbers")
+                return
+            end
+            
+            if resX < 2 or resY < 2 then
+                print("Invalid resolution, minimum is 2x2")
+                return
+            end
+            
+            CAM.res = {x = math.floor(resX), y = math.floor(resY)}
+            print("Resolution set")
+        end
+    },
+    setSamples = {
+        desc = "sets the samples to use (note that this is NOT per pixel, but per trace/depth^2)",
+        func = function(samples)
+            samples = tonumber(samples)
+            if not samples then
+                print("Argument not a number")
+            end
+            
+            if samples < 1 then
+                print("Invalid number of samples, minimum is 1")
+            end
+        
+            SAMPLES = math.floor(samples)
+            print("Samples set")
+        end
+    },
+    setExposure = {
+        desc = "sets the exposure of the camera",
+        func = function(exposure)
+            exposure = tonumber(exposure)
+            if not exposure then
+                print("Argument not a number")
+            end
+        
+            EXPOSURE = exposure
+            print("Exposure set")
+        end
+    },
+    markLight = {
+        desc = "marks a light, takes brightness r g b",
+        func = function(brightness, r, g, b)
+            local r, g, b, brightness = tonumber(r), tonumber(g), tonumber(b), tonumber(brightness)
+            if not r or not g or not b or not brightness then
+                print("Invalid argument types")
+                return
+            end
+            
+            markLight(player():getEyeTrace().Entity, brightness, Vector(r, g, b))
+        end
+    }
+}
+
+hook.add("PlayerChat", "chatCommands", function(plr, msg)
+    if plr ~= player() or msg[1] ~= "/" then return end
+    
+    local args = string.explode(" ", string.sub(msg, 2))
+    
+    if args[1] == "help" then
+        for k, v in pairs(COMMANDS) do
+            print("/"..k.." --> "..v.desc)
+        end
+    elseif COMMANDS[args[1]] then
+        local cmd = args[1]
+        table.remove(args, 1)
+        COMMANDS[cmd].func(unpack(args))
+    else
+        print("Unknown command '"..args[1].."'")
+    end
+end)

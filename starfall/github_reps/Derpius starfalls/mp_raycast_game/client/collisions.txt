@@ -1,0 +1,178 @@
+function intersectSegment(this, pos, delta, paddingX, paddingY)
+    paddingX = paddingX or 0
+    paddingY = paddingY or 0
+    
+    local scaleX = 1.0 / delta.x
+    local scaleY = 1.0 / delta.y
+    local signX = sign(scaleX)
+    local signY = sign(scaleY)
+    local nearTimeX = (this.pos.x - signX * (this.half.x + paddingX) - pos.x) * scaleX
+    local nearTimeY = (this.pos.y - signY * (this.half.y + paddingY) - pos.y) * scaleY
+    local farTimeX = (this.pos.x + signX * (this.half.x + paddingX) - pos.x) * scaleX
+    local farTimeY = (this.pos.y + signY * (this.half.y + paddingY) - pos.y) * scaleY
+    
+    if nearTimeX > farTimeY or nearTimeY > farTimeX then
+        return nil
+    end
+    
+    local nearTime = nearTimeX > nearTimeY and nearTimeX or nearTimeY
+    local farTime = farTimeX < farTimeY and farTimeX or farTimeY
+    
+    if nearTime >= 1 or farTime <= 0 then
+      return nil
+    end
+    
+    local hit = {
+        collider = this,
+        pos = {x = 0, y = 0},
+        delta = {x = 0, y = 0},
+        normal = {x = 0, y = 0},
+        time = 0
+    }
+    
+    hit.time = math.clamp(nearTime, 0, 1)
+    if nearTimeX > nearTimeY then
+      hit.normal.x = -signX
+      hit.normal.y = 0
+    else
+      hit.normal.x = 0
+      hit.normal.y = -signY
+    end
+    
+    hit.delta.x = (1.0 - hit.time) * -delta.x
+    hit.delta.y = (1.0 - hit.time) * -delta.y
+    hit.pos.x = pos.x + delta.x * hit.time
+    hit.pos.y = pos.y + delta.y * hit.time
+    
+    return hit
+end
+
+function intersectAABB(this, box)
+    local dx = box.pos.x - this.pos.x
+    local px = (box.half.x + this.half.x) - math.abs(dx);
+    if px <= 0 then
+      return nil
+    end
+
+    local dy = box.pos.y - this.pos.y
+    local py = (box.half.y + this.half.y) - math.abs(dy)
+    if py <= 0 then
+      return nil
+    end
+
+    local hit = {
+        collider = this,
+        pos = {x = 0, y = 0},
+        delta = {x = 0, y = 0},
+        normal = {x = 0, y = 0},
+        time = 0
+    }
+    
+    if px < py then
+      local sx = sign(dx)
+      hit.delta.x = px * sx
+      hit.normal.x = sx
+      hit.pos.x = this.pos.x + (this.half.x * sx)
+      hit.pos.y = box.pos.y
+    else
+      local sy = sign(dy)
+      hit.delta.y = py * sy
+      hit.normal.y = sy
+      hit.pos.x = box.pos.x
+      hit.pos.y = this.pos.y + (this.half.y * sy)
+    end
+    
+    return hit
+end
+
+function sweepAABB(this, box, delta)
+    local sweep = {
+        hit = nil,
+        pos = {x = 0, y = 0},
+        time = 1
+    }
+    
+    if delta.x == 0 and delta.y == 0 then
+        sweep.pos.x = box.pos.x
+        sweep.pos.y = box.pos.y
+        sweep.hit = intersectAABB(this, box)
+        
+        if sweep.hit then
+            sweep.hit.time = 0
+            sweep.time = 0
+        else
+            sweep.time = 1
+        end
+        
+        return sweep
+    end
+    
+    sweep.hit = intersectSegment(this, box.pos, delta, box.half.x, box.half.y)
+    if sweep.hit then
+        sweep.time = math.clamp(sweep.hit.time - EPSILON, 0 ,1)
+        sweep.pos.x = box.pos.x + delta.x * sweep.time
+        sweep.pos.y = box.pos.y + delta.y * sweep.time
+        
+        local direction = {x = delta.x, y = delta.y}
+        normalisePoint(direction)
+        
+        sweep.hit.pos.x = math.clamp(
+            sweep.hit.pos.x + direction.x * box.half.x,
+            this.pos.x - this.half.x, this.pos.x + this.half.x
+        )
+        sweep.hit.pos.y = math.clamp(
+            sweep.hit.pos.y + direction.y * box.half.y,
+            this.pos.y - this.half.y, this.pos.y + this.half.y
+        )
+    else
+        sweep.pos.x = box.pos.x + delta.x
+        sweep.pos.y = box.pos.y + delta.y
+        sweep.time = 1
+    end
+    
+    return sweep
+end
+
+function sweepInto(this, colliders, delta)
+    local nearest = {
+        hit = nil,
+        pos = {x = this.pos.x + delta.x, y = this.pos.y + delta.y},
+        time = 1
+    }
+    
+    for i = 1, #colliders do
+        local sweep = sweepAABB(colliders[i], this, delta)
+        if sweep.time < nearest.time then
+            nearest = sweep
+        end
+    end
+    
+    return nearest
+end
+
+-- Build collision data from the grid cells ajacent to player
+function buildWorldCollisions()
+    -- Calc coords of top left map square relative to player
+    local x, y = math.floor(localPlayer.pos.x/mapS) - 1, math.floor(localPlayer.pos.y/mapS) - 1
+    
+    -- Array of world AABB colliders
+    local colliders = {}
+    
+    for yOff = 0, 2 do
+        for xOff = 0, 2 do
+            if map[(y + yOff)*mapX + (x + xOff) + 1] ~= 1 then continue end
+            
+            local col = {
+                pos = {
+                    x = (x + xOff + 0.5)*mapS,
+                    y = (y + yOff + 0.5)*mapS
+                },
+                half = {x = mapS/2, y = mapS/2}
+            }
+            
+            colliders[#colliders + 1] = col
+        end
+    end
+    
+    return colliders
+end

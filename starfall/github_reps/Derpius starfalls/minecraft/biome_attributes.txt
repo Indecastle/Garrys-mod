@@ -1,0 +1,29 @@
+Biome = class("Biome")
+function Biome:initialize(name, terrainBaseHeight, terrainHeight, terrainScale, lodes)
+    self.name = name
+    
+    self.terrainBaseHeight = terrainBaseHeight
+    self.terrainHeight = terrainHeight
+    self.terrainScale = terrainScale
+    
+    self.lodes = lodes
+end
+
+Lode = class("Lode")
+function Lode:initialize(name, blockID, minHeight, maxHeight, scale, threshold, offset)
+    self.name = name
+    
+    self.blockID = blockID
+    self.minHeight = minHeight
+    self.maxHeight = maxHeight
+    
+    self.scale = scale
+    self.threshold = threshold
+    self.offset = offset
+end
+
+biomes = {
+    default = Biome:new("Default", 42, 42, 0.25, {
+        Lode:new("dirt", 3, 4, 255, 0.1, 0.8, 0)
+    })
+}

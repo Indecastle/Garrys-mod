@@ -1,0 +1,68 @@
+function rotateEntTo(ent, ang, force, smoothness)
+    ent:applyAngForce((ent:worldToLocalAngles(ang)*force - ent:getAngleVelocityAngle()*smoothness))
+end
+
+local target = Angle(0)
+
+local toggle = true
+
+local turretEnt = nil
+local cannonEnt = nil
+
+function traverseToTarget()
+    local turretLocalTarget = turretEnt:worldToLocalAngles(target)
+    local cannonLocalTarget = cannonEnt:worldToLocalAngles(target)
+    
+    if turretLocalTarget.p > cannonConfig.depression or turretLocalTarget.p < -cannonConfig.elevation then
+        turretLocalTarget.p = turretLocalTarget.p > cannonConfig.depression and cannonConfig.depression or -cannonConfig.elevation
+        cannonLocalTarget = cannonEnt:worldToLocalAngles(turretEnt:localToWorldAngles(turretLocalTarget))
+    end
+    
+    rotateEntTo(
+        turretEnt,
+        turretEnt:getAngles():rotateAroundAxis(
+            turretEnt:getUp(),
+            math.clamp(turretLocalTarget.y, -turretConfig.rate*deltaTime, turretConfig.rate*deltaTime)
+        ),
+        turretConfig.force,
+        turretConfig.smoothness
+    )
+    
+    rotateEntTo(
+        cannonEnt,
+        cannonEnt:getAngles():rotateAroundAxis(
+            cannonEnt:getRight(),
+            math.clamp(-cannonLocalTarget.p, -cannonConfig.rate*deltaTime, cannonConfig.rate*deltaTime)
+        ),
+        cannonConfig.force,
+        cannonConfig.smoothness
+    )
+end
+
+hook.add("input", "saveTurrentEnts", function(name, val)
+    if name == "Turret" then turretEnt = isValid(val) and val or nil
+    elseif name == "Cannon" then cannonEnt = isValid(val) and val or nil end
+end)
+
+hook.add("think", "handleTurretTraverse", function()
+    if not isValid(turretEnt) or not isValid(cannonEnt) then return end
+
+    if toggle and seated then target = owner():getEyeAngles() end
+    traverseToTarget()
+end)
+
+hook.add("KeyPress", "handleTurretInputPressed", function(plr, key)
+    if plr ~= owner() or not seated then return end
+    
+    if key == IN_KEY.WALK then toggle = false; return end
+    if key == IN_KEY.ATTACK then wire.ports["Fire"] = 1; return end
+    if key == IN_KEY.JUMP then wire.ports["FireMGs"] = 1; return end
+end)
+
+hook.add("KeyRelease", "handleTurretInputReleased", function(plr, key)
+    if plr ~= owner() then return end
+    
+    if key == IN_KEY.WALK then toggle = true; return end
+    if key == IN_KEY.ATTACK then wire.ports["Fire"] = 0; return end
+    if key == IN_KEY.JUMP then wire.ports["FireMGs"] = 0; return end
+end)

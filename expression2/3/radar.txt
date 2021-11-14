@@ -1,0 +1,263 @@
+@name Radar
+@inputs 
+@outputs I360 Sin
+@persist [EE Ow]:entity Pos I I360 Sin
+@trigger 
+
+if(first()){
+    EE=entity()
+    Ow=owner()
+    
+    Pos=1
+    
+    holoCreate(1)
+    holoParent(1,EE)
+    holoScale(1,vec(2,2,0.1))  
+    
+    holoCreate(2)
+    holoParent(2,EE)
+    holoScale(2,vec(2,0.1,2))  
+    holoPos(2,EE:toWorld(vec(0,11.5,11.5)))
+    
+    holoCreate(3)
+    holoParent(3,EE)
+    holoScale(3,vec(2,0.1,2))  
+    holoPos(3,EE:toWorld(vec(0,-11.5,11.5)))
+    
+    holoCreate(4)
+    holoParent(4,EE)
+    holoScale(4,vec(0.1,2,2))  
+    holoPos(4,EE:toWorld(vec(11.5,0,11.5)))
+    
+    holoCreate(5)
+    holoParent(5,EE)
+    holoScale(5,vec(0.1,2,2))  
+    holoPos(5,EE:toWorld(vec(-11.5,0,11.5)))
+    
+    holoCreate(6)
+    holoParent(6,EE)
+    holoScale(6,vec(2,1,0.1))  
+    holoPos(6,EE:toWorld(vec(0,5,23)))
+    
+    holoCreate(7)
+    holoParent(7,EE)
+    holoScale(7,vec(2,1,0.1))  
+    holoPos(7,EE:toWorld(vec(0,-5,23)))
+    
+    holoCreate(8)
+    holoModel(8,"hq_cylinder")
+    holoParent(8,EE)
+    holoScale(8,vec(0.2,0.2,1.7))  
+    holoPos(8,EE:toWorld(vec(0,0,10)))
+    
+    holoCreate(9)
+    holoModel(9,"hq_icosphere")
+    holoParent(9,holoEntity(8))
+    holoScale(9,vec(0.3))  
+    holoPos(9,holoEntity(8):toWorld(vec(0,0,10)))
+    
+    holoCreate(10)
+    holoModel(10,"hq_icosphere")
+    holoParent(10,holoEntity(8))
+    holoScale(10,vec(0.3))  
+    holoPos(10,holoEntity(8):toWorld(vec(0,0,10)))
+    
+    holoCreate(11)
+    holoParent(11,holoEntity(9))
+    holoScale(11,vec(0.05,0.8,1.5))  
+    holoPos(11,holoEntity(9):toWorld(vec(0.5,0,-10)))
+    
+    holoCreate(12)
+    holoParent(12,holoEntity(10))
+    holoScale(12,vec(0.05,0.8,1.5))  
+    holoPos(12,holoEntity(10):toWorld(vec(-0.5,0,-10)))
+    
+    holoCreate(13)
+    holoModel(13,"hq_icosphere")
+    holoParent(13,holoEntity(8))
+    holoScale(13,vec(0.3))  
+    holoPos(13,holoEntity(8):toWorld(vec(0,0,10)))
+    
+    holoCreate(14)
+    holoModel(14,"hq_icosphere")
+    holoParent(14,holoEntity(8))
+    holoScale(14,vec(0.3))  
+    holoPos(14,holoEntity(8):toWorld(vec(0,0,10)))
+    
+    holoCreate(15)
+    holoParent(15,holoEntity(13))
+    holoScale(15,vec(0.05,0.8,1.5))  
+    holoPos(15,holoEntity(13):toWorld(vec(0.5,0,-10)))
+    
+    holoCreate(16)
+    holoParent(16,holoEntity(14))
+    holoScale(16,vec(0.05,0.8,1.5))  
+    holoPos(16,holoEntity(14):toWorld(vec(-0.5,0,-10)))
+    
+    holoAlpha(15,0)
+    holoAlpha(16,0)
+    
+    #1 para 2 st
+    holoCreate(17)
+    holoModel(17,"hq_icosphere")
+    holoParent(17,holoEntity(8))
+    holoScale(17,vec(0.3))  
+    holoPos(17,holoEntity(8):toWorld(vec(0,0,10)))
+    
+    holoCreate(18)
+    holoModel(18,"hq_icosphere")
+    holoParent(18,holoEntity(8))
+    holoScale(18,vec(0.3))  
+    holoPos(18,holoEntity(8):toWorld(vec(0,0,10)))
+    
+    holoCreate(19)
+    holoParent(19,holoEntity(17))
+    holoScale(19,vec(0.05,0.8,1.5))  
+    holoPos(19,holoEntity(18):toWorld(vec(-0.5,0,-10)))
+    
+    holoCreate(20)
+    holoParent(20,holoEntity(18))
+    holoScale(20,vec(0.05,0.8,1.5))  
+    holoPos(20,holoEntity(18):toWorld(vec(-0.5,0,-10)))
+    #2para 2 st
+    holoCreate(21)
+    holoModel(21,"hq_icosphere")
+    holoParent(21,holoEntity(8))
+    holoScale(21,vec(0.3))  
+    holoPos(21,holoEntity(8):toWorld(vec(0,0,10)))
+    
+    holoCreate(22)
+    holoModel(22,"hq_icosphere")
+    holoParent(22,holoEntity(8))
+    holoScale(22,vec(0.3))  
+    holoPos(22,holoEntity(8):toWorld(vec(0,0,10)))
+    
+    holoCreate(23)
+    holoParent(23,holoEntity(21))
+    holoScale(23,vec(0.05,0.8,1.5))  
+    holoPos(23,holoEntity(21):toWorld(vec(-0.5,0,-10)))
+    
+    holoCreate(24)
+    holoParent(24,holoEntity(22))
+    holoScale(24,vec(0.05,0.8,1.5))  
+    holoPos(24,holoEntity(22):toWorld(vec(-0.5,0,-10)))
+    
+    holoAlpha(19,0)
+    holoAlpha(20,0)
+    holoAlpha(19,0)
+    holoAlpha(23,0)
+    holoAlpha(24,0)
+    
+    holoAlpha(10,0)
+    holoAlpha(13,0)
+    holoAlpha(14,0)
+    holoAlpha(17,0)
+    holoAlpha(18,0)
+    holoAlpha(21,0)
+    holoAlpha(22,0)
+    holoColor(11,vec(0))
+    holoColor(12,vec(0))
+    holoColor(15,vec(0))
+    holoColor(16,vec(0))
+    holoColor(19,vec(0))
+    holoColor(20,vec(0))
+    holoColor(23,vec(0))
+    holoColor(24,vec(0))
+    holoCreate(25)
+    holoParent(25,EE)
+    holoModel(25,"models/beer/wiremod/targetfinder.mdl")
+    holoPos(25,EE:toWorld(vec(-12,5,17)))
+    holoAng(25,EE:toWorld(ang(90,180,0)))
+    
+    holoCreate(26)
+    holoParent(26,EE)
+    holoScale(26,vec(0.45))
+    holoModel(26,"models/kobilica/wiremonitorbig.mdl")
+    holoPos(26,EE:toWorld(vec(-13,-4.2,11)))
+    holoAng(26,EE:toWorld(ang(0,180,0)))
+    #models/kobilica/wiremonitorbig.mdl
+    for(I=1,7){
+    holoColor(I,vec(100))
+    }
+    I=0
+}
+interval(100)
+
+if(Pos==1){
+    holoPos(6,holoEntity(6):toWorld(vec(0,1,0)))
+    holoPos(7,holoEntity(7):toWorld(vec(0,-1,0)))
+    I++
+    if(I>10){
+        Pos=2
+        I=0
+    }
+}
+if(Pos==2){
+    holoPos(8,holoEntity(8):toWorld(vec(0,0,1)))
+    I++
+    if(I>20){
+        Pos=3
+        I=0
+        
+    }
+}
+if(Pos==3){
+    holoAng(9,holoEntity(9):toWorld(ang(-10,0,0)))
+    holoAng(10,holoEntity(10):toWorld(ang(2,0,0)))
+    holoAng(13,holoEntity(13):toWorld(ang(-10,0,0)))
+    holoAng(14,holoEntity(14):toWorld(ang(2,0,0)))
+    holoAng(17,holoEntity(17):toWorld(ang(-10,0,0)))
+    holoAng(18,holoEntity(18):toWorld(ang(2,0,0)))
+    holoAng(21,holoEntity(21):toWorld(ang(-10,0,0)))
+    holoAng(22,holoEntity(22):toWorld(ang(2,0,0)))
+    I++
+    if(I>20){
+        Pos=4
+        I=0
+        holoAlpha(15,255)
+        holoAlpha(16,255)
+    }
+}
+if(Pos==4){
+    holoAng(13,holoEntity(13):toWorld(ang(0,-2,3.5)))
+    holoAng(14,holoEntity(14):toWorld(ang(0,-2.5,-3.5)))
+    I++
+    if(I>20){
+        Pos=5
+        I=0
+        holoAlpha(19,255)
+        holoAlpha(20,255)
+        holoAlpha(23,255)
+        holoAlpha(24,255)
+    }
+}
+if(Pos==5){
+    holoAng(17,holoEntity(17):toWorld(ang(0,1,-1.8)))
+    holoAng(18,holoEntity(18):toWorld(ang(0,-1,-1.8)))
+    holoAng(21,holoEntity(21):toWorld(ang(0,-1,1.8)))
+    holoAng(22,holoEntity(22):toWorld(ang(0,1,1.8)))
+    I++
+    if(I>20){
+        Pos=6
+        I=0
+
+    }
+}
+if(Pos==6){
+    holoPos(6,holoEntity(6):toWorld(vec(0,-1,0)))
+    holoPos(7,holoEntity(7):toWorld(vec(0,1,0)))
+    I++
+    if(I>10){
+        Pos=7
+        I=0
+    }
+}
+if(Pos==7){
+    I360=(I360+5)%180
+    Sin=sin(I360)
+    holoAng(8,holoEntity(8):toWorld(ang(0,2,0)))
+    holoColor(9,hsv2rgb(25,1,Sin))
+    if(first()){
+        holoMaterial(9,"model/debug/debugwhite")   
+    }
+}

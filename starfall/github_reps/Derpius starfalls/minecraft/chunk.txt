@@ -1,0 +1,108 @@
+
+
+Chunk = class("Chunk")
+function Chunk:initialize(pos)
+    self.pos = pos
+    self.active = true
+    
+    self.entity = holograms.create(
+        Vector(pos.x * VoxelData.chunkWidth * VoxelData.blockScale, pos.y * VoxelData.chunkWidth * VoxelData.blockScale, 0),
+        Angle(0, 0, 0),
+        "models/hunter/blocks/cube8x8x8.mdl",
+        Vector(1)
+    )
+    self.entity:setColor(Color(255, 255, 255, 0))
+    
+    self.verts = {}
+    self.data = {}
+    
+    self:PopulateVoxelMap()
+    
+    self:GenerateMeshData()
+    
+    if #self.verts > 0 then self:GenerateMesh() end
+end
+
+function Chunk:PopulateVoxelMap()
+    for x = 0, VoxelData.chunkWidth - 1 do
+        self.data[x] = {}
+        for y = 0, VoxelData.chunkWidth - 1 do
+            self.data[x][y] = {}
+            for z = 0, VoxelData.chunkHeight - 1 do
+                yield(0.8)
+                self.data[x][y][z] = GetVoxel(Vector(x, y, z) + Vector(self.pos.x*VoxelData.chunkWidth, self.pos.y*VoxelData.chunkWidth, 0))
+            end
+        end
+    end
+end
+
+function Chunk:GenerateMeshData()
+    for z = 0, VoxelData.chunkHeight - 1 do
+        for x = 0, VoxelData.chunkWidth - 1 do
+            for y = 0, VoxelData.chunkWidth - 1 do
+                yield(0.8)
+                if blockTypes[self.data[x][y][z]].bSolid then self:GenerateMeshDataVert(Vector(x, y, z)) end
+            end
+        end
+    end
+end
+
+function Chunk:GenerateMeshDataVert(pos)
+    for i = 1, 6 do
+        if not self:CheckVoxel(pos + VoxelData.faceChecks[i]) then
+            for j = 1, 6 do
+                self.verts[#self.verts + 1] = {
+                    pos = (VoxelData.verts[VoxelData.tris[i][j]] + pos)*VoxelData.blockScale,
+                    u = VoxelData.uvs[j].u*uvSize*0.9 + atlasUVs[blocks[blockTypes[self.data[pos.x][pos.y][pos.z]].textures[i]]].u,
+                    v = VoxelData.uvs[j].v*uvSize*0.9 + atlasUVs[blocks[blockTypes[self.data[pos.x][pos.y][pos.z]].textures[i]]].v
+                }
+            end
+        end
+    end
+end
+
+function Chunk:GenerateMesh()
+    mesh.generateNormals(self.verts, true)
+    
+    self.mesh = mesh.createFromTable(self.verts)
+    
+    self.entity:setMesh(self.mesh)
+    self.entity:setMeshMaterial(atlasMat)
+    self.entity:setColor(Color(255, 255, 255, 255))
+end
+
+function Chunk:SetActive(state)
+    if not self.active and state then
+        self.entity:setMesh(self.mesh)
+        self.entity:setColor(Color(255, 255, 255, 255))
+    elseif self.active and not state then
+        self.entity:setColor(Color(255, 255, 255, 0))
+        self.entity:setMesh()
+    end
+
+    self.active = state
+end
+
+function Chunk:IsVoxelInChunk(pos)
+    return pos.x >= 0 and pos.x < VoxelData.chunkWidth and pos.y >= 0 and pos.y < VoxelData.chunkWidth and pos.z >= 0 and pos.z < VoxelData.chunkHeight
+end
+
+function Chunk:CheckVoxel(pos)
+    if self:IsVoxelInChunk(pos) then
+        return blockTypes[self.data[pos.x][pos.y][pos.z]].bSolid
+    end
+    
+    return blockTypes[GetVoxel(pos + Vector(self.pos.x*VoxelData.chunkWidth, self.pos.y*VoxelData.chunkWidth, 0))].bSolid
+end
+
+
+
+ChunkCoord = class("ChunkCoord")
+function ChunkCoord:initialize(x, y)
+    self.x = x
+    self.y = y
+end
+
+function ChunkCoord:Equals(other)
+    return self.x == other.x and self.y == other.y
+end

@@ -1,0 +1,11 @@
+@name Ops Limit
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+interval(1)
+
+while (perf() & opcounter() < 5000) {
+    local Test = 1
+}

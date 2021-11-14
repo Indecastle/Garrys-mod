@@ -1,0 +1,137 @@
+--@name Image on screen
+--@author AKCEJIb
+--@shared
+--@include libs/util.txt
+
+--[[
+    
+    Image on screen by AKCEJIb
+    Version: 1.0
+    Date: 15.07.2019
+  
+    Permissions:
+    - Disable url material whitelist:
+    sf_permission_cl material.urlcreate urlwhitelist 2
+    
+    Type this commands to console. Give this commands to friends.
+    
+    Usage:
+    1. Place this chip on ground.
+    2. Place 'Starfall - Component' on ground.
+    3. RMB to 'Starfall - Component'.
+    4. RMB to chip on ground from step 1.
+    5. Type in chat !{image_link}, without {}
+    
+]]--
+
+if CLIENT then
+    
+    function ConvertFromBBCode(stringURL)
+        stringURL = string.Replace(stringURL, "[img]", "")
+        stringURL = string.Replace(stringURL, "[/img]", "")
+        return stringURL
+    end
+    
+    local image = image or material.create("UnlitGeneric")
+    
+    function SetImage(stringURL)
+        local url = ConvertFromBBCode(stringURL)
+        image = render.getTextureID(url, function(mat, Url, width, height, represent) 
+            
+            if width ~= nil and height ~= nil then
+                local size = 1024
+                local ratio = width/height
+                
+                if(size/ratio>1024) then
+                    represent((1024-(size*ratio))/2, 0, size*ratio, size)
+                else
+                    represent(0, (1024-(size/ratio))/2, size, size/ratio)
+                end
+            else
+                print("Invalid image!")
+                image = material.create("UnlitGeneric")
+            end
+        end)
+    end
+    
+    render.createRenderTarget("imageFeild")
+    
+    net.receive("imgUpdate", function()
+        local url = net.readString()
+        SetImage(url)
+    end)
+    
+    hook.add("render", "ban", function()
+        
+        render.setRenderTargetTexture("imageFeild")
+        render.drawTexturedRect(0,0, 512, 512)
+        render.selectRenderTarget("imageFeild")
+        render.clear(Color(255, 255, 255))
+        
+        render.setTexture(image)
+        render.drawTexturedRect(0, 0, 1024, 1024)
+        
+    end)
+    
+else
+--[[
+    OLD ImageParse
+    Deprecated because we have image links without extension :\
+    ------------
+    
+    local Utils = require("libs/util.txt")
+    local Set = Utils.Set -- Load Set function from library
+    
+    -- Allowed types
+    local imgTypes = Set {
+        ".png",
+        ".jpg",
+        ".gif", -- Without animation :(
+        ".jpeg"
+    }
+    
+    local pattern = "^!https?:.*%..*$"
+    
+    
+    hook.add("PlayerSay", "say", function(ply, text)
+        
+        local _tt = string.match(text, pattern)
+        
+        if _tt then
+        
+            local _tend = string.match(_tt, "%.%a*$")
+            
+            if imgTypes[_tend] then
+    
+                net.start("imgUpdate")
+                    net.writeString(_tt:sub(2))
+                net.send()
+                
+            else
+                
+                print("Invalid image URL!")
+                    
+            end
+            
+        end
+        
+    end)
+]]--
+
+    local pattern = "^!https?://.*$"
+    
+    
+    hook.add("PlayerSay", "say", function(ply, text)
+        
+        local _tt = string.match(text, pattern)
+        
+        if _tt then
+
+            net.start("imgUpdate")
+                net.writeString(_tt:sub(2))
+            net.send()
+         
+        end
+        
+    end)
+end

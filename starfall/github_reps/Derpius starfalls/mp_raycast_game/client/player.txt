@@ -1,0 +1,60 @@
+function movePlayer(dx, dy)
+    local sweep = sweepInto(
+        {
+            pos = clonePoint(localPlayer.pos),
+            half = {x = localPlayer.size/2, y = localPlayer.size/2}
+        },
+        buildWorldCollisions(),
+        {x = dx, y = dy}
+    )
+    
+    if sweep.hit then
+        local m = (sweep.hit.normal.y + EPSILON)/(sweep.hit.normal.x + EPSILON)
+        local adjX = (m*(dx + localPlayer.pos.x) - (dy + localPlayer.pos.y) + (1/m)*localPlayer.pos.x + localPlayer.pos.y)/(m + 1/m)
+        local adjY = m*(adjX - (dx + localPlayer.pos.x)) + (dy + localPlayer.pos.y)
+        
+        sweep = sweepInto(
+            {
+                pos = {x = localPlayer.pos.x, y = localPlayer.pos.y},
+                half = {x = localPlayer.size/2, y = localPlayer.size/2}
+            },
+            buildWorldCollisions(),
+            {x = (adjX - localPlayer.pos.x)*0.5, y = (adjY - localPlayer.pos.y)*0.5}
+        )
+    end
+    
+    localPlayer.pos.x, localPlayer.pos.y = sweep.pos.x, sweep.pos.y
+end
+
+function drawPlayer(x, y, drawLine)
+    x = x or localPlayer.pos.x
+    y = y or localPlayer.pos.y
+    drawLine = drawLine == nil and true or drawLine
+    
+    render.setColor(Color(255, 255, 50))
+    render.drawRect(x - localPlayer.size/2, y - localPlayer.size/2, localPlayer.size, localPlayer.size)
+    
+    if drawLine then render.drawLine(x, localPlayer.pos.y, x + localPlayer.delta.x*10, localPlayer.pos.y + localPlayer.delta.y*10) end
+end
+
+function handleInput()
+    -- Rotation
+    if player():keyDown(IN_KEY.MOVELEFT) and not player():keyDown(IN_KEY.MOVERIGHT) then
+        localPlayer.ang = localPlayer.ang - localPlayer.rotSpeed*deltaTime
+        if localPlayer.ang < 0 then localPlayer.ang = localPlayer.ang + PI*2 end
+        localPlayer.delta.x = math.cos(localPlayer.ang)
+        localPlayer.delta.y = math.sin(localPlayer.ang)
+    elseif player():keyDown(IN_KEY.MOVERIGHT) and not player():keyDown(IN_KEY.MOVELEFT) then
+        localPlayer.ang = localPlayer.ang + localPlayer.rotSpeed*deltaTime
+        if localPlayer.ang > PI * 2 then localPlayer.ang = localPlayer.ang - PI*2 end
+        localPlayer.delta.x = math.cos(localPlayer.ang)
+        localPlayer.delta.y = math.sin(localPlayer.ang)
+    end
+    
+    -- Traversal
+    if player():keyDown(IN_KEY.FORWARD) and not player():keyDown(IN_KEY.BACK) then
+        movePlayer(localPlayer.delta.x*localPlayer.movSpeed*deltaTime, localPlayer.delta.y*localPlayer.movSpeed*deltaTime)
+    elseif player():keyDown(IN_KEY.BACK) and not player():keyDown(IN_KEY.FORWARD) then
+        movePlayer(-localPlayer.delta.x*localPlayer.movSpeed*deltaTime, -localPlayer.delta.y*localPlayer.movSpeed*deltaTime)
+    end
+end

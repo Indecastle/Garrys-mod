@@ -1,0 +1,28 @@
+@name Spam opening Doors
+@inputs 
+@outputs [Doors]:array
+@persist 
+@trigger 
+
+if (first()) {
+    findByClass("prop_door_rotating")
+    Doors = findToArray()
+    
+    findByClass("func_door_rotating")
+    Doors = Doors:add(findToArray())
+    
+    findByClass("func_door")
+    Doors = Doors:add(findToArray())
+    
+    findByClass("func_button")
+    Doors = Doors:add(findToArray())
+}
+
+
+interval(2000)
+
+foreach (I, D:entity = Doors) {
+    D:use(owner())
+}
+
+

@@ -1,0 +1,54 @@
+
+
+function table.map(t, func)
+    local maped = {}
+    for i=1, #t do
+        maped[i] = func(t[i])
+    end
+    return maped
+end
+function table.sum(t, func)
+    local sum_ = 0
+    for i=1, #t do
+        sum_ = sum_ + func(t[i])
+    end
+    return sum_
+end
+function table.all(t, func)
+    for i=1, #t do
+        if not func(t[i]) then
+            return false
+        end
+    end
+    return true
+end
+function table.any(t, func)
+    for i=1, #t do
+        if func(t[i]) then
+            return true
+        end
+    end
+    return false
+end
+function table.reduce(list, fn, init)
+    local acc = init
+    for k, v in ipairs(list) do
+        if 1 == k and not init then
+            acc = v
+        else
+            acc = fn(acc, v)
+        end
+    end
+    return acc
+end
+function table.filter(t, func)
+    local maped = {}
+    local j = 1
+    for i=1, #t do
+        if func(t[i]) then
+            maped[j] = t[i]
+            j = j + 1
+        end
+    end
+    return maped
+end

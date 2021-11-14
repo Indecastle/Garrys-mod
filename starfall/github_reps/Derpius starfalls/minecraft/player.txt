@@ -1,0 +1,4 @@
+Player = class("Player")
+function Player:initialize()
+    self.transform = {position = Vector(0), angle = Angle(0)}
+end
