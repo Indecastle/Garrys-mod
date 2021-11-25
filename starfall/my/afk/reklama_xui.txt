@@ -6,7 +6,7 @@
 dofile("libs/3d2dtext.txt")
 
 local Target = chip()
-//Target = find.playersByName("mark")[1]
+Target = find.playersByName("str")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -29,7 +29,7 @@ local Data = {
         colorSpeed = 0.3,
     },
     {   text={"не любишь ебаться? Пропиши !будешь трахаться в чат",}, 
-        fontSize=40, 
+        fontSize=34, 
         fontBold=1000, 
         margin=60,
         bold=true,
@@ -52,7 +52,7 @@ local Data = {
 local Vars = {
     Target= Target,
 
-    Mode=2,
+    Mode=3,
     isRotate=false,
     rotateSpeed=100,
     swaySpeed=2,
@@ -66,8 +66,8 @@ local Vars = {
     shadowAlphaReverce=0,
     shadowOffset=1,
     
-    textSize=200,
-    DataOffsetZ=35,
+    textSize=600*5,
+    DataOffsetZ=10,
     
     isParentPos=true,
     isParentAngle=true,

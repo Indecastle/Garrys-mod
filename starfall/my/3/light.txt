@@ -7,28 +7,12 @@ local OO = owner()
 local E = chip()
 local worldE = game.getWorld()
 
-if O ~= OO then return end
+//if O ~= OO then return end
 
-local effectData = effect:create()
-
-//effectData:setStart(OO:getShootPos())
-//effectData:setOrigin(OO:getShootPos())
-
-//effectData:setEntity(OO)
-//effectData:setMagnitude(1)
-//effectData:setScale(3)
-//effectData:setRadius(1)
-//effectData:setDamageType(2^32 - 1)
+local light2 = light.create(Vector(), 300,5,Color(0,0,0))
 
 
-local sound;
-
-//local holo = holograms.create(Vector(), Angle(), "models/holograms/cube.mdl", Vector(1,1,1))
-
-//holo:addEffects(bit.bor(EF.NODRAW, EF.FOLLOWBONE))
-
-local light = light.create(Vector(),300,5,Color(0,0,0))
-
+/*
 timer.create("kek", 0.01, 0, function()
     local tr = OO:getEyeTrace()
     local target = tr.Entity 
@@ -45,10 +29,24 @@ timer.create("kek", 0.01, 0, function()
     
 
     
-    effectData:play("TeslaHitboxes")
+end)
+*/
+
+hook.add("think", "", function()
+    if !O:isFlashlightOn() then return end
+    
+    local tr = O:getEyeTrace()
+    local target = tr.Entity 
+    local hitPos = tr.HitPos
+    local hitNormal = tr.HitNormal
     
     
-    
+    light2:setPos(hitPos + hitNormal*15)
+    light2:setBrightness(5)
+    light2:setSize(200)
+    //light2:setNoModel(true)
+    light2:setColor(Color(timer.systime()*50, 1, 1):hsvToRGB())
+    light2:draw()
 end)
 
 

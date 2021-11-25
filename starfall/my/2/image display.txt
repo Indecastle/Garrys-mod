@@ -15,9 +15,9 @@ local URLS = {
     custom = nil
 }
 
-local img = "rikka_2"
+local img = "rikka_ch"
 
-local maxh = 120*1
+local maxh = 120*10
 
 function isLookingAtChip()
     local dir = owner():getEyeAngles():getForward()

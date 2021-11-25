@@ -94,7 +94,7 @@ do
     volume.pos = Vector(0, 0)
     volume.height = 20
     volume.dock = GUI.DOCK.TOP
-    volume.style = 2
+    volume.style = 1
     volume.cornerStyle = 0
     volume.text = "Volume %s"
     volume.min = 0

@@ -20,6 +20,7 @@ if(clk("t")) { #entity():setAlpha(0)
     holoModel(1,"models/props_c17/door01_left.mdl")
     HDoor:setBodygroup(1,1)
     holoAng(1,Door:angles())
+    #holoSkin(1, 2)
     holoParent(1,Door)
    
     

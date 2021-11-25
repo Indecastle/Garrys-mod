@@ -1,0 +1,14 @@
+@name set max health npc
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+interval(100)
+
+findByClass("npc_*")
+Ar = findToArray()
+
+foreach (I, E:entity = Ar) {
+    E:setMaxHealth(1)
+}

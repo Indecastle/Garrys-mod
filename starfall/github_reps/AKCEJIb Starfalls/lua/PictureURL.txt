@@ -1,7 +1,7 @@
 --@name Image on screen
 --@author AKCEJIb
 --@shared
---@include libs/util.txt
+--@include ./libs/util.txt
 
 --[[
     
@@ -26,32 +26,36 @@
 
 if CLIENT then
     
-    function ConvertFromBBCode(stringURL)
-        stringURL = string.Replace(stringURL, "[img]", "")
-        stringURL = string.Replace(stringURL, "[/img]", "")
-        return stringURL
-    end
-    
-    local image = image or material.create("UnlitGeneric")
+    local maxh = 120
+
+    local image;
     
     function SetImage(stringURL)
-        local url = ConvertFromBBCode(stringURL)
-        image = render.getTextureID(url, function(mat, Url, width, height, represent) 
+        //local url = ConvertFromBBCode(stringURL)
+        
+        image = material.create("UnlitGeneric")
+        image:setInt("$flags", 256)
+        --image:setTextureURL("$basetexture",stringURL)
+        image:setTextureURL("$basetexture", stringURL, function(m, u, w, h, l)
+            if m == nil then return end
+        
+            local ratio = w / h
+
+            local sh = 10
+            local sw = sh * ratio
             
-            if width ~= nil and height ~= nil then
-                local size = 1024
-                local ratio = width/height
-                
-                if(size/ratio>1024) then
-                    represent((1024-(size*ratio))/2, 0, size*ratio, size)
-                else
-                    represent(0, (1024-(size/ratio))/2, size, size/ratio)
-                end
-            else
-                print("Invalid image!")
-                image = material.create("UnlitGeneric")
-            end
+            --l(0, 0, m:getWidth(), m:getHeight())
+            
+            hook.add("renderoffscreen","",function()
+                render.selectRenderTarget("imageFeild")
+                render.setColor(Vector(0,0,0))
+                render.setMaterial(image)
+                render.drawTexturedRect(0, 0, 1024, 1024)
+        
+                hook.remove("renderoffscreen", "")
+            end)
         end)
+        print(stringURL)
     end
     
     render.createRenderTarget("imageFeild")
@@ -61,15 +65,20 @@ if CLIENT then
         SetImage(url)
     end)
     
-    hook.add("render", "ban", function()
-        
+    /*hook.add("renderoffscreen","",function()
+        render.selectRenderTarget("imageFeild")
+        render.setColor(Vector(0,0,0))
+        render.setMaterial(image)
+        render.drawTexturedRect(0, 0, 1024, 1024)
+
+        hook.remove("renderoffscreen", "")
+    end)*/
+    
+    hook.add("render", "dd", function()
+        render.selectRenderTarget()
+        render.setColor(Vector(0,0,0))
         render.setRenderTargetTexture("imageFeild")
         render.drawTexturedRect(0,0, 512, 512)
-        render.selectRenderTarget("imageFeild")
-        render.clear(Color(255, 255, 255))
-        
-        render.setTexture(image)
-        render.drawTexturedRect(0, 0, 1024, 1024)
         
     end)
     
@@ -121,7 +130,7 @@ else
     local pattern = "^!https?://.*$"
     
     
-    hook.add("PlayerSay", "say", function(ply, text)
+    /*hook.add("PlayerSay", "say", function(ply, text)
         
         local _tt = string.match(text, pattern)
         
@@ -133,5 +142,14 @@ else
          
         end
         
+    end)*/
+    
+    hook.add("ClientInitialized", "", function()
+    
+        net.start("imgUpdate")
+            net.writeString("https://i.imgur.com/9UtATPQ.gif")
+        net.send()
+        
+        hook.remove("ClientInitialized", "")
     end)
 end
