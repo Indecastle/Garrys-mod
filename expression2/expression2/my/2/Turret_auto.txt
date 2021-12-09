@@ -25,7 +25,10 @@ if(first()) {
 Turret:setPos(H:toWorld(vec(10,0,0)))
 
 
-
+function number getDegreeDiff(Dir1:vector, Dir2:vector) {
+    Cos = (Dir1:x()*Dir2:x()+Dir1:y()*Dir2:y()+Dir1:z()*Dir2:z()) / (Dir1:distance(vec(0))*Dir2:distance(vec(0)))
+    return acos(Cos)
+}
 
 if(clk("scan")) {
     findClearWhiteList()

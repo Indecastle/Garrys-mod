@@ -9,6 +9,7 @@ interval(1000)
 findIncludeClass("weapon")
 findIncludeClass("item_ammo")
 findIncludeClass("healthvial")
+findIncludeClass("arccw_*")
 findInSphere(entity():pos(), 10000)
 Ar = findToArray()
 
