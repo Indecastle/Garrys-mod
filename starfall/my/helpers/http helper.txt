@@ -33,8 +33,8 @@ if SERVER then
                     wire.ports.Response = json.decode(body2)
                     wire.ports.HttpCanRequest = 1
                 end, 
-                function(body2, length, headers, code) // fail
-                    wire.ports.Response = json.decode(body2)
+                function(message) // fail
+                    print(message)
                     wire.ports.HttpCanRequest = 1
                 end, 
                 body.headers) // { ['Content-Type'] = "application/json" }

@@ -1,0 +1,104 @@
+@name Combine Turret symfphys with keyboard
+@inputs
+@outputs [Driver Turret KeyBoard]:entity Firying
+@persist [E O]:entity Players:array [WTurret WKeyBoard]:wirelink Distance StoredAngle:angle MaxDegreeToRelease MaxDegreeToControl
+@trigger 
+
+if (first() | dupefinished()) { 
+    E=entity() O=owner()
+    
+    Distance = 75
+    MaxDegreeToRelease = 110
+    MaxDegreeToControl = 70
+    
+    findByClass("gmod_wire_keyboard")
+    KeyBoard = findClosest(E:pos())
+    findByClass("simfphys_turret")
+    Turret = findClosest(E:pos())
+    
+    KeyBoard:setAlpha(0)
+    
+    WTurret = Turret:wirelink()
+    WKeyBoard = KeyBoard:wirelink()
+    WKeyBoard["Kick", number] = 0
+    
+    function number getDegreeDiff(Dir1:vector, Dir2:vector) {
+        Cos = (Dir1:x()*Dir2:x()+Dir1:y()*Dir2:y()+Dir1:z()*Dir2:z()) / (Dir1:distance(vec(0))*Dir2:distance(vec(0)))
+        return acos(Cos)
+    }
+    
+    function void kickDriver() {
+        WKeyBoard["Kick", number] = 1
+        timer("KickOff", 100)
+    }
+    
+    timer("scan", 100)
+}
+
+
+interval(10)
+
+
+if (clk("scan")){
+    findByClass("player")
+    local OP = findToArray()
+    if (Players:count() != OP:count()){
+        runOnKeys(OP, 1)
+    }
+    Players = OP
+    timer("scan",1000)
+}
+
+if (clk("KickOff")) {
+    WKeyBoard["Kick", number] = 0
+}
+
+
+local Who = keyClk()
+Driver = WKeyBoard["User", entity]
+
+if (changed(Driver) & Driver) {
+    Turret:soundPlay(1, 10, "weapons/shotgun/shotgun_cock.wav")
+}
+
+
+if (Who) {
+    if (changed(Who:keyPressed("e")) && Who:keyPressed("e")) {
+        if (Driver == Who & Driver:isPlayer()) {
+            kickDriver()
+        }
+    }
+}
+
+if (Driver:isPlayer()) {
+    if (changed(Driver:keyPressed("mouse_left"))) {
+        Firying = Driver:keyPressed("mouse_left")
+        WTurret["Fire", number] = Firying
+    }
+    
+    local Dir1 = Driver:eyeAngles():forward()
+    local Dir2 = KeyBoard:angles():up()
+    local DegreeDiff = getDegreeDiff(Dir1, Dir2)
+    
+    if (DegreeDiff < MaxDegreeToControl) {
+        StoredAngle = Driver:eyeAngles() + ang(90,0,0)
+    }
+    
+    if (Driver:shootPos():distance(Turret:pos()) > Distance 
+            | getDegreeDiff(Dir1, Dir2) > MaxDegreeToRelease
+            | KeyBoard:toLocal(Driver:shootPos()):z() > 0) {
+        kickDriver()
+    }
+    
+} else {
+    WTurret["Fire", number] = 0
+}
+
+if (Driver:isPlayer()) {
+    Turret:setAng(StoredAngle)
+} else {
+    Turret:setAng(KeyBoard:toWorld(ang(0,0,0)))
+}
+
+Turret:setPos(KeyBoard:toWorld(vec(0, 0, 12)))
+

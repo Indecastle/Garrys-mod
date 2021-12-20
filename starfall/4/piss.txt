@@ -7,7 +7,7 @@
 local cum = true
 
 local Target = owner()
-Target = find.playersByName("Cheb")[1]
+Target = find.playersByName("Mark")[1]
 print(Target)
 
 

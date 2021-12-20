@@ -8,8 +8,9 @@ if (first() | dupefinished()) { O=owner()
     Limit = 10
     
     Target = owner()
-    #Target = findPlayerByName("licen")
+    #Target = findPlayerByName("Cheb")
     #Target = findPlayerBySteamID("STEAM_0:0:245102061")
+    print(Target)
     
     
     findIncludePlayerProps(Target)

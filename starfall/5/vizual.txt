@@ -1,0 +1,90 @@
+--@name circle-visual
+--@author troit5ky (thx Markiz)
+--@shared
+
+if CLIENT then   
+    local vol = .1
+    
+    local lastRad = 0
+    local lastH = {}
+    local v
+    
+    local font = render.createFont("Roboto",
+    12,
+    400,
+    1,
+    1,
+    0,
+    0)
+
+    function render.drawFilledCircle( x, y, r)
+        local seg = 360 
+        local cir = {}
+        
+        table.insert(cir, {x=x, y=y, u=.5, v=.5})
+        for i = 0, seg do 
+            local a = math.rad( (i/seg) * -360 )
+            table.insert( cir, {x=x+math.sin(a)*r, y=y+math.cos(a)*r, u = math.sin( a ) / 2 + 0.5, v = math.cos( a ) / 2 + 0.5 } )
+        end
+        
+        render.drawPoly(cir)
+    end
+    
+    function loadURL()
+        bass.loadURL("http://icecast-studio21.cdnvideo.ru/S21cl_1r", "3d noblock", 
+        function(s)
+            if s then 
+                v = s
+                
+                s:setVolume(vol)
+                s:setPos(chip():getPos())
+            end
+        end)
+    end
+    
+    function drawLines(rad, fft) 
+        for k,v in ipairs(fft) do
+            if k % 2 == 1 then render.setColor(Color(204, 204, 204, 204)) 
+            else render.setColor( Color(233, 233, 233) ) end
+            
+            local gen = k/3.14
+            local x = ( math.sin(gen) ) * rad + (256)
+            local y = ( math.cos(gen) ) * rad + (256)
+            local rot = -gen/3.14*360/2 + 90
+            local h = math.lerp(0.74, lastH[k] or 0, v*150)
+            lastH[k] = h
+            
+            render.drawTexturedRectRotated(x, y, h, 2, rot)
+        end
+    end
+    
+    function draw()      
+        render.setFont(font)
+        render.setColor( Color(21,21,21) )
+        render.drawRect(0,0,1024,1024)
+        
+        render.setColor( Color(255,255,255) )
+        
+        if(!hasPermission("bass.loadURL") or not v) then 
+            render.drawSimpleText(256, 256, "Haven't permission (Press E on screen) or stream error!", 1, 1)
+            return
+        end
+        
+        local fft = v:getFFT(1)
+        local rad = math.lerp(0.74, lastRad, math.clamp(0, 128, fft[94]*150))
+        local lastRad = rad
+        
+        --render.drawSimpleText(4,4, tostring(rad), 0,0)
+        drawLines(64+rad, fft)
+        
+        render.setColor( Color(255, 184, 255) )
+        render.drawFilledCircle(256,256, 64+rad )
+        
+        render.setColor(Color(255,255,255))
+        render.drawSimpleText(256, 256, string.formattedTime(v:getTime(), "%d:%d"), 1, 1)
+    end
+    
+    hook.add("render", "vizar", draw)
+    hook.add("permissionrequest", "loadMusic", loadURL)
+    setupPermissionRequest({"bass.loadURL"}, "For playing music :shrug:", true)
+end

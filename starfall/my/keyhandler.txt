@@ -23,8 +23,13 @@ if SERVER then
     
 else
     if O == OO then
+        
+        local oldPressedKey;
 
         hook.add("inputPressed", "", function(button)
+            if oldPressedKey == button then return end
+            
+            oldPressedKey = button
             net.start("keyHandler")
             net.writeInt(button, 7)
             net.writeString(input.getKeyName(button))

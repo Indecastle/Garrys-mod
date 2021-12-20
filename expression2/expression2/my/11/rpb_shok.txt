@@ -116,6 +116,7 @@ if(first() | dupefinished()) {
         findClearBlackList()
         
         findIncludeClass("player")
+        findIncludeClass("npc_*")
         findIncludeClass("vehicle")
         findIncludeClass("prop_ragdoll")
         
@@ -128,7 +129,7 @@ if(first() | dupefinished()) {
             ShockingEnts:addEnt(Ent)
             
             shockEffect(Ent, 20)
-            shockSlap(Ent, 1)
+            #shockSlap(Ent, 1)
             #shockDamage(Ent)
         }
     }

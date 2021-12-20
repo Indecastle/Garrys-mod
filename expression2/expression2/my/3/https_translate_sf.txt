@@ -27,7 +27,8 @@ if(first() | dupefinished()) { Hide = 1 #setName(randint(1000):toString())
     # https://libretranslate.de/translate
     # https://translate.astian.org/translate
     # https://translate.mentality.rip/translate
-    URL = "https://libretranslate.de/translate"
+    #URL = "https://libretranslate.de/translate"
+    URL = "http://trans.zillyhuhn.com/translate"
     
     printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!Thelp\"")
     

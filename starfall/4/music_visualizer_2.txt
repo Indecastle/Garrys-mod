@@ -79,11 +79,12 @@ end
 
 do
     local frame = gui:create("frame")
-    frame.pos = Vector(0, -20)
-    frame.size = Vector(512, 50)
+    frame.pos = Vector(20, -20)
+    frame.size = Vector(472, 50)
     frame.dragable = false
     frame.closeable = false
     frame.dragbarSize = false
+    frame.resizeable = false
     --frame.collapseOnClose = true
     frame.minSize = Vector(200, 50)
     
@@ -92,11 +93,14 @@ do
     local normal_color = volume.activeColor
     local red = Color(220, 60, 80)
     volume.pos = Vector(0, 0)
+    --volume.size = Vector(472, 30)
     volume.height = 20
     volume.dock = GUI.DOCK.TOP
-    volume.style = 1
+    volume.style = 2
     volume.cornerStyle = 0
     volume.text = "Volume %s"
+    --volume.backgroundColor = Color(0,0,0,0)
+    --volume.drawBackground = false
     volume.min = 0
     volume.max = 11
     volume.round = 1

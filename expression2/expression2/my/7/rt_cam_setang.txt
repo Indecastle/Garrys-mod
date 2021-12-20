@@ -2,6 +2,7 @@
 @inputs RT:entity StartAng:angle
 @outputs 
 @persist [O E]:entity Distance ON I Rev Speed Limit_angle
+@persist OldKey:string KeyOn
 
 if (first() | dupefinished()) {
     O = owner() E = entity()
@@ -24,13 +25,24 @@ if (first() | dupefinished()) {
         printColor(vec(255,0,255), format("%.6f, %.6f, %.6f", Ang:pitch(), Ang:yaw(), Ang:roll()))
     }
     function number check_key(Key:string) {
-        return changed(O:keyPressed(Key)) && O:keyPressed(Key)
+        if (!KeyOn & O:keyPressed(Key)) {
+            KeyOn = 1
+            OldKey = ""
+        }
+        if (KeyOn & O:keyPressed(Key) & OldKey != Key) {
+            OldKey = Key
+            return 1
+        } elseif (!O:keyPressed(Key)) {
+            KeyOn = 0
+        }
+        
+        return 0
     }
 }
 
 interval(100)
 
-if (changed(O:aimEntity()) && O:aimEntity() == RT && O:shootPos():distance(RT:pos()) < Distance) {
+if ( O:aimEntity() == RT & O:shootPos():distance(RT:pos()) < Distance) {
     if (check_key("g")) {
         ON = !ON
         if (!ON) {

@@ -1,0 +1,34 @@
+--@name chat1
+--@server
+
+function getUChar(text, index)
+    local a = string.byte(text, index, index)
+    if a == 208 or a == 209 then
+        return string.sub(text, index, index+1), index+2, a*1000 + string.byte(text, index+1, index+1)
+    end
+    return string.sub(text, index, index), index+1, a
+end
+
+            
+hook.add("PlayerSay","Say",function(ply,txt)
+    local uChar, uCharNum;
+    local indexText = 1
+    local i = 1
+    
+    if ply == owner() then
+        ALL = "0123456789abcdeff"
+        Text = ""
+        while indexText <= #txt do
+            i = i + 1
+            uChar, indexText, uCharNum = getUChar(txt, indexText)
+            Col = (Color((i-2)*(360/string.len(tostring(txt))*2),1,1):hsvToRGB())*(16/256)
+            if uChar == " " then
+                Text = Text.." "
+            else
+                Text = Text.."{#"..ALL[math.round(Col[1])+1]..ALL[math.round(Col[2])+1]..ALL[math.round(Col[3])+1].." "..uChar.."}"
+            end
+        end
+     
+        return Text
+    end
+end)

@@ -85,6 +85,9 @@ else
     local conectingPlayers = {}
     local sittingPlayers = {}
     local godPlayers = {}
+    local arFilter = find.all(function (e) return !e:isPlayer() end)
+    arFilter[#arFilter+1] = OO
+    print(#arFilter)
 
     local function getBBox(verts)
         local xmin, ymin, xmax, ymax 
@@ -141,7 +144,12 @@ else
         end)
         if ON != 0 and isInHelicopter then
             for i, p in ipairs(find.allPlayers()) do
-                if p ~= player() then
+                local targethead = p:lookupBone("ValveBiped.Bip01_Pelvis")
+                local targetheadpos, targetheadang = p:getBonePosition(targethead)
+                local startPos = OO:getShootPos()
+                local endPos = (targetheadpos - OO:getShootPos()):getNormalized()*100
+                local tr = trace.trace(OO:getShootPos(), targetheadpos+endPos, arFilter, MASK.ALL, nil, false)
+                if p ~= player() and tr.Entity == p then
                     //if p:getPos():getDistance( owner():getPos() ) > 1300 then continue end
                     local obbw = p:obbCenterW()
                     local obbhs = p:obbSize() / 2

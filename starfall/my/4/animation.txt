@@ -1,0 +1,41 @@
+// animation
+--@name animation
+--@author Markiz
+--@client
+
+local Target = owner()
+--Target = find.playersByName("Str")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+--print(Target)
+
+--if player() ~= Target then return end
+
+for i, p in ipairs(find.allPlayers()) do
+    --p:setAnimation("taunt_dance", nil, 1, true, nil, nil)
+    --p:setAnimationLoop(false)
+    --p:resetAnimation()
+end
+
+Target:setAnimation("smooth_ride", nil, 0.5, true, nil, nil)
+--Target:resetAnimation()
+
+-- Player:setAnimation(number or string sequence, number or nil progress, number or nil rate, boolean or nil loop, boolean or nil auto_advance, string or number or nil act)
+
+
+--timer.create("anim1", 0.9, 0, function()
+--    Target:setAnimation("snap", 0.3, 0.2, false, nil, nil)
+--end)
+
+
+/*
+smooth_ride
+dancemoves
+mask_off
+snap
+bunnyhop
+balletspin
+*/

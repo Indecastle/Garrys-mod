@@ -3,7 +3,7 @@
 function table.map(t, func)
     local maped = {}
     for i=1, #t do
-        maped[i] = func(t[i])
+        maped[i] = func(i, t[i])
     end
     return maped
 end

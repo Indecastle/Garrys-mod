@@ -32,7 +32,7 @@ return {
 			local _, height = render.getTextSize("")
 			local text_height = 0
 			
-			for spacer, word in string.gmatch(text, "(%s*)(%S*)") do
+			for spacer, word in string.gmatch(text or "", "(%s*)(%S*)") do
 				if string.find(spacer, "\n") then
 					str = str .. line .. "\n"
 					line = word

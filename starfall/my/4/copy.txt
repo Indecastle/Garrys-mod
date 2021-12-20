@@ -1,0 +1,139 @@
+--@name Copy
+--@author
+--@shared
+--@include libs/my_methods.txt
+
+dofile("libs/my_methods.txt")
+
+
+local Scale = 100
+
+
+local O = owner()
+local E = chip()
+--local ScaleUnit = 8.3333
+local ScaleUnit = 5.8
+
+if CLIENT then
+    local OO = player()
+    
+    local H = holograms.create(E:getPos(), Angle(), "models/holograms/cube.mdl", Vector(Scale/ScaleUnit))
+    local H2 = holograms.create(E:getPos(), Angle(), "models/holograms/cube.mdl", Vector(-Scale/ScaleUnit))
+    H:setColor(Color(100,255,100, 100))
+    H2:setColor(Color(100,255,100, 100))
+    
+    hook.add("think", "holoCube", function()
+        local tr = O:getEyeTrace()          
+
+        H:setPos(tr.HitPos )
+        H2:setPos(tr.HitPos )
+    end)
+    
+    hook.add("inputPressed", "", function(button)
+        net.start("keyHandler")
+        net.writeInt(button, 8)
+        net.send()
+    end)
+
+    return
+end
+
+
+---------------------------------------------------------------------------------
+
+local DataEnts;
+
+function func(key)
+    local tr = O:getEyeTrace()   
+    local hitPos = tr.HitPos
+    
+    local Ents = find.inBox(hitPos-Vector(Scale), hitPos+Vector(Scale), function(e) 
+        return e:getOwner() ~= nil
+    end)
+    
+    DataEnts = table.map(Ents, function(i, e)
+        return {
+            _entity = e,
+            id = i,
+            Class = e:getClass(),
+            Model = e:getModel(),
+            PosLocal = hitPos - e:getPos(),
+            Ang = e:getAngles(),
+            Color = e:getColor(),
+        }
+    end)
+    
+    for i, data in ipairs(DataEnts) do
+        local w = data._entity:getWirelink()
+        local inputs = w:inputs()
+        
+        local dataWires = table.map(inputs, function(j, d)
+            local x = w:getWiredTo(d)
+            if x ~= nil then
+            
+                local findedId = table.filter(DataEnts, function(e2)
+                    return e2._entity == x
+                end)[1].id
+                
+                return {
+                    id = findedId,
+                    InName = d,
+                    OutName = w:getWiredToName(d)
+                }
+            end
+        end)
+        
+        data.DataWires = dataWires
+    end
+    
+    print(#DataEnts)
+end
+
+
+local duping = false
+
+function func2(key)
+    duping = true
+    --print(json.encode(DataEnts))
+    
+    local tr = O:getEyeTrace()   
+    local hitPos = tr.HitPos
+    local i = 1
+    
+    timer.create("duping", 0.5, #DataEnts, function()
+        local data = DataEnts[i]
+        
+        prop.createSent(hitPos + data.PosLocal, data.Ang, data.Class, true, {
+            model = data.Model,
+            Color = data.Color,
+        })
+        
+        /*i = i + 1
+        if i > #DataEnts then
+            timer.remove("duping")
+        end*/
+    end)
+end
+
+
+
+
+
+hook.add("ClientInitialized", "cl_init", function(ply)
+end)
+
+net.receive("keyHandler", function (len, ply)
+    if ply ~= O then return end
+    local key = net.readInt(8)
+    if key == KEY.ALT then
+        func(key)
+    end
+    if key == KEY.CTRL then
+        func2(key)
+    end
+end)
+
+
+
+
+

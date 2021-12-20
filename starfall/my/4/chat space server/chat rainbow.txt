@@ -1,0 +1,30 @@
+--@name chat rainbow
+--@server
+
+function getUChar(text, index)
+    local a = string.byte(text, index, index)
+    if a == 208 or a == 209 then
+        return string.sub(text, index, index+1), index+2, a*1000 + string.byte(text, index+1, index+1)
+    end
+    return string.sub(text, index, index), index+1, a
+end
+
+            
+hook.add("PlayerSay","Say",function(ply,txt)
+    if ply ~= owner() then return txt end
+
+    local uChar, uCharNum;
+    local indexText = 1
+    local Text = ""
+    
+    while indexText <= #txt do
+        uChar, indexText, uCharNum = getUChar(txt, indexText)
+        if uChar == " " then
+            Text = Text.."  "
+        else
+            Text = Text.."{*"..uChar.."}"
+        end
+    end
+ 
+    return Text
+end)
