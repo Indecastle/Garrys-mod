@@ -1,0 +1,25 @@
+@name Beam Ranger
+@inputs 
+@outputs 
+@persist [E H B]:entity
+@trigger 
+
+if (first()) {
+    runOnTick(1)
+    E = entity()
+    
+    H=holoCreate(1, E:pos(), vec(0.1), ang(), vec4())
+    holoAlpha(1, 0)
+    
+    B=drawBeam("trails/physbeam", E:pos(), E:pos()+vec(0,0,100), vec(255), 255, 2)
+    B:setParent(E)
+    B:setBeamEndEnt(H)
+}
+
+Ranger=rangerOffset(1000, E:pos(), E:up())
+#B:setBeamEndPos(Ranger:pos())
+H:setPos(Ranger:pos())
+
+if (!B:isValid()) {
+    selfDestructAll()
+}

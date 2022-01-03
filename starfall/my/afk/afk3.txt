@@ -9,7 +9,7 @@ local AFK = chip()
         return true
     end
 end)[1]*/
-print(AFK)
+--print(AFK)
 
 local iterations = 50
 local timerDelay = 2 // seconds

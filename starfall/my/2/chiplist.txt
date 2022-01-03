@@ -1,5 +1,5 @@
 --@name ChipList
---@author OctopuSSX
+--@author
 --@client
 
 local px, py = 20, 80

@@ -1,0 +1,106 @@
+--@name TargetEntity 2
+--@author
+--@shared
+--@include libs/my_methods.txt
+
+dofile("libs/my_methods.txt")
+
+local O = owner()
+local OO = player()
+
+local MOUSE4_pressed = false
+
+local target, targetP;
+
+local oldIsPressed = nil
+
+
+function func()
+    local tr = O:getEyeTrace()          
+    target = tr.Entity 
+    targetP = target:getPhysicsObject()
+    --printTable(target:getNWVarTable())
+    
+    //local kek = target.Password 
+    
+    --local w = target:getWirelink()
+    
+    --print(w:getWiredTo(w:inputs()[8]))
+    --print(w:getWiredToName(w:inputs()[8]))
+    
+    print(target.gate)
+    
+    --local inputs = w:inputs()
+    --local outputs = w:outputs()
+    
+    /*for i, v in ipairs(inputs) do
+        local x = w:getWiredTo(w:inputs()[i])
+        if x ~= nil then
+            local y = w:getWiredToName(w:inputs()[i])
+            print(v.." - "..y.." - "..tostring(x))
+        end
+    end*/
+    
+    /*for i, v in ipairs(outputs) do
+        print(v.." - "..tostring(w[v]))
+    end*/
+    
+    /*for i=1, #outputs do
+        v = outputs[i]
+        if v == "wirelink" then continue end
+        print("["..v.."] "..w:outputType(v).." - "..tostring(w[v]))
+    end*/
+    
+    /*for i=1, #inputs do
+        v = inputs[i]
+        if v == "wirelink" then continue end
+        print("["..v.."] "..w:inputType(v).." - "..tostring(w[v]))
+    end*/
+    
+    --printTable(w["wirelink"])
+    --print(targetP["Red"])
+    
+    --print(target:getChipName())
+    --print(target:isWeldedTo())
+    --printTable(constraint.getTable(target))
+    --printTable(target:getAllConstrained())
+    /*printTable(target:getAllConstrained({
+        Wire = false,
+        Weld = true,
+        Parent = true,
+    }))*/
+    --printTable(target:getChildren())
+    --constraint.nocollide(chip(), target)
+end
+
+
+
+
+
+if O == OO then
+    if SERVER then
+        
+        hook.add("ClientInitialized", "cl_init", function(ply)
+        end)
+        
+        net.receive("keyHandler", function (len, ply)
+            local key = net.readInt(8)
+            if key == KEY.ALT then
+                func(key)
+            end
+        end)
+        
+    else        
+        
+        hook.add("inputPressed", "", function(button)
+            net.start("keyHandler")
+            net.writeInt(button, 8)
+            net.send()
+        end)
+        
+    end
+end
+
+
+
+

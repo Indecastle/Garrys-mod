@@ -27,17 +27,23 @@ if SERVER then
 
             wire.ports.HttpCanRequest = 0
             
-            http.post(body.url, 
-                body.payload, 
-                function(body2, length, headers, code) // success
-                    wire.ports.Response = json.decode(body2)
-                    wire.ports.HttpCanRequest = 1
-                end, 
-                function(message) // fail
-                    print(message)
-                    wire.ports.HttpCanRequest = 1
-                end, 
-                body.headers) // { ['Content-Type'] = "application/json" }
+            if !pcall(function()
+                http.post(body.url, 
+                    body.payload, 
+                    function(body2, length, headers, code) // success
+                        --print(body2:sub(1,1000))
+                        wire.ports.Response = json.decode(body2)
+                        wire.ports.HttpCanRequest = 1
+                    end, 
+                    function(message) // fail
+                        print(message)
+                        wire.ports.HttpCanRequest = 1
+                    end, 
+                    body.headers) // { ['Content-Type'] = "application/json" }
+            end) then
+                wire.ports.Response = e
+                wire.ports.HttpCanRequest = 1
+            end
         end
     end)
     

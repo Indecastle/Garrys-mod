@@ -6,7 +6,7 @@
 dofile("libs/3d2dtext.txt")
 
 local Target = chip()
-Target = find.playersByName("str")[1]
+Target = find.playersByName("markiz")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -52,7 +52,7 @@ local Data = {
 local Vars = {
     Target= Target,
 
-    Mode=3,
+    Mode=2,
     isRotate=false,
     rotateSpeed=100,
     swaySpeed=2,
@@ -60,14 +60,14 @@ local Vars = {
     
     IsStaticVertical=true,
     IsDoubleData=true,
-    isHideTarget=true,
+    isHideTarget=false,
     
     shadowIterations=10,
     shadowAlphaReverce=0,
     shadowOffset=1,
     
-    textSize=600*5,
-    DataOffsetZ=10,
+    textSize=100*0.5,
+    DataOffsetZ=20,
     
     isParentPos=true,
     isParentAngle=true,

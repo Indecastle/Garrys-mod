@@ -31,10 +31,15 @@ if(first() | dupefinished()) {
     }
     function number table:addEnt(Ent:entity) {
         local OK = 0
-        if(!This:checkAr(Ent)) { This:pushArray(array(Ent, curtime() + ShockingTime)) OK=1 }
-        else {
+        if(!This:checkAr(Ent)) { 
+            This:pushArray(array(Ent, curtime() + ShockingTime)) 
+            OK=1 
+        } else {
             for(I=1,This:count()) {
-                if(This[I, array]:entity(1) == Ent) { This[I, array][2, number] = curtime() + ShockingTime break }
+                if(This[I, array]:entity(1) == Ent) { 
+                    This[I, array][2, number] = curtime() + ShockingTime 
+                    break 
+                }
             }
         }
         return OK
@@ -162,12 +167,15 @@ if (clk("rpg")) {
     findClearWhiteList()
     findClearBlackList()
     
+    findIncludeClass("npc_grenade_frag")
     findIncludeClass("grenade_ar2")
     findIncludeClass("rpg_missile")
     findIncludeClass("lunasflightschool_missile")
     findIncludeClass("arccw_rpg7_he")
     findIncludeClass("arccw_rpg7_tandem")
     findIncludeClass("lunasflightschool_missile")
+    findIncludeModel("models/props_c17/oildrum001_explosive.mdl")
+    findIncludeModel("models/props_phx/cannonball_solid.mdl")
     findInSphere(entity():pos(), 10000000)
 
     foreach (I, Ent:entity = findToArray()) {

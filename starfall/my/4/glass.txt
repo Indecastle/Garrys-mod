@@ -1,0 +1,84 @@
+--@name glass
+--@author
+--@client
+
+
+local RangerLength = 200000
+local Count = 5 -- 200
+local Width = 0.5
+
+
+local ScaleUnit = 12
+local E = chip()
+local O = owner()
+local OO = player()
+
+local holos = {}
+for i=1, Count do
+    holos[#holos+1] = holograms.create(E:getPos(), Angle(), "models/holograms/hq_cylinder.mdl", Vector(1))
+    holos[#holos]:setColor(Color(80*i, 1, 1):hsvToRGB())
+    holos[#holos]:suppressEngineLighting(true)
+end
+
+
+
+local players = find.allPlayers()
+players[#players+1] = E
+
+hook.add("think", "glass", function()
+--timer.create("glass", 0.2, 0, function()
+    --trace.trace(Vector start, Vector endpos, Entity or table or function or nil filter, number or nil mask, number or nil colgroup, boolean or nil ignworld)
+    --throw(tostring(StartDir))
+    local StartPos = E:getPos()
+    local StartDir = E:getUp()
+    
+    for i=1, Count do
+        pcall(function()
+            local tr = trace.trace(StartPos, StartPos + StartDir * RangerLength, players, bit.bor(MASK.ALL, 2^14), nil, false)
+            local dirVec = (tr.HitPos - StartPos):getNormalized()
+            local distance = StartPos:getDistance(tr.HitPos)
+            holos[i]:setPos(StartPos + StartDir * distance / 2)
+            holos[i]:setAngles(StartDir:getAngle() + Angle(90,0,0))
+            holos[i]:setScale(Vector(Width, Width, distance/ScaleUnit))
+            local rn = tr.HitNormal
+            StartDir = dirVec - 2 * rn * rn:dot(dirVec)
+            StartPos = tr.HitPos
+        end)
+    end
+end)
+
+
+/*
+@name glass
+@persist RangerLength Count E:entity
+if(first()){
+    
+    RangerLength = 500
+    Count = 80  # 80
+    
+    for(I = 0, Count) {
+        holoCreate(I)
+        holoColor(I, hsv2rgb(50*I, 1, 1))
+    }
+    
+    E = entity()
+}
+
+local StartPos = E:pos()
+local StartDir = E:up()
+
+for(I = 0, Count) {
+    rangerFilter(players())
+    local R = rangerOffset(StartPos,StartPos + StartDir * RangerLength) 
+    local DirVec = (R:pos() - StartPos):normalized()
+    holoPos(I, StartPos + StartDir * R:distance() / 2)
+    holoAng(I, StartDir:toAngle())
+    holoScaleUnits(I, vec(R:distance(), 0.5, 0.5))
+    local RN = R:hitNormal()
+    StartDir = DirVec - 2 * RN * RN:dot(DirVec)
+    StartPos = R:pos()
+}
+
+
+interval(100)
+*/

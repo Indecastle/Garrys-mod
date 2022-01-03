@@ -1,0 +1,23 @@
+@name BlastWindow
+@inputs BlastWindow:entity ON
+@outputs 
+@persist 
+@trigger 
+
+
+if (first() | dupefinished() | ~BlastWindow) {
+    holoCreate(1, BlastWindow:pos(), vec(1), BlastWindow:angles(), vec4(255), "models/props_lab/blastwindow.mdl")
+    holoParent(1, BlastWindow)
+    BlastWindow:setAlpha(0)
+}
+
+if (~ON) {
+    if (ON) {
+        holoAnim(1, 0)
+        #BlastWindow:soundPlay("heli", 0, "npc/attack_helicopter/aheli_rotor_loop1.wav")
+    }
+    else {
+        holoAnim(1, 1)
+        #soundStop("heli")
+    }
+}

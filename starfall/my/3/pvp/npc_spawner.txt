@@ -4,13 +4,13 @@
 NpcSpawner = class("npc_spawner")
 
 -- Example
---[[
+/*
 --@name Spawner Combine
 --@author Markiz
---@include ../npc_spawner.txt
+--@include ./npc_spawner.txt
 --@server
 
-dofile("../npc_spawner.txt")
+dofile("./npc_spawner.txt")
 
 local Vars = {
     Limit = 5,
@@ -44,7 +44,7 @@ local Vars = {
 
 obj = NpcSpawner:new(Vars)
 obj:run()
-]]
+*/
 
 local dirs = {
     Vector(0, 0, 1),

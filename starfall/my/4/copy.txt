@@ -6,21 +6,48 @@
 dofile("libs/my_methods.txt")
 
 
-local Scale = 100
-
+local Scale = 5
+local DelayDupe = 0.8
 
 local O = owner()
 local E = chip()
 --local ScaleUnit = 8.3333
 local ScaleUnit = 5.8
 
+
+
+local _scaleBase = 40
+local _scale = _scaleBase * Scale
+
+
 if CLIENT then
+    local ON = false;
     local OO = player()
+    if OO ~= O then return end
     
-    local H = holograms.create(E:getPos(), Angle(), "models/holograms/cube.mdl", Vector(Scale/ScaleUnit))
-    local H2 = holograms.create(E:getPos(), Angle(), "models/holograms/cube.mdl", Vector(-Scale/ScaleUnit))
-    H:setColor(Color(100,255,100, 100))
-    H2:setColor(Color(100,255,100, 100))
+    
+    local H = holograms.create(E:getPos(), Angle(), "models/holograms/cube.mdl", Vector(_scale/ScaleUnit))
+    local H2 = holograms.create(E:getPos(), Angle(), "models/holograms/cube.mdl", Vector(-_scale/ScaleUnit))
+    H:setColor(Color(100,255,100, 0))
+    H2:setColor(Color(100,255,100, 0))
+    
+    function setAlpha(ON)
+        if ON then
+            H:setColor(H:getColor():setA(100))
+            H2:setColor(H2:getColor():setA(100))
+        else
+            H:setColor(H:getColor():setA(0))
+            H2:setColor(H2:getColor():setA(0))
+        end
+    end
+    setAlpha(false)
+    
+    function setScale(x)
+        Scale = Scale + x
+        _scale = _scaleBase * Scale
+        H:setScale(Vector(_scale/ScaleUnit))
+        H2:setScale(Vector(-_scale/ScaleUnit))
+    end
     
     hook.add("think", "holoCube", function()
         local tr = O:getEyeTrace()          
@@ -30,9 +57,24 @@ if CLIENT then
     end)
     
     hook.add("inputPressed", "", function(button)
-        net.start("keyHandler")
-        net.writeInt(button, 8)
-        net.send()
+        if OO ~= O then return end
+        if button == KEY.G then
+            ON = !ON
+            setAlpha(ON)
+        end
+        
+        if ON then
+            if button == KEY.UPARROW then
+                setScale(1)
+            end
+            if button == KEY.DOWNARROW then
+                if Scale == 1 then return end
+                setScale(-1)
+            end
+            net.start("keyHandler")
+            net.writeInt(button, 8)
+            net.send()
+        end
     end)
 
     return
@@ -41,95 +83,511 @@ end
 
 ---------------------------------------------------------------------------------
 
-local DataEnts;
+-- https://github.com/thegrb93/StarfallEx/blob/master/lua/starfall/libs_sv/prop_sent.lua
+local TYPE_ENTITY = "ENTITY"
+local TYPE_STRING = "STRING"
+local TYPE_NUMBER = "NORMAL"
+local TYPE_BOOL = "BOOLEAN"
+local TYPE_ANGLE = "ANGLE"
+local TYPE_VECTOR = "VECTOR"
+local TYPE_VECTOR2 = "VECTOR2"
+local TYPE_VECTOR4 = "VECTOR4"
 
-function func(key)
-    local tr = O:getEyeTrace()   
-    local hitPos = tr.HitPos
+local type_convert = {
+    [TYPE_ANGLE] = function(v) return string.format("%.15g, %.15g, %.15g", v.p, v.y, v.r) end,
+    [TYPE_VECTOR] = function(v) return string.format("%.15g, %.15g, %.15g", v.x, v.y, v.z) end,
+    [TYPE_STRING] = tostring,
+    [TYPE_NUMBER] = tostring,
+    [TYPE_BOOL] = tostring,
+    [TYPE_VECTOR2] = function(v) return "" end,
+    [TYPE_VECTOR4] = function(v) return "" end,
+}
+
+local DataEnts = {};
+
+-- https://github.com/jakejp1259/garrysmod/tree/master/lua/wire/gates
+local gates = {
     
-    local Ents = find.inBox(hitPos-Vector(Scale), hitPos+Vector(Scale), function(e) 
-        return e:getOwner() ~= nil
-    end)
-    
-    DataEnts = table.map(Ents, function(i, e)
-        return {
-            _entity = e,
-            id = i,
-            Class = e:getClass(),
-            Model = e:getModel(),
-            PosLocal = hitPos - e:getPos(),
-            Ang = e:getAngles(),
-            Color = e:getColor(),
-        }
-    end)
-    
+}
+
+
+local mapper = {
+    gmod_wire_value = {
+        get = function(e, w)
+            local outputs = w:outputs()
+            
+            local values = {}
+            
+            for i, v in ipairs(outputs) do
+                if v == "wirelink" /*or w[v] == nil*/ then continue end
+                if w[v] == nil then
+                    values[#values+1] = { [1] = TYPE_STRING, [2] = "" }
+                else
+                    values[#values+1] = { [1] = w:outputType(v), [2] = type_convert[w:outputType(v)](w[v]) }
+                end
+                
+            end
+            
+            return {
+                value = values
+            }
+        end
+    },
+    gmod_wire_lamp = {
+        get = function(e, w)
+            local outputs = w:outputs()
+            
+            return {
+                r = 255,
+                g = 255,
+                b = 255,
+                on = false,
+                Texture = "effects/flashlight001",
+                FOV = 90,
+                Dist = 1024,
+                Brightness = 8,
+            }
+        end
+    },
+    gmod_wire_button = {
+        get = function(e, w)
+            return {
+                toggle = true
+            }
+        end
+    },
+    gmod_wire_wheel = {
+        get = function(e)
+            return {
+                Base = e:isWeldedTo()
+            }
+        end
+    },
+    gmod_abc = {
+        get = function(e, w)
+        end,
+        update = function(d)
+        end
+    }
+}
+
+local mapperLocal = {
+    gmod_wire_value = {
+        get = function(data)
+        
+            local values = {}
+            values[#values+1] = { [1] = TYPE_STRING, [2] = "Abc" }
+            values[#values+1] = { [1] = TYPE_NUMBER, [2] = "43.256" }
+            
+            return {
+                value = values
+            }
+        end
+    },
+    gmod_wire_lamp = {
+        get = function(data)
+            return {
+                r = 255,
+                g = 255,
+                b = 255,
+                on = false,
+                Texture = "effects/flashlight001",
+                FOV = 90,
+                Dist = 1024,
+                Brightness = 8,
+            }
+        end
+    },
+    gmod_wire_button = {
+        get = function(data)
+            return {
+                toggle = true
+            }
+        end
+    },
+    gmod_wire_wheel = {
+        get = function(data)
+            /*
+            local data2 = constraint.getTable(data._entity)
+            local own, other
+            if data2.Ent1 == e then own=data2.Ent1; other=data2.Ent2 else own=data2.Ent2; other=data2.Ent1 end
+            local filtered = table.filter(DataEnts, function(e2)
+                return e2._entity == other
+            end)
+            
+            if #filtered == 0 then return {} end
+            local findedId = filtered[1].id
+            */
+
+            findedId = data.ConstraintData~=nil and data.ConstraintData[1]~=nil and data.ConstraintData[1].id or nil
+            if findedId == nil then return {} end
+            --DataEnts[findedId].ConstraintData = table.filter(DataEnts[findedId].ConstraintData, function(e2)
+            --    return e2.id ~= data.id
+            --end)
+            
+            --data.ConstraintData = {}
+
+            return {
+                BaseId = findedId,
+                LAxis = data.ConstraintData[1].LAxis,
+                LPos = data.ConstraintData[1].LPos2,
+            }
+        end,
+        update = function(data)
+            local targetData = DataEnts[data.SentData.BaseId]
+            if targetData._entity2 ~= nil then
+                data.SentData.Base = targetData._entity2
+                data.SentData.BaseId = nil
+                --data.SentData.LAxis = targetData.ConstraintData.LAxis
+            end
+        end
+    },
+    gmod_abc = {
+        get = function(e, data)
+        end,
+        update = function(d)
+        end
+    }
+}
+
+function getSentData(e, data)
+    local w = e:getWirelink()
+    local sentData = { Model = e:getModel() }
+    if mapper[e:getClass()] ~= nil and mapper[e:getClass()]["get"] ~= nil then
+        table.merge(sentData, mapper[e:getClass()].get(e, w))
+    end
+    return sentData
+end
+
+function getLocalSentData(e, data)
+    local sentData = { Model = e:getModel() }
+    if mapperLocal[e:getClass()] ~= nil and mapperLocal[e:getClass()]["get"] ~= nil then
+        table.merge(sentData, mapperLocal[e:getClass()].get(data))
+    end
+    return sentData
+end
+
+
+local processing = false
+function verifyWait()
+    if processing then
+        print("wait...")
+        return true
+    end
+    processing = true
+    return false
+end
+
+function setSentData()
+    for i, data in ipairs(DataEnts) do
+        --local w = data._entity:getWirelink()
+        --local inputs = w:inputs()
+        
+        local sentData = getLocalSentData(data._entity, data)
+
+        data.SentData = sentData
+    end
+end
+
+
+function setDataWires()
     for i, data in ipairs(DataEnts) do
         local w = data._entity:getWirelink()
         local inputs = w:inputs()
         
-        local dataWires = table.map(inputs, function(j, d)
+        local dataWires = {}
+        
+        for i, d in ipairs(inputs) do
             local x = w:getWiredTo(d)
             if x ~= nil then
-            
-                local findedId = table.filter(DataEnts, function(e2)
+                local filtered = table.filter(DataEnts, function(e2)
                     return e2._entity == x
-                end)[1].id
+                end)
                 
-                return {
+                if #filtered == 0 then continue end
+                local findedId = filtered[1].id
+                
+                dataWires[#dataWires+1] = {
                     id = findedId,
                     InName = d,
                     OutName = w:getWiredToName(d)
                 }
             end
-        end)
+        end
         
         data.DataWires = dataWires
     end
-    
-    print(#DataEnts)
 end
 
 
-local duping = false
+function setParentData()
+    for i, data in ipairs(DataEnts) do
+        local parentData = {}
+        
+        for i, e in ipairs(table.getKeys(data._entity:getChildren())) do
+            local filtered = table.filter(DataEnts, function(e2)
+                return e2._entity == e
+            end)
+            
+            if #filtered == 0 then continue end
+            local findedId = filtered[1].id
+            
+            parentData[#parentData+1] = {
+                    id = findedId,
+                }
+        end
+        
+        data.ParentData = parentData
+    end
+end
 
-function func2(key)
-    duping = true
-    --print(json.encode(DataEnts))
+function setConstraintData()
+    for i, data in ipairs(DataEnts) do
+        local weldData = {}
+        
+        for i, v in ipairs(constraint.getTable(data._entity)) do
+            local own, other
+            if v.Ent1 == data._entity then own=v.Ent1; other=v.Ent2 else own=v.Ent2; other=v.Ent1 end
+            local filtered = table.filter(DataEnts, function(e2)
+                return e2._entity == other
+            end)
+            
+            if #filtered == 0 then continue end
+            local findedId = filtered[1].id
+            
+            weldData[#weldData+1] = {
+                    id = findedId,
+                    LAxis = v.LocalAxis,
+                    LPos1 = v.LPos1,
+                    LPos2 = v.LPos2,
+                    Type = v.Type
+                }
+        end
+        
+        data.ConstraintData = weldData
+    end
+end
+
+
+local ClassPriority = {
+    prop_physics = 1,
+    gmod_wire_wheel = 2
+}
+
+function sortEnts(ents)
+    --printTable(DataEnts)
+    table.sort(ents, function(a, b)
+        local a2 = ClassPriority[a:getClass()]~=nil and ClassPriority[a:getClass()] or 999
+        local b2 = ClassPriority[b:getClass()]~=nil and ClassPriority[b:getClass()] or 999
+        return a2 < b2
+    end)
+    --printTable(DataEnts)
+end
+
+
+--local LIMIT = 10
+--local i;
+
+local copyCoro;
+function getCopyCoro()
+    return coroutine.wrap(function()
+        local tr = O:getEyeTrace()   
+        local hitPos = tr.HitPos
+        
+        local Ents = find.inBox(hitPos-Vector(_scale), hitPos+Vector(_scale), function(e) 
+            return e:getOwner() ~= nil
+        end)
+        print(#Ents)
+        
+        --printTable(Ents)
+        sortEnts(Ents)
+        --printTable(Ents)
+        
+        coroutine.yield()
+        
+        DataEnts = table.map(Ents, function(i, e)
+            return {
+                _entity = e,
+                id = i,
+                Class = e:getClass(),
+                Model = e:getModel(),
+                Material = e:getMaterial(),
+                PosLocal = hitPos - e:getPos(),
+                Ang = e:getAngles(),
+                Color = e:getColor(),
+                --SentData = getSentData(e),
+                --SentData = getLocalSentData(e),
+            }
+        end)
+        
+        
+        coroutine.yield()
+        --setDataWires()
+        coroutine.yield()
+        setParentData()
+        coroutine.yield()
+        setConstraintData()
+        coroutine.yield()
+        setSentData()
+        
+        --local data3 = constraint.getTable(DataEnts[2]._entity)
+        --printTable(data3)
+        --printTable(DataEnts)
+        --print(#DataEnts)
+        processing = false
+        print("Copy finished")
+    
+        coroutine.yield()
+        return true
+    end)
+end
+
+
+function copy()
+    if verifyWait() then return end
+    copyCoro = getCopyCoro()
+    print("start copy")
+    hook.add("think","copy",function()
+        while quotaAverage()<quotaMax()*0.3 do
+            if copyCoro() then
+                hook.remove("think","copy")
+                return
+            end
+        end
+    end)
+end
+
+
+--==========================================================================================
+
+
+function linkWireAll()
+    for i, data in ipairs(DataEnts) do
+        for j, wireData in ipairs(data.DataWires) do
+            if DataEnts[wireData.id]._entity2 ~= nil then
+                -- wire.create(Entity entI, Entity entO, string inputname, string outputname, number or nil width, Color or nil color, string or nil materialName)
+                wire.create(data._entity2, DataEnts[wireData.id]._entity2, wireData.InName, wireData.OutName)
+            end
+        end
+    end
+end
+
+function parentAll()
+    /*printTable(target:getAllConstrained({
+        Wire = false,
+        Weld = false,
+        Parent = true,
+    }))*/
+    for i, data in ipairs(DataEnts) do
+        for j, parentData in ipairs(data.ParentData) do
+            if DataEnts[parentData.id]._entity2 ~= nil then
+                DataEnts[parentData.id]._entity2:setParent(data._entity2)
+            end
+        end
+    end
+end
+
+
+function weldHandler(a, b)
+    -- constraint.weld(Entity e1, Entity e2, number or nil bone1, number or nil bone2, number or nil force_lim, boolean or nil nocollide)
+    constraint.weld(a, b)
+end
+
+function noCollideHandler(a, b)
+    constraint.nocollide(a, b)
+end
+
+function constraintAll()
+    /*printTable(target:getAllConstrained({
+        Wire = false,
+        Weld = true,
+        Parent = false,
+    }))*/
+    -- printTable(target:getChildren())
+    --printTable(constraint.getTable(target))
+    for i, data in ipairs(DataEnts) do
+        for j, weldData in ipairs(data.ConstraintData) do
+            local first = DataEnts[weldData.id]._entity2
+            local second = data._entity2
+            if first ~= nil and second ~= nil then
+                if weldData.Type == "Weld" then weldHandler(first, second)
+                elseif weldData.Type == "NoCollide" then noCollideHandler(first, second) end
+            end
+        end
+    end
+end
+
+
+function updateLocalSentData(i, data)
+    if mapperLocal[data.Class] ~= nil and mapperLocal[data.Class]["update"] ~= nil then
+        mapperLocal[data.Class].update(data)
+    end
+end
+
+
+function dupe(key)
+    if #DataEnts == nil or verifyWait() then return end
+    print("Start Dupe")
     
     local tr = O:getEyeTrace()   
     local hitPos = tr.HitPos
     local i = 1
     
-    timer.create("duping", 0.5, #DataEnts, function()
+    timer.create("duping", DelayDupe, #DataEnts, function()
         local data = DataEnts[i]
+        i = i + 1
+        --print(data.Class)
+        --printTable(data.DataWires)
+        updateLocalSentData(i, data)
+        --printTable(data)
         
-        prop.createSent(hitPos + data.PosLocal, data.Ang, data.Class, true, {
-            model = data.Model,
-            Color = data.Color,
-        })
+        local isSuccess, _ = pcall(function()
+            if data.Class == "prop_physics" then
+                data._entity2 = prop.create(hitPos - data.PosLocal, data.Ang, data.Model, true)
+            else
+                data._entity2 = prop.createSent(hitPos - data.PosLocal, data.Ang, data.Class, true, data.SentData)
+            end
+        end)
+        if !isSuccess or data._entity2 == nil then return end
         
-        /*i = i + 1
+        data._entity2:setColor(data.Color)
+        data._entity2:setMaterial(data.Material)
+        
         if i > #DataEnts then
-            timer.remove("duping")
-        end*/
+            timer.simple(0.1, function()
+                --linkWireAll()
+                parentAll()
+                constraintAll()
+                processing = false
+                print("Dupe finished")
+            end)
+        end
     end)
 end
 
-
-
-
+function setScale(x)
+    Scale = Scale + x
+    _scale = _scaleBase * Scale
+end
 
 hook.add("ClientInitialized", "cl_init", function(ply)
 end)
 
 net.receive("keyHandler", function (len, ply)
-    if ply ~= O then return end
     local key = net.readInt(8)
-    if key == KEY.ALT then
-        func(key)
+    
+    if button == KEY.UPARROW then
+        setScale(1)
     end
-    if key == KEY.CTRL then
-        func2(key)
+    if button == KEY.DOWNARROW then
+        setScale(-1)
+    end
+    
+    if key == KEY.H then
+        copy(key)
+    end
+    if key == KEY.J then
+        dupe(key)
     end
 end)
 

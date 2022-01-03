@@ -16,6 +16,33 @@ end
 
 local clr;
 
+local mouse = {
+    { x=0, y=0 },
+    { x=3, y=2 },
+    { x=1.1, y=2 },
+    { x=2.1, y=3.9 },
+    { x=1.9, y=4 },
+    { x=0.9, y=2.1 },
+    { x=0.1, y=4 },
+}
+
+function getMouse(curX, curY, scale)
+    local copyMouse = table.copy(mouse)
+    for i=1, #copyMouse do
+        copyMouse[i].x = copyMouse[i].x*scale + curX
+        copyMouse[i].y = copyMouse[i].y*scale + curY
+    end
+    return copyMouse
+end
+
+function drawMouse(curX, curY)
+    render.setRenderTargetTexture()
+
+    copyMouse = getMouse(curX, curY, 4)
+    render.setColor(Color(255, 255, 255))
+    render.drawPoly(copyMouse)
+end
+
 hook.add("render","",function()
     local w, h = render.getResolution()
     
@@ -39,6 +66,8 @@ hook.add("render","",function()
     
     render.setColor(clr)
     render.drawRect(cx/2 + 5, cy/2 + 10, 5, 5)
+    
+    drawMouse(cx/2, cy/2, 2)
 end)
 
 

@@ -2,21 +2,21 @@
 --@name animation sphere
 --@author Markiz
 --@client
---@include libs/my_methods.txt
 
-dofile("libs/my_methods.txt")
 
 local E = chip()
-local Radius = 200
+local Radius = 100
 
-local Animation = "dancemoves"
-local Speed = 0.5
+local Animation = "original_dance11"
+local MusicAnimation --= "weapons/guitar/animeshniki.ogg" -- or nill
+local Speed = 1.0
+local Volume = 0.2
 
 local SphereAlpha = 50
 
-local H = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_icosphere.mdl", Vector(Radius/5.8))
+local H = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(Radius/5.8))
 H:setColor(Color(255,255,255, SphereAlpha))
-local H2 = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_icosphere.mdl", -Vector(Radius/5.8))
+local H2 = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_sphere.mdl", -Vector(Radius/5.8))
 H2:setColor(Color(255,255,255, SphereAlpha))
 
 H:setParent(E)
@@ -25,18 +25,69 @@ H2:setParent(E)
 local activePlayers = {}
 local activePlayingPlayers = {}
 
+local Sound;
+
+
+function table.any(t, func)
+    for i=1, #t do
+        if func(t[i]) then
+            return true
+        end
+    end
+    return false
+end
+
+
 function inSphere(p)
     return p:isValid() and p:getPos():getDistance(E:getPos()) < Radius
 end
+
+
+local musicTaunt = {
+    a = ""
+}
+
+
+function songIfMusicDance(p)
+    
+    local soundName = MusicAnimation ~= nil and MusicAnimation ~= "" 
+        and "sound/"..MusicAnimation
+        or (string.startWith(Animation, "original_dance")
+            and "sound/mmd/"..string.lower(Animation)..".mp3"
+            or nil)
+    
+    if p == player() and soundName ~= nil and soundName ~= "" then
+        bass.loadFile(soundName, "3d noblock", function(snd)
+            if snd then
+                Sound = snd
+                snd:setPitch(Speed)
+                snd:setVolume(Volume)
+                hook.add("think", "MusicDance", function()
+                    snd:setPos(p:getPos())
+                end)
+            end
+        end)
+    end
+end
+
+
+function stopSound(p)
+    if p == player() and Sound ~= nil then
+        hook.remove("think", "MusicDance")
+        Sound:stop()
+    end
+end
+
 
 timer.create("anim1", 0.2, 0, function()
     local players = find.allPlayers(function(p)
         if inSphere(p) then
             if !table.any(activePlayers, function(pp) return pp == p end) then 
                 table.insert(activePlayers, p) 
-                if !p:isPlayingAnimation() then
+                --if !p:isPlayingAnimation() then
                     table.insert(activePlayingPlayers, p)
-                end
+                --end
+                p:resetAnimation()
             end
         end
         
@@ -46,6 +97,7 @@ timer.create("anim1", 0.2, 0, function()
     for i, p in ipairs(activePlayingPlayers) do 
         if p:isValid() and !p:isPlayingAnimation() then
             p:setAnimation(Animation, nil, Speed, false, nil, nil)
+            songIfMusicDance(p)
         end
         --p:setAnimationLoop(false)
         --p:resetAnimation()
@@ -55,6 +107,7 @@ timer.create("anim1", 0.2, 0, function()
         if p:isValid() and !inSphere(p) then
             if table.any(activePlayingPlayers, function(pp) return pp == p end) then 
                 p:resetAnimation()
+                stopSound(p)
             end
         
             table.removeByValue(activePlayers, p)
@@ -62,3 +115,25 @@ timer.create("anim1", 0.2, 0, function()
         end
     end
 end)
+
+
+hook.add("Removed", "anim", function()
+    stopSound(p)
+    for i, p in ipairs(activePlayers) do
+        if p:isValid() then
+            if table.any(activePlayingPlayers, function(pp) return pp == p end) then 
+                p:resetAnimation()
+            end
+        end
+    end
+end)
+
+/*
+smooth_ride
+snap
+dancemoves
+mask_off
+bunnyhop
+balletspin
+*/
+

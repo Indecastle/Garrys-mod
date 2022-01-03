@@ -1,0 +1,50 @@
+--@name DMG_DISSOLVE
+--@author
+--@server
+
+
+local ent = chip()
+--ent = prop.create(chip():getPos(), Angle(), "models/props_junk/watermelon01.mdl", false)
+ent = prop.create(chip():getPos(), Angle(), "models/cheeze/wires/nano_compare.mdl", false)
+--ent:setNocollideAll(true)
+ent:setFrozen(false)
+ent:setPhysMaterial("gmod_silent")
+ent:setColor(Color(0,0,0,0))
+
+local physEnt = ent:getPhysicsObject()
+
+physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
+physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
+
+local i = -1;
+local players = find.allPlayers()
+
+
+function gethead(ent)
+    if ent:lookupBone("ValveBiped.Bip01_Head1") then
+        local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+        return pos
+    end
+    return ent:localToWorld(ent:obbCenter())
+end
+
+
+timer.create("fun", 0.2, 0, function()
+    i = i + 1
+    if i == 0 or i > #players then
+        i = 1
+    end
+    
+    local p = players[i]
+    
+    if p ~= nil and p:isValid() 
+            and p:isValidPhys() 
+            and ent:isValidPhys() 
+            and p == owner() 
+            and !p:hasGodMode() 
+            and !p:getNWVarTable()["_Kyle_Buildmode"] 
+            and !p:inVehicle() then
+        physEnt:setPos(gethead(p) + Vector(0,0,30))
+        physEnt:setVelocity(Vector(0,0,-40))
+    end
+end)

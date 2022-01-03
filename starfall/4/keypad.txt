@@ -5,6 +5,7 @@
 -- To use, simply place the chip and link a starfall screen to it
 
 local HOLD_TIME = 2
+local USE_DISTANCE = 100
 
 
 local keypad = class("keypad")
@@ -114,7 +115,9 @@ function keypad:draw()
     end
     
     if self.cracking then
-        if player():getEyeTrace().Entity == render.getScreenEntity() and timer.systime() < self.endCrackingTime then
+        if player():getEyeTrace().Entity == render.getScreenEntity() 
+                    and player():getPos():getDistance(render.getScreenEntity():getPos()) < USE_DISTANCE
+                    and timer.systime() < self.endCrackingTime then
             render.setColor(Color(50,50,50))
             render.drawRoundedBox(10, 40, 256-50, 432, 100)
             

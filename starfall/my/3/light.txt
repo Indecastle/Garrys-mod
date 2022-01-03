@@ -33,9 +33,9 @@ end)
 */
 
 hook.add("think", "", function()
-    if !O:isFlashlightOn() then return end
+    if !OO:isFlashlightOn() then return end
     
-    local tr = O:getEyeTrace()
+    local tr = OO:getEyeTrace()
     local target = tr.Entity 
     local hitPos = tr.HitPos
     local hitNormal = tr.HitNormal
@@ -44,7 +44,11 @@ hook.add("think", "", function()
     light2:setPos(hitPos + hitNormal*15)
     light2:setBrightness(5)
     light2:setSize(200)
-    //light2:setNoModel(true)
+    --light2:setDirection(Vector(1,0,0))
+    --light2:setInnerAngle(180)
+    --light2:setOuterAngle(180)
+    --light2:setNoWorld(true)
+    --light2:setNoModel(true)
     light2:setColor(Color(timer.systime()*50, 1, 1):hsvToRGB())
     light2:draw()
 end)

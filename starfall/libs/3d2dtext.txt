@@ -161,6 +161,8 @@ function Text3D2D:initialize(data, vars)
     if vars.alphaGlobal == nil then vars.alphaGlobal = 255 end
     // ======================================================================
     
+    vars.isPlayer = vars.Target:isPlayer()
+    
     local keys = table.getKeys(vars)
     
     for i, k in ipairs(keys) do
@@ -173,12 +175,27 @@ end
 
 function Text3D2D:run()
     // ##################### don't touch !!! #####################
+    
+    function gethead(ent)
+        if ent:lookupBone("ValveBiped.Bip01_Head1") then
+            local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+            return pos
+        end
+        return ent:localToWorld(ent:obbCenter())
+    end
 
     function pos()
-        return self.Target:getEyePos() + 
-            ((self.Mode==1 or self.Mode==2) and Vector(0, 0, self.DataOffsetZ) or 
-            self.Mode==3 and self.Target:getForward()*self.DataOffsetZ or
-            self.Mode==4 and self.Target:getUp()*self.DataOffsetZ)
+        local obbhs = self.Target:obbSize()
+        if self.isPlayer then
+            --return gethead(self.Target) + Vector(0,0,1)*(self.DataOffsetZ)
+            return self.Target:getPos() + Vector(0,0,1)*(obbhs.z + self.DataOffsetZ)
+        else
+            local direction =
+                ((self.Mode==1 or self.Mode==2) and self.Target:getUp() or 
+                self.Mode==3 and self.Target:getForward() or
+                self.Mode==4 and self.Target:getUp())
+            return self.Target:getPos() + direction*self.DataOffsetZ
+        end
     end
     
     

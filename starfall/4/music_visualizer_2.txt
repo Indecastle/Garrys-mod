@@ -32,7 +32,7 @@ local settings = {
 local soundData
 
 function start() 
-    bass.loadURL(url,"3d", function(snd)
+    bass.loadURL(url,"3d noblock", function(snd)
         soundData = snd
         hook.add("render", "", function()
             snd:setPos(render.getScreenEntity():getPos())

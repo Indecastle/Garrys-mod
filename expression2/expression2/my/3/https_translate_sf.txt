@@ -28,7 +28,8 @@ if(first() | dupefinished()) { Hide = 1 #setName(randint(1000):toString())
     # https://translate.astian.org/translate
     # https://translate.mentality.rip/translate
     #URL = "https://libretranslate.de/translate"
-    URL = "http://trans.zillyhuhn.com/translate"
+    #URL = "http://trans.zillyhuhn.com/translate"
+    URL = "http://indecastle.pythonanywhere.com/api/translate/"
     
     printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!Thelp\"")
     
@@ -37,13 +38,15 @@ if(first() | dupefinished()) { Hide = 1 #setName(randint(1000):toString())
     
     function table getrequest(APIKey:string, SL:string, TL:string, Text:string, Auto:number) {
         Id_ += 1
+        local SourceLang = AutoT ? "auto" : SL
         return table( "url" = URL,
                             "payload" = table(
-                                "q" = Text,
-                                "source" = SL,
+                                #"q" = Text,
+                                "text" = Text,
+                                "source" = SourceLang,
                                 "target" = TL,
                                 "api-key" = APIkey),
-                            "headers" = table("Content-Type" = "application/json"),
+                            "headers" = table("Content-Type" = "application/json", "accept" = "application/json"),
                             "_id" = Id_
                      )
 
@@ -221,7 +224,8 @@ if(chatClk()) {
 
 if (~Response & Id_ != 0){
     Pars = Response #jsonDecode(httpData())
-    local Answer = Pars["translatedText",string]
+    #local Answer = Pars["translatedText",string]
+    local Answer = Pars["text",string]
     if(!TEST & LastWriter==owner() | FUN) {
         Hide = 0
         timer("concmd", Delay)

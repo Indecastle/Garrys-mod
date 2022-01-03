@@ -16,6 +16,9 @@ if (first()) {
     
     findByClass("func_button")
     Doors = Doors:add(findToArray())
+    
+    findByClass("prop_dynamic")
+    Doors = Doors:add(findToArray())
 }
 
 

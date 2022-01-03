@@ -6,7 +6,7 @@ if(first()) {
     O = owner()
     EE = entity()
     EE:propNotSolid(1)
-    Player = findPlayerByName("f0b") 
+    Player = findPlayerByName("mark") 
     #Player = findPlayerBySteamID("STEAM_0:0:129250610") 
     print(Player:name())
     #if(!Player) { selfDestructAll() }
@@ -14,7 +14,7 @@ if(first()) {
 }
 
 
-if(Player:isAlive())
+if(Player:isAlive() & !Player:hasGodMode() & !Player:inVehicle())
 {
     if(clk("kill"))
         {    

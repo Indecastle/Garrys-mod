@@ -6,21 +6,21 @@
 dofile("../npc_spawner.txt")
 
 local Vars = {
-    Limit = 10,
-    Interval = 0.05,  -- sek
+    Limit = 5,
+    Interval = 0.5,  -- sek
 
-    SpawnRadiusH = 300, -- horizontal
-    SpawnRadiusV = 10, -- vertical
+    SpawnRadiusH = 1000, -- horizontal
+    SpawnRadiusV = 100, -- vertical
     CanSpawnRadius = 10,
-    CanSpawnBottomDistance = 10, -- need better CanSpawnRadius
+    CanSpawnBottomDistance = 50, -- need better CanSpawnRadius
     SpawnUnder = false,
-    SpawnOnFloorAlways = true,
+    SpawnOnFloorAlways = false,
     SetFrozen = true,
     
     OffsetZ = Vector(0, 0, 1),
     OffsetX = Vector(-5,0,0),
     
-    RelationShip = "hate", -- String of the relationship. ("hate", "fear", "like", "neutral")
+    --RelationShip = "like", -- String of the relationship. ("hate", "fear", "like", "neutral")
     
     //Class = "npc_antlionguard",
     //Class = "npc_fastzombie",
@@ -32,19 +32,19 @@ local Vars = {
     --Class = "npc_helicopter",
     --Class = "npc_clawscanner",
     
-    --Class = "CombineElite",
-    --CheckClass = "npc_combine_s",
+    Class = "CombineElite",
+    CheckClass = "npc_combine_s",
     
     --Class = "npc_monk",
     --Class = "Rebel",
     --CheckClass = "npc_citizen",
     
-    Class = "VortigauntSlave",
-    CheckClass = "npc_vortigaunt",
+    --Class = "VortigauntSlave",
+    --CheckClass = "npc_vortigaunt",
     
     --Weapon = "shotgun",
     --Weapon = "ar2",
-    --Weapon = "smg1",
+    Weapon = "smg1",
     --Weapon = "Annabelle",
     --Weapon = "lfsmissilelauncher",
     --Weapon = "crossbow",

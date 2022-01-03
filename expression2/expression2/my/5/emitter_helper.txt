@@ -121,10 +121,10 @@ if(changed(G)){
     G:egpRoundedBox(1,vec2(500),vec2(1000,1000)) G:egpColor(1,vec4(100,100,100,100))
     G:egpRoundedBox(2,vec2(500),vec2(970,970)) G:egpColor(2,vec4(0,0,0,150))
     
-    G:egpText(3,"Name",vec2(50,160)) G:egpFont(3,"Marlett",25) 
-    G:egpText(4,"Health",vec2(500,160)) G:egpFont(4,"Marlett",25) 
-    G:egpText(5,"IsAlive",vec2(650,160)) G:egpFont(5,"Marlett",25) 
-    G:egpText(6,"Role",vec2(800,160)) G:egpFont(6,"Marlett",25) 
+    G:egpText(3,"Name",vec2(50,160)) G:egpFont(3,"Marlett",22) 
+    G:egpText(4,"Health",vec2(500,160)) G:egpFont(4,"Marlett",22) 
+    G:egpText(5,"IsAlive",vec2(630,160)) G:egpFont(5,"Marlett",22) 
+    G:egpText(6,"Role",vec2(770,160)) G:egpFont(6,"Marlett",22) 
     
     G:egpText(7,"Page 1",vec2(35,30)) G:egpFont(7,"Marlett", 20)
     G:egpText(8,"Player:",vec2(190,30)) G:egpFont(8,"Marlett", 20)
@@ -152,8 +152,8 @@ if(changed(G)){
         G:egpBox(180 + I,vec2(500,195 + I * 35),vec2(930,35) )  G:egpColor(180 + I,vec4(100,100,100,100)) 
         G:egpText(100 + I,"",vec2(50,177 + I * 35)) G:egpFont(100 + I,"Marlett",18)  
         G:egpText(120 + I,"",vec2(500,175 + I * 35)) G:egpFont(120 + I,"Marlett",18)  
-        G:egpText(140 + I,"",vec2(650,175 + I * 35)) G:egpFont(140 + I,"Marlett",18)  
-        G:egpText(160 + I,"",vec2(800,175 + I * 35)) G:egpFont(160 + I,"Marlett",18) 
+        G:egpText(140 + I,"",vec2(630,175 + I * 35)) G:egpFont(140 + I,"Marlett",18)  
+        G:egpText(160 + I,"",vec2(770,175 + I * 35)) G:egpFont(160 + I,"Marlett",15) 
     }
     
 }
@@ -191,7 +191,7 @@ if(clk("render_players")) {
         if (P:isValid()) {
             G:egpSetText(100 + I,P:name():sub(1,27)) G:egpColor(100 + I,vec4(255,255,255,150))
             G:egpSetText(120 + I,P:health():toString()) G:egpColor(120 + I,vec4(255,255,255,150))
-            if (P:isSuperAdmin()) {
+            #[if (P:isSuperAdmin()) {
                 G:egpColor(160 + I, vec4(150,0,0,150))
                 G:egpSetText(160 + I,"SuperAdmin")
             }
@@ -201,7 +201,12 @@ if(clk("render_players")) {
             } else {
                 G:egpColor(160 + I, vec4(0,150,200,150))
                 G:egpSetText(160 + I, "User")
-            }
+            }]#
+            local TeamName = P:team():teamName()
+            local TeamColor = teamColor(P:team())
+            G:egpColor(160 + I, TeamColor)
+            G:egpSetText(160 + I, TeamName)
+            
             if(P:isAlive()) {
                 G:egpSetText(140 + I, "alive")
                 G:egpColor(140 + I, vec4(0,150,0,150))

@@ -1,0 +1,46 @@
+@name elka
+@inputs
+@outputs
+@persist E:entity SizeMax Count Size
+
+if(first()){
+    E = entity()
+    
+    Count = 40
+    
+    SizeMax = 1.5
+    Size=5
+    
+    
+    holoCreate(999)
+    holoModel(999,"models/holograms/hq_rcylinder_thin.mdl")
+    holoMaterial(999,"models/props_foliage/tree_deciduous_01a_trunk")
+    holoPos(999,E:pos()+vec(0,0,50)*Size)
+    holoScaleUnits(999,vec(7,7,100)*Size)
+    holoParent(999,E)
+    
+    for(I=1,Count){
+        local BasePos = E:pos()+vec(0,0,150-I*2)*Size
+        local Radius = I*SizeMax*Size / 2
+        
+        holoCreate(I)
+        holoModel(I, "models/hunter/misc/cone2x05.mdl")
+        holoPos(I, BasePos)
+        holoScaleUnits(I, vec(I*SizeMax, I*SizeMax, 13) * Size)
+        holoColor(I, vec(30,155,20))
+        holoMaterial(I, "WTP/camoflage_1")
+        holoParent(I, E)
+        
+        local Degree = random(360)
+        local LocalPos = vec(Radius*cos(Degree), Radius*sin(Degree), 0)
+        
+        holoCreate(I+Count+5)
+        holoModel(I+Count+5,"models/holograms/icosphere.mdl")
+        holoPos(I+Count+5, BasePos + LocalPos)
+        holoScaleUnits(I+Count+5,vec(3)*Size)
+        holoColor(I+Count+5, hsv2rgb(random(0,360),1,1))
+        holoMaterial(I+Count+5,"models/shiny")
+        holoParent(I+Count+5,E)
+    }
+}
+

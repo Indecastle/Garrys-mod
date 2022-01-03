@@ -1,7 +1,7 @@
 @name http translate
 @inputs 
 @outputs IsSucces IsCanRequest Queue:table
-@persist Hide [APIkey SourceLang TargetLang]:string      LastWriter:entity LastAnswer:string
+@persist Hide [APIkey SourceLang TargetLang URL]:string      LastWriter:entity LastAnswer:string
 @persist [WhiteList BlackList]:array AllP TON TME FUN AutoT TEST Delay:number Commands:array
 @trigger 
 
@@ -20,9 +20,11 @@ if(first() | duped() | dupefinished()) { Hide = 1 #setName(randint(1000):toStrin
     Delay = 500 # ms
     Queue = table()
     
-    APIkey = "trnsl.1.1.20190711T184435Z.85fd27bff0ef3589.8dc99aaefca71f22cd1e043992920fd09dd53ef3"
+    #APIkey = "trnsl.1.1.20190711T184435Z.85fd27bff0ef3589.8dc99aaefca71f22cd1e043992920fd09dd53ef3"
     SourceLang = "ru"
     TargetLang = "en"
+    
+    URL = "http://indecastle.pythonanywhere.com/api/translate/"
     
     printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!Thelp\"")
     
@@ -31,8 +33,8 @@ if(first() | duped() | dupefinished()) { Hide = 1 #setName(randint(1000):toStrin
     
     function string getrequest(APIKey:string, SL:string, TL:string, Text:string, Auto:number) {
         Text = httpUrlEncode(Text)
-        TextLang = AutoT ? TL : (SL + "-" + TL)
-        return ("https://translate.yandex.net/api/v1.5/tr.json/translate?key=" + APIkey + "&text=" + Text + "&lang=" + TextLang)
+        local SourceLang = AutoT ? "auto" : SL
+        return (URL + "?format=json" + "&source=" + SourceLang + "&target=" + TL + "&text=" + Text)
     }
     function number array:checkAr(Str:string) {
         local OK = 0
@@ -200,7 +202,7 @@ if(chatClk()) {
 
 if (httpClk()){
     Pars = jsonDecode(httpData())
-    local Answer = Pars["text",table][1,string]
+    local Answer = Pars["text",string]
     if(!TEST & LastWriter==owner() | FUN) {
         Hide = 0
         timer("concmd", Delay)

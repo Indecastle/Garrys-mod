@@ -1,0 +1,67 @@
+--@name Beam
+--@author
+--@shared
+
+local Length = 555
+local Width = 0.02
+
+
+local ScaleUnit = 12
+local E = chip()
+local O = owner()
+local OO = player()
+local NoEntity = entity(0)
+
+if SERVER then
+    /*wire.adjustOutputs( 
+        { "Entity", "EntID",  "Pos",    "Dist",   "PosX",  "PosY",  "PosZ" }, 
+        { "entity", "number", "vector", "number", "number", "number", "number" } )*/
+    wire.adjustPorts(nil,
+        {
+            Entity="entity",
+            EntID="number",
+            Dist="number",
+            Pos="vector",
+            PosX="number",
+            PosY="number",
+            PosZ="number",
+        })
+
+    hook.add("think", "ly4", function()
+        local startPos = E:getPos()
+        local startDir = E:getUp()
+    
+        local tr = trace.trace(startPos, startPos + startDir * Length, E, bit.bor(MASK.ALL, 2^14), nil, false)
+        
+        local hitPos = tr.Hit and tr.HitPos or Vector()
+        
+        wire.ports.Entity = tr.Entity:isValid() and tr.Entity or NoEntity
+        wire.ports.EntID = tr.Entity:isValid() and tr.Entity:entIndex() or 0
+        wire.ports.Dist = tr.Hit and startPos:getDistance(tr.HitPos) or 0
+        wire.ports.Pos = hitPos
+        wire.ports.PosX = hitPos.x
+        wire.ports.PosY = hitPos.y
+        wire.ports.PosZ = hitPos.z
+    end)
+
+    return
+end
+
+
+
+local H = holograms.create(E:getPos(), Angle(), "models/holograms/hq_cylinder.mdl", Vector(1))
+H:setParent(E)
+H:suppressEngineLighting(true)
+
+hook.add("think", "ly4", function()
+    local StartPos = E:getPos()
+    local StartDir = E:getUp()
+
+    local tr = trace.trace(StartPos, StartPos + StartDir * Length, E, bit.bor(MASK.ALL, 2^14), nil, false)
+    local dirVec = (tr.HitPos - StartPos):getNormalized()
+    local distance = StartPos:getDistance(tr.HitPos)
+    H:setPos(StartPos + StartDir * distance / 2)
+    H:setAngles(StartDir:getAngle() + Angle(90,0,0))
+    H:setScale(Vector(Width, Width, distance/ScaleUnit))
+end)
+
