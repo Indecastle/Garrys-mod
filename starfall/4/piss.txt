@@ -7,7 +7,7 @@
 local cum = true
 
 local Target = owner()
-Target = find.playersByName("Mark")[1]
+Target = find.playersByName("mark")[1]
 print(Target)
 
 
@@ -127,5 +127,5 @@ function peter:think()
 end
 
 local mypeter = peter:new()
-hook.add("think","",function() mypeter:think() end)
+hook.add("hologrammatrix","",function() mypeter:think() end)
 

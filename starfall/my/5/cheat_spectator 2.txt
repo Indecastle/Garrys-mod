@@ -1,0 +1,167 @@
+--@name cheat spectator 2
+--@author Markiz
+--@client
+
+local Target = owner()
+Target = find.playersByName("owner")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+//print(Target)
+
+
+local IsHead = false
+
+
+
+local GameW, GameH;
+
+local Players = find.allPlayers()
+local IndexPlayer = 1;
+local TargetPlayer = player()
+local ThirdPerson = false
+
+local font = render.createFont("Arial" // font
+                                    ,50 // size
+                                    ,2000 // weight
+                                    ,false // antialias
+                                    ,false // additive
+                                    ,true // shadow
+                                    ,true // outline
+                                    ,false // blur
+                                    ,false //extended
+                                    )
+
+
+function gethead(ent)
+    if TargetPlayer:lookupAttachment("eyes") then
+        local pos, ang = ent:getAttachment(TargetPlayer:lookupAttachment("eyes"))
+        return pos
+    elseif ent:lookupBone("ValveBiped.Bip01_Head1") then
+        local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+        return pos
+    end
+    return ent:localToWorld(ent:obbCenter())
+end
+
+
+function nextPlayer()
+    IndexPlayer = IndexPlayer < #Players and IndexPlayer+1 or 1
+    if isValid(Players[IndexPlayer]) then
+        TargetPlayer = Players[IndexPlayer]
+    else
+        Players = find.allPlayers()
+        prevPlayer()
+    end
+end
+
+function prevPlayer()
+    IndexPlayer = IndexPlayer > 1 and IndexPlayer-1 or #Players
+    if isValid(Players[IndexPlayer]) then
+        TargetPlayer = Players[IndexPlayer]
+    else
+        Players = find.allPlayers()
+        nextPlayer()
+    end
+end
+
+
+--calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
+hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+
+    local head = IsHead and gethead(TargetPlayer) or TargetPlayer:getEyePos()
+    --local head = gethead(TargetPlayer)
+
+    local angle;
+    local originPos = head
+    if ThirdPerson then
+        angle = player():getEyeAngles()
+        originPos = originPos - ( angle:getForward() * 100 )
+    else
+        angle = TargetPlayer:getEyeAngles()
+        originPos = originPos + ( angle:getForward() * (IsHead and 0 or 10) )
+    end
+    --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
+    return {
+        origin= originPos
+        ,angles= angle
+        ,fov=fov
+        ,znear=znear + (IsHead and 5 or 10)
+        ,zfar=zfar,
+        drawviewer=true}
+end)
+
+timer.create("isHUDActive", 0.2, 0, function()
+    local newIsHUDActive = render.isHUDActive()
+    if oldIsHUDActive ~= newIsHUDActive then
+        oldIsHUDActive = newIsHUDActive
+        if newIsHUDActive then
+            printMessage(4, [[
+ALT - Change eye pos
+CTRL - Enable third person
+ArrowUp/ArrowDown - Switching to another player
+
+
+
+
+]])
+        end
+    end
+end)
+
+hook.add("drawhud","cheat spectator",function()
+    if GameW == nil then
+        GameW, GameH = render.getGameResolution()
+    end
+    
+    render.setFont(font)
+    render.setColor(team.getColor(TargetPlayer:getTeam()))
+    render.drawText(1, 1, ""..TargetPlayer:getName(), 0)  
+    
+    render.setColor(Color(0,200,200, 100))
+    render.drawRoundedBox(100, GameW/2-10-2, GameH/2-0.7, 23, 2)
+    render.drawRoundedBox(100, GameW/2-1.5, GameH/2-10+1, 2, 19)
+end)
+
+
+local oldIsHUDActive = false
+hook.add("inputPressed", "", function(key)
+    if ON and render.isHUDActive() then
+        if key == KEY.UPARROW then
+            nextPlayer()
+        end
+        
+        if key == KEY.DOWNARROW then
+            prevPlayer()
+        end
+        
+        if key == KEY.CTRL then
+            ThirdPerson = !ThirdPerson
+        end
+        if key == KEY.ALT then
+            IsHead = !IsHead
+        end
+    end
+end)
+
+
+
+function hudConnecting(isCon)
+    ON = isCon and 1 or 0
+end
+
+hook.add("hudconnected", "", function ()
+    hudConnecting(true)
+end)
+hook.add("huddisconnected", "", function ()
+    hudConnecting(false)
+end)
+
+
+
+if player() == owner() then
+    enableHud(nil, true)
+end
+

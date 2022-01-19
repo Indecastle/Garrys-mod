@@ -52,3 +52,11 @@ function table.filter(t, func)
     end
     return maped
 end
+function table.first(t, func)    
+    for i=1, #t do
+        if func(t[i]) then
+            return t[i]
+        end
+    end
+    return nil
+end

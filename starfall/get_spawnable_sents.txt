@@ -1,0 +1,11 @@
+--@name get Spawnable Sents
+--@author
+--@server
+
+local sents = prop.getSpawnableSents(true)
+
+for k, v in pairs(sents) do
+    print(k)
+end
+
+printTable(sents["NPC"])

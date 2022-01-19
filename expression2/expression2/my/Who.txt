@@ -22,4 +22,5 @@ if(changed(owner():keyPressed("e")) & owner():keyPressed("e") & owner():aimEntit
     #owner():aimEntity():propDelete()
     #owner():aimEntity():propPhysicalMaterial("wood_crate")
     
+    #owner():aimEntity():setModel("models/Humans/Charple01.mdl")
 }

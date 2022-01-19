@@ -1,4 +1,5 @@
---@name Copy
+--[[@name Copy]]--
+--@name Pristavka
 --@author
 --@shared
 --@include libs/my_methods.txt
@@ -7,14 +8,20 @@ dofile("libs/my_methods.txt")
 
 
 local Scale = 5
-local DelayDupe = 0.8
+local DelayDupe = 0.3
+
+
+local LoadFile = "dupe/dupe4.json"
+local SaveFile = "dupe/dupe4.json"
+
+
+
+
 
 local O = owner()
 local E = chip()
 --local ScaleUnit = 8.3333
 local ScaleUnit = 5.8
-
-
 
 local _scaleBase = 40
 local _scale = _scaleBase * Scale
@@ -56,25 +63,43 @@ if CLIENT then
         H2:setPos(tr.HitPos )
     end)
     
-    hook.add("inputPressed", "", function(button)
+    hook.add("inputPressed", "", function(key)
         if OO ~= O then return end
-        if button == KEY.G then
+        if key == KEY.G then
             ON = !ON
             setAlpha(ON)
         end
         
         if ON then
-            if button == KEY.UPARROW then
+            if key == KEY.UPARROW then
                 setScale(1)
             end
-            if button == KEY.DOWNARROW then
+            if key == KEY.DOWNARROW then
                 if Scale == 1 then return end
                 setScale(-1)
             end
+            
+            if key == KEY.K then
+                --print("You loaded file with name: '"..loadFile.."' ")
+                
+                local fileData = file.read(LoadFile, data)
+                --throw(tostring(#dataEnts))
+                net.start("DataEnts")
+                net.writeStream(fileData)
+                net.send()
+            end
+            
             net.start("keyHandler")
-            net.writeInt(button, 8)
+            net.writeInt(key, 8)
             net.send()
         end
+    end)
+    
+    net.receive("DataEnts", function (len)
+        net.readStream(function(data)
+            --print(data)
+            file.write(SaveFile, data)
+        end)
     end)
 
     return
@@ -103,12 +128,33 @@ local type_convert = {
     [TYPE_VECTOR4] = function(v) return "" end,
 }
 
+local ClassPriority = {
+    prop_physics = 1,
+    gmod_wire_wheel = 2
+}
+
+local WeldTypes = {
+    'Weld',
+}
+
 local DataEnts = {};
+local DupeData = {};
+
+function initData()
+    DataEnts = {}
+    DupeData = { 
+        DataEnts = DataEnts
+        ,PreserveFrozen = false -- Preserve frozen state after paste
+    };
+    
+end
+initData()
 
 -- https://github.com/jakejp1259/garrysmod/tree/master/lua/wire/gates
 local gates = {
     
 }
+local _waitSaveData = false;
 
 
 local mapper = {
@@ -170,8 +216,8 @@ local mapper = {
         end
     }
 }
-
-local mapperLocal = {
+local mapperLocal = {}
+mapperLocal = {
     gmod_wire_value = {
         get = function(data)
         
@@ -205,28 +251,20 @@ local mapperLocal = {
             }
         end
     },
+    gmod_wheel = {
+        get = function(data)
+            data.Class = "gmod_wire_wheel"
+            return mapperLocal.gmod_wire_wheel.get(data)
+        end,
+        update = function(data)
+            mapperLocal.gmod_wire_wheel.update(data)
+        end
+    },
     gmod_wire_wheel = {
         get = function(data)
-            /*
-            local data2 = constraint.getTable(data._entity)
-            local own, other
-            if data2.Ent1 == e then own=data2.Ent1; other=data2.Ent2 else own=data2.Ent2; other=data2.Ent1 end
-            local filtered = table.filter(DataEnts, function(e2)
-                return e2._entity == other
-            end)
-            
-            if #filtered == 0 then return {} end
-            local findedId = filtered[1].id
-            */
-
             findedId = data.ConstraintData~=nil and data.ConstraintData[1]~=nil and data.ConstraintData[1].id or nil
             if findedId == nil then return {} end
-            --DataEnts[findedId].ConstraintData = table.filter(DataEnts[findedId].ConstraintData, function(e2)
-            --    return e2.id ~= data.id
-            --end)
             
-            --data.ConstraintData = {}
-
             return {
                 BaseId = findedId,
                 LAxis = data.ConstraintData[1].LAxis,
@@ -242,13 +280,52 @@ local mapperLocal = {
             end
         end
     },
+    gmod_wire_motor = {
+        get = function(data)
+            return {}
+        end,
+        update = function(data)
+            
+        end
+    },
     gmod_abc = {
-        get = function(e, data)
+        get = function(data)
         end,
         update = function(d)
         end
-    }
+    },
 }
+
+
+function getByEnt(e)   
+    return table.first(DataEnts, function(d) return d._entity == e end)    
+end
+function getById(id) 
+    return table.first(DataEnts, function(d) return d.id == id end)   
+end
+
+
+function getWireMotor(data)
+    local constr = {}
+    
+    for i, d in ipairs(DataEnts) do
+        local ent1 = table.first(DataEnts.ConstraintData, function(cdata)
+            return cdata.Type == "WireMotor"
+        end)
+        
+        if ent1 == nil then continue end
+        
+        
+        dataWires[#dataWires+1] = {
+            id = findedId,
+            InName = d,
+            OutName = w:getWiredToName(d)
+        }
+    end
+    
+    return sentData
+end
+
 
 function getSentData(e, data)
     local w = e:getWirelink()
@@ -344,35 +421,34 @@ end
 function setConstraintData()
     for i, data in ipairs(DataEnts) do
         local weldData = {}
+        if !data._entity:isValid() then continue end
         
         for i, v in ipairs(constraint.getTable(data._entity)) do
+            coroutine.yield()
             local own, other
-            if v.Ent1 == data._entity then own=v.Ent1; other=v.Ent2 else own=v.Ent2; other=v.Ent1 end
-            local filtered = table.filter(DataEnts, function(e2)
-                return e2._entity == other
-            end)
             
-            if #filtered == 0 then continue end
-            local findedId = filtered[1].id
+            local Ent1Data = getByEnt(v.Ent1)
+            local Ent2Data = getByEnt(v.Ent2)
+            
+            if Ent1Data == nil or Ent2Data == nil then continue end
+            
+            if Ent1Data._entity == data._entity then own=Ent1Data; other=Ent2Data else own=Ent2Data; other=Ent1Data end
+            
             
             weldData[#weldData+1] = {
-                    id = findedId,
+                    id = other.id,
                     LAxis = v.LocalAxis,
                     LPos1 = v.LPos1,
                     LPos2 = v.LPos2,
-                    Type = v.Type
+                    Type = v.Type,
+                    EntId1 = Ent1Data.id,
+                    EntId2 = Ent2Data.id,
                 }
         end
         
         data.ConstraintData = weldData
     end
 end
-
-
-local ClassPriority = {
-    prop_physics = 1,
-    gmod_wire_wheel = 2
-}
 
 function sortEnts(ents)
     --printTable(DataEnts)
@@ -415,6 +491,7 @@ function getCopyCoro()
                 PosLocal = hitPos - e:getPos(),
                 Ang = e:getAngles(),
                 Color = e:getColor(),
+                CollisionGroup = e:getCollisionGroup(),
                 --SentData = getSentData(e),
                 --SentData = getLocalSentData(e),
             }
@@ -448,7 +525,7 @@ function copy()
     copyCoro = getCopyCoro()
     print("start copy")
     hook.add("think","copy",function()
-        while quotaAverage()<quotaMax()*0.3 do
+        while quotaAverage()<quotaMax()*0.2 do
             if copyCoro() then
                 hook.remove("think","copy")
                 return
@@ -510,9 +587,18 @@ function constraintAll()
             local first = DataEnts[weldData.id]._entity2
             local second = data._entity2
             if first ~= nil and second ~= nil then
-                if weldData.Type == "Weld" then weldHandler(first, second)
+                if table.hasValue(WeldTypes, weldData.Type) then weldHandler(first, second)
                 elseif weldData.Type == "NoCollide" then noCollideHandler(first, second) end
             end
+        end
+    end
+end
+
+
+function collisionGroupAll()
+    for i, data in ipairs(DataEnts) do
+        if data._entity2 ~= nil and data.CollisionGroup ~= 0 then
+            data._entity2:setCollisionGroup(data.CollisionGroup)
         end
     end
 end
@@ -526,7 +612,7 @@ end
 
 
 function dupe(key)
-    if #DataEnts == nil or verifyWait() then return end
+    if #DataEnts == nil or #DataEnts == 0 or verifyWait() then return end
     print("Start Dupe")
     
     local tr = O:getEyeTrace()   
@@ -535,7 +621,6 @@ function dupe(key)
     
     timer.create("duping", DelayDupe, #DataEnts, function()
         local data = DataEnts[i]
-        i = i + 1
         --print(data.Class)
         --printTable(data.DataWires)
         updateLocalSentData(i, data)
@@ -544,20 +629,25 @@ function dupe(key)
         local isSuccess, _ = pcall(function()
             if data.Class == "prop_physics" then
                 data._entity2 = prop.create(hitPos - data.PosLocal, data.Ang, data.Model, true)
+            elseif data.Class == "prop_vehicle_prisoner_pod" then
+                prop.createSeat(hitPos - data.PosLocal, data.Ang, data.Model, true)
             else
                 data._entity2 = prop.createSent(hitPos - data.PosLocal, data.Ang, data.Class, true, data.SentData)
             end
         end)
-        if !isSuccess or data._entity2 == nil then return end
         
-        data._entity2:setColor(data.Color)
-        data._entity2:setMaterial(data.Material)
+        if isSuccess and data._entity2 ~= nil then
+            data._entity2:setColor(data.Color)
+            data._entity2:setMaterial(data.Material)
+        end
         
+        i = i + 1
         if i > #DataEnts then
             timer.simple(0.1, function()
                 --linkWireAll()
                 parentAll()
                 constraintAll()
+                collisionGroupAll()
                 processing = false
                 print("Dupe finished")
             end)
@@ -570,28 +660,84 @@ function setScale(x)
     _scale = _scaleBase * Scale
 end
 
+function isOldVersion(data)
+    return data.DataEnts == nil
+end
+function setLoadedData(data)
+    if isOldVersion(data) then
+        initData()
+        DataEnts = data
+    else
+        DupeData = data
+        DataEnts = data.DataEnts
+    end
+end
+
 hook.add("ClientInitialized", "cl_init", function(ply)
+end)
+
+net.receive("DataEnts", function (len, ply)
+    if verifyWait() then return end
+    net.readStream(function(fileData)
+        data = json.decode(fileData)
+        setLoadedData(data)
+    end)
+    processing = false
+    print("Downloaded local data from file with name '"..LoadFile.."'")
 end)
 
 net.receive("keyHandler", function (len, ply)
     local key = net.readInt(8)
     
-    if button == KEY.UPARROW then
+    if key == KEY.UPARROW then
         setScale(1)
+        
     end
-    if button == KEY.DOWNARROW then
+    if key == KEY.DOWNARROW then
         setScale(-1)
     end
     
-    if key == KEY.H then
+    if key == MOUSE.MOUSE2 then
         copy(key)
     end
-    if key == KEY.J then
+    if key == MOUSE.MOUSE1 then
         dupe(key)
+    end
+    
+    if key == KEY.L then
+        if #DataEnts == 0 then return end
+        
+        print("Are you sure to save file with name "..saveFile.."? Press Enter to continue...")
+        _waitSaveData = true
+        return
+        
+    end
+    if key == KEY.ENTER and _waitSaveData then
+        net.start("DataEnts")
+        net.writeStream(json.encode(DupeData))
+        net.send(owner())
+        
+        print("You saved file with name: '"..SaveFile.."' ")
+        
+        _waitSaveData = true
+        return
+    end
+    
+    if _waitSaveData then
+        _waitSaveData = false
+        print("Canseled saving")
     end
 end)
 
 
-
-
+/*
+print("Helper:")
+print("Key G - ON/OFF the chip")
+print("Key Mouse1 - paste the build")
+print("Key Mouse2 - copy the build")
+print("Key ArrowUp - increase the area")
+print("Key ArrowDown - decrease the area")
+print("Key K - load from local file")
+print("Key L - save to local file")
+*/
 

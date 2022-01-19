@@ -1,0 +1,115 @@
+--@name particles 2d
+--@author
+--@client
+
+
+local DieTime = 5
+
+local FilePath = "effects/laser1"
+
+local E = chip()
+local chipPos = E:getPos()
+
+local pe = particle.create(eyePos(), false)
+
+--render.createRenderTarget("rt")
+--local box = render.createMaterial("effects/spark")
+
+local m = material.create("UnlitGeneric")
+--m:setTextureRenderTarget("$basetexture", "rt")
+
+-- https://wiki.facepunch.com/gmod/Material_Flags
+m:setInt("$flags", 256 + 128)
+/*m:setInt("$flags", bit.bor(
+    256 -- alphatest
+    ,1
+    ,2097152 -- translucent
+    ,128
+    ))*/
+
+--m:setInt("$flags",138414080)
+--m:setInt("$flags", 2^21)
+--m:setInt("$additive", 1)
+--m:setInt("$translucent", 1)
+--m:setInt("vertexalpha", 1)
+--m:setInt("$vertexcolor", 1)
+--m:setInt("$alphatest", 0)
+--m:setInt("$nocull", 0)
+--m:setString("$no_draw", "0")
+
+--m:setInt("$alphatestreference", 1)
+--m:setInt("$allowalphatocoverage", 1)
+--m:setInt("$ignorez", 1)
+--m:setInt("$blendtintbybasealpha", 1)
+--m:setInt("$blendtintcoloroverbase", 0)
+--m:setFloat("$PhongBrightnessScalar", 0.5)
+--m:setString("$color", "1 1 1")
+--m:setString("$color", "1 0.5 1")
+--m:setFloat("$alpha", 0.9)
+m:setTexture("$basetexture", FilePath)
+--m:setString("$brightness","effects/spark_brightness")
+--m:setString("$flashlighttexture","effects/flashlight001")
+--m:setTextureRenderTarget("$basetexture", "particle/muzzleflash2")
+
+m = material.load(FilePath)
+
+--pe:setNoDraw(false)
+--pe:setNearClip(1, 2)
+--pe:setBBox(chipPos, chipPos+Vector(1,1,1)*100)
+
+local parts = {}
+
+timer.create("particle", 0.1, 0, function()
+
+    if #parts >= 95 then return end
+
+    local randPos = Vector(math.rand(-100, 100), math.rand(-100, 100), math.rand(-100, 100))
+    local angles = Angle(0,0,0)  --player():localToWorldAngles(Angle(0,180,0)) --eyeAngles() + Angle(0,180,0)
+    
+    -- ParticleEmitter:add(Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
+    local p = pe:add(m, E:getPos(), 10, 0, 10, 0, 255, 0, DieTime)
+    --p:setAngles(angles)
+    --p:setLighting(false)
+    p:setCollide(true)
+    p:setBounce(1)
+    
+    p:setGravity(Vector(0, 0, -250))
+    --p:setRoll(100)
+    --p:setRollDelta(400)
+    p:setVelocity(Vector(math.rand(-1,1), math.rand(-1,1), 1) * 500)
+    
+    table.insert(parts, 1, {p=p, t=timer.curtime()+DieTime})
+end)
+
+
+/*hook.add("renderoffscreen","go", function()
+    render.overrideBlend(true, 1, 1, 0, 200, 50, 50)
+    render.selectRenderTarget("rt")
+    render.setMaterial(box)
+    render.drawTexturedRect(0,0,1024,1024)
+end)*/
+
+
+hook.add("think", "", function()
+    local angles = player():localToWorldAngles(Angle(0,180,0)) --eyeAngles() + Angle(0,180,0)
+    
+    local time = timer.curtime()
+    
+    for i, d in ipairs(parts) do
+        if d.t > time then
+            --d.p:setAngles(angles)
+        else
+            table.removeByValue(parts, d)
+        end
+    end
+    --print(#parts)
+end)
+
+
+hook.add("Removed", "anim", function()
+    local color = Color(0,0,0,0)
+    for i, d in ipairs(parts) do
+        d.p:setColor(color)
+        d.p:setAngles(eyeAngles())
+    end
+end)

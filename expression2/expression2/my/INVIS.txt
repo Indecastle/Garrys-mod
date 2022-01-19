@@ -5,7 +5,7 @@
 
 entity():setAlpha(0)
 if(first()) {
-    owner():setColor(0,0,0)
+    #owner():setColor(0,0,0)
     O = owner()
     runOnKeys(O,1)
     P = findPlayerByName(O:name())

@@ -1,0 +1,70 @@
+@name AntiNoclip
+@inputs 
+@outputs 
+@persist [E]:entity Radius [Players]:array [ActivePlayers]:table
+
+interval(10)
+
+#print(owner():inNoclip())
+
+if (first() | dupefinished()) {
+    E = entity()
+    Radius = 1000
+    
+    
+    Players = players()
+    
+    function number table:indexEnt(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This[I, array]:entity(1) == Ent) { OK = I break}
+        } 
+        return OK
+    }
+    function number table:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This[I, array]:entity(1) == Ent) { OK = 1 break }
+        }
+        return OK
+    }
+    function number table:addEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushArray(array(Ent, Ent:pos())) OK=1 }
+        return OK
+    }
+    function number table:addOrUpdateEnt(Ent:entity) {
+        local OK = 0
+        if(!This:checkAr(Ent)) { This:pushArray(array(Ent, Ent:pos())) OK=1 }
+        else {
+            for(I=1,This:count()) {
+                if(This[I, array]:entity(1) == Ent) { This[I, array][2, vector] = Ent:pos() break }
+            }
+        }
+        return OK
+    }
+    function number table:removeEnt(Ent:entity) {
+        local OK = 0
+        if(This:checkAr(Ent)) { This:remove(This:indexEnt(Ent)) OK=1}
+        return OK
+    }
+}
+
+
+foreach (I, P:entity = Players) {
+    if (P:pos():distance(E:pos()) < Radius) {
+        if (ActivePlayers:addEnt(P)) {}
+        if (P:inNoclip()) {
+            P:playerNoclip(0)
+            P:setPos(ActivePlayers[ActivePlayers:indexEnt(P), array][2, vector])
+            
+        } else {
+            ActivePlayers:addOrUpdateEnt(P)
+        }
+        P:setVel(vec(0,0,0))
+        #P:applyForce(P:vel()/2 *P:mass())
+        
+    } else {
+        ActivePlayers:removeEnt(P)
+    }
+}

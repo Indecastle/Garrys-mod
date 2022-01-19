@@ -1,0 +1,31 @@
+--@name cheat spectator
+--@author
+--@client
+
+local Target = owner()
+Target = find.playersByName("bad")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+//print(Target)
+
+--calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
+hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    local angle = Target:getEyeAngles()
+    local originPos = Target:getEyePos() + ( angle:getForward() * 20 )
+    --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
+    return {
+        origin= originPos
+        ,angles= angle
+        ,fov=fov
+        ,znear=znear
+        ,zfar=zfar,
+        drawviewer=true}
+end)
+
+
+if player() == owner() then
+    enableHud(nil, true)
+end

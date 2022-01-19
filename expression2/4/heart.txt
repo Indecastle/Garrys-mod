@@ -1,0 +1,37 @@
+@name heart
+@inputs 
+@outputs 
+@persist [E O]:entity [SphereColor HeartColor TrailColor]:vector T X Y
+@trigger 
+@model models/sprops/geometry/sphere_24.mdl
+
+interval(1)
+
+if(first()) {
+    E=entity() O=owner()
+    
+    SphereColor = vec(255, 0, 100)
+    HeartColor  = vec(155, 35, 100)
+    TrailColor  = vec(255, 0, 100)
+
+    entity():setMaterial("phoenix_storms/fender_white")
+    entity():setColor(SphereColor)
+    
+    holoCreate(1)
+    holoModel(1, "models/balloons/balloon_classicheart.mdl")
+    holoColor(1, HeartColor)
+    holoEntity(1):setTrails(5, 5, 5, "trails/smoke", TrailColor, 255)
+}
+
+T++
+
+local T3 = T * 3
+
+X = 16*sin(T3)^3
+Y = 13*cos(T3) - 5*cos(2*T3) - 2*cos(3*T3) - cos(4*T3)
+
+holoPos(1, E:toWorld(vec(X*5, 0, Y*5)))
+holoAng(1, E:toWorld(ang(0, 0, 0)))
+
+
+

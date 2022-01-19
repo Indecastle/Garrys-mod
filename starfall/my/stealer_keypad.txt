@@ -385,7 +385,7 @@ else
     end
         net.receive("passes", function (len)
             keypads_passes = net.readTable()
-    end)
+        end)
     
     timer.create("wh_keypads", 1, 0, function()
         wh_keypads = find.byClass("gmod_wire_keypad")

@@ -454,11 +454,11 @@ function Text3D2D:run()
     
     
     
-    hook.add("think", "", function()
+    hook.add("hologrammatrix", "3d2dText", function()
         local eyeAngle;
         if self.Mode == 1 then
-            local d = (-player():getForward()):getNormalized()
-            eyeAngle = d:getAngle()  + self.InitAngle
+            local d = -eyeVector()
+            eyeAngle = d:getAngle() + self.InitAngle
         elseif self.Mode == 2 then
             local d = (player():getEyePos() - holoText:getPos()):getNormalized()
             eyeAngle = d:getAngle()  + self.InitAngle

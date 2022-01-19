@@ -1,0 +1,22 @@
+--@name Sprite 2
+--@author Jacbo
+--@client
+--@include libs/sprites1.txt
+
+local manager = require("libs/sprites1.txt")
+local delay = 0.1
+local frameCount = 5*5*1 - 1
+
+local sprite_sheet = manager.loadURL("https://i.imgur.com/ArqIrer.png", 5, 5)
+
+
+sprite_sheet:setCallback(function()
+    hook.add("render", "", function()
+    
+        local w, h = sprite_sheet:getSpriteStretchedSize(512)
+        sprite_sheet:drawSprite(
+            0, 128, w, h,
+            math.floor(timer.systime() / delay) % frameCount + 1
+        )
+    end)
+end)

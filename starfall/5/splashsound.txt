@@ -1,0 +1,16 @@
+--@name SplashSound
+--@author
+--@client
+
+local Target = chip()
+Target = find.playersByName("mar")[1]
+--print(Target)
+
+local s1 = sounds.create(Target, "Splash.SplashSound", true)
+
+timer.create("a", 0.2, 0, function()
+    s1:stop()
+    s1:play()
+end)
+
+

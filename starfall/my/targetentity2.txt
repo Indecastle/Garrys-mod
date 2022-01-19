@@ -19,7 +19,7 @@ function func()
     local tr = O:getEyeTrace()          
     target = tr.Entity 
     targetP = target:getPhysicsObject()
-    --printTable(target:getNWVarTable())
+    --printTable(O:getNWVarTable())
     
     //local kek = target.Password 
     
@@ -28,7 +28,7 @@ function func()
     --print(w:getWiredTo(w:inputs()[8]))
     --print(w:getWiredToName(w:inputs()[8]))
     
-    print(target.gate)
+    --print(target.gate)
     
     --local inputs = w:inputs()
     --local outputs = w:outputs()
@@ -62,7 +62,8 @@ function func()
     
     --print(target:getChipName())
     --print(target:isWeldedTo())
-    --printTable(constraint.getTable(target))
+    printTable(constraint.getTable(target))
+    --print(target:getCollisionGroup())
     --printTable(target:getAllConstrained())
     /*printTable(target:getAllConstrained({
         Wire = false,

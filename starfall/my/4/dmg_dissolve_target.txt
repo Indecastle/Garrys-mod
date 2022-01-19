@@ -1,0 +1,58 @@
+--@name DMG_DISSOLVE target
+--@author
+--@shared
+--@include libs/my_methods.txt
+
+dofile("libs/my_methods.txt")
+
+local O = owner()
+local OO = player()
+
+local MOUSE4_pressed = false
+
+local target, targetP;
+
+local oldIsPressed = nil
+
+
+function func()
+    pcall(function()
+        local tr = O:getEyeTrace()          
+        target = tr.Entity 
+        targetP = target:getPhysicsObject()
+        targetP:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
+        print(target)
+    end)
+end
+
+
+
+
+
+if O == OO then
+    if SERVER then
+        
+        hook.add("ClientInitialized", "cl_init", function(ply)
+        end)
+        
+        net.receive("keyHandler", function (len, ply)
+            local key = net.readInt(8)
+            if key == KEY.ALT then
+                func(key)
+            end
+        end)
+        
+    else        
+        
+        hook.add("inputPressed", "", function(button)
+            net.start("keyHandler")
+            net.writeInt(button, 8)
+            net.send()
+        end)
+        
+    end
+end
+
+
+
+

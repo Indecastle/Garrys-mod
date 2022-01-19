@@ -1,0 +1,207 @@
+--@name particles think all 3d
+--@author
+--@client
+
+
+
+local DieTime = 2
+local SpawnDelay = 1
+local OffsetZ = 10
+local DistanceVisible = 5000
+
+local RandX = 0.5
+local RandZ = 1
+
+
+local FromInternet = true
+--local Url = "https://i.imgur.com/9UtATPQ.gif"
+--local Url = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg"
+local Url = "https://i.imgur.com/9UtATPQ.gif"
+local FilePath = "effects/tool_tracer"
+
+local VertexAlpha= true
+local AlphaTest= false
+local Additive= false
+local Translucent= false
+
+
+local StartSize = 1
+local EndSize = 10
+local StartLength = 1
+local EndLength = 10
+local StartAlpha = 100
+local EndAlpha = 0
+
+
+local Velocity = 30
+local Gravity = Vector(0, 0, -15)
+
+local Collide = true
+local Bounce = 0.5
+
+
+local Target = owner()
+--Target = find.playersByName("mark")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+//print(Target)
+
+--if Target ~= player() then return end
+
+local players = find.allPlayers()
+local OO = owner()
+local O = player()
+
+
+function gethead(ent)
+    if ent:lookupAttachment("eyes") then
+        local pos, ang = ent:getAttachment(ent:lookupAttachment("eyes"))
+        return pos
+    elseif ent:lookupBone("ValveBiped.Bip01_Head1") then
+        local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+        return pos
+    end
+    return ent:localToWorld(ent:obbCenter())
+end
+
+
+local getPos = function(player)
+    local pos = gethead(player) + Vector(0,0,OffsetZ)
+    return pos
+end
+
+
+
+
+
+local E = chip()
+
+
+
+local m = material.create("UnlitGeneric")
+
+
+local flags = 
+    (VertexAlpha and 32 or 0) +
+    (Additive and 128 or 0) +
+    (AlphaTest and 256 or 0) +
+    (Translucent and 2097152 or 0)
+
+--throw(table.toString(m:getKeyValues()))
+if flags ~= 0 then
+    m:setInt("$flags",  
+        flags)
+        
+end
+--throw(tostring(m2:getInt("$flags")))
+/*m:setInt("$flags", bit.bor(
+    256 -- alphatest
+    ,1
+    ,2097152 -- translucent
+    ,128
+    ))*/
+--m:setInt("$translucent", 1)
+--m:setInt("smooth", 1)
+--m:setInt("$ignorez", 1)
+--m:setString("$spriteorigin", "[ 0.50 0.50 ]")
+m:setString("$Proxies", [[{
+        "AnimatedTexture"
+        {
+            "animatedtexturevar" "$basetexture"
+            "animatedtextureframenumvar" "$frame"
+            "animatedtextureframerate" 10
+        }
+    }]])
+--m:setFloat("$alpha", 0.9)
+--m:setTexture("$basetexture","entities/npc_magnusson.png")
+
+if FromInternet then
+    m:setTextureURL("$basetexture", Url, function(mat, u, w, h, l)
+        if mat == nil then return end
+        
+        local ratio = w / h
+        local maxh = 1
+        local sh = maxh
+        local sw = sh * ratio
+        --screen:setSize(Vector(sh, sw, 1))
+        
+        l((m:getWidth()-w)/2, (m:getHeight()-h)/2, w, h)
+        
+        --screen:setMaterial("!" .. m:getName())
+    end)
+else
+    m:setTexture("$basetexture", FilePath)
+end
+m:recompute()
+--m = material.load(FilePath)
+
+
+
+
+--pe:setNearClip(1, 2)
+--pe:setBBox(chipPos, chipPos+Vector(1,1,1)*100)
+
+
+local parts = {}
+
+timer.create("particle", SpawnDelay, 0, function()
+    local pe = particle.create(eyePos(), true)
+    --pe:setNoDraw(false)
+    for i, pl in ipairs(players) do
+        if pl == O or pl:isValid() and O:getPos():getDistance(pl:getPos()) > DistanceVisible then continue end
+        pcall(function()
+            if #parts == 95 then return end
+        
+            local randPos = Vector(math.rand(-100, 100), math.rand(-100, 100), math.rand(-100, 100))
+            local angles = Angle(0,0,0)  --player():localToWorldAngles(Angle(0,180,0)) --eyeAngles() + Angle(0,180,0)
+            
+            -- ParticleEmitter:add(Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
+            local p = pe:add(m, getPos(pl), StartSize, EndSize, StartLength, EndLength, StartAlpha, EndAlpha, DieTime)
+            --p:setAngles(angles)
+            --p:setLighting(false)
+            p:setCollide(Collide)
+            p:setBounce(Bounce)
+            
+            p:setGravity(Gravity)
+            --p:setRoll(100)
+            --p:setRollDelta(400)
+            p:setVelocity(Vector(math.rand(-RandX,RandX), math.rand(-RandX,RandX), RandZ):getNormalized() * Velocity)
+            
+            table.insert(parts, 1, {p=p, t=timer.curtime()+DieTime})
+        end)
+    end
+    pe:destroy()
+end)
+
+
+hook.add("think", "", function()
+    --local angles = player():localToWorldAngles(Angle(0,180,0) + BaseAngle) --eyeAngles() + Angle(0,180,0)
+    
+    
+    local time = timer.curtime()
+    
+    for i, d in ipairs(parts) do
+        if d.t > time then
+            local dir = (eyePos() - d.p:getPos()):getNormalized()
+            local angles = dir:getAngle() + Angle(0,0,-90)
+            local eyeAngle = (-eyeVector()):getAngle() + Angle(0,0,-90)
+            
+            d.p:setAngles(eyeAngle)
+        else
+            table.removeByValue(parts, d)
+        end
+    end
+    --print(#parts)
+end)
+
+hook.add("Removed", "anim", function()
+    local color = Color(0,0,0)
+    for i, d in ipairs(parts) do
+        d.p:setColor(color)
+        d.p:setAngles(Angle(90,0,0))
+    end
+    --pe:destroy()
+end)

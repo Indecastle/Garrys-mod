@@ -3,13 +3,14 @@
 --@author Markiz
 --@client
 
-local Animation = "original_dance1"
-local MusicAnimation = "weapons/guitar/shmara.ogg" -- or nill
+local Animation = "dancemoves"
+--local MusicAnimation = "weapons/guitar/shmara.ogg" -- or nill
+--local MusicAnimation = "weapons/guitar/jackiechan.ogg" -- or nill
 --local MusicAnimation = "weapons/guitar/animeshniki.ogg" -- or nill
---local MusicAnimation = "mmd/original_dance1.mp3" -- or nill
+local MusicAnimation --= "mmd/original_dance1.mp3" -- or nill
 
-local Speed = 1.2
-local Volume = 0.4
+local Speed = 0.5
+local Volume = 0.5
 
 local Target = owner()
 --Target = find.playersByName("mark")[1]
@@ -28,7 +29,7 @@ for i, p in ipairs(find.allPlayers()) do
     --p:resetAnimation()
 end
 
-Target:setAnimation(Animation, nil, Speed, false, nil, nil)
+Target:setAnimation(Animation, nil, Speed, true, nil, nil)
 --Target:resetAnimation()
 
 -- Player:setAnimation(number or string sequence, number or nil progress, number or nil rate, boolean or nil loop, boolean or nil auto_advance, string or number or nil act)
@@ -38,17 +39,17 @@ Target:setAnimation(Animation, nil, Speed, false, nil, nil)
 --    Target:setAnimation("snap", 0.3, 0.2, false, nil, nil)
 --end)
 
-
-bass.loadFile("sound/"..MusicAnimation, "3d noblock", function(snd)
-    --if snd then
-        snd:setPitch(Speed)
-        snd:setVolume(Volume)
-        hook.add("think", "MusicDance", function()
-            snd:setPos(Target:getPos())
-        end)
-    --end
-end)
-
+if MusicAnimation ~= "" and MusicAnimation ~= nil then
+    bass.loadFile("sound/"..MusicAnimation, "3d noblock", function(snd)
+        --if snd then
+            snd:setPitch(Speed)
+            snd:setVolume(Volume)
+            hook.add("think", "MusicDance", function()
+                snd:setPos(Target:getPos())
+            end)
+        --end
+    end)
+end
 
 /*
 smooth_ride

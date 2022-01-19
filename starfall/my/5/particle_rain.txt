@@ -1,0 +1,52 @@
+--@name Particle rain
+--@author
+--@client
+
+
+local m = material.create("gmodscreenspace")
+--m:setInt("$flags",138414080)
+m:setTexture("$basetexture","effects/spark") -- effects/spark
+m:setInt("$flags", 128)
+--m:setTextureRenderTarget("$basetexture", "particle/muzzleflash2")
+
+
+
+
+
+
+function rain()
+    local tr =  player():getEyeTrace()
+    local pos = tr.HitPos + tr.HitNormal * 1 -- The origin position of the effect
+    local emitter = particle.create( Vector(), false ) -- Particle emitter in this position
+    for i = 0, 100 do -- Do 100 particles
+        local part = emitter:add( m, pos, 5, 0, 10, 10, 255, 0, 1 ) -- Create a new particle at pos
+        if ( part ) then
+    /*
+        part:setDieTime( 1 ) -- How long the particle should "live"
+        part:setStartAlpha( 255 ) -- Starting alpha of the particle
+        part:setEndAlpha( 0 ) -- Particle size at the end if its lifetime
+        part:setStartSize( 5 ) -- Starting size
+        part:setEndSize( 0 ) -- Size when removed
+        */
+        
+        --part:setCollide(true)
+        --part:setBounce(0)
+        
+        local _, velAng = localToWorld(Vector(
+            math.random(),math.random(),math.random()) * 50,
+            Angle(),
+            tr.HitNormal,
+            Angle())
+        part:setGravity( Vector( 0, 0, -250 ) ) -- Gravity of the particle
+        part:setVelocity( Vector(math.rand(-1,1), math.rand(-1,1), math.rand(-1,1)):getNormalized() * 50 ) -- Initial velocity of the particle
+        end
+    end
+    emitter:destroy()
+end
+
+timer.create("rain", 0.2, 0, function()
+    rain()
+end)
+
+
+-- emitter:destroy()

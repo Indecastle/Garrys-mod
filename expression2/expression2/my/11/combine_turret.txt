@@ -9,7 +9,7 @@ if(first()){
     runOnTick(1)
     SpeedRol = 0.2
     CookieDelay = 10 # seconds
-    CookieMaterial = "models/antlion/antlion_innards"
+    CookieMaterial =  "models/antlion/antlion_innards" # "phoenix_storms/mrtire"
     Offset = 17
     BoxSizeLimit = 80
     

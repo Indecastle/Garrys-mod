@@ -4,7 +4,7 @@
 @persist 
 @trigger 
 
-if (first() + dupefinished()) {
+if (first() | dupefinished()) {
     
     O = owner()
     Target = O
@@ -33,4 +33,4 @@ if (!CheckAlive) {
 
 
 
-interval(100)
+interval(10)

@@ -1,0 +1,30 @@
+--@name files
+--@author
+--@shared
+
+if SERVER then
+    net.receive("printTable", function (len, ply)
+        local t = net.readTable()
+        printTable(t)
+    end)
+    return
+end
+
+if owner() ~= player() then return end
+
+
+function logPrintTable(t)
+    net.start("printTable")
+    net.writeTable(t)
+    net.send()
+end
+
+--file.write("qwerty_player3.txt", "Hello world3")
+
+
+local files, dirs;
+
+files, dirs = file.find("dupe/*.json")
+
+logPrintTable(files)
+

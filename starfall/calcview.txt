@@ -1,0 +1,16 @@
+--@name calcview
+--@author
+--@client
+
+--calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
+hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    
+    --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
+    return {
+        origin=pos - ( ang:getForward() * 100 )
+        ,angles=ang
+        ,fov=fov+50
+        ,znear=znear
+        ,zfar=zfar,
+        drawviewer=true}
+end)

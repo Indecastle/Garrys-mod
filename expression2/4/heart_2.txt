@@ -1,0 +1,48 @@
+@name heart 2
+@inputs 
+@outputs 
+@persist [E O]:entity [CurrentPos SphereColor HeartColor TrailColor]:vector T X Y ScaleX ScaleY OffsetZ FreezeSpeed
+@trigger 
+@model models/sprops/geometry/sphere_24.mdl
+
+interval(1)
+
+if(first()) {
+    E=entity() O=owner()
+    
+    ScaleX = 16
+    ScaleY = 9
+    OffsetZ = 60
+    FreezeSpeed = 5
+    
+    
+    SphereColor = vec(255, 0, 100)
+    HeartColor  = vec(155, 35, 100)
+    TrailColor  = vec(255, 0, 100)
+
+    entity():setMaterial("phoenix_storms/fender_white")
+    entity():setColor(SphereColor)
+    
+    holoCreate(1)
+    holoModel(1, "models/balloons/balloon_classicheart.mdl")
+    holoColor(1, HeartColor)
+    holoEntity(1):setTrails(5, 5, 3, "trails/smoke", TrailColor, 255)
+}
+
+T++
+
+local T3 = T * 3
+
+X = ScaleX*sin(T3)^3
+Y = ScaleY*cos(T3) - 5*cos(2*T3) - 2*cos(3*T3) - cos(4*T3)
+
+#local TargetPos = O:toWorld(vec(0, X*5, Y*5 + 80))
+local TargetPos = toWorld(vec(0, X*5, Y*5 + OffsetZ), ang(), O:pos(), O:eyeAngles():setPitch(0))
+CurrentPos = CurrentPos + (TargetPos - CurrentPos) / FreezeSpeed
+
+holoPos(1, CurrentPos)
+local TargetAng = toWorldAng(vec(), ang(0, 90, 0), O:pos(), O:eyeAngles():setPitch(0))
+holoAng(1, TargetAng:setRoll(0))
+
+
+

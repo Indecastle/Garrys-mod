@@ -20,12 +20,7 @@ if (first()) {
     function number is_pressed_key(Key:string, Old_value:number) {
         if (keyClkPressed() == Key) {
             local KeyClk = keyClk(O)
-            if (KeyClk == 1) {
-                return KeyClk
-            }
-            elseif (KeyClk == -1) {
-                return 0
-            }
+            return KeyClk == 1 ? 1 : 0
         }
         return Old_value
     }
@@ -130,11 +125,11 @@ if (first()) {
     }
     
     # Entity=holoCreate(number index,vector position,vector scale,angle ang,vector color)
-    holoCreate(1, E:pos(), vec(1), ang(), vec4(0, 255, 0, 50))
-    holoCreate(2, E:pos(), vec(-1), ang(), vec4(0, 255, 0, 150))
+    holoCreate(1, E:pos(), vec(1), ang(), vec4(0, 255, 0, 50), "models/hunter/blocks/cube8x8x8.mdl")
+    holoCreate(2, E:pos(), vec(-1), ang(), vec4(0, 255, 0, 150), "models/hunter/blocks/cube8x8x8.mdl")
     
-    holoCreate(3, E:pos(), vec(1), ang(), vec4(255, 255, 0, 50))
-    holoCreate(4, E:pos(), vec(-1), ang(), vec4(255, 255, 0, 150))
+    holoCreate(3, E:pos(), vec(1), ang(), vec4(255, 255, 0, 50), "models/hunter/blocks/cube8x8x8.mdl")
+    holoCreate(4, E:pos(), vec(-1), ang(), vec4(255, 255, 0, 150), "models/hunter/blocks/cube8x8x8.mdl")
     
     for (I=5, 12) {
         holoCreate(I, E:pos(), vec(1), ang(), vec4(0, 255, 0, 150), "icosphere3")

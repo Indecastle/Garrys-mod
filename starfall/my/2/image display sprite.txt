@@ -1,0 +1,238 @@
+--@name Image Display Sprite
+--@author OctopuSSX
+--@shared
+--@include libs/sprites1.txt
+local SpriteManager = require("libs/sprites1.txt")
+
+local data = {
+    gachi = {
+        urls = {"https://i.imgur.com/ArqIrer.png"},
+        size = {5, 5},
+        frameCount = 5*5*1 - 1
+    },
+    micro = {
+        urls = {
+            "https://cdn.discordapp.com/attachments/607371740540305424/871456722873618442/1.png",
+            "https://cdn.discordapp.com/attachments/607371740540305424/871456756759404584/2.png",
+            "https://cdn.discordapp.com/attachments/607371740540305424/871456772580335737/3.png"
+        },
+        size = {8, 8},
+        frameCount = 8^2*3
+    },
+    kek = { -- "https://imgur.com/a/a4mRYyh"
+        urls = {"https://i.imgur.com/IMSMlVL.png", "https://i.imgur.com/DhZl05n.png"},
+        size = {6, 6},
+        frameCount = 6*6*2 - 1
+    }
+}
+
+local img = "gachi"
+
+local maxh = 120*1
+
+
+local delay = 0.05
+local frameCount = data[img].frameCount
+
+
+function isLookingAtChip()
+    local dir = owner():getEyeAngles():getForward()
+    local dir2 = (chip():getPos() - owner():getShootPos()):getNormalized()
+    local cos = (dir.x*dir2.x + dir.y*dir2.y + dir.z*dir2.z) / (dir:getDistance(Vector())*dir2:getDistance(Vector()))
+    // Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+    //print(math.acos(cos))
+    return math.acos(cos) < 0.15
+end
+
+if SERVER then
+    chip():setNoDraw(0)
+
+    hook.add("PlayerSay", "chat", function(ply, txt)
+        if ply ~= owner() then return end
+        if not isLookingAtChip() then return end
+        
+        if txt:sub(1, 5) == "-img " then            
+            t = txt:sub(6)
+            if data[t] == nil then return end
+            img = t
+            
+            net.start("changeImage")
+            net.writeString(t)
+            net.send()
+            return ''
+        elseif txt:sub(1, 4) == "-mh " then
+            maxh = tonumber(txt:sub(5)) or 100
+            
+            net.start("setMaxH")
+            net.writeInt(maxh, 16)
+            net.send()
+            return ''
+        elseif txt:sub(1, 5) == "-url " then
+            url = txt:sub(6)
+            
+            net.start("setUrl")
+            net.writeString(url)
+            net.send()
+            return ''
+        elseif txt:sub(1, 7) == "-delay " then
+            delay = tonumber(txt:sub(8)) or 0.05
+            
+            net.start("setDelay")
+            net.writeFloat(delay, 16)
+            net.send()
+            return ''
+        end
+    end)
+else
+    function say(msg)
+        pcall(function()
+            if player() == owner() then print(msg) end
+        end)
+    end
+    
+    local FPS = 5
+    local frame = 0
+    local delta = 1/FPS
+
+    local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
+    screen:setParent(chip())
+    
+    render.createRenderTarget("cantload")
+    
+    local nonmat = material.create("UnlitGeneric")
+    nonmat:setTextureRenderTarget("$basetexture", "cantload")
+    nonmat:setInt("$flags", 0)
+    
+    
+    local sprite_sheet;
+    
+    function cantload()
+        screen:setSize(Vector(60, 60, 1))
+        screen:setMaterial("!" .. nonmat:getName())
+    end
+    
+    function setCustom(url)
+        data["c"] = url
+        img = "c"
+        loadImage()
+    end
+    
+    function loadImage()
+        if img == nil then return end
+        if data[img] == nil then return end
+        
+        URL = data[img].urls[1]
+    
+        if not hasPermission("material.urlcreate", URL) then
+            cantload()
+            return
+        end
+        
+        hook.remove("renderoffscreen","sprite1")
+        sprite_sheet = SpriteManager.loadURL(data[img].urls[1], data[img].size[1], data[img].size[2], function(m, w, h, l)
+            if m == nil then return end
+        
+            local ratio = w / h
+
+            local sh = maxh
+            local sw = sh * ratio
+            screen:setSize(Vector(sh, sw, 1))
+            --throw(tostring(sh))
+            
+            --l(0, 0, m:getWidth(), m:getHeight())
+        end)
+        for i=2, #data[img].urls do
+            sprite_sheet:appendURL(data[img].urls[i])
+        end
+        --screen:setSize(Vector(sh, sw, 1))
+        screen:setMaterial("!" .. sprite_sheet.matRender:getName())
+        
+        
+        sprite_sheet:setCallback(function()
+            hook.add("renderoffscreen","sprite1",function()
+                if quotaAverage() > quotaMax() * 0.2 then return end 
+                sprite_sheet:selectRenderTarget()
+                --render.setColor(Color(255,0,0))
+                --render.drawRect(0,0, 1000, 1000)
+                --if not sprite_sheet.loading then print(1) end
+                local w, h = sprite_sheet:getSpriteStretchedSize(1024)
+                sprite_sheet:drawSprite2(
+                    0, 0, 1024, 1024,
+                    math.floor(timer.systime() / delay) % frameCount + 1
+                )
+            end)
+        end)
+        
+    
+        /*local mat = material.create("UnlitGeneric")
+        
+        mat:setInt("$flags", 256)
+        
+        mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+            if m == nil then return end
+        
+            local ratio = w / h
+
+            local sh = maxh
+            local sw = sh * ratio
+            screen:setSize(Vector(sh, sw, 1))
+            
+            l(0, 0, m:getWidth(), m:getHeight())
+            
+            screen:setMaterial("!" .. mat:getName())
+        end)*/
+    end
+    
+    net.receive("changeImage", function(l)
+        img = net.readString()
+        
+        say("Set image to " .. img)
+        
+        loadImage()
+    end)
+    net.receive("setMaxH", function(l)
+        maxh = net.readInt(16)
+        
+        say("Set height to " .. maxh)
+        
+        loadImage()
+    end)
+    net.receive("setUrl", function(l)
+        url = net.readString()
+        
+        
+        say("Set custom imageas")
+        
+        setCustom(url)
+    end)
+    net.receive("setDelay", function(l)
+        delay = net.readFloat(16)
+        
+        say("Set frame delay")
+    end)
+    
+    loadImage()
+    
+    setupPermissionRequest({"material.urlcreate"}, "Load images from external websites", true)
+    
+    hook.add("permissionrequest", "perm", loadImage)
+    
+    hook.add("renderoffscreen", "cantload", function()
+        isLookingAtChip()
+        local now = timer.systime()
+        if frame > now then return end
+        frame = now + delta
+        
+        render.selectRenderTarget("cantload")
+        render.clear()
+        
+        local font = render.createFont("Arial", 50, 400, true, false, false, false, false, true)
+        render.setFont(font)
+        
+        render.drawText(512, 270, "Image source is not whitelisted!", 1)
+        render.drawText(512, 330, "Press E on the dot to allow loading!", 1)
+        
+        render.draw3DSphere(Vector(512, 512, 20), 30, 20, 20)
+        
+    end)
+end

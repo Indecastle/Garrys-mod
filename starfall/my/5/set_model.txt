@@ -1,0 +1,75 @@
+--@name Set Model
+--@author
+--@client
+
+local Target = owner()
+--Target = find.playersByName("mark")[1]
+
+local TargetModel = Target
+--TargetModel = find.playersByName("rony")[1]
+local Model = TargetModel:getModel()
+
+--local H = holograms.create(chip():getPos(), Angle(), "models/props_c17/doll01.mdl", Vector(1,1,1))
+local H = holograms.create(chip():getPos(), Angle(), Model, Vector(1,1,1))
+--local H2 = holograms.create(chip():getPos(), Angle(), Model, Vector(1,1,1))
+--H:setNoDraw(true)
+H:setParent( Target )
+H:addEffects( 1 )
+
+--H:setAnimation("bunnyhop", nil, 0.5)
+// holograms.create(Vector pos, Angle ang, string model, Vector or nil scale)
+
+local scale = 0
+local vel = 0.5*0.1
+local max = 5
+local m = Matrix()
+
+hook.add("think", "kek", function()
+    H:setColor(Color(timer.curtime()*100, 1, 1):hsvToRGB())
+
+
+    --local pos, ang = ply:getBonePosition(ply:lookupBone(ragdoll:getBoneName(ragdoll:translatePhysBoneToBone(i))))
+    
+    /*for i = 0, owner():getBoneCount()-1 do
+        pcall(function()
+
+                local bone = owner():lookupBone(owner():getBoneName(owner():translatePhysBoneToBone(i)))
+                local pos, ang = owner():getBonePosition(bone)
+                local pos2, ang2 = H2:getBonePosition(bone)
+                local posOffset = pos - owner():getPos()
+                local angOffset = ang - owner():getAngles()
+                --pos = owner():getManipulateBonePosition(owner():translatePhysBoneToBone(i))
+                --ang = owner():getManipulateBoneAngles(owner():translatePhysBoneToBone(i))
+
+                pos3, ang3 = worldToLocal(pos2, ang2, pos, ang)
+                --ang = ang2:worldToLocalAngles(ang)
+                --if i == 1 then print(pos3)
+                local scale = H:getManipulateBoneScale(i)
+                local jiggle = H:getManipulateBoneJiggle(i)
+                
+                H:manipulateBonePosition(bone, pos3)
+                H:manipulateBoneAngles(bone, ang3)
+                --H:manipulateBoneScale(i, scale)
+                --H:manipulateBoneJiggle(i, jiggle)
+                H2:setPos(owner():getPos())
+                H2:setAngles(owner():getAngles():setP(0))
+        end)
+    end*/
+end)
+
+timer.create("anim", 0.2, 0, function()
+    --H:setAnimation("taunt_dance", nil, 1)
+    --H:unparent()
+    --H:setParent( nil )
+    local players = find.allPlayers()
+    table.removeByValue(players, owner())
+    local closestPlayer = find.sortByClosest(players, owner():getPos(), false)[1]
+    if closestPlayer then
+        H:setModel(closestPlayer:getModel())
+        --H2:setModel(closestPlayer:getModel())
+        --H:setSkin(closestPlayer:getSkin())
+        --H:setColor(closestPlayer:getColor())
+    end
+    Target = closestPlayer
+    
+end)
