@@ -1,11 +1,15 @@
---@name particles think all 3d
+--@name particles sprite think all 3d
 --@author
 --@client
+--@include libs/sprites1.txt
+--@include libs/sprites_data.txt
+
+dofile("libs/sprites_data.txt")
+local SpriteManager = require("libs/sprites1.txt")
 
 
-
-local DieTime = 2
-local SpawnDelay = 2
+local DieTime = 3
+local SpawnDelay = 5
 local OffsetZ = 10
 local DistanceVisible = 5000
 
@@ -29,15 +33,23 @@ local StartSize = 1
 local EndSize = 10
 local StartLength = 1
 local EndLength = 10
-local StartAlpha = 100
+local StartAlpha = 255
 local EndAlpha = 0
 
 
 local Velocity = 30
-local Gravity = Vector(0, 0, -15)
+local Gravity = Vector(0, 0, -12)
 
 local Collide = true
 local Bounce = 0.5
+
+
+local img = "cat"
+local maxh = 50
+local delay = 0.05
+
+
+local frameCount = SpritesData[img].frameCount
 
 
 local Target = owner()
@@ -57,7 +69,9 @@ local O = player()
 
 
 function gethead(ent)
-    if ent:lookupAttachment("eyes") then
+    if ent == chip() then
+        return ent:getPos()
+    elseif ent:lookupAttachment("eyes") then
         local pos, ang = ent:getAttachment(ent:lookupAttachment("eyes"))
         return pos
     elseif ent:lookupBone("ValveBiped.Bip01_Head1") then
@@ -68,9 +82,9 @@ function gethead(ent)
 end
 
 
-local getPos = function(player)
-    local pos = gethead(player) + Vector(0,0,OffsetZ)
-    return pos
+local getPos = function(ent)
+    local pos = gethead(ent)
+    return pos + Vector(0,0,OffsetZ)
 end
 
 
@@ -119,7 +133,7 @@ m:setString("$Proxies", [[{
 --m:setTexture("$basetexture","entities/npc_magnusson.png")
 
 if FromInternet then
-    m:setTextureURL("$basetexture", Url, function(mat, u, w, h, l)
+    /*m:setTextureURL("$basetexture", Url, function(mat, u, w, h, l)
         if mat == nil then return end
         
         local ratio = w / h
@@ -131,7 +145,43 @@ if FromInternet then
         l((m:getWidth()-w)/2, (m:getHeight()-h)/2, w, h)
         
         --screen:setMaterial("!" .. m:getName())
+    end)*/
+    
+    sprite_sheet = SpriteManager.loadURL(SpritesData[img].urls[1], SpritesData[img].size[1], SpritesData[img].size[2], function(m, w, h, l)
+        if m == nil then return end
+    
+        local ratio = w / h
+
+        local sh = maxh
+        local sw = sh * ratio
+        --screen:setSize(Vector(sh, sw, 1))
+        --throw(tostring(sh))
+        
+        --l(0, 0, m:getWidth(), m:getHeight())
     end)
+    for i=2, #SpritesData[img].urls do
+        sprite_sheet:appendURL(SpritesData[img].urls[i])
+    end
+    --screen:setSize(Vector(sh, sw, 1))
+    --screen:setMaterial("!" .. sprite_sheet.matRender:getName())
+    m:setTextureRenderTarget("$basetexture", "MySpriteRenderTarget")
+    
+    sprite_sheet:setCallback(function()
+        hook.add("renderoffscreen","sprite1",function()
+            if quotaAverage() > quotaMax() * 0.2 then return end 
+            sprite_sheet:selectRenderTarget()
+            render.clear(Color(0,0,0,0))
+            --render.setColor(Color(255,0,0))
+            --render.drawRect(0,0, 1000, 1000)
+            --if not sprite_sheet.loading then print(1) end
+            local w, h = sprite_sheet:getSpriteStretchedSize(1024)
+            sprite_sheet:drawSprite2(
+                w/4, 0, w/2, h/2,
+                math.floor(timer.systime() / delay) % frameCount + 1
+            )
+        end)
+    end)
+    
 else
     m:setTexture("$basetexture", FilePath)
 end
@@ -139,11 +189,14 @@ m:recompute()
 --m = material.load(FilePath)
 
 
-
-
+--local pe = particle.create(eyePos(), true)
+--pe:setNoDraw(false)
 --pe:setNearClip(1, 2)
 --pe:setBBox(chipPos, chipPos+Vector(1,1,1)*100)
 
+hook.add("postdrawopaquerenderables",'',function()
+    --pe:draw()
+end)
 
 local parts = {}
 
@@ -177,7 +230,7 @@ timer.create("particle", SpawnDelay, 0, function()
 end)
 
 
-hook.add("think", "", function()
+hook.add("tick", "", function()
     --local angles = player():localToWorldAngles(Angle(0,180,0) + BaseAngle) --eyeAngles() + Angle(0,180,0)
     
     
@@ -203,5 +256,4 @@ hook.add("Removed", "anim", function()
         d.p:setColor(color)
         d.p:setAngles(Angle(90,0,0))
     end
-    --pe:destroy()
 end)

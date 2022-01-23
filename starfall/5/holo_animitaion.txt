@@ -2,8 +2,19 @@
 --@author
 --@client
 
+local Target = owner()
+Target = find.playersByName("mark")[1]
+
+local TargetModel = Target
+TargetModel = find.playersByName("rony")[1]
+local Model = TargetModel:getModel()
+
 --local H = holograms.create(chip():getPos(), Angle(), "models/props_c17/doll01.mdl", Vector(1,1,1))
-local H = holograms.create(chip():getPos(), Angle(), "models/pac/female_base.mdl", Vector(1,1,1))
+local H = holograms.create(chip():getPos(), Angle(), Model, Vector(1,1,1))
+--H:setNoDraw(true)
+H:setParent( Target )
+H:addEffects( 1 )
+
 --H:setAnimation("bunnyhop", nil, 0.5)
 // holograms.create(Vector pos, Angle ang, string model, Vector or nil scale)
 
@@ -21,13 +32,22 @@ hook.add("think", "simple rotate", function()
 
     m:setScale(Vector(scale==0 and 0.001 or scale))
     m:rotate(Angle(0, 1, 0))
-    H:setRenderMatrix(m)
+    --H:setRenderMatrix(m)
     
     H:setPos(chip():getPos())
-    H:setAngles(chip():getAngles())
+    --H:setAngles(chip():getAngles())
     H:setColor(Color(timer.curtime()*100, 1, 1):hsvToRGB())
+    
+    
+
 end)
 
-timer.create("anim", 2, 0, function()
-    H:setAnimation("taunt_dance", nil, 1)
+timer.create("anim", 0.2, 0, function()
+    --H:setAnimation("taunt_dance", nil, 1)
+    --H:unparent()
+    --H:setParent( nil )
+    local players = find.allPlayers()
+    table.removeByValue(players, owner())
+    local closestPlayer = find.sortByClosest(players, owner():getPos(), false)[1]
+    H:setModel(closestPlayer:getModel())
 end)

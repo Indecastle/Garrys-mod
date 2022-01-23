@@ -8,14 +8,18 @@ dofile("libs/my_methods.txt")
 
 
 local Scale = 5
-local DelayDupe = 0.3
+local DelayDupe = 0.6
 
 
-local LoadFile = "dupe/dupe4.json"
-local SaveFile = "dupe/dupe4.json"
+local LoadFile = "base"
+local SaveFile = LoadFile
 
 
-
+-- 0 = Freeze all
+-- 1 = Preserve
+-- 2 = Unfreeze all
+local FreezingMode = 0
+local PasteAtOriginalPos = false 
 
 
 local O = owner()
@@ -27,10 +31,23 @@ local _scaleBase = 40
 local _scale = _scaleBase * Scale
 
 
+
+
+function isValidFileName(name)
+    return string.match(name, "^[a-zA-Z0-9]+$") ~= nil
+end
+
+
 if CLIENT then
     local ON = false;
     local OO = player()
     if OO ~= O then return end
+    
+    file.createDir("dupe")
+    
+    if !isValidFileName(LoadFile) then
+        throw("Bad file name")
+    end
     
     
     local H = holograms.create(E:getPos(), Angle(), "models/holograms/cube.mdl", Vector(_scale/ScaleUnit))
@@ -79,10 +96,21 @@ if CLIENT then
                 setScale(-1)
             end
             
+            if key == KEY.O then
+                files, dirs = file.find("dupe/*.json")
+                net.start("GetSavedDupes")
+                net.writeTable(files)
+                net.send()
+            end
+            
             if key == KEY.K then
                 --print("You loaded file with name: '"..loadFile.."' ")
+                if !file.exists("dupe/"..LoadFile..".json") then
+                    log("Bad File Name")
+                    return
+                end
                 
-                local fileData = file.read(LoadFile, data)
+                local fileData = file.read("dupe/"..LoadFile..".json", data)
                 --throw(tostring(#dataEnts))
                 net.start("DataEnts")
                 net.writeStream(fileData)
@@ -98,8 +126,13 @@ if CLIENT then
     net.receive("DataEnts", function (len)
         net.readStream(function(data)
             --print(data)
-            file.write(SaveFile, data)
+            file.write("dupe/"..SaveFile..".json", data)
         end)
+    end)
+    
+    net.receive("ChangeTargetFileName", function (len)
+        LoadFile = net.readString()
+        SaveFile = LoadFile
     end)
 
     return
@@ -144,7 +177,7 @@ function initData()
     DataEnts = {}
     DupeData = { 
         DataEnts = DataEnts
-        ,PreserveFrozen = false -- Preserve frozen state after paste
+        ,MapName = '' -- Preserve frozen state after paste
     };
     
 end
@@ -155,6 +188,7 @@ local gates = {
     
 }
 local _waitSaveData = false;
+local _waitChangeTargetFileName = false;
 
 
 local mapper = {
@@ -464,6 +498,13 @@ end
 --local LIMIT = 10
 --local i;
 
+
+
+function setBaseInfo(ents)
+    --printTable(DataEnts)
+    DupeData.MapName = game.getMap()
+end
+
 local copyCoro;
 function getCopyCoro()
     return coroutine.wrap(function()
@@ -482,16 +523,19 @@ function getCopyCoro()
         coroutine.yield()
         
         DataEnts = table.map(Ents, function(i, e)
+            --print(''..tostring(e)..' - '..tostring(e:isValidPhys()))
             return {
                 _entity = e,
                 id = i,
                 Class = e:getClass(),
                 Model = e:getModel(),
                 Material = e:getMaterial(),
+                PosOriginal = e:getPos(),
                 PosLocal = hitPos - e:getPos(),
                 Ang = e:getAngles(),
                 Color = e:getColor(),
                 CollisionGroup = e:getCollisionGroup(),
+                IsFrozen = e:isValidPhys() and e:isFrozen() or true,
                 --SentData = getSentData(e),
                 --SentData = getLocalSentData(e),
             }
@@ -506,6 +550,8 @@ function getCopyCoro()
         setConstraintData()
         coroutine.yield()
         setSentData()
+        
+        setBaseInfo()
         
         --local data3 = constraint.getTable(DataEnts[2]._entity)
         --printTable(data3)
@@ -603,6 +649,15 @@ function collisionGroupAll()
     end
 end
 
+function freezingAll()
+    for i, data in ipairs(DataEnts) do
+        if data._entity2 ~= nil and FreezingMode ~= 0 then
+            data._entity2:setFrozen(FreezingMode==1 and data.IsFrozen or false)
+        end
+    end
+end
+
+
 
 function updateLocalSentData(i, data)
     if mapperLocal[data.Class] ~= nil and mapperLocal[data.Class]["update"] ~= nil then
@@ -627,12 +682,14 @@ function dupe(key)
         --printTable(data)
         
         local isSuccess, _ = pcall(function()
+            local pos = PasteAtOriginalPos and data.PosOriginal or (hitPos - data.PosLocal)
+            
             if data.Class == "prop_physics" then
-                data._entity2 = prop.create(hitPos - data.PosLocal, data.Ang, data.Model, true)
+                data._entity2 = prop.create(pos, data.Ang, data.Model, true)
             elseif data.Class == "prop_vehicle_prisoner_pod" then
-                prop.createSeat(hitPos - data.PosLocal, data.Ang, data.Model, true)
+                prop.createSeat(pos, data.Ang, data.Model, true)
             else
-                data._entity2 = prop.createSent(hitPos - data.PosLocal, data.Ang, data.Class, true, data.SentData)
+                data._entity2 = prop.createSent(pos, data.Ang, data.Class, true, data.SentData)
             end
         end)
         
@@ -648,6 +705,7 @@ function dupe(key)
                 parentAll()
                 constraintAll()
                 collisionGroupAll()
+                freezingAll()
                 processing = false
                 print("Dupe finished")
             end)
@@ -663,9 +721,16 @@ end
 function isOldVersion(data)
     return data.DataEnts == nil
 end
+function verifyForOriginalPaste(data)
+    if PasteAtOriginalPos and (isOldVersion(data) or data.MapName ~= game.getMap()) then
+        print("You can't paste build at original position on this map")
+        return false
+    end
+    return true
+end
 function setLoadedData(data)
+    initData()
     if isOldVersion(data) then
-        initData()
         DataEnts = data
     else
         DupeData = data
@@ -678,12 +743,24 @@ end)
 
 net.receive("DataEnts", function (len, ply)
     if verifyWait() then return end
+    local isAccess = true
     net.readStream(function(fileData)
         data = json.decode(fileData)
-        setLoadedData(data)
+        if verifyForOriginalPaste(data) then
+            setLoadedData(data)
+            print("Downloaded local data from file with name '"..LoadFile.."'")
+        end
+        processing = false
     end)
-    processing = false
-    print("Downloaded local data from file with name '"..LoadFile.."'")
+    
+end)
+
+net.receive("GetSavedDupes", function (len, ply)
+    local t = net.readTable()
+    local t2 = table.map(t, function(i, x)
+        return string.match(x, "(%w+).json")
+    end, true)
+    printTable(t2)
 end)
 
 net.receive("keyHandler", function (len, ply)
@@ -704,22 +781,28 @@ net.receive("keyHandler", function (len, ply)
         dupe(key)
     end
     
+    if key == KEY.P then
+        _waitChangeTargetFileName = true
+        print("Write to chat new file name")
+    end
+    
     if key == KEY.L then
         if #DataEnts == 0 then return end
         
-        print("Are you sure to save file with name "..saveFile.."? Press Enter to continue...")
+        print("Are you sure to save file with name \""..SaveFile.."\"? Press Enter to continue...")
         _waitSaveData = true
         return
         
     end
     if key == KEY.ENTER and _waitSaveData then
+        DupeData.DataEnts = DataEnts
         net.start("DataEnts")
         net.writeStream(json.encode(DupeData))
         net.send(owner())
         
         print("You saved file with name: '"..SaveFile.."' ")
         
-        _waitSaveData = true
+        _waitSaveData = false
         return
     end
     
@@ -730,6 +813,34 @@ net.receive("keyHandler", function (len, ply)
 end)
 
 
+hook.add("PlayerSay","Say",function(ply, txt)
+    if ply ~= O then return end
+    if !_waitChangeTargetFileName then
+        if txt:sub(1, 11) == "!dupedelay " then            
+                DelayDupe = tonumber(txt:sub(11)) or 0.6
+                print("DelayDupe changed to "..DelayDupe)
+                return ''
+        end
+        return
+    end
+    _waitChangeTargetFileName = false
+    
+    if !isValidFileName(txt) then
+        print("Bad file name")
+        return ''
+    end
+    
+    LoadFile = txt
+    SaveFile = LoadFile
+    
+    net.start("ChangeTargetFileName")
+    net.writeString(LoadFile)
+    net.send(owner())
+    
+    print("Changed FileName to '"..LoadFile.."'")
+    return ''
+end)
+
 /*
 print("Helper:")
 print("Key G - ON/OFF the chip")
@@ -739,5 +850,7 @@ print("Key ArrowUp - increase the area")
 print("Key ArrowDown - decrease the area")
 print("Key K - load from local file")
 print("Key L - save to local file")
+print("Key O - show all saved builds")
+print("Key P - change target file name")
 */
 

@@ -127,5 +127,5 @@ function peter:think()
 end
 
 local mypeter = peter:new()
-hook.add("hologrammatrix","",function() mypeter:think() end)
+hook.add("think","",function() mypeter:think() end)
 

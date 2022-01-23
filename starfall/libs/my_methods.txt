@@ -1,9 +1,42 @@
 
+if SERVER then
+    net.receive("print", function (len, ply)
+        local t = net.readString(t)
+        if t == "table" then printTable(net.readTable())
+        elseif t == "string" then print(net.readString(16))
+        elseif t == "number" then print(net.readInt(16))
+        elseif t == "vector" then print(net.readVector())
+        elseif t == "angle" then print(net.readAngle())
+        elseif t == "entity" then print(net.readEntity())
+        end
+    end)
+else
+    function log(v)
+        net.start("print")
+        
+        local t = type(v)
+        net.writeString(t)
+        if t == "table" then net.writeTable(v)
+        elseif t == "string" then net.writeString(v)
+        elseif t == "number" then net.writeInt(v, 16)
+        elseif t == "vector" then net.writeVector(v)
+        elseif t == "angle" then net.writeAngle(v)
+        elseif t == "entity" then net.writeEntity(v)
+        end
+        net.send()
+    end
+end
 
-function table.map(t, func)
+
+
+function table.map(t, func, ExcludeNil)
     local maped = {}
+    if ExcludeNil == nil then ExcludeNil = false end
     for i=1, #t do
-        maped[i] = func(i, t[i])
+        local result = func(i, t[i])
+        if !ExcludeNil or result ~= nil then
+            maped[#maped + 1] = func(i, t[i])
+        end
     end
     return maped
 end

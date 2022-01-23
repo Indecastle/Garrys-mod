@@ -6,7 +6,7 @@
 local m = material.create("gmodscreenspace")
 --m:setInt("$flags",138414080)
 m:setTexture("$basetexture","effects/spark") -- effects/spark
-m:setInt("$flags", 128)
+m:setInt("$flags", 256+128+2097152 )
 --m:setTextureRenderTarget("$basetexture", "particle/muzzleflash2")
 
 
@@ -15,10 +15,10 @@ m:setInt("$flags", 128)
 
 
 function rain()
-    local tr =  player():getEyeTrace()
+    local tr =  owner():getEyeTrace()
     local pos = tr.HitPos + tr.HitNormal * 1 -- The origin position of the effect
     local emitter = particle.create( Vector(), false ) -- Particle emitter in this position
-    for i = 0, 100 do -- Do 100 particles
+    for i = 0, 50 do -- Do 100 particles
         local part = emitter:add( m, pos, 5, 0, 10, 10, 255, 0, 1 ) -- Create a new particle at pos
         if ( part ) then
     /*
@@ -44,7 +44,7 @@ function rain()
     emitter:destroy()
 end
 
-timer.create("rain", 0.2, 0, function()
+timer.create("rain", 0.1, 0, function()
     rain()
 end)
 

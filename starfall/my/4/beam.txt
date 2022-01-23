@@ -16,7 +16,12 @@ if SERVER then
     /*wire.adjustOutputs( 
         { "Entity", "EntID",  "Pos",    "Dist",   "PosX",  "PosY",  "PosZ" }, 
         { "entity", "number", "vector", "number", "number", "number", "number" } )*/
-    wire.adjustPorts(nil,
+    wire.adjustPorts(
+        {
+            Xui1="entity",
+            Xui2="number",
+            Xui3="vector",
+        },
         {
             Entity="entity",
             EntID="number",

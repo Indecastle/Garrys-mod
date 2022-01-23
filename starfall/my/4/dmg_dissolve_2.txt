@@ -3,7 +3,7 @@
 --@server
 
 
-local Radius = 500
+local Radius = 1000
 
 local Force = 5
 local ForceUp = 250

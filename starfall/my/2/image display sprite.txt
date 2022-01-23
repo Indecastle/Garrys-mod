@@ -2,37 +2,23 @@
 --@author OctopuSSX
 --@shared
 --@include libs/sprites1.txt
+--@include libs/sprites_data.txt
+
+dofile("libs/sprites_data.txt")
 local SpriteManager = require("libs/sprites1.txt")
 
-local data = {
-    gachi = {
-        urls = {"https://i.imgur.com/ArqIrer.png"},
-        size = {5, 5},
-        frameCount = 5*5*1 - 1
-    },
-    micro = {
-        urls = {
-            "https://cdn.discordapp.com/attachments/607371740540305424/871456722873618442/1.png",
-            "https://cdn.discordapp.com/attachments/607371740540305424/871456756759404584/2.png",
-            "https://cdn.discordapp.com/attachments/607371740540305424/871456772580335737/3.png"
-        },
-        size = {8, 8},
-        frameCount = 8^2*3
-    },
-    kek = { -- "https://imgur.com/a/a4mRYyh"
-        urls = {"https://i.imgur.com/IMSMlVL.png", "https://i.imgur.com/DhZl05n.png"},
-        size = {6, 6},
-        frameCount = 6*6*2 - 1
-    }
-}
 
-local img = "gachi"
-
-local maxh = 120*1
-
-
+local img = "triangle"
+local maxh = 10*50
 local delay = 0.05
-local frameCount = data[img].frameCount
+
+
+local ParentAngle = false
+local VerticalAngle = false
+local PosUp = false
+
+
+local frameCount = SpritesData[img].frameCount
 
 
 function isLookingAtChip()
@@ -53,7 +39,7 @@ if SERVER then
         
         if txt:sub(1, 5) == "-img " then            
             t = txt:sub(6)
-            if data[t] == nil then return end
+            if SpritesData[t] == nil then return end
             img = t
             
             net.start("changeImage")
@@ -81,6 +67,13 @@ if SERVER then
             net.writeFloat(delay, 16)
             net.send()
             return ''
+        elseif txt:sub(1, 8) == "-parent " then
+            ParentAngle = tonumber(txt:sub(8)) or 0
+            
+            net.start("setParent")
+            net.writeInt(ParentAngle, 16)
+            net.send()
+            return ''
         end
     end)
 else
@@ -95,7 +88,23 @@ else
     local delta = 1/FPS
 
     local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
-    screen:setParent(chip())
+    
+    hook.add("tick", "", function()
+        --local d = -eyeVector()
+        local d = (player():getEyePos() - screen:getPos()):getNormalized()
+        local eyeAngle = d:getAngle() + Angle(90,0,0)
+        if ParentAngle then
+            screen:setAngles(chip():getAngles())
+            screen:setPos(chip():localToWorld(Vector(0, 0, 5)))
+        else
+            if VerticalAngle then
+                eyeAngle = eyeAngle:setP(90)
+            end
+            screen:setAngles(eyeAngle)
+            screen:setPos(chip():getPos())
+        end
+    end)
+    
     
     render.createRenderTarget("cantload")
     
@@ -112,16 +121,16 @@ else
     end
     
     function setCustom(url)
-        data["c"] = url
+        SpritesData["c"] = url
         img = "c"
         loadImage()
     end
     
     function loadImage()
         if img == nil then return end
-        if data[img] == nil then return end
+        if SpritesData[img] == nil then return end
         
-        URL = data[img].urls[1]
+        URL = SpritesData[img].urls[1]
     
         if not hasPermission("material.urlcreate", URL) then
             cantload()
@@ -129,7 +138,7 @@ else
         end
         
         hook.remove("renderoffscreen","sprite1")
-        sprite_sheet = SpriteManager.loadURL(data[img].urls[1], data[img].size[1], data[img].size[2], function(m, w, h, l)
+        sprite_sheet = SpriteManager.loadURL(SpritesData[img].urls[1], SpritesData[img].size[1], SpritesData[img].size[2], function(m, w, h, l)
             if m == nil then return end
         
             local ratio = w / h
@@ -141,8 +150,8 @@ else
             
             --l(0, 0, m:getWidth(), m:getHeight())
         end)
-        for i=2, #data[img].urls do
-            sprite_sheet:appendURL(data[img].urls[i])
+        for i=2, #SpritesData[img].urls do
+            sprite_sheet:appendURL(SpritesData[img].urls[i])
         end
         --screen:setSize(Vector(sh, sw, 1))
         screen:setMaterial("!" .. sprite_sheet.matRender:getName())
@@ -152,12 +161,15 @@ else
             hook.add("renderoffscreen","sprite1",function()
                 if quotaAverage() > quotaMax() * 0.2 then return end 
                 sprite_sheet:selectRenderTarget()
+                render.clear(Color(0,0,0,0))
                 --render.setColor(Color(255,0,0))
                 --render.drawRect(0,0, 1000, 1000)
                 --if not sprite_sheet.loading then print(1) end
-                local w, h = sprite_sheet:getSpriteStretchedSize(1024)
+                local x,y,w,h;
+                if PosUp then x=256 y=0 w=512 h=512
+                else x=0 y=0 w=1024 h=1024 end
                 sprite_sheet:drawSprite2(
-                    0, 0, 1024, 1024,
+                    x, y, w, h,
                     math.floor(timer.systime() / delay) % frameCount + 1
                 )
             end)
@@ -185,6 +197,7 @@ else
     
     net.receive("changeImage", function(l)
         img = net.readString()
+        frameCount = SpritesData[img].frameCount
         
         say("Set image to " .. img)
         
@@ -209,6 +222,11 @@ else
         delay = net.readFloat(16)
         
         say("Set frame delay")
+    end)
+    net.receive("setParent", function(l)
+        ParentAngle = net.readInt(16) == 1
+        
+        say("Set is parent angle")
     end)
     
     loadImage()

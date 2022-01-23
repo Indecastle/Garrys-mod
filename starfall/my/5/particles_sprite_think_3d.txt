@@ -1,14 +1,23 @@
---@name particles 3d
+--@name particles sprite think 3d
 --@author
 --@client
+--@include libs/sprites1.txt
+--@include libs/sprites_data.txt
+
+dofile("libs/sprites_data.txt")
+local SpriteManager = require("libs/sprites1.txt")
 
 
+local DieTime = 5
+local SpawnDelay = 1
+local OffsetZ = 10
 
-local DieTime = 1
-local SpawnDelay = 0.5
+local RandX = 0.5
+local RandZ = 1
 
 
 local FromInternet = true
+--local Url = "https://i.imgur.com/9UtATPQ.gif"
 --local Url = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg"
 local Url = "https://i.imgur.com/9UtATPQ.gif"
 local FilePath = "effects/tool_tracer"
@@ -16,22 +25,31 @@ local FilePath = "effects/tool_tracer"
 local VertexAlpha= true
 local AlphaTest= false
 local Additive= false
-local Translucent= true
+local Translucent= false
 
 
-local StartSize = 1
-local EndSize = 15
-local StartLength = 1
-local EndLength = 15
+local StartSize = 10
+local EndSize = 50
+local StartLength = 10
+local EndLength = 50
 local StartAlpha = 255
-local EndAlpha = 255
+local EndAlpha = 0
 
 
-local Velocity = 40
-local Gravity = Vector(0, 0, -15)
+local Velocity = 500
+local Gravity = Vector(0, 0, -1000)
 
 local Collide = true
-local Bounce = 0.5
+local Bounce = 0.8
+
+
+
+local img = "triangle"
+local maxh = 50
+local delay = 0.05
+
+
+local frameCount = SpritesData[img].frameCount
 
 
 local Target = chip()
@@ -42,7 +60,12 @@ local Target = chip()
 
 
 function gethead(ent)
-    if ent:lookupBone("ValveBiped.Bip01_Head1") then
+    if Target == chip() then
+        return Target:getPos()
+    elseif Target:lookupAttachment("eyes") then
+        local pos, ang = ent:getAttachment(Target:lookupAttachment("eyes"))
+        return pos
+    elseif ent:lookupBone("ValveBiped.Bip01_Head1") then
         local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
         return pos
     end
@@ -52,7 +75,7 @@ end
 
 local getPos = function()
     local pos = gethead(Target)
-    return pos
+    return pos + Vector(0,0,OffsetZ)
 end
 
 
@@ -101,7 +124,7 @@ m:setString("$Proxies", [[{
 --m:setTexture("$basetexture","entities/npc_magnusson.png")
 
 if FromInternet then
-    m:setTextureURL("$basetexture", Url, function(mat, u, w, h, l)
+    /*m:setTextureURL("$basetexture", Url, function(mat, u, w, h, l)
         if mat == nil then return end
         
         local ratio = w / h
@@ -113,7 +136,43 @@ if FromInternet then
         l((m:getWidth()-w)/2, (m:getHeight()-h)/2, w, h)
         
         --screen:setMaterial("!" .. m:getName())
+    end)*/
+    
+    sprite_sheet = SpriteManager.loadURL(SpritesData[img].urls[1], SpritesData[img].size[1], SpritesData[img].size[2], function(m, w, h, l)
+        if m == nil then return end
+    
+        local ratio = w / h
+
+        local sh = maxh
+        local sw = sh * ratio
+        --screen:setSize(Vector(sh, sw, 1))
+        --throw(tostring(sh))
+        
+        --l(0, 0, m:getWidth(), m:getHeight())
     end)
+    for i=2, #SpritesData[img].urls do
+        sprite_sheet:appendURL(SpritesData[img].urls[i])
+    end
+    --screen:setSize(Vector(sh, sw, 1))
+    --screen:setMaterial("!" .. sprite_sheet.matRender:getName())
+    m:setTextureRenderTarget("$basetexture", "MySpriteRenderTarget")
+    
+    sprite_sheet:setCallback(function()
+        hook.add("renderoffscreen","sprite1",function()
+            if quotaAverage() > quotaMax() * 0.2 then return end 
+            sprite_sheet:selectRenderTarget()
+            render.clear(Color(0,0,0,0))
+            --render.setColor(Color(255,0,0))
+            --render.drawRect(0,0, 1000, 1000)
+            --if not sprite_sheet.loading then print(1) end
+            local w, h = sprite_sheet:getSpriteStretchedSize(1024)
+            sprite_sheet:drawSprite2(
+                w/4, 0, w/2, h/2,
+                math.floor(timer.systime() / delay) % frameCount + 1
+            )
+        end)
+    end)
+    
 else
     m:setTexture("$basetexture", FilePath)
 end
@@ -150,14 +209,14 @@ timer.create("particle", SpawnDelay, 0, function()
         p:setGravity(Gravity)
         --p:setRoll(100)
         --p:setRollDelta(400)
-        p:setVelocity(Vector(math.rand(-1,1), math.rand(-1,1), 1):getNormalized() * Velocity)
+        p:setVelocity(Vector(math.rand(-RandX,RandX), math.rand(-RandX,RandX), RandZ):getNormalized() * Velocity)
         
         table.insert(parts, 1, {p=p, t=timer.curtime()+DieTime})
     end)
 end)
 
 
-hook.add("think", "", function()
+hook.add("tick", "", function()
     --local angles = player():localToWorldAngles(Angle(0,180,0) + BaseAngle) --eyeAngles() + Angle(0,180,0)
     
     
@@ -176,8 +235,6 @@ hook.add("think", "", function()
     end
     --print(#parts)
 end)
-
-
 
 hook.add("Removed", "anim", function()
     local color = Color(0,0,0)

@@ -15,37 +15,39 @@ local worldE = game.getWorld()
 
 if O ~= Target then return end
 
+local effectData = effect:create()
 
 
-
---timer.create("kek", 0.001, 0, function()
-hook.add("think", "", function()
-
-    local tr = OO:getEyeTrace()
-    local target = tr.Entity 
-    local hitPos = tr.HitPos
-    local hitNormal = tr.HitNormal
+timer.create("kek", 0.01, 0, function()
+--hook.add("think", "", function()
+    pcall(function()
+        local tr = OO:getEyeTrace()
+        local target = tr.Entity 
+        local hitPos = tr.HitPos
+        local hitNormal = tr.HitNormal
+        
+        //print(target)
+        if target == worldE then return end 
     
-    //print(target)
-    if target == worldE then return end 
-
-    local effectData = effect:create()
-    effectData:setEntity(target)
-    effectData:setMagnitude(3000)
-    effectData:setScale(4)
-    effectData:setRadius(4)
+        
+        effectData:setEntity(target)
+        effectData:setMagnitude(1000)
+        effectData:setScale(4)
+        effectData:setRadius(4000)
+        
+        effectData:setRadius(1)
+        effectData:setNormal(hitNormal)
+        
+        effectData:setFlags(1+5+7)
+        effectData:setSurfaceProp(-1)
+        effectData:setDamageType(2^35 - 1)
+        
+        --effectData:setStart(hitPos)
+        effectData:setOrigin(hitPos)  
+        effectData:setEntity(target)
     
-    effectData:setRadius(1)
-    effectData:setNormal(hitNormal)
-    
-    effectData:setFlags(5)
-    effectData:setSurfaceProp(254)
-    effectData:setDamageType(2^35 - 1)
-    
-    effectData:setStart(hitPos)
-    effectData:setOrigin(hitPos)  
-
-    effectData:play("TeslaHitboxes")
+        effectData:play("balloon_pop")
+    end)
 end)
 
 

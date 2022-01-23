@@ -1,9 +1,6 @@
 --@name DMG_DISSOLVE target
 --@author
 --@shared
---@include libs/my_methods.txt
-
-dofile("libs/my_methods.txt")
 
 local O = owner()
 local OO = player()

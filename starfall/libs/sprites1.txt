@@ -14,7 +14,7 @@ else -- CLIENT
         
         local matRender = material.create("UnlitGeneric")
         matRender:setTextureRenderTarget("$basetexture", "MySpriteRenderTarget")
-        matRender:setInt("$flags", 0)
+        matRender:setInt("$flags", 256)
         
         local t = {
             loading = true,

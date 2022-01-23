@@ -5,7 +5,7 @@
 
 
 local DieTime = 2
-local SpawnDelay = 2
+local SpawnDelay = 0.5
 local OffsetZ = 10
 
 local RandX = 0.5
@@ -40,14 +40,16 @@ local Bounce = 0.5
 
 
 local Target = chip()
-Target = find.playersByName("mark")[1]
+--Target = find.playersByName("mark")[1]
 --print(Target)
 
 --if Target == player() then return end
 
 
 function gethead(ent)
-    if Target:lookupAttachment("eyes") then
+    if Target == chip() then
+        return Target:getPos()
+    elseif Target:lookupAttachment("eyes") then
         local pos, ang = ent:getAttachment(Target:lookupAttachment("eyes"))
         return pos
     elseif ent:lookupBone("ValveBiped.Bip01_Head1") then

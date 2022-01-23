@@ -25,7 +25,7 @@ local max = 5
 local m = Matrix()
 
 hook.add("think", "kek", function()
-    H:setColor(Color(timer.curtime()*100, 1, 1):hsvToRGB())
+    --H:setColor(Color(timer.curtime()*100, 1, 1):hsvToRGB())
 
 
     --local pos, ang = ply:getBonePosition(ply:lookupBone(ragdoll:getBoneName(ragdoll:translatePhysBoneToBone(i))))
@@ -68,7 +68,7 @@ timer.create("anim", 0.2, 0, function()
         H:setModel(closestPlayer:getModel())
         --H2:setModel(closestPlayer:getModel())
         --H:setSkin(closestPlayer:getSkin())
-        --H:setColor(closestPlayer:getColor())
+        H:setColor(closestPlayer:getColor())
     end
     Target = closestPlayer
     

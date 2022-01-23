@@ -1,11 +1,12 @@
 @name Cookie
 @inputs 
 @outputs 
-@persist [E Base Coo1 Coo2 Coo3]:entity I Ar:array CookieDelay CookieMaterial:string Offset SpeedRol BoxSizeLimit
+@persist [O E Base Coo1 Coo2 Coo3]:entity I Ar:array CookieDelay CookieMaterial:string Offset SpeedRol BoxSizeLimit
 @trigger 
 
 if(first()){
-    E=entity()
+    O = owner()
+    E = entity()
     runOnTick(1)
     SpeedRol = 0.2
     CookieDelay = 10 # seconds
@@ -67,6 +68,7 @@ if(first()){
         local BoxSize = Ent:boxSize()
         return Ent:getMaterial() != CookieMaterial
             & BoxSize:x() < BoxSizeLimit & BoxSize:y() < BoxSizeLimit & BoxSize:z() < BoxSizeLimit
+            & Ent:owner() == O
     }
     function number addCoo (Ent:entity) {
         if     (!Coo1:isValid()) { Coo1 = Ent timer("1", CookieDelay) return 1}

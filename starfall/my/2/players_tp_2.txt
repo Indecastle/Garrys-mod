@@ -29,7 +29,7 @@ local maxLen = 13
 local wm = 8
 local hm = 8
 
-local delta = 1/20
+local delta = 1/10
 local frame = 0
 
 local click = nil
@@ -122,9 +122,9 @@ hook.add("render", "", function()
     render.setColor(Color(255,255,255))
     //render.drawRoundedBox(8, cx / 2 - 2, cy / 2 - 2, 4, 4)
     --render.drawCircle(cx / 2, cy / 2, 3)
-    //drawMouse(cx/2, cy/2, mouseScale)
-    render.setMaterial(cursorTex)
-    render.drawTexturedRect(cx/2,cy/2,12,12)
+    drawMouse(cx/2, cy/2, mouseScale)
+    --render.setMaterial(cursorTex)
+    --render.drawTexturedRect(cx/2,cy/2,12,12)
 end)
 
 
