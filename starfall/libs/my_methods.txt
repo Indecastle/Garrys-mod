@@ -4,7 +4,8 @@ if SERVER then
         local t = net.readString(t)
         if t == "table" then printTable(net.readTable())
         elseif t == "string" then print(net.readString(16))
-        elseif t == "number" then print(net.readInt(16))
+        elseif t == "int" then print(net.readInt(16))
+        elseif t == "float" then print(net.readFloat(16))
         elseif t == "vector" then print(net.readVector())
         elseif t == "angle" then print(net.readAngle())
         elseif t == "entity" then print(net.readEntity())
@@ -12,13 +13,18 @@ if SERVER then
     end)
 else
     function log(v)
-        net.start("print")
-        
+       net.start("print")
+    
         local t = type(v)
+        if t == "number" then
+            t = math.round(v)==v and "int" or "float"
+        end
+        
         net.writeString(t)
         if t == "table" then net.writeTable(v)
         elseif t == "string" then net.writeString(v)
-        elseif t == "number" then net.writeInt(v, 16)
+        elseif t == "int" then net.writeInt(v, 16)
+        elseif t == "float" then net.writeFloat(v, 16)
         elseif t == "vector" then net.writeVector(v)
         elseif t == "angle" then net.writeAngle(v)
         elseif t == "entity" then net.writeEntity(v)

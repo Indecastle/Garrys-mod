@@ -8,7 +8,7 @@ dofile("libs/sprites_data.txt")
 local SpriteManager = require("libs/sprites1.txt")
 
 
-local DieTime = 5
+local DieTime = 10
 local SpawnDelay = 1
 local OffsetZ = 10
 
@@ -28,15 +28,15 @@ local Additive= false
 local Translucent= false
 
 
-local StartSize = 10
-local EndSize = 50
-local StartLength = 10
-local EndLength = 50
+local StartSize = 500
+local EndSize = 1000
+local StartLength = 500
+local EndLength = 1000
 local StartAlpha = 255
 local EndAlpha = 0
 
 
-local Velocity = 500
+local Velocity = 5000
 local Gravity = Vector(0, 0, -1000)
 
 local Collide = true

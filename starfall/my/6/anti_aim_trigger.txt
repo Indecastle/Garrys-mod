@@ -1,0 +1,97 @@
+--@name Anti Aim trigger
+--@author
+--@shared
+
+
+local HeadDegree = 5
+local WarnDiffDegree = 80
+local WarnLimitDistance = 1000
+
+
+
+local OO = owner()
+
+if SERVER then
+    net.receive("WarnAim", function (len, ply)
+        local degree = net.readFloat(16)
+        
+        print(Color(255,255,0), 'Warning:   ', Color(100,255,200), 'Player', Color(200,0,200), ' [', Color(200,100,0), ply:getName(), Color(200,0,200), '] ', Color(100,255,200), 'maybe use the AIM')
+        
+        net.start("NotifyAram")
+        net.send(OO)
+    end)
+    return
+end
+
+
+function warn(v)
+    net.start("WarnAim")
+    net.writeFloat(v, 16)
+    net.send()
+end
+
+
+
+local O = player()
+
+
+--if O ~= OO then return end
+
+local oldAngles = eyeVector() --O:getEyeAngles():getForward()
+local oldPos = eyePos() --O:getEyeAngles():getForward()
+local oldStateInVehicle = O:inVehicle()
+
+local lastTime = 0
+local s1 = sounds.create(OO, "NPC_FloorTurret.AlarmPing", true)
+
+
+function isLookingAtHead()
+    for i, v in ipairs(find.allPlayers()) do
+        local dir = owner():getEyeAngles():getForward()
+        local dir2 = (v:getShootPos() - eyePos()):getNormalized()
+        local cos = dir:dot(dir2)
+        local degree = math.acos(cos) / 3.14 * 180
+        if degree < HeadDegree then
+            return true
+        end
+    end
+    return false
+end
+
+
+--timer.create("Anti Aim trigger", 0.01, 0, function()
+hook.add("think", "Anti Aim trigger", function()
+    local newAngles = eyeVector()
+    local newPos = eyePos()
+    local newStateInVehicle = O:inVehicle()
+    
+    local acos = math.acos(newAngles:dot(oldAngles))
+    local degree = acos / 3.14 * 180
+    --warn(tostring(newAngles:dot(oldAngles)))
+    local now = timer.curtime()
+    
+    
+    if oldStateInVehicle and not newStateInVehicle then
+        lastTime = now + 0.5
+    end
+    if oldPos:getDistance(newPos) < WarnLimitDistance 
+        and lastTime < now 
+        and degree > WarnDiffDegree 
+        and isLookingAtHead() then
+        warn(degree)
+        
+        lastTime = now + 2
+    end
+    
+    
+    --print(acos / 3.14 * 360)
+    oldAngles = newAngles
+    oldPos = newPos
+    oldStateInVehicle = newStateInVehicle
+end)
+
+
+net.receive("NotifyAram", function (len)
+    s1:stop()
+    s1:play()
+end)
