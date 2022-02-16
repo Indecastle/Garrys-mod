@@ -1,7 +1,7 @@
 @name http translate
 @inputs 
 @outputs IsSucces IsCanRequest Queue:table
-@persist Hide [APIkey SourceLang TargetLang URL]:string      LastWriter:entity LastAnswer:string
+@persist Hide [APIkey SourceLang TargetLang URL Translator]:string      LastWriter:entity LastAnswer:string
 @persist [WhiteList BlackList]:array AllP TON TME FUN AutoT TEST Delay:number Commands:array
 @trigger 
 
@@ -25,6 +25,7 @@ if(first() | duped() | dupefinished()) { Hide = 1 #setName(randint(1000):toStrin
     TargetLang = "en"
     
     URL = "http://indecastle.pythonanywhere.com/api/translate/"
+    Translator = "yandex"
     
     printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!Thelp\"")
     
@@ -34,7 +35,7 @@ if(first() | duped() | dupefinished()) { Hide = 1 #setName(randint(1000):toStrin
     function string getrequest(APIKey:string, SL:string, TL:string, Text:string, Auto:number) {
         Text = httpUrlEncode(Text)
         local SourceLang = AutoT ? "auto" : SL
-        return (URL + "?format=json" + "&source=" + SourceLang + "&target=" + TL + "&text=" + Text)
+        return (URL + "?format=json" + "&source=" + SourceLang + "&translator=" + Translator + "&target=" + TL + "&text=" + Text)
     }
     function number array:checkAr(Str:string) {
         local OK = 0
@@ -240,7 +241,7 @@ if (clk("help_en")) {
     printColor(vec(255,255,0), "!tdellw [nick]", vec(0,255,255), "  - Remove Friend from WhiteList")
     printColor(vec(255,255,0), "!taddb [nick]", vec(0,255,255), "  - Add Player to BlackList")
     printColor(vec(255,255,0), "!tdellb [nick]", vec(0,255,255), "  - Remove Player from BlackList")
-    printColor(vec(255,255,0), "!tallp 0/1", vec(0,255,255), "  - allow all players to use teleport")
+    printColor(vec(255,255,0), "!tallp 0/1", vec(0,255,255), "  - Allow listening to all players except from BlackList")
     printColor(vec(255,255,0), "!reft", vec(0,255,255), "  - clears the Queue")
     print(_HUD_PRINTCENTER, "Wait :)")
     timer("help_en2", 2000)

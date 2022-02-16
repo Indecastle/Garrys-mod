@@ -9,9 +9,9 @@ local SpriteManager = require("libs/sprites1.txt")
 
 
 local DieTime = 3
-local SpawnDelay = 5
+local SpawnDelay = 2
 local OffsetZ = 10
-local DistanceVisible = 5000
+local DistanceVisible = 1000
 
 local RandX = 0.5
 local RandZ = 1
@@ -44,22 +44,25 @@ local Collide = true
 local Bounce = 0.5
 
 
-local img = "cat"
+local img = "gachi"
 local maxh = 50
-local delay = 0.05
+local delay = 0.03
 
 
 local frameCount = SpritesData[img].frameCount
 
 
+local IsTargetVisible = true
+local IsOwnVisible = true
+
 local Target = owner()
---Target = find.playersByName("mark")[1]
+Target = find.playersByName("Diry")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
     end
 end)[1]*/
-//print(Target)
+print(Target)
 
 --if Target ~= player() then return end
 
@@ -204,7 +207,16 @@ timer.create("particle", SpawnDelay, 0, function()
     local pe = particle.create(eyePos(), true)
     --pe:setNoDraw(false)
     for i, pl in ipairs(players) do
-        if pl == O or pl:isValid() and O:getPos():getDistance(pl:getPos()) > DistanceVisible then continue end
+        if Target and Target:isValid() then
+        
+        else
+        
+        end
+        if ((Target and Target:isValid()) 
+            and (not IsTargetVisible and pl ~= Target)
+            or (not IsOwnVisible and pl == O) )
+            or (pl:isValid() and O:getPos():getDistance(pl:getPos()) > DistanceVisible)
+            then continue end
         pcall(function()
             if #parts == 95 then return end
         

@@ -8,10 +8,10 @@ dofile("libs/my_methods.txt")
 
 
 local Scale = 5
-local DelayDupe = 1.5
+local DelayDupe = 1
 
 
-local LoadFile = "base"
+local LoadFile = "dupe2"
 local SaveFile = LoadFile
 
 
@@ -34,7 +34,7 @@ local _scale = _scaleBase * Scale
 
 
 function isValidFileName(name)
-    return string.match(name, "^[a-zA-Z0-9]+$") ~= nil
+    return string.match(name, "^[a-zA-Z0-9_]+$") ~= nil
 end
 
 

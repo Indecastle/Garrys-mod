@@ -10,7 +10,7 @@ interval(100)
 if(first() | dupefinished()) { Hide = 1 #setName(randint(1000):toString())
     #soundURLload(1,"https://translate.google.com/translate_tts?ie=UTF-8&q={Hello%20world}&tl=en&client=tw-ob",10,0,owner():pos())
     runOnChat(1)
-    runOnHTTP(1)
+    #runOnHTTP(1)
     AllP = 0
     TON = 1
     TME = 1
@@ -20,7 +20,7 @@ if(first() | dupefinished()) { Hide = 1 #setName(randint(1000):toString())
     Delay = 500 # ms
     Queue = table()
     
-    APIkey = "trnsl.1.1.20190711T184435Z.85fd27bff0ef3589.8dc99aaefca71f22cd1e043992920fd09dd53ef3"
+    APIkey = "XXXXXXX"
     SourceLang = "ru"
     TargetLang = "en"
     
@@ -263,7 +263,7 @@ if (clk("help_en")) {
     printColor(vec(255,255,0), "!tdellw [nick]", vec(0,255,255), "  - Remove Friend from WhiteList")
     printColor(vec(255,255,0), "!taddb [nick]", vec(0,255,255), "  - Add Player to BlackList")
     printColor(vec(255,255,0), "!tdellb [nick]", vec(0,255,255), "  - Remove Player from BlackList")
-    printColor(vec(255,255,0), "!tallp 0/1", vec(0,255,255), "  - allow all players to use teleport")
+    printColor(vec(255,255,0), "!tallp 0/1", vec(0,255,255), "  - Allow listening to all players except from BlackList")
     printColor(vec(255,255,0), "!reft", vec(0,255,255), "  - clears the Queue")
     print(_HUD_PRINTCENTER, "Wait :)")
     timer("help_en2", 2000)

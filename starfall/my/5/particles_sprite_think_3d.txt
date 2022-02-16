@@ -8,7 +8,7 @@ dofile("libs/sprites_data.txt")
 local SpriteManager = require("libs/sprites1.txt")
 
 
-local DieTime = 10
+local DieTime = 5
 local SpawnDelay = 1
 local OffsetZ = 10
 
@@ -28,16 +28,16 @@ local Additive= false
 local Translucent= false
 
 
-local StartSize = 500
-local EndSize = 1000
-local StartLength = 500
-local EndLength = 1000
+local StartSize = 50
+local EndSize = 100
+local StartLength = 50
+local EndLength = 100
 local StartAlpha = 255
 local EndAlpha = 0
 
 
-local Velocity = 5000
-local Gravity = Vector(0, 0, -1000)
+local Velocity = 500
+local Gravity = Vector(0, 0, -1050)
 
 local Collide = true
 local Bounce = 0.8
@@ -46,7 +46,7 @@ local Bounce = 0.8
 
 local img = "triangle"
 local maxh = 50
-local delay = 0.05
+local delay = 0.03
 
 
 local frameCount = SpritesData[img].frameCount

@@ -1,151 +1,106 @@
-@name Cookie
-@inputs 
-@outputs 
-@persist [O E Base Coo1 Coo2 Coo3]:entity I Ar:array CookieDelay CookieMaterial:string Offset SpeedRol BoxSizeLimit
+@name Combine Turret
+@inputs
+@outputs [Driver Turret]:entity Firying
+@persist [E O HoloTurret]:entity Players:array W:wirelink Distance StoredAngle:angle
 @trigger 
 
-if(first()){
-    O = owner()
-    E = entity()
-    runOnTick(1)
-    SpeedRol = 0.2
-    CookieDelay = 10 # seconds
-    CookieMaterial =  "models/antlion/antlion_innards" # "phoenix_storms/mrtire"
-    Offset = 17
-    BoxSizeLimit = 80
+if (first() | dupefinished()) { 
+    E=entity() O=owner()
     
-    Ar=array()
+    Distance = 75
     
-    # holoCreate(number index,vector position,vector scale,angle ang,vector color,string model)
-    holoCreate(1,E:toWorld(vec(0,30,15)), vec(1), E:toWorld(ang(0,0,90)), vec(255), "models/hunter/plates/plate125.mdl")
-    holoMaterial(1,"models/props_canal/canal_bridge_railing_01b")
-    holoParent(1, E)
+    findByClass("gmod_wire_turret")
+    Turret = findClosest(E:pos())
+    W = Turret:wirelink()
+    Turret:setAlpha(0)
     
-    holoCreate(2,holoEntity(1):toWorld(vec(4,32,0)), vec(1), E:toWorld(ang(45,0,90)), vec(255), "models/hunter/plates/plate025.mdl")
-    holoMaterial(2,"models/props_canal/canal_bridge_railing_01b")
-    holoParent(2, E)
+    HoloTurret = holoCreate(1, Turret:toWorld(vec(-5, 0, -10)), vec(0.7), Turret:toWorld(ang(0)), vec(255), "models/props_combine/bunker_gun01.mdl")
+    holoParent(1, Turret)
     
-    holoCreate(3,holoEntity(1):toWorld(vec(-4,32,0)), vec(1), E:toWorld(ang(-45,0,90)), vec(255), "models/hunter/plates/plate025.mdl")
-    holoMaterial(3,"models/props_canal/canal_bridge_railing_01b")
-    holoParent(3, E)
-    #-
-    holoCreate(4,E:toWorld(vec(0,-30,15)), vec(1), E:toWorld(ang(0,0,90)), vec(255), "models/hunter/plates/plate125.mdl")
-    holoMaterial(4,"models/props_canal/canal_bridge_railing_01b")
-    holoParent(4, E)
+    function number getDegreeDiff(Dir1:vector, Dir2:vector) {
+        Cos = (Dir1:x()*Dir2:x()+Dir1:y()*Dir2:y()+Dir1:z()*Dir2:z()) / (Dir1:distance(vec(0))*Dir2:distance(vec(0)))
+        return acos(Cos)
+    }
     
-    holoCreate(5,holoEntity(4):toWorld(vec(4,32,0)), vec(1), E:toWorld(ang(45,0,90)), vec(255), "models/hunter/plates/plate025.mdl")
-    holoMaterial(5,"models/props_canal/canal_bridge_railing_01b")
-    holoParent(5, E)
-    holoCreate(6,holoEntity(4):toWorld(vec(-4,32,0)), vec(1), E:toWorld(ang(-45,0,90)), vec(255), "models/hunter/plates/plate025.mdl")
-    holoMaterial(6,"models/props_canal/canal_bridge_railing_01b")
-    holoParent(6, E)
+    function void activate(NewDriver:entity) {
+        Driver = NewDriver
+        Turret:soundPlay(1, 0.598, "weapons/shotgun/shotgun_cock.wav")
+        holoAnim(1, "activate", 0)
+    }
     
-    holoCreate(7,E:toWorld(vec(0,0,0)), vec(1), E:toWorld(ang()), vec(255), "models/props_unique/firepit_campground.mdl")
-    holoParent(7, E)
+    function void deactivate() {
+        Driver = noentity()
+        holoAnim(1, "retract", 0)
+    }
     
-    
-    Base = holoCreate(8,E:toWorld(vec(0,35,46)), vec(0.7), ang(0,0,90), vec(255), "models/props_c17/signpole001.mdl")
-    holoMaterial(8,"models/XQM//Deg360")
-    holoParent(8, E)
-    
-    #holoCreate(8)
-    #holoScale(8,vec(2))
-    timer("fire", 1)
-    CookieDelay = CookieDelay * 1000
-    
-    lightCreate(1)
-    lightPos(1, E:toWorld(vec(0,0,20)))
-    lightParent(1, E)
-    lightBrightness(1, 5)
-    lightDistance(1, 200)
-    lightColor(1, vec(255,100,0))
-    E:soundPlay("fire", 0, "coast.campfire")
+    timer("scan", 100)
+}
 
-    function number checkCoo (Ent:entity) {
-        return (!Coo1:isValid() | !Coo2:isValid() | !Coo3:isValid()) & (Coo1!=Ent & Coo2!=Ent & Coo3!=Ent )
+
+interval(10)
+
+
+if (clk("scan")){
+    findByClass("player")
+    local OP = findToArray()
+    if (Players:count() != OP:count()){
+        runOnKeys(OP, 1)
     }
-    function number checkOther (Ent:entity) {
-        local BoxSize = Ent:boxSize()
-        return Ent:getMaterial() != CookieMaterial
-            & BoxSize:x() < BoxSizeLimit & BoxSize:y() < BoxSizeLimit & BoxSize:z() < BoxSizeLimit
-            & Ent:owner() == O
-    }
-    function number addCoo (Ent:entity) {
-        if     (!Coo1:isValid()) { Coo1 = Ent timer("1", CookieDelay) return 1}
-        elseif (!Coo2:isValid()) { Coo2 = Ent timer("2", CookieDelay) return 1}
-        elseif (!Coo3:isValid()) { Coo3 = Ent timer("3", CookieDelay) return 1}
-        return 0
-    }
-    #[function entity releaseCoo(Ent:entity) {
-        if     (Coo3:isValid()) { local Temp=Coo1 Coo1 = noentity() return Temp }
-        elseif (Coo2:isValid()) { local Temp=Coo2 Coo2 = noentity() return Temp }
-        elseif (Coo1:isValid()) { local Temp=Coo3 Coo3 = noentity() return Temp }
-        return noentity()
-    }]#
-    function void verifyCoo() {
-        if (!Coo1:isValid()) { stoptimer("1") }
-        if (!Coo2:isValid()) { stoptimer("2") }
-        if (!Coo3:isValid()) { stoptimer("3") }
+    Players = OP
+    timer("scan",1000)
+}
+
+
+local Who = keyClk()
+
+if (Who) {
+    if (changed(Who:keyPressed("e")) && Who:keyPressed("e")) {
+        if (Driver == Who & Driver:isPlayer()) {
+            deactivate()
+        }
+        else {
+            local Dir1 = Who:eyeAngles():forward()
+            local Dir2 = (Turret:pos() - Who:shootPos()):normalized()
+            if (Who:shootPos():distance(Turret:pos()) < Distance & getDegreeDiff(Dir1, Dir2) < 30) {
+                activate(Who)
+            }
+        }
+
     }
 }
 
-I = (I + SpeedRol) % 360
-
-holoAng(8, E:toWorld(ang(I*10,0,90)))
-findIncludeClass("prop")
-findInBox(E:toWorld(vec(5,35,43)),E:toWorld(vec(10,-35,49)))
-F=findToArray()
-
-
-foreach (I, Ent:entity = F) {
-    if (checkOther(Ent) & checkCoo(Ent)) {
-        findExcludeEntity(Ent)
-        #Ent:ignite(CookieDelay/1000)
-        addCoo(Ent)
-        Ar:pushEntity(Ent)
+if (Driver:isPlayer()) {
+    if (changed(Driver:keyPressed("mouse_left"))) {
+        Firying = Driver:keyPressed("mouse_left")
+        W["Fire", number] = Firying
     }
-}
-
-verifyCoo()
-
-Coo1:setPos(Base:toWorld(vec(0,0,Offset+0)))
-Coo2:setPos(Base:toWorld(vec(0,0,Offset+20)))
-Coo3:setPos(Base:toWorld(vec(0,0,Offset+40)))
-
-Coo1:setAng(Base:toWorld(ang(0,0,0)))
-Coo2:setAng(Base:toWorld(ang(0,0,0)))
-Coo3:setAng(Base:toWorld(ang(0,0,0)))
-
-Coo1:propFreeze(1)
-Coo2:propFreeze(1)
-Coo3:propFreeze(1)
-
-
-
-if(changed(clk("1"))&clk("1")){
-    Coo1:setMaterial(CookieMaterial)
-    Coo1:propFreeze(0)
-    Coo1 = noentity()
-}
-if(changed(clk("2"))&clk("2")){
-    Coo2:setMaterial(CookieMaterial)
-    Coo2:propFreeze(0)
-    Coo2 = noentity()
-}
-if(changed(clk("3"))&clk("3")){
-    Coo3:setMaterial(CookieMaterial)
-    Coo3:propFreeze(0)
-    Coo3 = noentity()
-}
-
-if (clk("fire")) {
-    timer("fire", 400)
     
-    #ifdef particle(number, number, number, string, vector, vector, vector, number, number, number, number)
-        # particle(number Duration,number StartSize,number EndSize,string Mat,vector RGB,vector Position,vector Velocity,number Pitch,number RollDelta,number StartAlpha,number EndAlpha)
-        particle(2,15,10,"particles/flamelet5",vec(255,255,255),entity():toWorld(vec(0,0,0)),entity():up()*30,50,random(-5,5),50,0)
-        particle(2,15,10,"particles/flamelet5",vec(255,255,255),entity():toWorld(vec(0,20,0)),entity():up()*30,50,random(-5,5),50,0)
-        particle(2,15,10,"particles/flamelet5",vec(255,255,255),entity():toWorld(vec(0,-20,0)),entity():up()*30,50,random(-5,5),50,0)
-    #endif
     
+    
+    
+    local Dir1 = Driver:eyeAngles():forward()
+    local Dir2 = E:angles():forward()
+    local DegreeDiff = getDegreeDiff(Dir1, Dir2)
+    
+    if (DegreeDiff < 60) {
+        StoredAngle = Driver:eyeAngles()
+    }
+    
+    if (Driver:shootPos():distance(Turret:pos()) > Distance 
+        | getDegreeDiff(Dir1, Dir2) > 80
+        | E:toLocal(Driver:shootPos()):x() > 0) {
+        deactivate()
+    }
+    
+} else {
+    W["Fire", number] = 0
 }
+
+if (Driver:isPlayer()) {
+    Turret:setAng(StoredAngle)
+} else {
+    Turret:setAng(E:angles())
+}
+
+Turret:setPos(E:toWorld(vec(0, 0, 20)))
+

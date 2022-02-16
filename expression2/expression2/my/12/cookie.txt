@@ -1,65 +1,76 @@
 @name Cookie
 @inputs 
 @outputs 
-@persist [E Base Coo1 Coo2 Coo3]:entity I Ar:array CookieDelay
+@persist [O E Base Coo1 Coo2 Coo3]:entity I Ar:array CookieDelay CookieMaterial:string Offset SpeedRol BoxSizeLimit
 @trigger 
-interval(10)
+
 if(first()){
-    E=entity()
-    
-    CookieDelay = 5000
+    O = owner()
+    E = entity()
+    runOnTick(1)
+    SpeedRol = 0.2
+    CookieDelay = 10 # seconds
+    CookieMaterial =  "models/antlion/antlion_innards" # "phoenix_storms/mrtire"
+    Offset = 17
+    BoxSizeLimit = 80
     
     Ar=array()
     
-    holoCreate(1,E:toWorld(vec(0,30,15)))
-    holoModel(1,"models/hunter/plates/plate125.mdl")
-    holoScale(1,vec(1,1,1))
+    # holoCreate(number index,vector position,vector scale,angle ang,vector color,string model)
+    holoCreate(1,E:toWorld(vec(0,30,15)), vec(1), E:toWorld(ang(0,0,90)), vec(255), "models/hunter/plates/plate125.mdl")
     holoMaterial(1,"models/props_canal/canal_bridge_railing_01b")
-    holoAng(1,ang(0,0,90))
+    holoParent(1, E)
     
-    holoCreate(2,holoEntity(1):toWorld(vec(4,32,0)))
-    holoModel(2,"models/hunter/plates/plate025.mdl")
-    holoScale(2,vec(1,1,1))
+    holoCreate(2,holoEntity(1):toWorld(vec(4,32,0)), vec(1), E:toWorld(ang(45,0,90)), vec(255), "models/hunter/plates/plate025.mdl")
     holoMaterial(2,"models/props_canal/canal_bridge_railing_01b")
-    holoAng(2,ang(45,0,90))
-    holoCreate(3,holoEntity(1):toWorld(vec(-4,32,0)))
-    holoModel(3,"models/hunter/plates/plate025.mdl")
-    holoScale(3,vec(1,1,1))
+    holoParent(2, E)
+    
+    holoCreate(3,holoEntity(1):toWorld(vec(-4,32,0)), vec(1), E:toWorld(ang(-45,0,90)), vec(255), "models/hunter/plates/plate025.mdl")
     holoMaterial(3,"models/props_canal/canal_bridge_railing_01b")
-    holoAng(3,ang(-45,0,90))
+    holoParent(3, E)
     #-
-    holoCreate(4,E:toWorld(vec(0,-30,15)))
-    holoModel(4,"models/hunter/plates/plate125.mdl")
-    holoScale(4,vec(1,1,1))
+    holoCreate(4,E:toWorld(vec(0,-30,15)), vec(1), E:toWorld(ang(0,0,90)), vec(255), "models/hunter/plates/plate125.mdl")
     holoMaterial(4,"models/props_canal/canal_bridge_railing_01b")
-    holoAng(4,ang(0,0,90))
+    holoParent(4, E)
     
-    holoCreate(5,holoEntity(4):toWorld(vec(4,32,0)))
-    holoModel(5,"models/hunter/plates/plate025.mdl")
-    holoScale(5,vec(1,1,1))
+    holoCreate(5,holoEntity(4):toWorld(vec(4,32,0)), vec(1), E:toWorld(ang(45,0,90)), vec(255), "models/hunter/plates/plate025.mdl")
     holoMaterial(5,"models/props_canal/canal_bridge_railing_01b")
-    holoAng(5,ang(45,0,90))
-    holoCreate(6,holoEntity(4):toWorld(vec(-4,32,0)))
-    holoModel(6,"models/hunter/plates/plate025.mdl")
-    holoScale(6,vec(1,1,1))
+    holoParent(5, E)
+    holoCreate(6,holoEntity(4):toWorld(vec(-4,32,0)), vec(1), E:toWorld(ang(-45,0,90)), vec(255), "models/hunter/plates/plate025.mdl")
     holoMaterial(6,"models/props_canal/canal_bridge_railing_01b")
-    holoAng(6,ang(-45,0,90))
+    holoParent(6, E)
+    
+    holoCreate(7,E:toWorld(vec(0,0,0)), vec(1), E:toWorld(ang()), vec(255), "models/props_unique/firepit_campground.mdl")
+    holoParent(7, E)
     
     
-    Base = holoCreate(7,E:toWorld(vec(0,35,46)))
-    holoModel(7,"models/props_c17/signpole001.mdl")
-    holoScale(7,vec(0.7))
-    holoMaterial(7,"models/XQM//Deg360")
-    holoAng(7,ang(0,0,90))
+    Base = holoCreate(8,E:toWorld(vec(0,35,46)), vec(0.7), ang(0,0,90), vec(255), "models/props_c17/signpole001.mdl")
+    holoMaterial(8,"models/XQM//Deg360")
+    holoParent(8, E)
     
     #holoCreate(8)
     #holoScale(8,vec(2))
+    timer("fire", 1)
+    CookieDelay = CookieDelay * 1000
     
+    lightCreate(1)
+    lightPos(1, E:toWorld(vec(0,0,20)))
+    lightParent(1, E)
+    lightBrightness(1, 5)
+    lightDistance(1, 200)
+    lightColor(1, vec(255,100,0))
+    E:soundPlay("fire", 0, "coast.campfire")
 
-    function number checkCoo(Ent:entity) {
+    function number checkCoo (Ent:entity) {
         return (!Coo1:isValid() | !Coo2:isValid() | !Coo3:isValid()) & (Coo1!=Ent & Coo2!=Ent & Coo3!=Ent )
     }
-    function number addCoo(Ent:entity) {
+    function number checkOther (Ent:entity) {
+        local BoxSize = Ent:boxSize()
+        return Ent:getMaterial() != CookieMaterial
+            & BoxSize:x() < BoxSizeLimit & BoxSize:y() < BoxSizeLimit & BoxSize:z() < BoxSizeLimit
+            & Ent:owner() == O
+    }
+    function number addCoo (Ent:entity) {
         if     (!Coo1:isValid()) { Coo1 = Ent timer("1", CookieDelay) return 1}
         elseif (!Coo2:isValid()) { Coo2 = Ent timer("2", CookieDelay) return 1}
         elseif (!Coo3:isValid()) { Coo3 = Ent timer("3", CookieDelay) return 1}
@@ -71,38 +82,39 @@ if(first()){
         elseif (Coo1:isValid()) { local Temp=Coo3 Coo3 = noentity() return Temp }
         return noentity()
     }]#
-    function number releaseCoo(Ent:entity) {
-        if     (Coo1==Ent) { local Temp=Coo1 Coo1 = noentity() return 1 }
-        elseif (Coo2==Ent) { local Temp=Coo2 Coo2 = noentity() return 1 }
-        elseif (Coo3==Ent) { local Temp=Coo3 Coo3 = noentity() return 1 }
-        return 0
+    function void verifyCoo() {
+        if (!Coo1:isValid()) { stoptimer("1") }
+        if (!Coo2:isValid()) { stoptimer("2") }
+        if (!Coo3:isValid()) { stoptimer("3") }
     }
 }
 
-I = (I + 0.5) % 360
+I = (I + SpeedRol) % 360
 
-holoAng(7,ang(I*10,0,90))
+holoAng(8, E:toWorld(ang(I*10,0,90)))
 findIncludeClass("prop")
-findInBox(E:pos()+vec(5,35,43),E:pos()+vec(10,-35,49))
+findInBox(E:toWorld(vec(5,35,43)),E:toWorld(vec(10,-35,49)))
 F=findToArray()
 
 
 foreach (I, Ent:entity = F) {
-    if (checkCoo(Ent)) {
+    if (checkOther(Ent) & checkCoo(Ent)) {
         findExcludeEntity(Ent)
-        printTable(F)
+        #Ent:ignite(CookieDelay/1000)
         addCoo(Ent)
         Ar:pushEntity(Ent)
     }
 }
 
-Coo1:setPos(Base:pos()-vec(0,15,0))
-Coo2:setPos(Base:pos()-vec(0,35,0))
-Coo3:setPos(Base:pos()-vec(0,55,0))
+verifyCoo()
 
-Coo1:setAng(ang(I*10,0,90))
-Coo2:setAng(ang(I*10,0,90))
-Coo3:setAng(ang(I*10,0,90))
+Coo1:setPos(Base:toWorld(vec(0,0,Offset+0)))
+Coo2:setPos(Base:toWorld(vec(0,0,Offset+20)))
+Coo3:setPos(Base:toWorld(vec(0,0,Offset+40)))
+
+Coo1:setAng(Base:toWorld(ang(0,0,0)))
+Coo2:setAng(Base:toWorld(ang(0,0,0)))
+Coo3:setAng(Base:toWorld(ang(0,0,0)))
 
 Coo1:propFreeze(1)
 Coo2:propFreeze(1)
@@ -111,17 +123,29 @@ Coo3:propFreeze(1)
 
 
 if(changed(clk("1"))&clk("1")){
-    Coo1:setMaterial("models/antlion/antlion_innards")
+    Coo1:setMaterial(CookieMaterial)
     Coo1:propFreeze(0)
-    releaseCoo(Coo1)
+    Coo1 = noentity()
 }
 if(changed(clk("2"))&clk("2")){
-    Coo2:setMaterial("models/antlion/antlion_innards")
+    Coo2:setMaterial(CookieMaterial)
     Coo2:propFreeze(0)
-    releaseCoo(Coo2)
+    Coo2 = noentity()
 }
 if(changed(clk("3"))&clk("3")){
-    Coo3:setMaterial("models/antlion/antlion_innards")
+    Coo3:setMaterial(CookieMaterial)
     Coo3:propFreeze(0)
-    releaseCoo(Coo3)
+    Coo3 = noentity()
+}
+
+if (clk("fire")) {
+    timer("fire", 400)
+    
+    #ifdef particle(number, number, number, string, vector, vector, vector, number, number, number, number)
+        # particle(number Duration,number StartSize,number EndSize,string Mat,vector RGB,vector Position,vector Velocity,number Pitch,number RollDelta,number StartAlpha,number EndAlpha)
+        particle(2,15,10,"particles/flamelet5",vec(255,255,255),entity():toWorld(vec(0,0,0)),entity():up()*30,50,random(-5,5),50,0)
+        particle(2,15,10,"particles/flamelet5",vec(255,255,255),entity():toWorld(vec(0,20,0)),entity():up()*30,50,random(-5,5),50,0)
+        particle(2,15,10,"particles/flamelet5",vec(255,255,255),entity():toWorld(vec(0,-20,0)),entity():up()*30,50,random(-5,5),50,0)
+    #endif
+    
 }

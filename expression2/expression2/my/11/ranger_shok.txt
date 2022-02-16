@@ -160,8 +160,8 @@ if(clk("shock")) {
     }
     if (Target != World & HitPos != vec()) {
         ShockingEnts:addEnt(Target)
-        shockSlap(Target, 1)
-        shockDamage(Target)
+        #shockSlap(Target, 1)
+        #shockDamage(Target)
     }
     
     local CurTime = curtime()
@@ -181,7 +181,7 @@ if(clk("shocking")) {
         local T = Ar:entity(1)
         
         shockEffect(T, 10, 2)
-        shockSlap(T, 2)
-        shockDamage(T)
+        #shockSlap(T, 2)
+        #shockDamage(T)
     }
 }

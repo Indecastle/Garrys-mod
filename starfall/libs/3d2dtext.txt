@@ -235,11 +235,6 @@ function Text3D2D:run()
         holoText2:setColor(Color(0,0,0,0))
     end
     
-    //local font = render.createFont("Roboto", fontSize, fontBold, true)
-    for i=1, #self.Data do
-        self.Data[i].font = render.createFont(self.Data[i].font, self.Data[i].fontSize, self.Data[i].fontBold, true)
-    end
-    
     local isStatic = table.all(self.Data, function(V) return V.colorMode == 1 end)
     
     function getUChar(text, index)
@@ -314,6 +309,11 @@ function Text3D2D:run()
         
     end
     
+    //local font = render.createFont("Roboto", fontSize, fontBold, true)
+    for i=1, #self.Data do
+        self.Data[i]._font = render.createFont(self.Data[i].font, self.Data[i].fontSize, self.Data[i].fontBold, true)
+    end
+    
     // ##################### don't touch !!! #####################
     
     local isCreated = false
@@ -357,7 +357,7 @@ function Text3D2D:run()
             render.setColor(Color(0, 0, 0) / (1 + self.shadowIterations + self.shadowAlphaReverce - i))
             local offset = -averageOffset
             for j=1, #self.Data do
-                render.setFont(self.Data[j].font)
+                render.setFont(self.Data[j]._font)
                 for k=1, #self.Data[j].text do
                     offset = offset + getOffset(j, k)
                     if self.Data[j].bold then
@@ -388,7 +388,6 @@ function Text3D2D:run()
     end
     
     function renderText()
-    
         render.selectRenderTarget("afkscreen")
         render.clear(Color(0, 0, 0, 0))
         
@@ -404,7 +403,7 @@ function Text3D2D:run()
                 render.setColor(Color(math.cos(timer.systime() * self.Data[j].colorSpeed) * 360, 1, 1):hsvToRGB():setA(self.Data[j].alpha))
             end
             
-            render.setFont(self.Data[j].font)
+            render.setFont(self.Data[j]._font)
             
             for k=1, #self.Data[j].text do
                 offset = offset + getOffset(j, k)
@@ -457,7 +456,12 @@ function Text3D2D:run()
             local d = (player():getEyePos() - holoText:getPos()):getNormalized()
             eyeAngle = d:getAngle()  + self.InitAngle
         elseif self.Mode==3 or self.Mode==4 then
-            eyeAngle = self.Target:localToWorldAngles(self.InitAngle)
+            if self.Target:isPlayer() then
+                eyeAngle = self.Target:getAngles():setP(0) + self.InitAngle
+            else
+                eyeAngle = self.Target:localToWorldAngles(self.InitAngle)
+            end
+            
         end
         
         //print(d)
@@ -467,7 +471,7 @@ function Text3D2D:run()
         end
         
         if self.isRotate then
-            eyeAngle = eyeAngle + Angle(0,  timer.systime()*self.rotateSpeed, 0)
+            eyeAngle = eyeAngle + Angle(0, timer.systime()*self.rotateSpeed, 0)
         end
         
         if self.swayDegreesMax ~= 0 then

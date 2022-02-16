@@ -39,8 +39,9 @@ timer.create("fun", 0.2, 0, function()
     
     if p ~= nil and p:isValid() 
             and p:isValidPhys() 
+            and ent:isValid() 
             and ent:isValidPhys() 
-            and p == owner() 
+            --and p == owner() 
             and !p:hasGodMode() 
             and !p:getNWVarTable()["_Kyle_Buildmode"] 
             and !p:inVehicle() then

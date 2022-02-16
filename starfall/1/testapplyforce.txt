@@ -6,11 +6,18 @@ if SERVER then
 
     wire.adjustInputs( { "Wheel" }, { "entity" } )
     
-    timer.create("xui", 0.1, 0, function()
+    --timer.create("xui", 0.1, 0, function()
+    hook.add("think", "", function()
         if wire.ports.Wheel:isValid() then
             local p = wire.ports.Wheel
+            if p == nil or !p:isValid() then return end
+            
+            local phys = p:getPhysicsObject()
+            phys:enableGravity(false)
             local mass = p:getMass()
-            p:applyForceCenter(Vector(0,0,mass*60))
+            local velocity = p:getVelocity()
+            local gravity = Vector(0,0,-600) --physenv.getGravity()
+            --p:applyForceCenter(Vector(0,0,mass*9.08))
         end
     end)
     

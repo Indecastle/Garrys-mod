@@ -6,10 +6,10 @@
 local fft={}
 
 //mat2 = material.create("UnlitGeneric")
-//mat = material.create("UnlitGeneric")
-//mat:setInt("$flags",138414080)
+mat = material.create("UnlitGeneric")
+mat:setInt("$flags",138414080)
 //mat:setInt("$flags", bit.bxor(bit.bor(2^11, 2^22, 2^27, 2^22)))
-//mat:setTexture("$basetexture","gm_construct/grass1")
+mat:setTexture("$basetexture","gm_construct/grass1")
 
 local url1 = "http://radio.licen777.ru/chechnya"
 local url2 = "http://radio.licen777.ru/stream"
@@ -24,7 +24,7 @@ function start()
         Sound:play()
         hook.add("think","",function()
             Sound:setPos(chip():getPos())
-            fft=Sound:getFFT(6)
+            fft=Sound:getFFT(5)
         end)
     end)
     
@@ -44,7 +44,7 @@ function start()
         render.draw3DBox(Vector(0,512,512),Angle(0,0,90),Vector(),Vector(512))
         
         render.setMaterial(mat)
-        render.draw3DBox(Vector(256,256,256), Angle(), Vector(256,256,256), -Vector(256,256,256))
+        render.draw3DBox(Vector(256,256,256), Angle(), Vector(256,256,256+(fft[10] or 0)*1000), -Vector(256,256,256))
                     
         for i=0,50,1 do
             render.setMaterial()

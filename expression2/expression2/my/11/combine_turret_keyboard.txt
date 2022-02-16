@@ -1,7 +1,7 @@
 @name Combine Turret with keyboard
 @inputs
 @outputs [Driver Turret KeyBoard]:entity Firying
-@persist [E O]:entity Players:array [WTurret WKeyBoard]:wirelink Distance StoredAngle:angle MaxDegreeToRelease MaxDegreeToControl
+@persist [E O HoloTurret]:entity Players:array [WTurret WKeyBoard]:wirelink Distance StoredAngle:angle MaxDegreeToRelease MaxDegreeToControl
 @trigger 
 
 if (first() | dupefinished()) { 
@@ -17,6 +17,10 @@ if (first() | dupefinished()) {
     Turret = findClosest(E:pos())
     
     KeyBoard:setAlpha(0)
+    Turret:setAlpha(0)
+    
+    HoloTurret = holoCreate(1, Turret:toWorld(vec(-5, 0, -10)), vec(0.7), Turret:toWorld(ang(0)), vec(255), "models/props_combine/bunker_gun01.mdl")
+    holoParent(1, Turret)
     
     WTurret = Turret:wirelink()
     WKeyBoard = KeyBoard:wirelink()
@@ -30,6 +34,16 @@ if (first() | dupefinished()) {
     function void kickDriver() {
         WKeyBoard["Kick", number] = 1
         timer("KickOff", 100)
+    }
+    
+    function void activate() {
+        Turret:soundPlay(1, 0.598, "weapons/shotgun/shotgun_cock.wav")
+        holoAnim(1, "activate", 0)
+    }
+    
+    function void deactivate() {
+        kickDriver()
+        holoAnim(1, "retract", 0)
     }
     
     timer("scan", 100)
@@ -58,14 +72,14 @@ local Who = keyClk()
 Driver = WKeyBoard["User", entity]
 
 if (changed(Driver) & Driver) {
-    Turret:soundPlay(1, 10, "weapons/shotgun/shotgun_cock.wav")
+    activate()
 }
 
 
 if (Who) {
     if (changed(Who:keyPressed("e")) && Who:keyPressed("e")) {
         if (Driver == Who & Driver:isPlayer()) {
-            kickDriver()
+            deactivate()
         }
     }
 }
@@ -87,7 +101,7 @@ if (Driver:isPlayer()) {
     if (Driver:shootPos():distance(Turret:pos()) > Distance 
             | getDegreeDiff(Dir1, Dir2) > MaxDegreeToRelease
             | KeyBoard:toLocal(Driver:shootPos()):z() > 0) {
-        kickDriver()
+        deactivate()
     }
     
 } else {

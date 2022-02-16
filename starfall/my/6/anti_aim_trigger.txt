@@ -71,7 +71,7 @@ hook.add("think", "Anti Aim trigger", function()
     local now = timer.curtime()
     
     
-    if oldStateInVehicle and not newStateInVehicle then
+    if oldStateInVehicle ~= newStateInVehicle then
         lastTime = now + 0.5
     end
     if oldPos:getDistance(newPos) < WarnLimitDistance 

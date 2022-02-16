@@ -1,0 +1,87 @@
+--@name Reklama 2
+--@author Markiz
+--@include libs/3d2dtext.txt
+--@client
+
+dofile("libs/3d2dtext.txt")
+
+local Target = chip()
+Target = find.playersByName("Marki")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+//print(Target)
+
+local Data = {
+    {   text={"ЛОББИ ПЕСОЧНИЦЫ"}, 
+        //font = "Courier New",
+        fontSize=47, 
+        fontBold=500, 
+        bold=true,
+        color=Color(250,170,0),
+        margin=40,
+        --colorMode = 3,
+        rainbowSpace = 35,
+        rainbowColorSpace = 20,
+        rainbowReverse = false,
+        symbolLongSpace = 14
+        //colorSpeed = 0.3,
+    },
+    {   text={"PvP отключен"}, 
+        //font = "Courier New",
+        fontSize=45, 
+        fontBold=500, 
+        bold=true,
+        color=Color(200,70,70),
+        margin=50,
+        colorMode = 1,
+        rainbowSpace = 35,
+        rainbowColorSpace = 20,
+        rainbowReverse = true,
+        --colorSpeed = 1.3,
+    },
+    {   text={"Присоединяйся к нашему серверу Discord с помощью TAB-меню"}, 
+        //font = "Courier New",
+        fontSize=40, 
+        fontBold=500, 
+        bold=true,
+        color=Color(250,170,0),
+        margin=83,
+        colorMode = 1,
+        rainbowSpace = 35,
+        rainbowColorSpace = 20,
+        rainbowReverse = true,
+        --colorSpeed = 1.3,
+    },
+}
+
+local Vars = {
+    Target= Target,
+
+    Mode=2,
+    isRotate=false,
+    rotateSpeed=200,
+    swaySpeed=2,
+    swayDegreesMax=0,
+    
+    IsStaticVertical=true,
+    IsDoubleData=true,
+    isHideTarget=false,
+    
+    shadowIterations=4,
+    shadowAlphaReverce=0,
+    shadowOffset=0.5,
+    --alphaGlobal=50,
+    
+    textSize=50*11 / 6,
+    DataOffsetZ=20,
+    
+    isParentPos=true,
+    isParentAngle=true,
+}
+
+
+obj = Text3D2D:new(Data, Vars)
+obj:run()

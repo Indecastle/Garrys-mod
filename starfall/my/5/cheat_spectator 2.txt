@@ -2,8 +2,8 @@
 --@author Markiz
 --@client
 
-local Target = owner()
-Target = find.playersByName("owner")[1]
+--local Target = owner()
+--Target = find.playersByName("owner")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -13,6 +13,9 @@ end)[1]*/
 
 
 local IsHead = false
+local FreeCumOn = false
+local FreeCumVelocity = 20
+local FreeCumVelocityShift = 200
 
 
 
@@ -33,6 +36,13 @@ local font = render.createFont("Arial" // font
                                     ,false // blur
                                     ,false //extended
                                     )
+                                    
+local Key_W = false;
+local Key_S = false;
+local Key_A = false;
+local Key_D = false;
+local Key_Shift = false;
+local FreeCumPos = eyePos();
 
 
 function gethead(ent)
@@ -70,28 +80,48 @@ end
 
 --calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
 hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
-
-    local head = IsHead and gethead(TargetPlayer) or TargetPlayer:getEyePos()
-    --local head = gethead(TargetPlayer)
-
-    local angle;
-    local originPos = head
-    if ThirdPerson then
-        angle = player():getEyeAngles()
-        originPos = originPos - ( angle:getForward() * 100 )
+    if FreeCumOn then
+        local velocity = Vector()
+        if Key_W then velocity = velocity + eyeAngles():getForward() end
+        if Key_S then velocity = velocity - eyeAngles():getForward() end
+        if Key_A then velocity = velocity - eyeAngles():getRight() end
+        if Key_D then velocity = velocity + eyeAngles():getRight() end
+        if velocity:getDistance(Vector()) ~= 0 then
+            velocity = velocity:getNormalized()
+            FreeCumPos = FreeCumPos + velocity * (Key_Shift and FreeCumVelocityShift or FreeCumVelocity)
+        end
+        
+        return {
+            origin= FreeCumPos
+            ,angles= eyeAngles()
+            ,fov=fov
+            ,znear=znear
+            ,zfar=zfar,
+            drawviewer=true}
     else
-        angle = TargetPlayer:getEyeAngles()
-        originPos = originPos + ( angle:getForward() * (IsHead and 0 or 10) )
+        local head = IsHead and gethead(TargetPlayer) or TargetPlayer:getEyePos()
+        --local head = gethead(TargetPlayer)
+    
+        local angle;
+        local originPos = head
+        if ThirdPerson then
+            angle = player():getEyeAngles()
+            originPos = originPos - ( angle:getForward() * 100 )
+        else
+            angle = TargetPlayer:getEyeAngles()
+            originPos = originPos + ( angle:getForward() * (IsHead and 0 or 10) )
+        end
+        --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
+        return {
+            origin= originPos
+            ,angles= angle
+            ,fov=fov
+            ,znear=znear + (IsHead and 5 or 10)
+            ,zfar=zfar,
+            drawviewer=true}
     end
-    --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
-    return {
-        origin= originPos
-        ,angles= angle
-        ,fov=fov
-        ,znear=znear + (IsHead and 5 or 10)
-        ,zfar=zfar,
-        drawviewer=true}
 end)
+
 
 timer.create("isHUDActive", 0.2, 0, function()
     local newIsHUDActive = render.isHUDActive()
@@ -102,14 +132,15 @@ timer.create("isHUDActive", 0.2, 0, function()
 ALT - Change eye pos
 CTRL - Enable third person
 ArrowUp/ArrowDown - Switching to another player
-
-
+M - Switching cheat / free spectate
+A/W/S/D - move free camera (only for free spectating)
 
 
 ]])
         end
     end
 end)
+
 
 hook.add("drawhud","cheat spectator",function()
     if GameW == nil then
@@ -127,25 +158,46 @@ end)
 
 
 local oldIsHUDActive = false
-hook.add("inputPressed", "", function(key)
+hook.add("inputPressed", "cheat spectator", function(key)
     if ON and render.isHUDActive() then
-        if key == KEY.UPARROW then
-            nextPlayer()
+        if not FreeCumOn then
+            if key == KEY.UPARROW then
+                nextPlayer()
+            end
+            
+            if key == KEY.DOWNARROW then
+                prevPlayer()
+            end
+            
+            if key == KEY.CTRL then
+                ThirdPerson = !ThirdPerson
+            end
+            if key == KEY.ALT then
+                IsHead = !IsHead
+            end
         end
         
-        if key == KEY.DOWNARROW then
-            prevPlayer()
+        if key == KEY.M then
+            FreeCumOn = !FreeCumOn
         end
         
-        if key == KEY.CTRL then
-            ThirdPerson = !ThirdPerson
-        end
-        if key == KEY.ALT then
-            IsHead = !IsHead
-        end
+        if key == KEY.W then Key_W = true end
+        if key == KEY.S then Key_S = true end
+        if key == KEY.A then Key_A = true end
+        if key == KEY.D then Key_D = true end
+        if key == KEY.SHIFT then Key_Shift = true end
     end
 end)
 
+hook.add("inputReleased", "cheat spectator", function(key)
+    if ON and render.isHUDActive() then    
+        if key == KEY.W then Key_W = false end
+        if key == KEY.S then Key_S = false end
+        if key == KEY.A then Key_A = false end
+        if key == KEY.D then Key_D = false end
+        if key == KEY.SHIFT then Key_Shift = false end
+    end
+end)
 
 
 function hudConnecting(isCon)

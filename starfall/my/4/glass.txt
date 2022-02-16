@@ -25,6 +25,7 @@ end
 local players = find.allPlayers()
 players[#players+1] = E
 
+--hook.add("hologrammatrix", "glass", function()
 hook.add("hologrammatrix", "glass", function()
 --timer.create("glass", 0.1, 0, function()
     --trace.trace(Vector start, Vector endpos, Entity or table or function or nil filter, number or nil mask, number or nil colgroup, boolean or nil ignworld)
