@@ -3,17 +3,20 @@
 --@author Markiz
 --@client
 
-local Animation = "dancemoves"
---local MusicAnimation = "weapons/guitar/shmara.ogg" -- or nill
+local Animation = "taunt_dance"
+--local Animation = "original_dance12"
+--local Animation = "bunnyhop"
+--local MusicAnimation = "weapons/guitar/vdv.ogg" -- or nill
 --local MusicAnimation = "weapons/guitar/jackiechan.ogg" -- or nill
 --local MusicAnimation = "weapons/guitar/animeshniki.ogg" -- or nill
-local MusicAnimation --= "mmd/original_dance1.mp3" -- or nill
+--local MusicAnimation = "mmd/original_dance12.mp3" -- or nill
+--local MusicAnimation = "npc/zombie/moan_loop3.wav" -- or nill
 
 local Speed = 0.5
-local Volume = 0.5
+local Volume = 1
 
 local Target = owner()
---Target = find.playersByName("mark")[1]
+--Target = find.playersByName("Mark")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -24,7 +27,7 @@ end)[1]*/
 --if player() ~= Target then return end
 
 for i, p in ipairs(find.allPlayers()) do
-    --p:setAnimation("taunt_dance", nil, 1, true, nil, nil)
+    --p:setAnimation("smooth_ride", nil, 1, true, nil, nil)
     --p:setAnimationLoop(false)
     --p:resetAnimation()
 end
@@ -41,13 +44,14 @@ Target:setAnimation(Animation, nil, Speed, true, nil, nil)
 
 if MusicAnimation ~= "" and MusicAnimation ~= nil then
     bass.loadFile("sound/"..MusicAnimation, "3d noblock", function(snd)
-        --if snd then
+        if snd then
             snd:setPitch(Speed)
             snd:setVolume(Volume)
+            snd:setLooping(true)
             hook.add("think", "MusicDance", function()
                 snd:setPos(Target:getPos())
             end)
-        --end
+        end
     end)
 end
 
@@ -59,4 +63,5 @@ mask_off
 bunnyhop
 balletspin
 bendi
+boogie_down
 */

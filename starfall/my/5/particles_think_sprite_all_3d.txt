@@ -44,7 +44,7 @@ local Collide = true
 local Bounce = 0.5
 
 
-local img = "gachi"
+local img = "cat"
 local maxh = 50
 local delay = 0.03
 
@@ -56,7 +56,7 @@ local IsTargetVisible = true
 local IsOwnVisible = true
 
 local Target = owner()
-Target = find.playersByName("Diry")[1]
+Target = find.playersByName("mark")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true

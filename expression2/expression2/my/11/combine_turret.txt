@@ -2,12 +2,14 @@
 @inputs
 @outputs [Driver Turret]:entity Firying
 @persist [E O HoloTurret]:entity Players:array W:wirelink Distance StoredAngle:angle
+@persist HoldDelay IsHold
 @trigger 
 
 if (first() | dupefinished()) { 
     E=entity() O=owner()
     
     Distance = 75
+    HoldDelay = 1000
     
     findByClass("gmod_wire_turret")
     Turret = findClosest(E:pos())
@@ -24,13 +26,19 @@ if (first() | dupefinished()) {
     
     function void activate(NewDriver:entity) {
         Driver = NewDriver
-        Turret:soundPlay(1, 0.598, "weapons/shotgun/shotgun_cock.wav")
+        Turret:soundPlay(1, 0.600, "weapons/shotgun/shotgun_cock.wav")
         holoAnim(1, "activate", 0)
+        
+        IsHold = 1
+        timer("hold", HoldDelay)
     }
     
     function void deactivate() {
         Driver = noentity()
-        holoAnim(1, "retract", 0)
+        holoAnim(1, "retract", 100)
+        
+        IsHold = 0
+        stoptimer("hold")
     }
     
     timer("scan", 100)
@@ -47,7 +55,14 @@ if (clk("scan")){
         runOnKeys(OP, 1)
     }
     Players = OP
-    timer("scan",1000)
+    timer("scan", 1000)
+}
+
+if (clk("firing")){
+    if (Driver:isPlayer() & Firying) {
+        holoAnim(1, "fire", 0.01)
+        timer("firing", 100)
+    }
 }
 
 
@@ -69,14 +84,16 @@ if (Who) {
     }
 }
 
+if (clk("hold")) {
+    IsHold = 0
+}
+
 if (Driver:isPlayer()) {
-    if (changed(Driver:keyPressed("mouse_left"))) {
+    if (!IsHold & changed(Driver:keyPressed("mouse_left"))) {
         Firying = Driver:keyPressed("mouse_left")
         W["Fire", number] = Firying
+        timer("firing", 100)
     }
-    
-    
-    
     
     local Dir1 = Driver:eyeAngles():forward()
     local Dir2 = E:angles():forward()
@@ -96,11 +113,11 @@ if (Driver:isPlayer()) {
     W["Fire", number] = 0
 }
 
-if (Driver:isPlayer()) {
+if (Driver:isPlayer() & !IsHold) {
     Turret:setAng(StoredAngle)
 } else {
     Turret:setAng(E:angles())
 }
 
-Turret:setPos(E:toWorld(vec(0, 0, 20)))
+Turret:setPos(E:toWorld(vec(5, 0, 20)))
 

@@ -14,21 +14,13 @@ local OO = owner()
 if SERVER then
     net.receive("WarnAim", function (len, ply)
         local degree = net.readFloat(16)
-        
         print(Color(255,255,0), 'Warning:   ', Color(100,255,200), 'Player', Color(200,0,200), ' [', Color(200,100,0), ply:getName(), Color(200,0,200), '] ', Color(100,255,200), 'maybe use the AIM')
-        
-        net.start("NotifyAram")
-        net.send(OO)
     end)
     return
 end
 
 
-function warn(v)
-    net.start("WarnAim")
-    net.writeFloat(v, 16)
-    net.send()
-end
+
 
 
 
@@ -44,6 +36,15 @@ local oldStateInVehicle = O:inVehicle()
 local lastTime = 0
 local s1 = sounds.create(OO, "NPC_FloorTurret.AlarmPing", true)
 
+
+function warn(v)
+    net.start("WarnAim")
+    net.writeFloat(v, 16)
+    net.send()
+    
+    s1:stop()
+    s1:play()
+end
 
 function isLookingAtHead()
     for i, v in ipairs(find.allPlayers()) do
@@ -88,10 +89,4 @@ hook.add("think", "Anti Aim trigger", function()
     oldAngles = newAngles
     oldPos = newPos
     oldStateInVehicle = newStateInVehicle
-end)
-
-
-net.receive("NotifyAram", function (len)
-    s1:stop()
-    s1:play()
 end)

@@ -11,7 +11,7 @@ local Scale = 5
 local DelayDupe = 1
 
 
-local LoadFile = "dupe2"
+local LoadFile = "base"
 local SaveFile = LoadFile
 
 

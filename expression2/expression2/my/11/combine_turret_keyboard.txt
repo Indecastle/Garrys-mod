@@ -1,7 +1,8 @@
 @name Combine Turret with keyboard
 @inputs
 @outputs [Driver Turret KeyBoard]:entity Firying
-@persist [E O HoloTurret]:entity Players:array [WTurret WKeyBoard]:wirelink Distance StoredAngle:angle MaxDegreeToRelease MaxDegreeToControl
+@persist [E O HoloTurret]:entity Players:array [WTurret WKeyBoard]:wirelink Distance StoredAngle:angle
+@persist MaxDegreeToRelease MaxDegreeToControl HoldDelay IsHold
 @trigger 
 
 if (first() | dupefinished()) { 
@@ -10,6 +11,7 @@ if (first() | dupefinished()) {
     Distance = 75
     MaxDegreeToRelease = 110
     MaxDegreeToControl = 70
+    HoldDelay = 1000
     
     findByClass("gmod_wire_keyboard")
     KeyBoard = findClosest(E:pos())
@@ -39,11 +41,17 @@ if (first() | dupefinished()) {
     function void activate() {
         Turret:soundPlay(1, 0.598, "weapons/shotgun/shotgun_cock.wav")
         holoAnim(1, "activate", 0)
+        
+        IsHold = 1
+        timer("hold", HoldDelay)
     }
     
     function void deactivate() {
         kickDriver()
         holoAnim(1, "retract", 0)
+        
+        IsHold = 0
+        stoptimer("hold")
     }
     
     timer("scan", 100)
@@ -63,10 +71,20 @@ if (clk("scan")){
     timer("scan",1000)
 }
 
+if (clk("firing")){
+    if (Driver:isPlayer() & Firying) {
+        holoAnim(1, "fire", 0.01)
+        timer("firing", 100)
+    }
+}
+
 if (clk("KickOff")) {
     WKeyBoard["Kick", number] = 0
 }
 
+if (clk("hold")) {
+    IsHold = 0
+}
 
 local Who = keyClk()
 Driver = WKeyBoard["User", entity]
@@ -85,9 +103,10 @@ if (Who) {
 }
 
 if (Driver:isPlayer()) {
-    if (changed(Driver:keyPressed("mouse_left"))) {
+    if (!IsHold & changed(Driver:keyPressed("mouse_left"))) {
         Firying = Driver:keyPressed("mouse_left")
         WTurret["Fire", number] = Firying
+        timer("firing", 100)
     }
     
     local Dir1 = Driver:eyeAngles():forward()
@@ -108,7 +127,7 @@ if (Driver:isPlayer()) {
     WTurret["Fire", number] = 0
 }
 
-if (Driver:isPlayer()) {
+if (Driver:isPlayer() & !IsHold) {
     Turret:setAng(StoredAngle)
 } else {
     Turret:setAng(KeyBoard:toWorld(ang(-90,0,0)))

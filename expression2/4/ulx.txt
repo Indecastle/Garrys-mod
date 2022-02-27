@@ -1,0 +1,284 @@
+@name ULX
+@persist I Count [E O PPP]:entity [P PlaersName Jail JailE]:array [Derma URL]:string Sub:string Volume WindowSize:vector2 ReturnPos:table
+interval(500)
+
+if(first())
+{
+    #noDuplications()
+
+    E = entity()
+    O = owner()
+    
+    WindowSize = vec2(400,430)
+    
+    P=players()
+    
+    Derma = "XGUI"
+    
+    dPanel(Derma,vec2(0,0),WindowSize)
+    
+    dTabHolder("Window",Derma,vec2(10,30),WindowSize-vec2(20,60))
+    
+    dTab("Fun","Window")
+    dTab("Teleport","Window")
+    dTab("Administrate","Window")
+    
+    dLabel("Player: ",Derma,vec2((WindowSize[1]/2)-(WindowSize[1]-110)/2 -33,WindowSize[2]/3.5))
+    #dTextBox("URL","Main",vec2(45,30),100)
+    
+    dSlider("Value:","Administrate",vec2(5,75),WindowSize[1]/1.5,0,1000)
+    
+    ##Fun
+    
+    #Freeze
+    dButton("PlayerFreeze","Fun",vec2(10,WindowSize[2]/3),vec2(WindowSize[1]/2-20,25))
+    
+    #UnFreeze
+    dButton("PlayerUnFreeze","Fun",vec2(WindowSize[1]/2-10,WindowSize[2]/3),vec2(WindowSize[1]/2-30,25))
+    
+    #Ragdoll
+    dButton("PlayerRagdoll","Fun",vec2(10,WindowSize[2]/2.5),vec2(WindowSize[1]/2-20,25))
+    
+    #Noclip
+    dButton("PlayerNoclip","Fun",vec2(WindowSize[1]/2-10,WindowSize[2]/2.5),vec2(WindowSize[1]/2-30,25))
+    
+    #Flip
+    dButton("PlayerFlip","Fun",vec2(10,WindowSize[2]/2.15),vec2(WindowSize[1]/2-20,25))
+    
+    #Strip
+    dButton("PlayerStrip","Fun",vec2(WindowSize[1]/2-10,WindowSize[2]/2.15),vec2(WindowSize[1]/2-30,25))
+    
+    #Kill
+    dButton("Kill","Fun",vec2(10,WindowSize[2]/1.90),vec2(WindowSize[1]/2-20,25))
+    
+    #Clear
+    dButton("Remove Entity's","Fun",vec2(WindowSize[1]/2-10,WindowSize[2]/1.90),vec2(WindowSize[1]/2-30,25))
+    
+    ##Teleport
+    
+    #Goto
+    dButton("GotoPlayer","Teleport",vec2(10,WindowSize[2]/3),vec2(WindowSize[1]/2-20,25))
+    
+    #Bring
+    dButton("BringPlayer","Teleport",vec2(WindowSize[1]/2-10,WindowSize[2]/3),vec2(WindowSize[1]/2-30,25))
+    
+    #FBring
+    dButton("FBringPlayer","Teleport",vec2(10,WindowSize[2]/2.5),vec2(WindowSize[1]/2-20,25))
+    
+    #Return
+    dButton("Return","Teleport",vec2(WindowSize[1]/2-10,WindowSize[2]/2.5),vec2(WindowSize[1]/2-30,25))
+    
+    ##Administrate
+    
+    #Health
+    dButton("SetHealth","Administrate",vec2(10,WindowSize[2]/3),vec2(WindowSize[1]/2-20,25))
+    
+    #Armor
+    dButton("SetArmor","Administrate",vec2(WindowSize[1]/2-10,WindowSize[2]/3),vec2(WindowSize[1]/2-30,25))
+    
+    #Speed
+    dButton("SetSpeed","Administrate",vec2(10,WindowSize[2]/2.5),vec2(WindowSize[1]/2-20,25))
+    
+    #Jump
+    dButton("SetJumpPower","Administrate",vec2(WindowSize[1]/2-10,WindowSize[2]/2.5),vec2(WindowSize[1]/2-30,25))
+    
+    #ResetSpeed
+    dButton("ResetSpeed","Administrate",vec2(10,WindowSize[2]/2.15),vec2(WindowSize[1]/2-20,25))
+    
+    #ResetJump
+    dButton("ResetJumpPower","Administrate",vec2(WindowSize[1]/2-10,WindowSize[2]/2.15),vec2(WindowSize[1]/2-30,25))
+    
+    #SetIgnite
+    dButton("SetIgnite","Administrate",vec2(10,WindowSize[2]/1.90),vec2(WindowSize[1]/2-20,25))
+    
+    #SetIgnite
+    dButton("Jail za 300","Administrate",vec2(WindowSize[1]/2-10,WindowSize[2]/1.9),vec2(WindowSize[1]/2-30,25))
+    
+    #Player choose
+    dDropBox("player",Derma,vec2((WindowSize[1]/2)-(WindowSize[1]-110)/2,WindowSize[2]/3.5),WindowSize[1]-110)
+        
+    
+}
+P=players()
+
+PlaersName:clear()
+
+for(I = 1, P:count())
+{
+    PlaersName[I, string] =  P[I,entity]:name()+ ": " + P[I,entity]:steamID()
+}
+
+
+dArray("player", PlaersName)
+
+if(O:isTyping()){
+    dShow(Derma,1)
+}
+else{
+    dShow(Derma,0)
+}
+     
+Target = findPlayerBySteamID(dSval("player"):explode(": ")[2,string])
+
+
+switch(dClk()){
+    ##Fun
+    
+    #Freeze
+    case("PlayerFreeze"),
+        Target:playerFreeze()
+    break
+    case("PlayerUnFreeze"),
+        Target:playerUnFreeze() 
+    break
+    #Ragdoll
+    case("PlayerRagdoll"),
+        Target:playerRagdoll()
+    break
+    
+    #Noclip
+    case("PlayerNoclip"),
+        Target:playerNoclipToggle()
+    break
+    
+    case("PlayerFlip"),
+        Target:playerNoclip(0)
+        Target:playerUnFreeze()
+        Target:setVel(vec(0,0,2000))
+    break
+    
+    case("PlayerStrip"),
+        Target:stripWeapons()
+    break
+    
+    case("Kill"),
+        if(!Target:inGodMode()){
+                PPP:propDelete()
+                PPP = propSpawn("models/hunter/blocks/cube025x025x025.mdl", 0)
+                noCollideAll(PPP,0)
+                PPP:propFreeze(0)
+                PPP:setPos(Target:toWorld(vec(0,0,Target:boxSize()[3]+10)))
+                
+                PPP:setMass(10000000)
+                
+                PPP:setAlpha(0)
+                PPP:applyForce((Target:pos()-PPP:pos())*10000000)
+                timer("del",500)
+        }
+        
+    break
+    
+    case("Remove Entity's"),
+        findAllowPlayerProps(Target)
+        findByClass("*")
+        A = findToArray()
+        for(I=1,A:count()){
+            if(A[I,entity]:owner()==Target & Target:isExist()){
+                A[I,entity]:remove()
+            }
+        }    
+    break
+    ##Teleport
+    
+    #Goto
+    
+    case("GotoPlayer"),
+        
+        ReturnPos[owner():steamID(),vector] = owner():pos()
+        
+        owner():setPos(Target:pos()-Target:forward()*50)
+        owner():setEyeAngles((Target:pos()-owner():pos()):toAngle())
+    break
+    
+    #Bring
+    case("BringPlayer"),
+        
+        ReturnPos[Target:steamID(),vector] = Target:pos()
+        
+        Target:setPos(owner():pos()+owner():forward()*50)
+        Target:setEyeAngles((owner():pos()-Target:pos()):toAngle())
+    break
+    
+    #FBring
+    case("FBringPlayer"),
+        
+        ReturnPos[Target:steamID(),vector] = Target:pos()
+        
+        Target:setPos(owner():pos()+owner():forward()*50)
+        Target:setEyeAngles((owner():pos()-Target:pos()):toAngle())
+        Target:playerFreeze()
+    break
+    
+    #Return
+    case("Return"),
+        
+        if(ReturnPos[Target:steamID(),vector]){Target:setPos(ReturnPos[Target:steamID(),vector])}
+    break
+    
+    ##Administrate
+    
+    #Health
+    case("SetHealth"),
+        
+        Target:setHealth(dNval("Value:"))
+    break
+    
+    #Armor
+    case("SetArmor"),
+        
+        Target:setArmor(dNval("Value:"))
+    break
+    
+    #Speed
+    case("SetSpeed"),
+        
+        Target:plyWalkSpeed(dNval("Value:")*4)
+        Target:plyRunSpeed(dNval("Value:")*8)
+    break
+    
+    #Jump
+    case("SetJumpPower"),
+        
+        Target:plyJumpPower(dNval("Value:")*4)
+    break
+    
+    #ResetSpeed
+    case("ResetSpeed"),
+        Target:plyWalkSpeed(200)
+        Target:plyRunSpeed(400)
+    break
+    
+    #ResetJump
+    case("ResetJumpPower"),
+        
+        Target:plyJumpPower(200)
+    break
+    
+    #SetIgnite
+    case("SetIgnite"),
+        
+        Target:ignite(dNval("Value:"))
+    break
+    
+    #Freeze na dohuya
+    case("Jail za 300"),
+        
+        timer(Target:steamID(),dNval("Value:")*100)
+        Jail:pushEntity(Target)
+        JailE:pushVector(Target:pos())
+        
+        Target:setPos(randvec(10000,10000))
+        Target:playerFreeze()
+    break
+}
+
+if(clk("del")){
+    PPP:remove()
+}
+
+for(HJ=1,Jail:count()){
+    if(clk(Jail[HJ,entity]:steamID())){
+        Jail[HJ,entity]:playerUnFreeze()
+        Jail[HJ,entity]:setPos(JailE[HJ,vector])
+    }
+}
