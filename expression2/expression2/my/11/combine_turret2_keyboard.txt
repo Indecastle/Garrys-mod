@@ -1,0 +1,153 @@
+@name Combine Turret2 with keyboard
+@inputs
+@outputs [Driver Turret KeyBoard]:entity Firying
+@persist [E O HoloTurret]:entity Players:array [WTurret WKeyBoard]:wirelink Distance StoredAngle:angle
+@persist MaxDegreeToRelease MaxDegreeToControl HoldDelay IsHold
+@trigger 
+
+if (first() | dupefinished()) { 
+    E=entity() O=owner()
+    
+    Distance = 75
+    MaxDegreeToRelease = 110
+    MaxDegreeToControl = 70
+    HoldDelay = 1000
+    
+    findByClass("gmod_wire_keyboard")
+    KeyBoard = findClosest(E:pos())
+    findByClass("gmod_wire_turret")
+    Turret = findClosest(E:pos())
+    
+    KeyBoard:setAlpha(0)
+    Turret:setAlpha(0)
+    
+    HoloTurret = holoCreate(1, Turret:toWorld(vec(-5, 0, -10)), vec(0.7), Turret:toWorld(ang(0)), vec(255), "models/props_combine/bunker_gun01.mdl")
+    #holoParent(1, Turret)
+    
+    WTurret = Turret:wirelink()
+    WKeyBoard = KeyBoard:wirelink()
+    WKeyBoard["Kick", number] = 0
+    
+    timer("scan", 100)
+}
+
+
+if (first() | duped()) { 
+    function void entity:myapply(Pos:vector, Ang:angle, Precision:number) {
+        This:applyForce(((Pos-This:pos())*15-This:vel()/2)*This:mass())
+        This:applyTorque((Precision*150*This:toLocalAxis(rotationVector(quat(Ang)/quat(This)))-12*This:angVelVector())*This:inertia())
+    }
+    
+    function number getDegreeDiff(Dir1:vector, Dir2:vector) {
+        Cos = (Dir1:x()*Dir2:x()+Dir1:y()*Dir2:y()+Dir1:z()*Dir2:z()) / (Dir1:distance(vec(0))*Dir2:distance(vec(0)))
+        return acos(Cos)
+    }
+    
+    function void kickDriver() {
+        WKeyBoard["Kick", number] = 1
+        timer("KickOff", 100)
+    }
+    
+    function void activate() {
+        Turret:soundPlay(1, 0.598, "weapons/shotgun/shotgun_cock.wav")
+        holoAnim(1, "activate", 0)
+        
+        IsHold = 1
+        timer("hold", HoldDelay)
+    }
+    
+    function void deactivate() {
+        kickDriver()
+        holoAnim(1, "retract", 0)
+        
+        IsHold = 0
+        stoptimer("hold")
+    }
+}
+
+
+interval(10)
+
+
+if (clk("scan")){
+    findByClass("player")
+    local OP = findToArray()
+    if (Players:count() != OP:count()){
+        runOnKeys(OP, 1)
+    }
+    Players = OP
+    timer("scan",1000)
+}
+
+if (clk("firing")){
+    if (Driver:isPlayer() & Firying) {
+        holoAnim(1, "fire", 0.01)
+        timer("firing", 100)
+    }
+}
+
+if (clk("KickOff")) {
+    WKeyBoard["Kick", number] = 0
+}
+
+if (clk("hold")) {
+    IsHold = 0
+}
+
+local Who = keyClk()
+Driver = WKeyBoard["User", entity]
+
+if (changed(Driver) & Driver) {
+    activate()
+}
+
+
+if (Who) {
+    if (changed(Who:keyPressed("e")) && Who:keyPressed("e")) {
+        if (Driver == Who & Driver:isPlayer()) {
+            deactivate()
+        }
+    }
+}
+
+if (Driver:isPlayer()) {
+    if (!IsHold & changed(Driver:keyPressed("mouse_left"))) {
+        Firying = Driver:keyPressed("mouse_left")
+        WTurret["Fire", number] = Firying
+        timer("firing", 100)
+    }
+    
+    local Dir1 = Driver:eyeAngles():forward()
+    local Dir2 = KeyBoard:angles():up()
+    local DegreeDiff = getDegreeDiff(Dir1, Dir2)
+    
+    if (DegreeDiff < MaxDegreeToControl) {
+        StoredAngle = Driver:eyeAngles()
+    }
+    
+    if (Driver:shootPos():distance(Turret:pos()) > Distance 
+            | getDegreeDiff(Dir1, Dir2) > MaxDegreeToRelease
+            | KeyBoard:toLocal(Driver:shootPos()):z() > 0) {
+        deactivate()
+    }
+    
+} else {
+    WTurret["Fire", number] = 0
+}
+
+
+local ResultAng = ang() 
+
+if (Driver:isPlayer() & !IsHold) {
+    ResultAng = StoredAngle
+} else {
+    ResultAng = KeyBoard:toWorld(ang(-90,0,0))
+}
+
+holoPos(1, KeyBoard:toWorld(vec(10, 0, 0)))
+holoAng(1, ResultAng)
+
+local ResultPos = HoloTurret:toWorld(vec(12, -1, 12))
+
+Turret:myapply(ResultPos, ResultAng, 4)
+

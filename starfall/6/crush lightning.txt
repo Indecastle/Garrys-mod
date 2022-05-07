@@ -4,7 +4,7 @@
 
 
 local Target = owner()
-Target = find.playersByName("mark")[1]
+Target = find.playersByName("Markiz")[1]
 
 
 
@@ -46,7 +46,7 @@ timer.create("kek", 0.01, 0, function()
         effectData:setOrigin(hitPos)  
         effectData:setEntity(target)
     
-        effectData:play("balloon_pop")
+        effectData:play("TeslaHitboxes")
     end)
 end)
 

@@ -1,0 +1,379 @@
+--@name SF Car
+--@author AstalNeker
+
+if SERVER then
+
+    --[[
+    How to use?
+    
+    1. Spawn a baseplate
+    2. Spawn the chip on the baseplate
+    3. Have fun !
+    
+    ]]
+    
+    --------------SETTINGS--------------
+    
+    --Control
+    
+    --Drift mode
+    local steer_max_angle = 65
+    --local apply_force = 70 --The max force apply at 0 km/h
+    --
+    
+    --Normal mode
+    local apply_force = 35 --The max force apply at 0 km/h
+    --
+    
+    local max_speed = 150 --Speed in km/h, Need big apply_force value to go at high speed
+    
+    --Engine
+    local idle_rpm = 1300
+    local max_rpm = 7000
+    local max_torque = 360
+    local engine_sound = "acf_engines/v12_russian.wav"
+    local flywheel_weight = 0.15
+    
+    local rpm = 0
+    
+    --Mass
+    local base_mass = 800
+    local wheel_mass = 100
+    
+    --Model
+    local front_wheel_mdl = "models/sprops/trans/wheel_c/t_wheel35.mdl" --Better to use Sprops wheel..
+    local rear_wheel_mdl = "models/sprops/trans/wheel_c/t_wheel35.mdl"
+    local seat_mdl = "models/nova/airboat_seat.mdl"
+    local steering_wheel_mdl = "models/sprops/trans/stwheels/stwheel_1.mdl"
+    
+    --Advanced
+    local bodygroups = {
+        front = {
+            [1] = {
+                description = "Wheel model",
+                groups = 1,
+                value = 2
+            },
+            [2] = {
+                description = "Brake rotor",
+                groups = 2,
+                value = 1
+            }
+        },
+        
+        rear = {
+            [1] = {
+                description = "Wheel model",
+                groups = 1,
+                value = 2
+            },
+            [2] = {
+                description = "Brake rotor",
+                groups = 2,
+                value = 1
+            }
+        }
+    }
+
+    --Suspension
+    local constants = 45000
+    local damping = 3200
+    local length = 45 --Default 45
+    
+    ------------------------------------
+
+    local base = chip():isWeldedTo()
+    
+    local steering_plate = nil
+    local seat1 = nil
+    local seat2 = nil
+    local driver = nil
+    
+    local lock = steer_max_angle
+    local steering_angle = 0
+    local steer = 0
+    local a,d = 0,0
+    local z,s = 0,0
+    local brake = 0
+    local shift = 0
+    local kmh = 0
+    local original_kmh = 0
+    local throttle = 0
+    local rpm_wheel = 0
+
+    local engine_data = {}
+    local wheel = {}
+    local constraints = {}
+    local steering_wheel_holo = nil
+    local engine_sound_data = nil
+    local hud = nil
+    
+    function brake_wheel(wheel,kmh,max_speed,force)
+        local ang_speed = wheel:getAngleVelocity()
+        force = (ang_speed.y/300) * force * (0.9-(kmh/max_speed)*0.3)
+        dir = wheel:getRight()
+        wheel:applyTorque(dir * force * wheel:getMass())
+    end
+    
+    function turn_wheel(i,force,wheel,kmh,max_speed)
+        if i == 1 or i == 2 then dir = wheel:getRight()
+        elseif i == 3 or i == 4 then dir = -wheel:getRight() end
+
+        if kmh > max_speed then
+        else
+            wheel:applyTorque(dir * force * wheel:getMass())
+        end
+    end
+          
+    function add_constraints(base,base_size,steering_plate)
+        wheel[1]:setPos(base:localToWorld(Vector(base_size.x/2 - wheel[1]:obbSize().x/2 - 5,base_size.y/2 - 5,-5)))
+        wheel[2]:setPos(base:localToWorld(Vector(-base_size.x/2 + wheel[2]:obbSize().x/2 + 5,base_size.y/2 - 5,-5)))
+        wheel[3]:setPos(base:localToWorld(Vector(base_size.x/2 - wheel[3]:obbSize().x/2 - 5,-base_size.y/2 + 5,-5)))
+        wheel[4]:setPos(base:localToWorld(Vector(-base_size.x/2 + wheel[4]:obbSize().x/2 + 5,-base_size.y/2 + 5,-5)))
+        
+        for k, groups in pairs(bodygroups.front) do
+            wheel[1]:setBodygroup(groups.groups, groups.value)
+            wheel[3]:setBodygroup(groups.groups, groups.value)
+        end
+        
+        for k, groups in pairs(bodygroups.rear) do
+            wheel[2]:setBodygroup(groups.groups, groups.value)
+            wheel[4]:setBodygroup(groups.groups, groups.value)
+        end
+                
+        for i=1, 2 do
+            wheel[i]:enableSphere(true)
+            wheel[2+i]:enableSphere(true)
+                        
+            constraint.rope(wheel[i], wheel[i], base, 0, 0, Vector(0,0,0), Vector(0,0,0), nil, 0, 0, 0, nil, true)
+            constraint.rope(wheel[2+i], wheel[2+i], base, 0, 0, Vector(0,0,0), Vector(0,0,0), nil, 0, 0, 0, nil, true)
+
+            if i == 1 then
+                constraint.rope(wheel[i], wheel[i], base, 0, 0, Vector(0,0,0), Vector(base_size.x/2,0,0), nil, 0, 0, 0, nil, true)
+                constraint.rope(wheel[2+i], wheel[2+i], base, 0, 0, Vector(0,0,0), Vector(base_size.x/2,0,0), nil, 0, 0, 0, nil, true)
+            elseif i == 2 then
+                constraint.rope(wheel[i], wheel[i], base, 0, 0, Vector(0,0,0), Vector(-base_size.x/2,0,0), nil, 0, 0, 0, nil, true)
+                constraint.rope(wheel[2+i], wheel[2+i], base, 0, 0, Vector(0,0,0), Vector(-base_size.x/2,0,0), nil, 0, 0, 0, nil, true)
+            end
+        end
+                    
+        constraint.elastic(wheel[1], wheel[1], base, nil, nil, Vector(0,0,0), Vector(base_size.x/2 - wheel[1]:obbSize().x/2 - 5,base_size.y/2 - 5,45), constants, damping, 1, 0, false)
+        constraint.elastic(wheel[2], wheel[2], base, nil, nil, Vector(0,0,0), Vector(-base_size.x/2 + wheel[2]:obbSize().x/2 + 5,base_size.y/2 - 5,45), constants, damping, 1, 0, false)
+        constraint.elastic(wheel[3], wheel[3], base, nil, nil, Vector(0,0,0), Vector(base_size.x/2 - wheel[3]:obbSize().x/2 - 5,-base_size.y/2 + 5,45), constants, damping, 1, 0, false)
+        constraint.elastic(wheel[4], wheel[4], base, nil, nil, Vector(0,0,0), Vector(-base_size.x/2 + wheel[4]:obbSize().x/2 + 5,-base_size.y/2 + 5,45), constants, damping, 1, 0, false)
+        
+        constraint.setElasticLength(wheel[1], wheel[1], length)
+        constraint.setElasticLength(wheel[2], wheel[2], length)
+        constraint.setElasticLength(wheel[3], wheel[3], length)
+        constraint.setElasticLength(wheel[4], wheel[4], length)
+        
+        for i=1, 2 do
+            constraint.ballsocketadv(steering_plate, wheel[1], nil, nil, Vector(0,0,0), Vector(0,0,0), nil, nil, Vector(-180,-0.01,-0.01), Vector(180,0.01,0.01), Vector(0,0,0), true, true)
+            constraint.ballsocketadv(wheel[1], steering_plate, nil, nil, Vector(0,0,0), Vector(0,0,0), nil, nil, Vector(-180,-0.01,-0.01), Vector(180,0.01,0.01), Vector(0,0,0), true, true)
+            constraint.ballsocketadv(steering_plate, wheel[3], nil, nil, Vector(0,0,0), Vector(0,0,0), nil, nil, Vector(-180,-0.01,-0.01), Vector(180,0.01,0.01), Vector(0,0,0), true, true)
+            constraint.ballsocketadv(wheel[3], steering_plate, nil, nil, Vector(0,0,0), Vector(0,0,0), nil, nil, Vector(-180,-0.01,-0.01), Vector(180,0.01,0.01), Vector(0,0,0), true, true)
+    
+            constraint.ballsocketadv(base, wheel[2], nil, nil, Vector(0,0,0), Vector(0,0,0), nil, nil, Vector(-180,-0.01,-0.01), Vector(180,0.01,0.01), Vector(0,0,0), true, true)
+            constraint.ballsocketadv(wheel[2], base, nil, nil, Vector(0,0,0), Vector(0,0,0), nil, nil, Vector(-180,-0.01,-0.01), Vector(180,0.01,0.01), Vector(0,0,0), true, true)
+            constraint.ballsocketadv(base, wheel[4], nil, nil, Vector(0,0,0), Vector(0,0,0), nil, nil, Vector(-180,-0.01,-0.01), Vector(180,0.01,0.01), Vector(0,0,0), true, true)
+            constraint.ballsocketadv(wheel[4], base, nil, nil, Vector(0,0,0), Vector(0,0,0), nil, nil, Vector(-180,-0.01,-0.01), Vector(180,0.01,0.01), Vector(0,0,0), true, true)
+        end    
+        
+        constraint.nocollide(wheel[1], wheel[3])
+        constraint.nocollide(wheel[2], wheel[4])
+        constraint.nocollide(wheel[1], wheel[2])
+        constraint.nocollide(wheel[3], wheel[4])
+    end
+        
+    if base then
+        if base:getOwner() == owner() then
+            print(tostring(chip()) .. " successfully linked with: " .. tostring(base))
+            local base_size = base:obbSize()
+    
+            --Reset base
+            base:setFrozen(true)
+            base:setNocollideAll(true)
+            base:setPos(base:localToWorld(Vector(0,0,30)))
+            base:setAngles(Angle(0,90,0))
+            if base:getMass() < base_mass then
+                base:setMass(base_mass)
+            end
+
+            steering_plate = prop.create(base:localToWorld(Vector(0,0,15)), Angle(0,0,0), "models/sprops/rectangles/size_2_5/rect_18x18x3.mdl", 1)
+            steering_plate:setMass(50000)
+            
+            steering_wheel_holo = holograms.create(chip():getPos(), Angle(0,0,0), steering_wheel_mdl)
+            
+            hud = prop.createComponent(chip():getPos(), Angle(0,0,0), "starfall_hud", "models/bull/dynamicbuttonsf.mdl", true)
+            hud:linkComponent(chip())
+            --Spawn all props
+            timer.simple(0.2, function()
+                seat1 = prop.createSeat(base:localToWorld(Vector(base_size.x/8,base_size.y/2 - 20,5)), Angle(0,0,0), seat_mdl, 1)
+                seat2 = prop.createSeat(base:localToWorld(Vector(base_size.x/8,-base_size.y/2 + 20,5)), Angle(0,0,0), seat_mdl, 1)
+                
+                seat1:setParent(base)
+                seat2:setParent(base)
+                
+                hud:linkComponent(seat1)
+                hud:linkComponent(seat2)
+                
+                timer.create("create wheel", 0.2, 4, function()
+                    if #wheel < 2 then
+                        if #wheel == 0 then
+                            wheel[#wheel+1] = prop.create(base:localToWorld(Vector(0,0,0)), Angle(0,90,0), front_wheel_mdl, 1)
+                        else
+                            wheel[#wheel+1] = prop.create(base:localToWorld(Vector(0,0,0)), Angle(0,90,0), rear_wheel_mdl, 1)
+                        end
+                    else
+                        if #wheel == 2 then
+                            wheel[#wheel+1] = prop.create(base:localToWorld(Vector(0,0,0)), Angle(0,-90,0), front_wheel_mdl, 1)
+                        else
+                            wheel[#wheel+1] = prop.create(base:localToWorld(Vector(0,0,0)), Angle(0,-90,0), rear_wheel_mdl, 1)
+                        end
+                    end
+                end)
+                
+                steering_wheel_holo:setPos(seat1:localToWorld(Vector(0,22,17)))
+                steering_wheel_holo:setParent(seat1)
+            
+                timer.simple(1, function()
+                    add_constraints(base,base_size,steering_plate)
+                    
+                    base:setFrozen(false)
+                    for i=1, 4 do
+                        wheel[i]:setFrozen(false)
+                        wheel[i]:setMass(wheel_mass)
+                    end
+                end)
+            end)
+        else
+            print("You are not the owner of the baseplate, cannot create the car.")
+        end
+        
+    else
+        print("Cannot link the " .. tostring(chip()) .. " to the baseplate..")
+    end
+    
+    hook.add("KeyPress", "", function(ply,button)
+        if ply == driver then
+            if button == 512 then a = 1 end
+            if button == 1024 then d = 1 end
+            if button == 8 then z = 1 end
+            if button == 16 then s = 1 end
+            if button == 2 then brake = 1 end
+            if button == 131072 then shift = 1 end
+        end
+    end)
+    
+    hook.add("KeyRelease", "", function(ply,button)
+        if ply == driver then
+            if button == 512 then a = 0 end
+            if button == 1024 then d = 0 end
+            if button == 8 then z = 0 end
+            if button == 16 then s = 0 end
+            if button == 2 then brake = 0 end
+            if button == 131072 then shift = 0 end
+        end
+    end)
+            
+    hook.add("tick","Steering and control",function()
+        if seat1 then
+            driver = seat1:getDriver()
+            if driver then
+            else
+                a,d,z,s,shift = 0,0,0,0,0
+            end
+        end
+
+        if base and #wheel >= 4 then
+            steer = steer + (d-a)*1.4+base:getAngleVelocity().z/65
+            bvel = math.min(base:getVelocity():getLength()/35000+1,2)
+            steer = steer / bvel
+            steer = math.clamp(steer,-lock,lock)
+            steering_angle = steering_angle + (steer - steering_angle) * 0.96
+            
+            if steering_plate then
+                steering_plate:setAngles(base:localToWorldAngles(Angle(0,-steering_angle,steering_angle/3)))
+                steering_wheel_holo:setAngles(seat1:localToWorldAngles(Angle(-30,-90,-(steering_angle/lock) * 350)))
+                if not steering_plate:isFrozen() then steering_plate:setFrozen(not steering_plate:isPlayerHolding()) end
+            end
+            
+            original_kmh = (base:getVelocity():getLength() * 1.905 / 100000 * 3600)
+            kmh_wheel_avg = 0
+            
+            rpm = math.lerp((1-flywheel_weight/1) * 0.03,rpm,(idle_rpm + (throttle/100) * (max_rpm-idle_rpm)) * ((idle_rpm/max_rpm)+(rpm_wheel/max_rpm)))
+            
+            for i=1, 4 do
+                kmh = (wheel[i]:getAngleVelocity():getLength() * 1.905 / 100000 * 900)
+                
+                if brake == 1 then
+                    brake_wheel(wheel[i],kmh,max_speed,15)
+                elseif brake == 0 then
+                    throttle = 0
+                    if z > 0 or s > 0 then
+                        throttle = (50 + (shift or 0)*50)
+                    end
+                    
+                    force = (rpm/max_rpm) * apply_force * (1-(kmh/max_speed)*0.5)
+                    if z > 0 then
+                        turn_wheel(i,-force,wheel[i],kmh,max_speed)
+                    elseif s > 0 then
+                        turn_wheel(i,force,wheel[i],kmh,max_speed)
+                    end
+                end
+                
+                kmh_wheel_avg = kmh_wheel_avg + kmh
+            end
+            rpm_wheel = idle_rpm + ((kmh_wheel_avg/4) / max_speed) * (max_rpm-idle_rpm)
+            
+            if engine_sound_data and engine_sound_data:isPlaying() then
+                engine_sound_data:setPitch((rpm / max_rpm) * 100,0.2)
+                
+                if z or s then
+                    engine_sound_data:setVolume(1,0.2) 
+                else
+                    engine_sound_data:setVolume(0.6,0.2)
+                end
+            else
+                engine_sound_data = sounds.create(base, engine_sound)
+                engine_sound_data:play()
+            end
+            
+            engine_data = {
+                rpm = rpm,
+                idle_rpm = idle_rpm,
+                max_rpm = max_rpm,
+                throttle = throttle,
+                force = force,
+                kmh = original_kmh,
+                wheel_speed_avg = (kmh_wheel_avg/4)
+            }
+        end
+    end)
+    
+    timer.create("send_engine_data",0.2,0,function()
+        net.start("engine_data")
+        net.writeTable(engine_data)
+        net.send()
+    end)
+end
+
+
+
+if CLIENT then
+    local engine_data = nil
+    local to_rpm = 0
+    
+    net.receive("engine_data",function()
+        engine_data = net.readTable()
+    end)
+    
+    hook.add("drawhud","",function()
+        if engine_data then
+            to_rpm = math.lerp(0.2,to_rpm,engine_data.rpm)
+            render.drawSimpleText(40, 250, "Rpm: " .. to_rpm)
+            render.drawSimpleText(40, 270, "Throttle: " .. engine_data.throttle)
+            render.drawSimpleText(40, 290, "Kmh: " .. engine_data.kmh)
+        end
+    end)
+end

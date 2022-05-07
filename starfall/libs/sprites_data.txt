@@ -51,4 +51,9 @@ SpritesData = {
         size = {10, 10},
         frameCount = 10^2*2 - 13
     },
+    anime1   = {
+        urls = {"https://i.imgur.com/uOKZF7G.png"},
+        size = {3, 2},
+        frameCount = 3*2
+    },
 }

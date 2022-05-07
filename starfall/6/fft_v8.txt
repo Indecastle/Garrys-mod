@@ -1,0 +1,86 @@
+--@name fft_v8
+--@author Eiji 
+--@client
+
+--local url = "https://ru.hitmotop.com/get/music/20210528/MORGENSHTERN_-_NOMINALO_72984963.mp3"
+local url = "https://u.teknik.io/o2Fly.mp3"
+
+local speed = 1
+
+
+function start() 
+    local fft = {}
+    local fft2 = {}
+    local track_time = 0
+    local track_origin = 0
+    local Text = render.createFont("Roboto", 90)
+    timer.create("pi", 1, 0, function() track_time = track_time - speed end)
+    
+    bass.loadURL(url, "3d noblock", function(Sound)
+        Sound:setPitch(speed)
+        
+        hook.add("think", "", function()
+            Sound:setPos(chip():getPos())
+            fft = Sound:getFFT(7)
+            
+            if track_time < 0 then
+                track_time = math.round(Sound:getLength() or 0)
+                track_origin = track_time
+                Sound:play()
+            else
+            end
+        end)
+            
+    end)
+    
+    hook.add("render", "", function() 
+        for i = 1,80 do 
+            f = fft[i] or 0
+            fft2[i] = math.lerp(0.3, fft2[i] or 0, f) or 0
+            f2 = fft2[i] or 0
+            --render.setColor(Color(i * 12, 1, 1):hsvToRGB())   
+            render.setColor(Color(120,120,120)) 
+            render.draw3DBox(Vector(3 + math.cos(math.rad(360/80)*i),3 + math.sin(math.rad(360/80)*i),1) * 85,Angle(0,(360 / 80)*i, 0),Vector(3 + (f2 * 120),3,3),Vector(-3)) --KRUG  
+        end     
+        render.setColor(Color(120, 120, 120))
+        render.draw3DWireframeBox(Vector(512/2,512/2,90), Angle(timer.curtime() * 4), Vector(30),Vector(-30))   
+        
+        render.setFont(Text)
+        render.setColor(Color(120, 120, 120))  
+        render.drawSimpleText(256, 120, "" .. string.toMinutesSeconds(track_time),  1, 1)  
+         
+    end)
+end
+
+
+
+
+local perms = {
+    "bass.loadURL",
+    "render.screen",
+}
+
+setupPermissionRequest(perms, "URL sounds from external sites", true)
+
+
+function checkGrant()
+    return url and hasPermission("bass.loadURL", url)
+end
+
+
+if checkGrant() then
+    start()
+else
+    hook.add("render", "perms", function()
+        render.drawSimpleText(256, 256, "Press e to listen to epic songs", 1, 1)
+    end)
+end
+
+hook.add("permissionrequest", "perms", function()
+    if checkGrant() and hasPermission("render.screen") then
+        hook.remove("permissionrequest", "perms")
+        hook.remove("render", "perms")
+        
+        start()
+    end
+end)

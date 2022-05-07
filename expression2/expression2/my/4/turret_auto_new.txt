@@ -4,7 +4,8 @@
 @persist Defaultpos MaxDegree Radius [Turret H]:entity W:wirelink E Ang:angle
 @trigger none
 interval(10)
-if(first()) { 
+
+if(first() | dupefinished()) { 
     MaxDegree = 45
     Radius = 5000
     E = 1.5      #intervaltick(0.015..)*E
@@ -16,16 +17,18 @@ if(first()) {
     #findExcludePlayer(owner())
     timer("scan",100)
     
-    
-    
     H = holoCreate(1,entity():toWorld(vec(0,0,10)),vec(0.3)) H:setAlpha(0)
     holoParent(1,entity())
-    
+}
+
+
+if(first() | duped()) {
     function void entity:myapply(Pos:vector, Ang:angle, Precision:number) {
         This:applyForce(((Pos-This:pos())*15-This:vel()/2)*This:mass())
         This:applyTorque((Precision*150*This:toLocalAxis(rotationVector(quat(Ang)/quat(This)))-12*This:angVelVector())*This:inertia())
     }
 }
+
 
 #Turret:setPos(H:toWorld(vec(10,0,0)))
 Turret:myapply(H:toWorld(vec(10,0,0)), Ang, 4)

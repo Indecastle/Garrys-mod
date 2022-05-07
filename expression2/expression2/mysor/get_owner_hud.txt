@@ -1,0 +1,17 @@
+@name Get owner hud
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+findByClass("gmod_wire_egp_hud")
+
+Ar = findToArray()
+
+if (Ar:count() > 0){
+    foreach(I, V:entity = Ar) {
+        print(V:owner())
+    }
+}
+
+interval(1000)

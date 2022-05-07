@@ -9,7 +9,7 @@ local url4 = "http://air.radiorecord.ru:8102/rock_128" -- not working
 local url5 = "http://radio-srv1.11one.ru/record192k.mp3"
 local url6 = "http://sv.wargaming.fm:8051/128"
 
-local url = url6
+local url = url5
 
 
 local buffers = {"RT", "RT2"}
@@ -115,39 +115,33 @@ do
     end
 end
 
+
 local perms = {
-    --"render.screen",
     "bass.loadURL",
-    --"sound.create",
-    --"sound.modify"
+    "render.screen",
 }
 
-setupPermissionRequest({"bass.loadURL"}, "URL sounds from external sites", true)
+setupPermissionRequest(perms, "URL sounds from external sites", true)
 
-if url and hasPermission("bass.loadURL", url) then
-    start(url)
+
+function checkGrant()
+    return url and hasPermission("bass.loadURL", url)
 end
 
-if hasPermission("render.screen") then
+
+if checkGrant() then
+    start(url)
+else
     hook.add("render", "perms", function()
         render.drawSimpleText(256, 256, "Press e to listen to epic songs", 1, 1)
     end)
 end
 
 hook.add("permissionrequest", "perms", function()
-    --if permissionRequestSatisfied() then
-    if hasPermission("bass.loadURL", url) then
+    if checkGrant() and hasPermission("render.screen") then
         hook.remove("permissionrequest", "perms")
         hook.remove("render", "perms")
         
-        start(url)
+        start()
     end
 end)
-
-/*
-hook.add("permissionrequest", "permission", function()
-    if url and hasPermission("bass.loadURL", url) then
-        start(url)
-    end
-end)
-*/

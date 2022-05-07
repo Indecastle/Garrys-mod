@@ -8,7 +8,7 @@ dofile("libs/sprites_data.txt")
 local SpriteManager = require("libs/sprites1.txt")
 
 
-local img = "niggers"
+local img = "anime1"
 local maxh = 10*20
 local delay = 0.05
 

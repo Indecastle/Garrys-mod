@@ -1,0 +1,48 @@
+@name Message App EGP derma
+@inputs [EGP]:wirelink [HisMessage]:string [HisSend]:number
+@outputs [MyMessage]:string [MySend]:number
+@persist [Chip]:entity [Messages]:array
+#include "library/egpderma"
+if(first() | dupefinished())
+{
+    Chip = entity()
+    Messages = array()
+    
+    panel("App Message",randvec2(0,512 - 250),vec2(250))
+    color("App Message",vec4(0,0,randint(100,255),255))
+    
+    listbox("Messages","App Message",vec2(5,30),250 - 5 - 5,8)
+    color("Messages",vec4(randint(161,255),randint(161,255),randint(161,255),255))
+    
+    text("Input","App Message",vec2(5,60 + ((8 * 20))),250 - 5 - 5 - 50 - 5)
+
+    button("Send","App Message",vec2(5 + (250 - 50 - 5 - 5),60 + ((8 * 20))),vec2(50,20))
+    color("Send",vec4(0,255,0,255))
+
+    runOnTick(1)
+
+}
+
+
+
+
+MyMessage = sval("Input")
+
+MySend = clkd("Send")
+
+if(MySend)
+{
+    Messages:pushString("Your: " + MyMessage)
+    setarray("Messages",Messages)
+}
+
+if(HisMessage != "" & changed(HisSend) & HisSend)
+{
+    Messages:pushString("User 1: " + HisMessage)
+    setarray("Messages",Messages)
+}
+
+if(Messages:count() > 8) 
+{
+    Messages:remove(1)
+}

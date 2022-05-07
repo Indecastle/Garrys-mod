@@ -1,6 +1,6 @@
 --@name Dat
 --@author OctopuSSX
---@includedir libs
+--@include ibs/screen.txt
 --@client
 
 dofile("libs/screen.txt")

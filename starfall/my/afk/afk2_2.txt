@@ -3,7 +3,7 @@
 --@client
 
 local AFK = owner()
-AFK = find.playersByName("port")[1]
+AFK = find.playersByName("Markiz")[1]
 /*AFK = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true

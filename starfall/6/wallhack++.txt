@@ -1,0 +1,226 @@
+--@name WallHack++
+--@author PrikolMen#3372
+--@shared
+
+--[[-----------------
+    Configuration
+-----------------]]--
+
+if CLIENT then
+
+    -- Colors
+    CLIENT_DEATH_COLOR = Color( 250, 50, 50 )
+
+    -- Players
+    CLIENT_REMOVE_FRIENDS = true
+
+    -- Scaner
+    CLIENT_UPDATE_TIME = 0.05
+    CLIENT_MAX_DISTANCE = 10000
+
+else
+
+    -- Players
+    SERVER_REMOVE_SUPERADMINS = false
+    SERVER_REMOVE_ADMINS = false
+    SERVER_REMOVE_NOCLIP = true
+    SERVER_REMOVE_DEAD = true
+    SERVER_REMOVE_GOD = true
+
+    -- Scaner
+    SERVER_UPDATE_TIME = 0.5
+
+end
+
+--[[-----------------
+         Code
+-----------------]]--
+
+local owner = owner()
+if (CLIENT) then
+    if (player() != owner) then
+        return
+    else
+        enableHud( nil, true )
+    end
+end
+
+local ipairs = ipairs
+
+local compiledName
+do
+    local chip = chip()
+    if isValid( chip ) then
+        if (SERVER) then
+            // pcall(chip.setNoDraw, chip, true)
+            chip:setNocollideAll( true )
+        end
+
+        if isValid( owner ) then
+            compiledName = crc( chip:getChipName() .. " by " .. chip:getChipAuthor() .. ", Owner: " .. owner:getName() )
+        end
+    end
+end
+
+if (compiledName == nil) then
+    error("Chip Loading Error!")
+    return
+end
+
+if (CLIENT) then
+    local dots = {}
+
+    do
+
+        local buildDots
+
+        do
+
+            local LerpColor
+            do
+                local Color = Color
+                local lerp = math.lerp
+                function LerpColor( frac, a, b )
+                    return Color( lerp( frac, a["r"], b["r"] ), lerp( frac, a["g"], b["g"] ), lerp( frac, a["b"], b["b"] ) )
+                end
+            end
+
+            local isValid = isValid
+            local team_getColor = team.getColor
+
+            local CLIENT_DEATH_COLOR = CLIENT_DEATH_COLOR
+            local CLIENT_MAX_DISTANCE = CLIENT_MAX_DISTANCE * CLIENT_MAX_DISTANCE
+            local CLIENT_REMOVE_FRIENDS = CLIENT_REMOVE_FRIENDS
+
+            local players = {}
+            function buildDots( tbl )
+                if (tbl != nil) then
+                    players = tbl
+                end
+
+                dots = {}
+
+                for num, ply in ipairs( players ) do
+                    if isValid( ply ) then
+                        if CLIENT_REMOVE_FRIENDS and (ply:getFriendStatus() == "friend") then
+                            continue
+                        end
+
+                        if (CLIENT_MAX_DISTANCE > 0) and (ply:getPos():getDistanceSqr( owner:getPos() ) > CLIENT_MAX_DISTANCE) then
+                            continue
+                        end
+
+                        table.insert( dots, {
+                            ply:getName(),
+                            LerpColor( 1 - ( ply:getHealth() / ply:getMaxHealth() ), team_getColor( ply:getTeam() ), CLIENT_DEATH_COLOR ),
+                            ply:getPos(),
+                            ply:getAngles(),
+                            ply:obbMins(),
+                            ply:obbMaxs()
+                        })
+                    end
+                end
+
+            end
+
+        end
+
+        net.receive(compiledName, function()
+            local tbl = net.readTable()
+            if (#tbl > 0) then
+                buildDots( tbl )
+            end
+        end)
+
+        timer.create( compiledName, CLIENT_UPDATE_TIME, 0, buildDots )
+
+    end
+
+    --[[------------------
+            Render
+    ------------------]]--
+
+    do
+
+        local render_setColor = render.setColor
+
+        do
+            local render_clearDepth = render.clearDepth
+            local render_draw3DWireframeBox = render.draw3DWireframeBox
+            hook.add("postdrawtranslucentrenderables", compiledName, function()
+                for num, info in ipairs( dots ) do
+                    render_clearDepth()
+                    render_setColor( info[2] )
+                    render_draw3DWireframeBox( info[3], info[4], info[5], info[6] )
+                end
+            end)
+        end
+
+        do
+            local render_drawSimpleText = render.drawSimpleText
+            hook.add("drawhud", compiledName, function()
+                for num, info in ipairs( dots ) do
+                    local data = info[3]:toScreen()
+                    if (data["visible"] == true) then
+                        render_setColor( info[2] )
+                        render_drawSimpleText( data["x"], data["y"], info[1], 1, 2 )
+                    end
+                end
+            end)
+        end
+
+    end
+
+else
+
+    local SERVER_REMOVE_GOD = SERVER_REMOVE_GOD
+    local SERVER_REMOVE_DEAD = SERVER_REMOVE_DEAD
+    local SERVER_REMOVE_ADMINS = SERVER_REMOVE_ADMINS
+    local SERVER_REMOVE_NOCLIP = SERVER_REMOVE_NOCLIP
+    local SERVER_REMOVE_SUPERADMINS = SERVER_REMOVE_SUPERADMINS
+
+    local isValid = isValid
+    local net_send = net.send
+    local net_start = net.start
+    local table_insert = table.insert
+    local net_writeTable = net.writeTable
+    local find_allPlayers = find.allPlayers
+
+    timer.create(compiledName, SERVER_UPDATE_TIME, 0, function()
+        local players = {}
+        for num, ply in ipairs( find_allPlayers() ) do
+            if (ply == owner) then
+                continue
+            end
+
+            if not ply:isAlive() and SERVER_REMOVE_DEAD then
+                continue
+            end
+
+            if ply:isAdmin() and SERVER_REMOVE_ADMINS then
+                continue
+            end
+
+            if ply:isSuperAdmin() and SERVER_REMOVE_SUPERADMINS then
+                continue
+            end
+
+            if ply:isNoclipped() and SERVER_REMOVE_NOCLIP then
+                continue
+            end
+
+            if ply:hasGodMode() and SERVER_REMOVE_GOD then
+                continue
+            end
+
+            table_insert( players, ply )
+        end
+
+        if isValid( owner ) then
+            net_start( compiledName )
+                net_writeTable( players )
+            net_send( owner )
+        end
+    end)
+
+end

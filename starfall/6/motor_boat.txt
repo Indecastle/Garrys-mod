@@ -1,0 +1,98 @@
+--@name Motor Boat
+--@author
+--@shared
+
+if CLIENT then
+    
+else
+    chip():setColor(Color(255,255,255,0))
+    local turnAngle = 55
+    local turnSpeed = 5
+    local resultAngle = 0
+    local dist = 0
+    local clamp = math.clamp
+    
+    function selectDriver(ply, veh)
+        if veh != Seats.driver_seat then return end
+        driver = ply
+        snd:play()
+        --print(driver)
+    end
+    
+    function checkDriver(ply, veh)
+        if veh != Seats.driver_seat then return end
+        driver = nil
+        snd:stop()
+    end
+    
+    local boat = chip():isWeldedTo()
+    
+    
+    
+    if boat:getModel() == "models/props_canal/boat002b.mdl" then
+        boat:setFrozen(true)
+        Seats = {
+            driver_seat = prop.createSeat(boat:localToWorld(Vector(-45,0,-1)),boat:localToWorldAngles(Angle(0,-90,0)),"models/nova/airboat_seat.mdl",true),
+            passenger_seat1 = prop.createSeat(boat:localToWorld(Vector(-45,16,-1)),boat:localToWorldAngles(Angle(0,-90,0)),"models/nova/airboat_seat.mdl",true),
+            passenger_seat2 = prop.createSeat(boat:localToWorld(Vector(-45,-16,-1)),boat:localToWorldAngles(Angle(0,-90,0)),"models/nova/airboat_seat.mdl",true),
+        }
+        for _,v in pairs(Seats) do
+            v:setColor(Color(255,255,255,0))
+            v:setParent(boat)
+        end     
+                                        
+        motorbase = holograms.create(boat:localToWorld(Vector(-68,0,0)),boat:localToWorldAngles(Angle(0,0,0)),"models/props_c17/oildrum001.mdl",Vector(0.4,0.4,0.3))
+        motorbase:setParent(boat)
+        local motorbaseHolograms = {
+            handle = holograms.create(motorbase:localToWorld(Vector(10,0,13)),motorbase:localToWorldAngles(Angle(0,-90,0)),"models/props_c17/TrapPropeller_Lever.mdl",Vector(1,1.2,1)),
+            verticalShaft = holograms.create(motorbase:localToWorld(Vector(0,0,0)),motorbase:localToWorldAngles(Angle(0,0,180)),"models/props_c17/signpole001.mdl",Vector(1.5,1.5,0.08)),
+            propellerBase = holograms.create(motorbase:localToWorld(Vector(0,0,-10)),motorbase:localToWorldAngles(Angle(-90,0,0)),"models/props_lab/jar01a.mdl",Vector(0.6)),
+            propeller = holograms.create(motorbase:localToWorld(Vector(-4.5,0,-10)),motorbase:localToWorldAngles(Angle(15,-90,90)),"models/props_c17/trappropeller_blade.mdl",Vector(0.2))
+        }
+        for _,v in pairs(motorbaseHolograms) do
+            v:setParent(motorbase)
+        end
+        
+        snd = sounds.create(boat,"vehicles/airboat/fan_blade_fullthrottle_loop1.wav")
+        
+        
+        timer.create("tick",0.02,0,function()
+            if driver and boat:getWaterLevel()>0 then
+                local vel = boat:getVelocity():getLength()
+                snd:setPitch(10+vel/2)
+                if driver:keyDown(IN_KEY.FORWARD) then
+                    boat:applyForceOffset(boat:getForward()*2900,boat:localToWorld(Vector(0,0,-20)))
+                end
+                if driver:keyDown(IN_KEY.BACK) then
+                    boat:applyForceOffset(boat:getForward()*-800,boat:localToWorld(Vector(0,0,-26)))
+                end
+                if driver:keyDown(IN_KEY.MOVELEFT) then
+                    boat:applyForceOffset(boat:getRight()*800,boat:localToWorld(Vector(-55,0,-15)))
+                    resultAngle = clamp(resultAngle - turnSpeed, -turnAngle, turnAngle)
+                end
+                if driver:keyDown(IN_KEY.MOVERIGHT) then
+                    boat:applyForceOffset(boat:getRight()*-800,boat:localToWorld(Vector(-55,0,-15)))
+                    resultAngle = clamp(resultAngle + turnSpeed, -turnAngle, turnAngle)
+                end
+                if driver:keyDown(IN_KEY.SPEED) then
+                    boat:applyForceOffset(boat:getForward()*5500,boat:localToWorld(Vector(0,0,-12)))
+                end
+                
+                dist = dist + vel
+                resultAngle = resultAngle * 0.93
+                motorbase:setAngles(boat:localToWorldAngles(Angle(0,resultAngle,0)))
+                motorbaseHolograms.propeller:setAngles(motorbase:localToWorldAngles(Angle(dist,-90,90)))
+            else
+                
+            end
+        end)
+        
+        hook.add("PlayerEnteredVehicle", "1", selectDriver)
+        hook.add("PlayerLeaveVehicle", "2", checkDriver)
+       
+    else 
+        print("wrong model")
+    end
+    
+    
+end

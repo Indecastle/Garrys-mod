@@ -15,8 +15,9 @@ local url1 = "http://radio.licen777.ru/chechnya"
 local url2 = "http://radio.licen777.ru/stream"
 local url3 = "https://play.sas-media.ru/play_256"
 local url4 = "http://air.radiorecord.ru:8102/rock_128"
+local url5 = "https://u.teknik.io/o2Fly.mp3"
 
-local url = url3
+local url = url5
 
 function start() 
     bass.loadURL( url, "3d noblock", function(Sound)
@@ -56,10 +57,32 @@ end
 
 
 
-setupPermissionRequest({"bass.loadURL"}, "URL sounds from external sites", true)
+local perms = {
+    "bass.loadURL",
+    "render.screen",
+}
 
-hook.add("permissionrequest", "permission", function()
-    if url and hasPermission("bass.loadURL", url) then
-        start(url)
+setupPermissionRequest(perms, "URL sounds from external sites", true)
+
+
+function checkGrant()
+    return url and hasPermission("bass.loadURL", url) and hasPermission("render.screen")
+end
+
+
+if checkGrant() then
+    start(url)
+else
+    hook.add("render", "perms", function()
+        render.drawSimpleText(256, 256, "Press e to listen to epic songs", 1, 1)
+    end)
+end
+
+hook.add("permissionrequest", "perms", function()
+    if checkGrant() then
+        hook.remove("permissionrequest", "perms")
+        hook.remove("render", "perms")
+        
+        start()
     end
 end)

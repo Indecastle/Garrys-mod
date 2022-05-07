@@ -1,0 +1,147 @@
+@name Train Optimized Loco Control
+@inputs Active W S Space Throttle_OVR
+@outputs MPH KPH V Throttle NegativeThrottle OPS
+@persist MaxSpeed Mul [E O Weld]:entity [Diesel_Sound Steamer_Ambient_Sound Steamer_Chuff_Sound Wheel_Sound Brake_Sound]:string EngineMin EngineMax Mode AccelTo AccelQ Throttle Braking Spd
+@trigger 
+#@model models/props_lab/reciever_cart.mdl
+
+if(first()|duped()){
+    MaxSpeed = 65/0.01905 #Top Speed in hammer units per second
+    Mul = 400   #Force multiplier
+    
+    Mode = 0 #1 for Steamers, 0 for Diesels/Electric/Other
+    
+    #The Engine idle sound that will be used for Diesel/Electric/Other locomotives
+    
+    
+    #The Ambient and Chuff loop sounds that will be used for Steam locomotives
+    Steamer_Ambient_Sound = ""
+    Steamer_Chuff_Sound = ""
+    
+    #The wheel and brake sound that will be used on all locomotives
+    Wheel_Sound = "razortrain_wheels"
+    Brake_Sound = ""
+    
+    EngineMin = 30 #Minimum engine pitch. If the locomotive is a steamer, the Ambient sound will be clamped to this value.
+    EngineMax = 80 #Maximum engine pitch, only used on Diesels/Electrics/Other when you put that hammer down.
+    
+    
+    Throttle = 0
+    AccelTo = 0
+    E = entity()
+    O = owner()
+    runOnChat(1)
+    
+    
+}
+interval(20)
+if(Active==1){
+    
+    #Ignition
+    if(~Active){
+        Weld = E:isWeldedTo()
+        E:soundPlay(0,0,Mode ? Steamer_Ambient_Sound : Diesel_Sound)
+        E:soundPlay(1,0,Wheel_Sound)
+        if(Mode){
+            E:soundPlay(2,0,Steamer_Chuff_Sound)
+            soundPitch(0,EngineMin)
+        }
+    }
+    
+    
+    #Throttle Controlling
+    
+    if((W|S|Space) & !->Throttle_OVR){
+        if(AccelQ){AccelQ=0}
+        
+        Throttle += (W - S)*0.125
+        
+        if(Space){
+            Throttle = 0
+            Braking = 0.2
+            if(Spd > 15){
+                soundPlay(3,0,Brake_Sound)
+            }
+        }
+    }elseif(->Throttle_OVR){
+        Throttle = Throttle_OVR
+    }
+    if(!->Throttle_OVR & AccelQ){
+        Throttle += sign(AccelTo - Throttle)/64
+        if(Throttle==AccelTo){
+            AccelQ = 0
+        }
+    }
+    
+    Throttle = clamp(Throttle,-10,10)
+    NegativeThrottle = -Throttle
+    
+    
+    #Velocity Info Gathering
+    V = -E:velL():z()
+    Spd = abs(V)
+    MPH = toUnit("mph",Spd)
+    KPH = toUnit("km/h",Spd)
+    
+    #Sound Pitch Adjustment
+    
+    if(!Mode){
+        soundPitch(0,EngineMin + (EngineMax - EngineMin)*abs(Throttle)/10)
+    }
+    soundPitch(1,Spd > 15 ? Spd/12 : 0)
+    soundPitch(2,Spd > 15 ? Spd/4 : 0)
+    
+    if(Spd<15 & Braking){
+        Braking = 0
+        soundStop(3)
+    }
+    
+    #Force Application
+    Dir = -E:up()
+    TargetSpeed = MaxSpeed*Throttle/10
+    Weld:applyForce(Dir*(TargetSpeed - V)*Mul*2)
+    
+    #Chat Control
+    
+    if(chatClk(O) & !->Throttle_OVR){
+        Sentence = O:lastSaid():explode(" ")
+        CMD = Sentence[1,string]
+        if(CMD == ".throttle"){
+            AccelQ = 0
+            Throttle = clamp(Sentence[2,string]:toNumber(),-10,10)
+            if(Throttle==0){
+                Braking = 1
+                E:soundPlay(3,0,Brake_Sound)
+            }
+            hideChat(1)
+            print("Setting Throttle to " + Throttle:toString())
+        }elseif(CMD == ".accelto"){
+            AccelQ = 1
+            AccelTo = clamp(Sentence[2,string]:toNumber(),-10,10)
+            hideChat(1)
+            print("Accelerating to " + AccelTo:toString())
+        }elseif(CMD == ".mul"){
+            Mul = Sentence[2,string]:toNumber()
+            hideChat(1)
+            print("Setting Force Multiplier to " + Sentence[2,string])
+        }elseif(CMD == ".maxspeed"){
+            MaxSpeed = Sentence[2,string]:toNumber()
+            hideChat(1)
+            print("Setting Maximum Speed to " + Sentence[2,string])
+        } 
+}
+    
+}else{
+    if(~Active){
+        Throttle = NegativeThrottle = V = Spd = MPH = KPH = AccelTo = AccelQ = Braking = 0
+        soundStop(0)
+        soundStop(1)
+        soundStop(2)
+        soundStop(3)
+        
+    }
+}
+
+
+
+OPS = ops()

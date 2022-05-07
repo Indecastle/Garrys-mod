@@ -1,0 +1,934 @@
+#[---------------------Made by OKOLOBASKETBALL---------------------]#
+# 03.02.2022 - Owner's  note: this code is garbage.
+#[ LIST OF ALL FUNCTIONS WITH EXPLANATION OF WHAT THEY DO:
+    
+    panel(Name:string,Pos:vector,Size:vector2) 
+        :- creates a panel
+    button(Name:string,Parent:string,Pos:vector2,Size:vector2) 
+        :- creates a button
+    text(Name:string,Parent:string,Pos:vector2,Length:number) 
+        :- creates a text input box
+    checkbox(Name:string,Parent:string,Pos:vector2) 
+        :- creates a checkbox 
+    label(Name:string,Parent:string,Pos:vector2) 
+        :- creates a regular text
+    listbox(Name:string,Parent:string,Pos:vector2,Length:number,Amount:number) 
+        :- creates a list box, 'Length' is X size, 'Amount' is how many lines should listbox have.
+    box(Name:string,Parent:string,Pos:vector2,Size:vector2) 
+        :- creates a 2d box (weird dont use it)
+    setboxmaterial(Name:string,Material:string)
+        :- sets box material to something that egp can handle
+    color(Name:string,Color4:vector4)
+        :- sets color (works with any object)
+    show(Name:string,Show:number)
+        :- hides or shows the object, depends on what value you're giving it (0;1)
+    slider(Name:string,Parent:string,Pos:vector2,Size:number,Max:number,Round:number)
+        :- creates a slider, 'Size' is how long should slider be, 'Max' is the maximum value from slider, 'Round' if set to 1 will round the outcome result.
+    delete(Name:string)
+        :- doesnt work, dont use it.
+    setarray(Name:string,Array:array)
+        :- sets an array to listbox, only works with string values inside array.
+    setsval(Name:string,Value:string)
+        :- sets a string value for label
+    setnval(Name:string,Value:number)
+        :- sets a number value for slider
+    
+]#
+
+if(first())
+{
+    T=gTable("EGP VGUI "+entity():id(),0) T:clear()
+    
+    #[          USER SETTINGS           ]#
+    T["FOV",number]=100                    # <- What FOV do you have? Check console variable 'default_fov' and set the exact value.
+    T["FunctionSpeedMultiplier",number]=1 # <- How fast should derma functions be processed? Useful with large amounts of objects.
+    T["ContextMenuBind",string]="C"        # <- What button you're using for context menu (by default 'C').
+    T["EGPAccess",number]=1               # <- Who can use EGP Screen? (1-everyone \ 2-steam friends \ 3-only owner)
+    T["InteractBind",string]="mouse_left"  # <- What button will you use to interact with everything (by default 'mouse_left').
+    #[          END                     ]#
+    
+    runOnChat(1)
+    runOnLast(1)
+    if(0)
+    {# ^ this is stupid, dont even ask me.
+        EGP=nowirelink()
+    }
+    EGP:egpClear()
+    T["Objects",table]=table()
+    T["NameToIndex",table]=table()
+    T["Indexes",array]=array()
+    T["CurIndex",number]=0
+    T["MouseDown",number]=0
+    T["CursorEnabled",number]=0
+    T["WaitForInput",number]=0
+    T["UsingTextObject",number]=0
+    T["MovingPanel",number]=0
+    T["UsingSlider",number]=0
+    T["nval",table]=table()
+    T["sval",table]=table()
+    T["clk",table]=table()
+    T["CursorRainbow",number]=0
+    T["StartArray",table]=table()
+    T["Type",string]=EGP:entity():type() # it is so funny storing everything in a table
+    if(T["Type",string]=="gmod_wire_egp_hud")
+    {
+        T["Player",entity] = owner()
+        runOnKeys(T["Player",entity],1,array(T["InteractBind",string]))
+        T["ScrH",number] = egpScrH(T["Player",entity])
+        T["ScrW",number] = egpScrW(T["Player",entity])
+        T["Scr_H_half",number] = T["ScrH",number]/2
+        T["Scr_W_half",number] = T["ScrW",number]/2
+        T["D",number]= 4 * T["ScrH",number]/(6*tan(T["FOV",number]*0.5))
+    }
+    elseif(T["Type",string]=="gmod_wire_egp")
+    {
+        switch(T["EGPAccess",number])
+        {
+            case 1,
+            runOnKeys(players(),1,array(T["InteractBind",string]))
+            break
+            case 2,
+            runOnKeys(owner():steamFriends(),1,array(T["InteractBind",string]))
+            break
+            case 3,
+            runOnKeys(owner(),1,array(T["InteractBind",string]))
+            break
+        }
+    }
+    else
+    {
+        print("[EGP DERMA] EGP isn't connected or connected incorrectly.")
+    }
+    Cursor=vec2()
+    function void initTable(A:table)
+    {# very funny function delayer :)  (had to make it because of e2 is slow as shit)
+        local Type=A[1,string]
+        local SpawnType=Type+"C"
+        switch(Type)
+        {
+            case("panel"),
+            SpawnType(A[2,string],A[3,vector2],A[4,vector2])
+            break
+            case("button"),
+            SpawnType(A[2,string],A[3,string],A[4,vector2],A[5,vector2])
+            break
+            case("text"),
+            SpawnType(A[2,string],A[3,string],A[4,vector2],A[5,number])
+            break
+            case("checkbox"),
+            SpawnType(A[2,string],A[3,string],A[4,vector2])
+            break
+            case("label"),
+            SpawnType(A[2,string],A[3,string],A[4,vector2])
+            break
+            case("listbox"),
+            SpawnType(A[2,string],A[3,string],A[4,vector2],A[5,number],A[6,number])
+            break
+            case("box"),
+            SpawnType(A[2,string],A[3,string],A[4,vector2],A[5,vector2])
+            break
+            case("setboxmaterial"),
+            SpawnType(A[2,string],A[3,string])
+            break
+            case("color"),
+            SpawnType(A[2,string],A[3,vector4])
+            break
+            case("show"),
+            SpawnType(A[2,string],A[3,number])
+            break
+            case("slider"),
+            SpawnType(A[2,string],A[3,string],A[4,vector2],A[5,number],A[6,number],A[7,number])
+            break
+            case("delete"),
+            SpawnType(A[2,string])
+            break
+            case("setarray"),
+            SpawnType(A[2,string],A[3,array])
+            break
+            case("setsval"),
+            SpawnType(A[2,string],A[3,string])
+            break
+            case("setnval"),
+            SpawnType(A[2,string],A[3,number])
+            break
+        }
+    }
+    function number newID()
+    {# in my opinion this is the coolest fucking function in this code
+        if(T["Indexes",array]:count()>0)
+        {
+            return T["Indexes",array]:popNumber()
+        }
+        else
+        {
+            T["CurIndex",number]=T["CurIndex",number]+1
+            if(T["CurIndex",number]>egpMaxObjects()-1)
+            {
+                error("[EGP DERMA] Reached 299 EGP Objects Limit.")
+            }
+            return T["CurIndex",number]
+        }
+    }
+    function number removeID(ID:number)
+    {# this function wouldn't work without previous function
+        if(inrange(ID,1,egpMaxObjects()-1))
+        {
+            EGP:egpRemove(ID)
+            T["Indexes",array]:pushNumber(ID)
+        }
+    }
+    function void panel(Name:string,Pos:vector2,Size:vector2)
+    {
+        T["StartArray",table]:pushTable(table("panel",Name,Pos,Size))
+    }
+    function void button(Name:string,Parent:string,Pos:vector2,Size:vector2)
+    {
+        T["StartArray",table]:pushTable(table("button",Name,Parent,Pos,Size))
+    }
+    function void text(Name:string,Parent:string,Pos:vector2,Length:number)
+    {
+        T["StartArray",table]:pushTable(table("text",Name,Parent,Pos,Length))
+    }
+    function void checkbox(Name:string,Parent:string,Pos:vector2)
+    {
+        T["StartArray",table]:pushTable(table("checkbox",Name,Parent,Pos))
+    }
+    function void label(Name:string,Parent:string,Pos:vector2)
+    {
+        T["StartArray",table]:pushTable(table("label",Name,Parent,Pos))
+    }
+    function void listbox(Name:string,Parent:string,Pos:vector2,Length:number,Amount:number)
+    {
+        T["StartArray",table]:pushTable(table("listbox",Name,Parent,Pos,Length,Amount))
+    }
+    function void box(Name:string,Parent:string,Pos:vector2,Size:vector2)
+    {
+        T["StartArray",table]:pushTable(table("box",Name,Parent,Pos,Size))
+    }
+    function void setboxmaterial(Name:string,Material:string)
+    {
+        T["StartArray",table]:pushTable(table("setboxmaterial",Name,Material))
+    }
+    function void color(Name:string,Color4:vector4)
+    {
+        T["StartArray",table]:pushTable(table("color",Name,Color4))
+    }
+    function void show(Name:string,Show:number)
+    {
+        T["StartArray",table]:pushTable(table("show",Name,Show))
+    }
+    function void slider(Name:string,Parent:string,Pos:vector2,Size:number,Max:number,Round:number)
+    {
+        T["StartArray",table]:pushTable(table("slider",Name,Parent,Pos,Size,Max,Round))
+    }
+    function void delete(Name:string)
+    {
+        T["StartArray",table]:pushTable(table("delete",Name))
+    }
+    function void setarray(Name:string,Array:array)
+    {
+        T["StartArray",table]:pushTable(table("setarray",Name,Array))
+    }
+    function void setnval(Name:string,Value:number)
+    {
+        T["StartArray",table]:pushTable(table("setnval",Name,Value))
+    }
+    function void setsval(Name:string,Value:string)
+    {
+        T["StartArray",table]:pushTable(table("setsval",Name,Value))
+    }#had to do it cuz u know already
+    function void panelC(Name:string,Pos:vector2,Size:vector2)
+    {
+        local ID=newID()
+        EGP:egpBox(ID,Pos+Size/2,Size)
+        local NameID=newID()
+        EGP:egpText(NameID,Name,-Size/2)
+        EGP:egpFont(NameID,"Courier New",20)
+        EGP:egpParent(NameID,ID)
+        T["Objects",table]:insertTable(ID,
+            table(
+            "Type"="Panel",
+            "Indexes"=array(ID,NameID),
+            "Name"=Name,
+            "Pos"=Pos,
+            "RelativePos"=vec2(),
+            "Size"=Size,
+            "Show"=1,
+            "Containments"=table() # <- woooow look its a table! and the tables in e2 are really weird, but im glad i figured out exactly how they work!
+            )
+        )
+        T["NameToIndex",table][Name,number]=ID
+    }
+    function void buttonC(Name:string,Parent:string,Pos:vector2,Size:vector2)
+    {
+        local ID=newID()
+        EGP:egpBox(ID,Pos-T["Objects",table][T["NameToIndex",table][Parent,number],table]["Size",vector2]/2+Size/2,Size)
+        EGP:egpParent(ID,T["NameToIndex",table][Parent,number])
+        local NameID=newID()
+        EGP:egpText(NameID,Name,vec2(0,-9))
+        EGP:egpFont(NameID,"Courier New",20)
+        EGP:egpAlign(NameID,1)
+        EGP:egpParent(NameID,ID)
+        local Table=
+        table(
+        "Type"="Button",
+        "Indexes"=array(ID,NameID),
+        "Name"=Name,
+        "Parent"=Parent,
+        "Pos"=Pos,
+        "Size"=Size,
+        "Show"=1
+        )
+        T["Objects",table]:insertTable(ID,Table)
+        T["Objects",table][T["NameToIndex",table][Parent,number],table]["Containments",table]:insertTable(ID,Table)
+        T["NameToIndex",table][Name,number]=ID
+    }
+    function void textC(Name:string,Parent:string,Pos:vector2,Length:number)
+    {
+        local ID=newID()
+        EGP:egpBox(ID,Pos-T["Objects",table][T["NameToIndex",table][Parent,number],table]["Size",vector2]/2+vec2(Length,20)/2,vec2(Length,20))
+        EGP:egpParent(ID,T["NameToIndex",table][Parent,number])
+        local NameID=newID()
+        EGP:egpText(NameID,"",vec2(0,-9))
+        EGP:egpFont(NameID,"Courier New",20)
+        EGP:egpAlign(NameID,1)
+        EGP:egpParent(NameID,ID)
+        EGP:egpColor(NameID,vec())
+        local Table=
+        table(
+        "Type"="Text",
+        "Indexes"=array(ID,NameID),
+        "Name"=Name,
+        "Pos"=Pos,
+        "Parent"=Parent,
+        "Size"=vec2(Length,20),
+        "Text"="",
+        "Show"=1
+        )
+        T["Objects",table]:insertTable(ID,Table)
+        T["Objects",table][T["NameToIndex",table][Parent,number],table]["Containments",table]:insertTable(ID,Table)
+        T["NameToIndex",table][Name,number]=ID
+    }
+    function void checkboxC(Name:string,Parent:string,Pos:vector2)
+    {
+        local ID=newID()
+        EGP:egpBox(ID,Pos-T["Objects",table][T["NameToIndex",table][Parent,number],table]["Size",vector2]/2+vec2(10),vec2(20))
+        EGP:egpParent(ID,T["NameToIndex",table][Parent,number])
+        EGP:egpMaterial(ID,"icon16/cross.png")
+        local NameID=newID()
+        EGP:egpText(NameID,Name,Pos-T["Objects",table][T["NameToIndex",table][Parent,number],table]["Size",vector2]/2+vec2(25,1))
+        EGP:egpColor(NameID,vec())
+        EGP:egpParent(NameID,T["NameToIndex",table][Parent,number])
+        EGP:egpFont(NameID,"Courier New",20)
+        local Table=
+        table(
+        "Type"="Checkbox",
+        "Indexes"=array(ID,NameID),
+        "Name"=Name,
+        "Pos"=Pos,
+        "Parent"=Parent,
+        "Size"=vec2(20),
+        "State"=0,
+        "Show"=1
+        )
+        T["Objects",table]:insertTable(ID,Table)
+        T["Objects",table][T["NameToIndex",table][Parent,number],table]["Containments",table]:insertTable(ID,Table)
+        T["NameToIndex",table][Name,number]=ID
+    }
+    function void labelC(Name:string,Parent:string,Pos:vector2)
+    {
+        local NameID=newID()
+        EGP:egpText(NameID,Name,Pos-T["Objects",table][T["NameToIndex",table][Parent,number],table]["Size",vector2]/2)
+        EGP:egpFont(NameID,"Courier New",20)
+        EGP:egpColor(NameID,vec(1))
+        EGP:egpParent(NameID,T["NameToIndex",table][Parent,number])
+        local Table=
+        table(
+        "Type"="Label",
+        "Indexes"=array(NameID),
+        "Name"=Name,
+        "Parent"=Parent,
+        "String"="",
+        "Show"=1
+        )
+        T["Objects",table]:insertTable(NameID,Table)
+        T["Objects",table][T["NameToIndex",table][Parent,number],table]["Containments",table]:insertTable(NameID,Table)
+        T["NameToIndex",table][Name,number]=NameID
+    }
+    function void listboxC(Name:string,Parent:string,Pos:vector2,Length:number,Amount:number)
+    {
+        local PanelSize=T["Objects",table][T["NameToIndex",table][Parent,number],table]["Size",vector2]/2
+        local ParentID=T["NameToIndex",table][Parent,number]
+        local Pos0=Pos-PanelSize
+        local BackgroundID=newID()
+        EGP:egpBox(BackgroundID,Pos0+vec2(Length,20+Amount*20)/2,vec2(Length,20+Amount*20))
+        EGP:egpParent(BackgroundID,ParentID)
+        local OutlineID=newID()
+        EGP:egpLineStrip(OutlineID,array(Pos0,Pos0+vec2(Length,0),Pos0+vec2(Length,20+Amount*20),Pos0+vec2(0,20+Amount*20),Pos0,Pos0+vec2(0,20),Pos0+vec2(Length,20),Pos0+vec2(Length-10,0),Pos0+vec2(Length-20,20),Pos0+vec2(Length-20,0),Pos0+vec2(Length-20,20+Amount*20),Pos0+vec2(Length-10,20+Amount*20),Pos0+vec2(Length-20,Amount*20),Pos0+vec2(Length,Amount*20),Pos0+vec2(Length-10,20+Amount*20)))
+        EGP:egpColor(OutlineID,vec(1))
+        EGP:egpParent(OutlineID,ParentID)
+        EGP:egpSize(OutlineID,2)
+        local NameID=newID()
+        EGP:egpText(NameID,Name,Pos0+vec2((Length-20)/2,0))
+        EGP:egpFont(NameID,"Courier New",20)
+        EGP:egpColor(NameID,vec(1))
+        EGP:egpAlign(NameID,1)
+        EGP:egpParent(NameID,ParentID)
+        local Array=array()
+        for(I=1,Amount)
+        {
+            local KeyID=newID()
+            Array:pushNumber(KeyID)
+            EGP:egpText(KeyID,"",Pos0+vec2(2,I*20))
+            EGP:egpFont(KeyID,"Courier New",20)
+            EGP:egpColor(KeyID,vec(1))
+            EGP:egpParent(KeyID,ParentID)
+        }
+        local Table=
+        table(
+        "Type"="Listbox",
+        "Indexes"=array(BackgroundID,OutlineID,NameID):add(Array),
+        "Name"=Name,
+        "Pos"=Pos,
+        "Size"=vec2(Length,20+Amount*20),
+        "Amount"=Amount,
+        "Parent"=Parent,
+        "Scroll"=0,
+        "Show"=1,
+        "Array"=array()
+        )
+        T["Objects",table]:insertTable(BackgroundID,Table)
+        T["Objects",table][T["NameToIndex",table][Parent,number],table]["Containments",table]:insertTable(BackgroundID,Table)
+        T["NameToIndex",table][Name,number]=BackgroundID
+    }
+    function void updatelistbox(Name:string)
+    {# this is an internal function and you shouldn't use it on your own (wtf i dont even care do whatever you want.)
+        local ObjectTable=T["Objects",table][T["NameToIndex",table][Name,number],table]
+        for(I=1,ObjectTable["Amount",number])
+        {
+            local KeyID=ObjectTable["Indexes",array][I+3,number]
+            EGP:egpSetText(KeyID,ObjectTable["Array",array][I+ObjectTable["Scroll",number],string])
+        }
+    }
+    function void setarrayC(Name:string,Array:array)
+    {# e2 table code moment
+        local Listbox=T["Objects",table][T["NameToIndex",table][Name,number],table]
+        Listbox["Array",array]=Array
+        Listbox["Amount",number]=Array:count()
+        updatelistbox(Name)
+    }
+    function void boxC(Name:string,Parent:string,Pos:vector2,Size:vector2)
+    {
+        local ID=newID()
+        EGP:egpBox(ID,Pos-Size/2,Size)
+        EGP:egpParent(ID,T["NameToIndex",table][Name,number])
+        local Table=
+        table(
+        "Type"="Box",
+        "Indexes"=array(ID),
+        "Material"="",
+        "Name"=Name,
+        "Parent"=Parent,
+        "Pos"=Pos,
+        "Size"=Size,
+        "Show"=1
+        )
+        T["Objects",table]:insertTable(ID,Table)
+        T["Objects",table][T["NameToIndex",table][Parent,number],table]["Containments",table]:insertTable(ID,Table)
+        T["NameToIndex",table][Name,number]=ID
+    }
+    function void setboxmaterialC(Name:string,Material:string)
+    {
+        local ID=T["NameToIndex",table][Name,number]
+        T["Objects",table][ID,table]["Material",string]=Material
+        EGP:egpMaterial(ID,Material)
+    }
+    function void setboxegpmaterial(Name:string,EGPEntity:entity)
+    {
+        EGP:egpMaterialFromScreen(T["NameToIndex",table][Name,number],EGPEntity)
+    }
+    function void sliderC(Name:string,Parent:string,Pos:vector2,Size:number,Max:number,Round:number)
+    {
+        local PanelSize=T["Objects",table][T["NameToIndex",table][Parent,number],table]["Size",vector2]/2
+        local ID=newID()
+        local NumID=newID()
+        EGP:egpLineStrip(ID,array(
+        Pos+vec2(0,10)-PanelSize,
+        Pos+vec2()-PanelSize,
+        Pos+vec2(0,20)-PanelSize,
+        Pos+vec2(0,10)-PanelSize,
+        Pos+vec2(Size,10)-PanelSize
+        ))
+        EGP:egpSize(ID,2)
+        EGP:egpParent(ID,T["NameToIndex",table][Parent,number])
+        EGP:egpText(NumID,"0",Pos+vec2(Size+5,0)-PanelSize)
+        EGP:egpFont(NumID,"Courier New",20)
+        EGP:egpParent(NumID,T["NameToIndex",table][Parent,number])
+        local Table=
+        table(
+        "Type"="Slider",
+        "Indexes"=array(ID,NumID),
+        "Value"=0,
+        "Max"=Max,
+        "Name"=Name,
+        "Parent"=Parent,
+        "Pos"=Pos,
+        "Size"=vec2(Size,20),
+        "Round"=Round,
+        "Show"=1
+        )
+        T["Objects",table]:insertTable(ID,Table)
+        T["Objects",table][T["NameToIndex",table][Parent,number],table]["Containments",table]:insertTable(ID,Table)
+        T["NameToIndex",table][Name,number]=ID
+    }
+    function void colorC(Name:string,Color4:vector4)
+    {# this is next level dogshit, but it works pretty neat.
+        foreach(I,Index:number=T["Objects",table][T["NameToIndex",table][Name,number],table]["Indexes",array])
+        {
+            if(EGP:egpColor(Index)==vec())
+            {
+                continue
+            }
+            if(I==1)
+            {
+                EGP:egpColor(Index,vec(Color4:x(),Color4:y(),Color4:z()))
+                EGP:egpAlpha(Index,Color4[4])
+            }
+            else
+            {
+                EGP:egpColor(Index,vec(Color4:x(),Color4:y(),Color4:z())/2)
+                EGP:egpAlpha(Index,Color4[4])
+            }
+        }
+    }
+    function void enableCursor(On:number)
+    {# i dont know why i made this function, but let it be.
+        if(On)
+        {
+            EGP:egpBox(egpMaxObjects(),vec2(),vec2(20))
+            EGP:egpMaterial(egpMaxObjects(),"icon16/cursor.png")
+            T["CursorEnabled",number]=1
+        }
+        else
+        {
+            EGP:egpRemove(egpMaxObjects())
+            T["CursorEnabled",number]=0
+            T["MouseDown",number]=0
+        }
+    }
+    function number aimObject(Array:array,Ignore:number)
+    {# yoooo this is where fun part begins!
+        foreach(I,Key:number=Array)
+        {
+            if(!Ignore)
+            {
+                if(T["Objects",table][Key,table]["Type",string]!="Panel")
+                {
+                    continue
+                }
+            }
+            if(T["Objects",table][Key,table]["Show",number])
+            {
+                local Pos=T["Objects",table][Key,table]["Pos",vector2]+T["Objects",table][Ignore,table]["Pos",vector2]
+                if(inrange(Cursor,Pos,Pos+T["Objects",table][Key,table]["Size",vector2]))
+                {
+                    return Key
+                }
+            }
+        }
+        return 0
+    }
+    function void objectAction(ID:number)
+    {# under this comment, performs everything that you can do in this chip. yep.
+        if(ID)
+        {
+            local ObjectTable=T["Objects",table][ID,table]
+            local Type=ObjectTable["Type",string]
+            switch(Type)
+            {
+                case("Panel"),
+                local Pos=ObjectTable["Pos",vector2]
+                local Size=ObjectTable["Size",vector2]
+                if(inrange(Cursor,Pos,Pos+vec2(Size:x(),20)))
+                {
+                    ObjectTable["RelativePos",vector2]=Cursor-Pos
+                    T["MovingPanel",number]=ID
+                }
+                else
+                {
+                    objectAction(aimObject(ObjectTable["Containments",table]:keys(),ID))
+                }
+                break
+                case("Button"),
+                T["clk",table][ObjectTable["Name",string],number]=curtime()
+                #timer(ObjectTable["Name",string],1)
+                break
+                case("Text"),
+                T["UsingTextObject",number]=ID
+                T["WaitForInput",number]=1
+                stoptimer("[EGP DERMA] Input timeout")
+                timer("[EGP DERMA] Input timeout",15000)
+                if(T["Player",entity]==owner())
+                {
+                    print("[EGP DERMA] Waiting for input in chat...")
+                }
+                else
+                {
+                    concmd("say \"[EGP DERMA] Waiting for input in chat...\"")
+                }
+                break
+                case("Checkbox"),
+                local State=!ObjectTable["State",number]
+                ObjectTable["State",number]=State
+                T["nval",table][ObjectTable["Name",string],number]=State
+                if(State)
+                {
+                    EGP:egpMaterial(ObjectTable["Indexes",array][1,number],"icon16/tick.png")
+                }
+                else
+                {
+                    EGP:egpMaterial(ObjectTable["Indexes",array][1,number],"icon16/cross.png")
+                }
+                break
+                case("Listbox"),
+                local Size=ObjectTable["Size",vector2]
+                local Scroll=ObjectTable["Scroll",number]
+                local GlobalPos=T["Objects",table][T["NameToIndex",table][ObjectTable["Parent",string],number],table]["Pos",vector2]+ObjectTable["Pos",vector2]
+                local CursorPos0=Cursor-GlobalPos
+                if(inrange(CursorPos0,vec2(0,20),vec2(Size:x()-20,Size:y())))
+                {
+                    local Chosen = round((CursorPos0:y()-10)/20)
+                    T["sval",table][ObjectTable["Name",string],string]=ObjectTable["Array",array][ObjectTable["Scroll",number]+Chosen,string]
+                }
+                elseif(inrange(CursorPos0,vec2(Size:x()-20,0),vec2(Size:x(),20)))
+                {
+                    ObjectTable["Scroll",number]=clamp(Scroll-1,0,ObjectTable["Amount",number])
+                    if(ObjectTable["Scroll",number]!=Scroll)
+                    {
+                        updatelistbox(T["Objects",table][ID,table]["Name",string])
+                    }
+                }
+                elseif(inrange(CursorPos0,Size-vec2(20),Size))
+                {
+                    ObjectTable["Scroll",number]=clamp(Scroll+1,0,ObjectTable["Amount",number])
+                    if(ObjectTable["Scroll",number]!=Scroll)
+                    {
+                        updatelistbox(T["Objects",table][ID,table]["Name",string])
+                    }
+                }
+                break
+                case("Slider"),
+                T["UsingSlider",number]=ID
+                break
+            }
+        }
+    }
+    function void showC(Name:string,Show:number)
+    {# this function is retarded. i dont even remember how it works and i probably shouldn't
+        local ID=T["NameToIndex",table][Name,number]
+        T["Objects",table][ID,table]["Show",number]=Show
+        foreach(I,Index:number=T["Objects",table][ID,table]["Indexes",array])
+        {
+            EGP:egpAlpha(Index,Show*255)
+        }
+        if(T["Objects",table][ID,table]["Containments",table]:count()>0)
+        {
+            foreach(I,Index:number=T["Objects",table][ID,table]["Containments",table]:keys())
+            {
+                show(T["Objects",table][ID,table]["Containments",table][Index,table]["Name",string],Show)
+            }
+        }
+    }
+    function void deleteC(Name:string)
+    {# i'm still anxious that some day this won't work properly
+        local ID=T["NameToIndex",table][Name,number]
+        foreach(I,Index:number=T["Objects",table][ID,table]["Indexes",array])
+        {
+            removeID(Index)
+        }
+        if(T["Objects",table][ID,table]["Containments",table]:count()>0)
+        {
+            foreach(I,Index:number=T["Objects",table][ID,table]["Containments",table]:keys())
+            {
+                delete(T["Objects",table][ID,table]["Containments",table][Index,table]["Name",string])
+            }
+        }
+        else
+        {
+            T["Objects",table]:removeTable(ID)
+        }
+    }
+    function string sval(Name:string)
+    {
+        return T["sval",table][Name,string]
+    }
+    function number nval(Name:string)
+    {
+        return T["nval",table][Name,number]
+    }
+    function void setsvalC(Name:string,Value:string)
+    {
+        local ObjectTable=T["Objects",table][T["NameToIndex",table][Name,number],table]
+        local Type=ObjectTable["Type",string]
+        switch(Type)
+        {
+            case("Panel"),
+            local ID=ObjectTable["Indexes",array][2,number]
+            EGP:egpSetText(ID,Value)
+            break
+            case("Text"),
+            local ID=T["NameToIndex",table][Name,number]
+            EGP:egpSetText(ID,Value)
+            T["Objects",table][ID,table]["Text",string]=Value
+            T["sval",table][Name,string]=Value
+            break
+            case("Label"),
+            local ID=T["NameToIndex",table][Name,number]
+            EGP:egpSetText(ID,Value)
+            T["Objects",table][ID,table]["String",string]=Value
+            T["sval",table][Name,string]=Value
+            break
+            
+        }
+    }
+    function void setnvalC(Name:string,Value:number)
+    {
+        local ObjectTable=T["Objects",table][T["NameToIndex",table][Name,number],table]
+        local Type=ObjectTable["Type",string]
+        switch(Type)
+        {
+            case("Slider"),
+            local MaxSize=ObjectTable["Size",vector2]:x()
+            local MaxValue=ObjectTable["Max",number]
+            local Pos=ObjectTable["Pos",vector2]
+            local ParentPanel=T["Objects",table][T["NameToIndex",table][ObjectTable["Parent",string],number],table]
+            local ParentSize=ParentPanel["Size",vector2]/2
+            local EgpValue=clamp(Value/(MaxValue/MaxSize),0,MaxSize)
+            local Val=clamp(Value,0,MaxValue)
+            if(ObjectTable["Round",number])
+            {
+                Val=round(Val)
+            }
+            EGP:egpLineStrip(ObjectTable["Indexes",array][1,number],array(
+            Pos+vec2(0,10)-ParentSize,
+            Pos+vec2(EgpValue,10)-ParentSize,
+            Pos+vec2(EgpValue,0)-ParentSize,
+            Pos+vec2(EgpValue,20)-ParentSize,
+            Pos+vec2(EgpValue,10)-ParentSize,
+            Pos+vec2(MaxSize,10)-ParentSize
+            ))
+            EGP:egpSetText(ObjectTable["Indexes",array][2,number],round(Val,2):toString())
+            T["nval",table][ObjectTable["Name",string],number]=Val
+            ObjectTable["Value",number]=Val
+            break
+            case("Checkbox"),
+            local Val = clamp(round(Value),0,1)
+            ObjectTable["State",number]=Val
+            T["nval",table][ObjectTable["Name",string],number]=Val
+            if(Val)
+            {
+                EGP:egpMaterial(ObjectTable["Indexes",array][1,number],"icon16/tick.png")
+            }
+            else
+            {
+                EGP:egpMaterial(ObjectTable["Indexes",array][1,number],"icon16/cross.png")
+            }
+            break
+        }
+    }
+    function number clkd(Name:string)
+    {# this is my first time making my own callback, so idfc.
+        local Clk=T["clk",table][Name,number]
+        if(Clk==curtime())
+        {
+            return 1
+        }
+        return 0
+    }
+}
+else
+{
+    T=gTable("EGP VGUI "+entity():id(),0)
+    if(clk()|tickClk())
+    {#          ^ someone will totally use runOnTick so i had to add this too
+        if(T["StartArray",table]:count()>0)
+        {
+            for(M=1,T["FunctionSpeedMultiplier",number])
+            {
+                local Key=T["StartArray",table]:keys():min()
+                local FunctionTable=T["StartArray",table][Key,table]
+                T["StartArray",table]:unset(Key)
+                if(FunctionTable:count()>0)
+                {
+                    initTable(FunctionTable)
+                }
+                else
+                {
+                    break
+                }
+            }
+        }
+        if(T["Type",string]=="gmod_wire_egp_hud")
+        {
+            local ContextMenuOpened=T["Player",entity]:keyPressed(T["ContextMenuBind",string])
+            if(changed(ContextMenuOpened))
+            {
+                enableCursor(ContextMenuOpened)
+            }
+        }
+    }
+    if(T["WaitForInput",number])
+    {# i made it so you can't use anything until you enter an input.
+        if(chatClk(T["Player",entity]))
+        {
+            hideChat(1)
+            local Input=lastSaid()
+            local TextTable=T["Objects",table][T["UsingTextObject",number],table]
+            TextTable["Text",string]=Input
+            T["sval",table][TextTable["Name",string],string]=Input
+            EGP:egpSetText(TextTable["Indexes",array][2,number],Input)
+            T["WaitForInput",number]=0
+            T["UsingTextObject",number]=0
+            T["MouseDown",number]=0
+        }
+        if(clk("[EGP DERMA] Input timeout"))
+        {
+            if(T["Player",entity]==owner())
+            {
+                print("[EGP DERMA] Input aborted.")
+            }
+            else
+            {
+                concmd("say \"[EGP DERMA] Input aborted.\"")
+            }
+            T["WaitForInput",number]=0
+            T["UsingTextObject",number]=0
+            T["MouseDown",number]=0
+        }
+    }
+    else
+    {
+        if(T["CursorEnabled",number])
+        {# this is where your cursor on the screen turns into actual cursor position (this is hard) (also this code isn't mine!) @Kuklach 
+            EndAng = T["Player",entity]:eyeAngles()
+            Dir=T["Player",entity]:eye()
+            local Fdp=EndAng:forward():dot(Dir)
+            local VProj=(T["D",number]/Fdp)*Dir
+            Cursor = vec2(T["Scr_W_half",number]+EndAng:right():dot(VProj),T["Scr_H_half",number]-EndAng:up():dot(VProj))
+            T["CursorRainbow",number]=(T["CursorRainbow",number]+1)%360
+            EGP:egpPos(300,Cursor+vec2(10))
+            EGP:egpColor(300,hsv2rgb(T["CursorRainbow",number],1,1))
+        }
+        elseif(T["Type",string]=="gmod_wire_egp")
+        {# this code is retarded because if multiple players use one screen, it gets fucked.
+            Cursor=EGP:egpCursor(T["Player",entity])
+            if(Cursor)
+            {
+                T["CursorRainbow",number]=(T["CursorRainbow",number]+1)%360
+                #EGP:egpColor(300,hsv2rgb(T["CursorRainbow",number],1,1))
+                EGP:egpColor(300,vec4(255))
+            }
+            if(changed(inrange(Cursor,vec2(),vec2(512))))
+            {
+                if(Cursor)
+                {
+                    EGP:egpBox(300,vec2(8,10),vec2(20))
+                    EGP:egpParentToCursor(300)
+                    EGP:egpMaterial(300,"icon16/cursor.png")
+                }
+                if(Cursor==vec2(-1))
+                {# very memer way to check if cursor is not on the screen
+                    EGP:egpRemove(300)
+                    T["MouseDown",number]=0
+                }
+            }
+        }
+        local KeyPly=keyClk()
+        if(KeyPly)
+        {# wow is that player interaction?
+            Key=keyClkPressed()
+            if(Key==T["InteractBind",string])
+            {
+                if(T["Type",string]=="gmod_wire_egp")
+                {
+                    if(KeyPly:aimEntity()==EGP:entity()&KeyPly:pos():distance(EGP:entity():pos())<400)
+                    {
+                        if(T["Player",entity]!=KeyPly)
+                        {
+                            T["Player",entity]=KeyPly
+                            T["MouseDown",number]=0
+                        }
+                        T["MouseDown",number]=!T["MouseDown",number]
+                        if(T["MouseDown",number])
+                        {
+                            objectAction(aimObject(T["Objects",table]:keys(),0))
+                        }
+                        else
+                        {
+                            T["MovingPanel",number]=0
+                            T["UsingSlider",number]=0
+                        }
+                    }
+                }
+                elseif(T["Type",string]=="gmod_wire_egp_hud")
+                {
+                    T["MouseDown",number]=!T["MouseDown",number]
+                    if(T["MouseDown",number])
+                    {
+                        objectAction(aimObject(T["Objects",table]:keys(),0))
+                    }
+                    else
+                    {
+                        T["MovingPanel",number]=0
+                        T["UsingSlider",number]=0
+                    }
+                }
+            }
+        }
+        if(T["MouseDown",number])
+        {# this is continuous player interaction. proud of it.
+            local PanelID = T["MovingPanel",number]
+            local SliderID = T["UsingSlider",number]
+            if(PanelID)
+            {
+                local ObjectTable=T["Objects",table][PanelID,table]
+                local RelativePos=ObjectTable["RelativePos",vector2]
+                local Pos=ObjectTable["Pos",vector2]
+                local Size=ObjectTable["Size",vector2]
+                EGP:egpPos(PanelID,Cursor+Size/2-RelativePos)
+                ObjectTable["Pos",vector2]=Cursor-RelativePos
+            }
+            if(SliderID)
+            {# TOO MANY SHIT GOING ON HERE!
+                local ObjectTable=T["Objects",table][SliderID,table]
+                local MaxSize=ObjectTable["Size",vector2]:x()
+                local MaxValue=ObjectTable["Max",number]
+                local Pos=ObjectTable["Pos",vector2]
+                local ParentPanel=T["Objects",table][T["NameToIndex",table][ObjectTable["Parent",string],number],table]
+                local ParentSize=ParentPanel["Size",vector2]/2
+                local Pos0x=(Cursor-Pos-ParentPanel["Pos",vector2]):x()
+                local EgpValue=clamp(Pos0x,0,MaxSize)
+                local Value=clamp(Pos0x*(MaxValue/MaxSize),0,MaxValue)
+                if(ObjectTable["Round",number])
+                {
+                    Value=round(Value)
+                }
+                EGP:egpLineStrip(ObjectTable["Indexes",array][1,number],array(
+                Pos+vec2(0,10)-ParentSize,
+                Pos+vec2(EgpValue,10)-ParentSize,
+                Pos+vec2(EgpValue,0)-ParentSize,
+                Pos+vec2(EgpValue,20)-ParentSize,
+                Pos+vec2(EgpValue,10)-ParentSize,
+                Pos+vec2(MaxSize,10)-ParentSize
+                ))
+                EGP:egpSetText(ObjectTable["Indexes",array][2,number],round(Value,2):toString())
+                T["nval",table][ObjectTable["Name",string],number]=Value
+                ObjectTable["Value",number]=Value
+            }
+        }
+    }
+}
+if(last())
+{
+    T:clear()
+    }#hey, you scrolled way down to the end of the code. if you haven't already realised, there are multiple comments here for funniest functions ever, so you might wanna check them out.

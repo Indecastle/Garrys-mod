@@ -1,0 +1,41 @@
+@name local chat
+
+# Made By Curly #
+
+if (first() | dupefinished())
+{    
+    dsJoinGroup("local_chat")
+    dsSetScope(2)
+    runOnSignal("local_chat", 2, 1)
+    runOnChat(1)
+}
+
+if (chatClk(owner()))
+{
+    Said = owner():lastSaid()
+    
+    if (Said:explode("")[1, string] == "?" & Said:explode(" ")[1, string] != "?online")
+    {
+        hideChat(1)
+        Message = Said:sub(2)
+        dsSend("local_message", "local_chat", Message)       
+        printColor(teamColor(owner():team()), owner():name(), vec(255), ": ", vec(255, 255, 155), Message)     
+    }
+    if (Said:explode(" ")[1, string] == "?online")
+    {
+        hideChat(1)
+        OnlineChips = dsProbe("local_chat"):add(array(entity()))
+        Online = ""
+        foreach (K, V:entity = OnlineChips)
+        {
+            Online = Online + V:owner():name() + ((K == OnlineChips:count()) ? ("") : (", "))
+        }
+        printColor(vec(255, 255, 155), OnlineChips:count() + " player(s) online: ", vec(255), Online)
+    }
+}
+
+if (dsClk())
+{
+    Sender = dsGetSender():owner()
+    printColor(teamColor(Sender:team()), Sender:name(), vec(255), ": ", vec(255, 255, 155), dsGetString())  
+}

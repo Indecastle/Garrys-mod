@@ -8,7 +8,7 @@ dofile("libs/my_methods.txt")
 
 
 local Scale = 5
-local DelayDupe = 1
+local DelayDupe = 0.5
 
 
 local LoadFile = "base"
@@ -166,8 +166,9 @@ local ClassPriority = {
     gmod_wire_wheel = 2
 }
 
-local WeldTypes = {
+local OnlyOneConstraintTypes = {
     'Weld',
+    'Rope',
 }
 
 local DataEnts = {};
@@ -338,7 +339,7 @@ function getById(id)
     return table.first(DataEnts, function(d) return d.id == id end)   
 end
 
-
+// TODO: not working
 function getWireMotor(data)
     local constr = {}
     
@@ -411,15 +412,11 @@ function setDataWires()
         for i, d in ipairs(inputs) do
             local x = w:getWiredTo(d)
             if x ~= nil then
-                local filtered = table.filter(DataEnts, function(e2)
-                    return e2._entity == x
-                end)
-                
-                if #filtered == 0 then continue end
-                local findedId = filtered[1].id
+                local finded = getByEnt(x)
+                if finded == nil then continue end
                 
                 dataWires[#dataWires+1] = {
-                    id = findedId,
+                    id = finded.id,
                     InName = d,
                     OutName = w:getWiredToName(d)
                 }
@@ -436,15 +433,11 @@ function setParentData()
         local parentData = {}
         
         for i, e in ipairs(table.getKeys(data._entity:getChildren())) do
-            local filtered = table.filter(DataEnts, function(e2)
-                return e2._entity == e
-            end)
-            
-            if #filtered == 0 then continue end
-            local findedId = filtered[1].id
+            local finded = getByEnt(e)
+            if finded == nil then continue end
             
             parentData[#parentData+1] = {
-                    id = findedId,
+                    id = finded.id,
                 }
         end
         
@@ -469,6 +462,12 @@ function setConstraintData()
             if Ent1Data._entity == data._entity then own=Ent1Data; other=Ent2Data else own=Ent2Data; other=Ent1Data end
             
             
+            if table.hasValue(OnlyOneConstraintTypes, v.Type) and other.ConstraintData
+                and table.any(other.ConstraintData, function(d) return d.id == own.id and d.Type == v.Type end) then
+                continue
+            end
+            --print("==============================")
+            --printTable(v)
             weldData[#weldData+1] = {
                     id = other.id,
                     LAxis = v.LocalAxis,
@@ -478,6 +477,17 @@ function setConstraintData()
                     EntId1 = Ent1Data.id,
                     EntId2 = Ent2Data.id,
                 }
+                
+            if v.Type == 'Rope' then
+                weldData[#weldData].Bone1 = v.Bone1
+                weldData[#weldData].Bone2 = v.Bone2
+                weldData[#weldData].Length = v.length
+                weldData[#weldData].AddLength = v.addlength
+                weldData[#weldData].ForceLimit = v.forcelimit
+                weldData[#weldData].Width = v.width
+                weldData[#weldData].Material = v.material
+                weldData[#weldData].Rigid = v.rigid
+            end
         end
         
         data.ConstraintData = weldData
@@ -620,6 +630,10 @@ function noCollideHandler(a, b)
     constraint.nocollide(a, b)
 end
 
+function ropeHandler(a, b, constData)
+    constraint.rope(0, a, b, constData.Bone1, constData.Bone2, constData.LPos1, constData.LPos2, constData.Length, constData.AddLength, constData.ForceLimit, constData.Width, constData.Material, constData.Rigid)
+end
+
 function constraintAll()
     /*printTable(target:getAllConstrained({
         Wire = false,
@@ -629,12 +643,13 @@ function constraintAll()
     -- printTable(target:getChildren())
     --printTable(constraint.getTable(target))
     for i, data in ipairs(DataEnts) do
-        for j, weldData in ipairs(data.ConstraintData) do
-            local first = DataEnts[weldData.id]._entity2
+        for j, constData in ipairs(data.ConstraintData) do
+            local first = DataEnts[constData.id]._entity2
             local second = data._entity2
             if first ~= nil and second ~= nil then
-                if table.hasValue(WeldTypes, weldData.Type) then weldHandler(first, second)
-                elseif weldData.Type == "NoCollide" then noCollideHandler(first, second) end
+                if constData.Type == "Weld" then weldHandler(first, second)
+                elseif constData.Type == "NoCollide" then noCollideHandler(first, second)
+                elseif constData.Type == "Rope" then ropeHandler(first, second, constData) end
             end
         end
     end

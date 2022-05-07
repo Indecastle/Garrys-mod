@@ -125,11 +125,11 @@ if (first()) {
     }
     
     # Entity=holoCreate(number index,vector position,vector scale,angle ang,vector color)
-    holoCreate(1, E:pos(), vec(1), ang(), vec4(0, 255, 0, 50), "models/hunter/blocks/cube8x8x8.mdl")
-    holoCreate(2, E:pos(), vec(-1), ang(), vec4(0, 255, 0, 150), "models/hunter/blocks/cube8x8x8.mdl")
+    holoCreate(1, E:pos(), vec(1), ang(), vec4(0, 255, 0, 50), "models/hunter/blocks/cube4x4x4.mdl")
+    holoCreate(2, E:pos(), vec(-1), ang(), vec4(0, 255, 0, 150), "models/hunter/blocks/cube4x4x4.mdl")
     
-    holoCreate(3, E:pos(), vec(1), ang(), vec4(255, 255, 0, 50), "models/hunter/blocks/cube8x8x8.mdl")
-    holoCreate(4, E:pos(), vec(-1), ang(), vec4(255, 255, 0, 150), "models/hunter/blocks/cube8x8x8.mdl")
+    holoCreate(3, E:pos(), vec(1), ang(), vec4(255, 255, 0, 50), "models/hunter/blocks/cube4x4x4.mdl")
+    holoCreate(4, E:pos(), vec(-1), ang(), vec4(255, 255, 0, 150), "models/hunter/blocks/cube4x4x4.mdl")
     
     for (I=5, 12) {
         holoCreate(I, E:pos(), vec(1), ang(), vec4(0, 255, 0, 150), "icosphere3")
