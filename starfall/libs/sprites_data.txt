@@ -57,3 +57,20 @@ SpritesData = {
         frameCount = 3*2
     },
 }
+
+
+SpritesData2 = {
+    lol = "https://static1.e621.net/data/2b/ef/2bef1255f749d40e2b9688a970eb4eb1.gif",
+    gachi = "https://i.imgur.com/ArqIrer.png",
+    triangle = "https://i.imgur.com/wEGAreQ.gif",
+    cat = "https://i.imgur.com/m0bHjI5.gif",
+    scala = "https://i.imgur.com/1yfdoGt.gif",
+    
+    
+    eye = "https://i.imgur.com/hUHWwL9.gif",
+    room = "https://i.imgur.com/RBjURwd.gif",
+    room = "https://i.imgur.com/RBjURwd.gif",
+    tornado = "https://i.imgur.com/xIOeFDt.gif",
+    --dicaprio = "https://u.teknik.io/VoX0P.gif",
+    city = "https://i.imgur.com/ROf54Np.gif",
+}

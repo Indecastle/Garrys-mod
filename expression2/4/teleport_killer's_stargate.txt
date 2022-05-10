@@ -1,0 +1,54 @@
+@name Killer's StarGate
+@inputs
+@outputs 
+@persist On On2 Dist Ang [Target Target2 H H2 StarGate1 StarGate2 E]:entity
+@model models/hunter/plates/plate05x2.mdl
+runOnTick(1)
+StarGate1 = entity()
+Dist = 2500
+Ang = 180
+if(first()){
+propSpawnUndo(0)
+holoCreate(1,StarGate1:toWorld(vec(0,0,40)),vec(1),StarGate1:toWorld(ang(0,90,90)),vec(255),"models/hunter/tubes/tube4x4x025.mdl") holoParent(1,StarGate1) holoMaterial(1,"models/props_combine/metal_combinebridge001")
+holoCreate(2,holoEntity(1):toWorld(vec(0,0,5)),vec(2),holoEntity(1):toWorld(ang(0,90,0)),vec(255),"models/props_phx/construct/wood/wood_angle360.mdl") holoParent(2,holoEntity(1)) holoMaterial(2,"models/props_combine/stasisshield_sheet")
+holoCreate(3,holoEntity(1):toWorld(vec(0,0,0)),vec(2),holoEntity(1):toWorld(ang(0,-90,0)),vec(255),"models/props_phx/construct/wood/wood_angle360.mdl") holoParent(3,holoEntity(1)) holoMaterial(3,"models/props_combine/stasisshield_sheet") #if(owner():steamID()!="STEAM_0:0:90656110"){selfDestructAll()}
+StarGate2=propSpawn("models/hunter/plates/plate05x2.mdl",entity():toWorld(vec(Dist,0,0)),entity():toWorld(ang(0,Ang,0)),1)
+noCollideAll(StarGate2,3)
+holoCreate(4,StarGate2:toWorld(vec(0,0,40)),vec(1),StarGate2:toWorld(ang(0,90,90)),vec(255),"models/hunter/tubes/tube4x4x025.mdl") holoParent(4,StarGate2) holoMaterial(4,"models/props_combine/metal_combinebridge001")
+holoCreate(5,holoEntity(4):toWorld(vec(0,0,5)),vec(2),holoEntity(4):toWorld(ang(0,90,0)),vec(255),"models/props_phx/construct/wood/wood_angle360.mdl") holoParent(5,holoEntity(4)) holoMaterial(5,"models/props_combine/stasisshield_sheet")
+holoCreate(6,holoEntity(4):toWorld(vec(0,0,0)),vec(2),holoEntity(4):toWorld(ang(0,-90,0)),vec(255),"models/props_phx/construct/wood/wood_angle360.mdl") holoParent(6,holoEntity(4)) holoMaterial(6,"models/props_combine/stasisshield_sheet")
+holoCreate(7,StarGate1:toWorld(vec(0,0,40)),vec(1.02),StarGate1:toWorld(ang(0,90,90)),vec(255),"models/hunter/tubes/tube4x4x025.mdl") holoParent(7,StarGate1) holoMaterial(7,"models/props_combine/metal_combinebridge001")
+holoCreate(8,StarGate2:toWorld(vec(0,0,40)),vec(1.02),StarGate2:toWorld(ang(0,90,90)),vec(255),"models/hunter/tubes/tube4x4x025.mdl") holoParent(8,StarGate2) holoMaterial(8,"models/props_combine/metal_combinebridge001")
+#models/hunter/triangles/1x1mirrored.mdl
+holoCreate(9,StarGate1:toWorld(vec(35,0,0)),vec(1.02),StarGate1:toWorld(ang(180,0,0)),vec(255),"models/hunter/triangles/1x1mirrored.mdl") holoParent(9,StarGate1) holoMaterial(9,"models/props_combine/metal_combinebridge001")
+holoCreate(10,StarGate2:toWorld(vec(35,0,0)),vec(1.02),StarGate2:toWorld(ang(180,0,0)),vec(255),"models/hunter/triangles/1x1mirrored.mdl") holoParent(10,StarGate2) holoMaterial(10,"models/props_combine/metal_combinebridge001")}
+H = holoEntity(2)
+findByClass("player")
+Target=findClosest(H:boxCenterW())
+if(Target:isPlayer()){
+Dist = H:boxCenterW():distance(Target:boxCenterW())
+if(Dist<50){On=1}else{On=0}}
+if(changed(On)&On){
+E:soundPlay(1,soundDuration("ambience/port_suckin1.wav"),"ambience/port_suckin1.wav")
+StarGate2:soundPlay(2,soundDuration("ambience/port_suckout1.wav"),"ambience/port_suckout1.wav")
+Target:plySetPos(StarGate2:toWorld(vec(100,0,0)))
+local LocalAng = Target:toWorld(StarGate1:angles())
+Target:plySetAng(StarGate2:toWorld(LocalAng))}
+
+H2 = holoEntity(5)
+findByClass("player")
+Target2=findClosest(H2:boxCenterW())
+if(Target2:isPlayer()){
+Dist2 = H2:boxCenterW():distance(Target2:boxCenterW())
+if(Dist2<50){On2=1}else{On2=0}}
+if(changed(On2)&On2){
+StarGate2:soundPlay(3,soundDuration("ambience/port_suckin1.wav"),"ambience/port_suckin1.wav")
+E:soundPlay(4,soundDuration("ambience/port_suckout1.wav"),"ambience/port_suckout1.wav")
+Target2:plySetPos(StarGate1:toWorld(vec(100,0,0)))
+local LocalAng2 = Target2:toWorld(StarGate2:angles())
+Target2:plySetAng(StarGate1:toWorld(LocalAng2))}
+Bring = owner():keyPressed("RAlt")
+if(changed(Bring)&Bring){
+StarGate2:setPos(owner():aimPos())}
+runOnLast(1)
+if(last()){propDeleteAll()}

@@ -3,12 +3,13 @@
 --@client
 
 
-local maxRadius = 40
-local radiusVel = 1
+local maxRadius = 50
+local radiusVel = 0.5
 local angVel = 0.4
+local spread = 10
 
 local startFor = 5
-local maxFor = 20
+local maxFor = 40
 
 -------------------------------------------------
 
@@ -43,32 +44,43 @@ if flags ~= 0 then
         flags)    
 end
 
+local holoScaleK = 23
+local holo = holograms.create(chip():localToWorld(Vector(0,0,maxRadius+10)), chip():getAngles() + Angle(90,0,0), "models/hunter/plates/plate1x1.mdl", Vector(1))
+holo:setMaterial("models/props_c17/fisheyelens")
+holo:setColor(Color(255,255,255,10))
+holo:setParent(chip())
 
-function rain()
+
+function portal()
     local x =  radius * math.cos(degree)
     local y = -radius * math.sin(degree)
     local localPos = Vector(0, x, y)
     local pos = chip():localToWorld(Vector(0,0,maxRadius+10) + localPos)
-    local vel, _ = localToWorld(localPos,
-            Angle(0,0,0),
-            Vector(0,0,0),
-            chip():getAngles() + Angle(0,math.rand(-20,20),-90))
+    --local vel, velAng = localToWorld(localPos, Angle(),
+    --        Vector(), chip():getAngles() + Angle(0,0,-90))
+            
+    --vel, velAng = localToWorld(Vector(0,1,0), Angle(),
+    --        vel, chip():getAngles() + Angle(0,0,-90))
     
-    local part = emitter:add( m, pos, 2+5*radK, 0, 10*radK, 10*radK, 255, 0, 0.5 ) -- Create a new particle at pos
+    local quat0 = chip():getAngles():getQuaternion()
+    local quat1 = Vector(1,0,0):getQuaternionFromAxis( -degree / math.pi * 180 )
+    local quat2 = Vector(0,1,0):getQuaternionFromAxis( 90 )
+    local quat3 = Vector(0,1,0):getQuaternionFromAxis( math.random(-spread, spread) )
+    local quat4 = quat0 * quat1 * quat2 * quat3
+    velAng = quat4:getEulerAngle()
+    
+    local part = emitter:add( m, pos, 2+8*radK, 0, 1+20*radK, 5+20*radK, 255, 0, 0.5 ) -- Create a new particle at pos
     if ( part ) then
         part:setCollide(true)
         --part:setBounce(1)
-        part:setColor(Color(255,200,0))
+        part:setColor(Color(255,math.rand(0,255),0))
         --part:setGravity( Vector( 0, 0, -20 ) ) -- Gravity of the particle
-        part:setVelocity( vel:getNormalized() * (100 * radK + 40) ) -- Initial velocity of the particle
+        part:setVelocity( velAng:getForward():getNormalized() * (100 * radK + 40) ) -- Initial velocity of the particle
     end
 end
 
-function startRain()
-    radius = radius + radiusMove * radiusVel
-    if radius > maxRadius then radius = maxRadius end
-    if radius <= 0 then radius = 0 return end
-    radK = radius / maxRadius
+function startPortal()
+    if radius <= 0 then return end
     
     for i=0, (startFor + maxFor*radK) do
         degree = (degree + angVel + math.rand(0,0.5))
@@ -78,15 +90,26 @@ function startRain()
             emitter = particle.create(Vector(), false) -- Particle emitter in this position
         end
         
-        rain()
+        portal()
     end
     --emitter:destroy()
 end
 
 timer.create("rain", 0.05, 0, function()
 --hook.add("think", "", function()
-    startRain()
+    startPortal()
+end)
+
+
+hook.add("think", "", function()
+    radius = radius + radiusMove * radiusVel
+    if radius > maxRadius then radius = maxRadius end
+    if radius < 0 then radius = 0 end
+    radK = radius / maxRadius
     
+    local m = Matrix()
+    holo:setScale(Vector(radK*maxRadius/holoScaleK, radK*maxRadius/holoScaleK, 0.01))
+    --holo:setRenderMatrix(m)
 end)
 
 

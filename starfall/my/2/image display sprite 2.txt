@@ -1,0 +1,283 @@
+--@name Image Display Sprite 2
+--@author OctopuSSX
+--@shared
+--@include libs/gifspritesheet.txt
+--@include libs/sprites_data.txt
+
+dofile("libs/sprites_data.txt")
+local GifToSpritesheet = require("libs/gifspritesheet.txt")
+
+
+local img = "city"
+local maxh = 10*500
+local delay = 1
+
+local maxRTs = 5
+
+local ParentAngle = true
+local VerticalAngle = true
+local PosUp = true
+
+
+function isLookingAtChip()
+    local dir = owner():getEyeAngles():getForward()
+    local dir2 = (chip():getPos() - owner():getShootPos()):getNormalized()
+    local cos = (dir.x*dir2.x + dir.y*dir2.y + dir.z*dir2.z) / (dir:getDistance(Vector())*dir2:getDistance(Vector()))
+    // Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+    //print(math.acos(cos))
+    return math.acos(cos) < 0.15
+end
+
+if SERVER then
+    chip():setNoDraw(0)
+
+    hook.add("PlayerSay", "chat", function(ply, txt)
+        if ply ~= owner() then return end
+        if not isLookingAtChip() then return end
+        
+        if txt:sub(1, 5) == "-img " then            
+            t = txt:sub(6)
+            if SpritesData[t] == nil then return end
+            img = t
+            
+            net.start("changeImage")
+            net.writeString(t)
+            net.send()
+            return ''
+        elseif txt:sub(1, 4) == "-mh " then
+            maxh = tonumber(txt:sub(5)) or 100
+            
+            net.start("setMaxH")
+            net.writeInt(maxh, 16)
+            net.send()
+            return ''
+        elseif txt:sub(1, 5) == "-url " then
+            url = txt:sub(6)
+            
+            net.start("setUrl")
+            net.writeString(url)
+            net.send()
+            return ''
+        elseif txt:sub(1, 7) == "-delay " then
+            delay = tonumber(txt:sub(8)) or 0.05
+            
+            net.start("setDelay")
+            net.writeFloat(delay, 16)
+            net.send()
+            return ''
+        elseif txt:sub(1, 8) == "-parent " then
+            ParentAngle = tonumber(txt:sub(8)) or 0
+            
+            net.start("setParent")
+            net.writeInt(ParentAngle, 16)
+            net.send()
+            return ''
+        end
+    end)
+else
+    function say(msg)
+        pcall(function()
+            if player() == owner() then print(msg) end
+        end)
+    end
+    
+    local FPS = 5
+    local frame = 0
+    local delta = 1/FPS
+
+    local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
+    
+    hook.add("tick", "", function()
+        --local d = -eyeVector()
+        local d = (player():getEyePos() - screen:getPos()):getNormalized()
+        local eyeAngle = d:getAngle() + Angle(90,0,0)
+        if ParentAngle then
+            screen:setAngles(chip():getAngles())
+            screen:setPos(chip():localToWorld(Vector(0, 0, 5)))
+        else
+            if VerticalAngle then
+                eyeAngle = eyeAngle:setP(90)
+            end
+            screen:setAngles(eyeAngle)
+            screen:setPos(chip():getPos())
+        end
+    end)
+    
+    
+    render.createRenderTarget("cantload")
+    
+    local nonmat = material.create("UnlitGeneric")
+    nonmat:setTextureRenderTarget("$basetexture", "cantload")
+    nonmat:setInt("$flags", 0)
+    
+    
+    local sprite_sheet;
+    
+    function cantload()
+        screen:setSize(Vector(60, 60, 1))
+        screen:setMaterial("!" .. nonmat:getName())
+    end
+    
+    function setCustom(url)
+        SpritesData["c"] = url
+        img = "c"
+        loadImage()
+    end
+    
+    function loadImage()
+        if img == nil then return end
+        if SpritesData2[img] == nil then return end
+        
+        URL = SpritesData2[img]
+    
+        if not hasPermission("material.urlcreate", URL) then
+            cantload()
+            return
+        end
+        
+        hook.remove("renderoffscreen","sprite1")
+        /*sprite_sheet = SpriteManager.loadURL(SpritesData[img].urls[1], SpritesData[img].size[1], SpritesData[img].size[2], function(m, w, h, l)
+            if m == nil then return end
+        
+            local ratio = w / h
+
+            local sh = maxh
+            local sw = sh * ratio
+            screen:setSize(Vector(sh, sw, 1))
+            --throw(tostring(sh))
+            
+            --l(0, 0, m:getWidth(), m:getHeight())
+        end)
+        for i=2, #SpritesData[img].urls do
+            sprite_sheet:appendURL(SpritesData[img].urls[i])
+        end
+        --screen:setSize(Vector(sh, sw, 1))
+        screen:setMaterial("!" .. sprite_sheet.matRender:getName())
+        
+        
+        sprite_sheet:setCallback(function()
+            hook.add("renderoffscreen","sprite1",function()
+                if quotaAverage() > quotaMax() * 0.2 then return end 
+                sprite_sheet:selectRenderTarget()
+                render.clear(Color(0,0,0,0))
+                --render.setColor(Color(255,0,0))
+                --render.drawRect(0,0, 1000, 1000)
+                --if not sprite_sheet.loading then print(1) end
+                local x,y,w,h;
+                if PosUp then x=256 y=0 w=512 h=512
+                else x=0 y=0 w=1024 h=1024 end
+                sprite_sheet:drawSprite2(
+                    x, y, w, h,
+                    math.floor(timer.systime() / delay) % frameCount + 1
+                )
+            end)
+        end)*/
+        http.get(URL, function(data)
+            GifToSpritesheet(data, maxRTs, function(spritesheet, decoder)
+                local w, h = spritesheet.framew, spritesheet.frameh
+                
+                local ratio = w / h
+                local sh = maxh
+                local sw = sh * ratio
+                screen:setSize(Vector(sh, sw, 1))
+                
+                screen:setMaterial("!" .. decoder.drawMaterial:getName())
+                
+                hook.add("renderoffscreen","sprite1",function()
+                    render.selectRenderTarget("gif")
+                    render.clear(Color(0,0,0,0))
+                    
+                    local sw, sh = render.getResolution()
+                    local scale
+                    if sw*h<sh*w then
+                        scale = sw / w
+                    else
+                        scale = sh / h
+                    end
+                    local x, y, w, h
+                    if PosUp then x=256 y=0 w=512 h=512
+                    else x=0 y=0 w=1024 h=1024 end
+                    spritesheet:draw(x, y, w, h, timer.frametime() * delay)
+                end)
+            end)
+        end)
+        --screen:setMaterial("!" .. sprite_sheet.matRender:getName())
+    
+        /*local mat = material.create("UnlitGeneric")
+        
+        mat:setInt("$flags", 256)
+        
+        mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+            if m == nil then return end
+        
+            local ratio = w / h
+
+            local sh = maxh
+            local sw = sh * ratio
+            screen:setSize(Vector(sh, sw, 1))
+            
+            l(0, 0, m:getWidth(), m:getHeight())
+            
+            screen:setMaterial("!" .. mat:getName())
+        end)*/
+    end
+    
+    net.receive("changeImage", function(l)
+        img = net.readString()
+        frameCount = SpritesData[img].frameCount
+        
+        say("Set image to " .. img)
+        
+        loadImage()
+    end)
+    net.receive("setMaxH", function(l)
+        maxh = net.readInt(16)
+        
+        say("Set height to " .. maxh)
+        
+        loadImage()
+    end)
+    net.receive("setUrl", function(l)
+        url = net.readString()
+        
+        
+        say("Set custom imageas")
+        
+        setCustom(url)
+    end)
+    net.receive("setDelay", function(l)
+        delay = net.readFloat(16)
+        
+        say("Set frame delay")
+    end)
+    net.receive("setParent", function(l)
+        ParentAngle = net.readInt(16) == 1
+        
+        say("Set is parent angle")
+    end)
+    
+    loadImage()
+    
+    setupPermissionRequest({"material.urlcreate"}, "Load images from external websites", true)
+    
+    hook.add("permissionrequest", "perm", loadImage)
+    
+    hook.add("renderoffscreen", "cantload", function()
+        isLookingAtChip()
+        local now = timer.systime()
+        if frame > now then return end
+        frame = now + delta
+        
+        render.selectRenderTarget("cantload")
+        render.clear()
+        
+        local font = render.createFont("Arial", 50, 400, true, false, false, false, false, true)
+        render.setFont(font)
+        
+        render.drawText(512, 270, "Image source is not whitelisted!", 1)
+        render.drawText(512, 330, "Press E on the dot to allow loading!", 1)
+        
+        render.draw3DSphere(Vector(512, 512, 20), 30, 20, 20)
+        
+    end)
+end

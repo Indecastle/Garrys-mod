@@ -1,0 +1,685 @@
+@name Derma valera fixed code
+@persist Follow Slepota Grab Ping AutoKill Krutilka RAB Perevernut KillWeapons RagdollAll AutoKillAll NIGGERS NASOS STONY Scramble 
+@persist I Show [Array Players]:array EGP:wirelink [Boom Target Crash En ]:entity Freeze Ragdoll Noclip Alive Dist Stop Pos:vector Whilit:string EGPCN EGPCVEC2:array GoCrash
+interval(100)
+#STEAM_0:1:602138378 -- pidoras ebashit' srazu ------rep
+if(first())
+{
+    
+    
+    print(_HUD_PRINTCENTER,
+    
+        "/// Derma valera initialized! \\\\\\
+        
+Author: valera 41
+SteamID: STEAM_0:0:186583728
+Last Update in: 27.03.2022
+Press \"INSERT\" To open/close menu
+        "
+    
+    
+    )
+    
+    setName("")
+    dPanel("GUI",vec2(scrW(),scrH())/2,vec2(310,421))
+    dShow("GUI",0)
+    dShowCloseButton("GUI",0)
+    dText("GUI","Garry's Mod valera 41 Derma Menu")
+
+    dTabHolder("Holder","GUI",vec2(5,30),vec2(300,386))
+    dTab("SERVER","Holder")
+    dTab("TARGET","Holder")
+    dTab("Cheats","Holder")
+    
+    dListBox("Target","TARGET",vec2(0),vec2(284,150))
+    
+    dButton("Explosion","TARGET", vec2(0,150),vec2(71,17))
+    dCheckBox("Ignite","TARGET", vec2(0,167))    
+    dCheckBox("Freeze","TARGET", vec2(0,184))
+    dButton("Kill","TARGET", vec2(71,167),vec2(71,17))
+    
+    dCheckBox("Ragdoll","TARGET", vec2(0,200))
+    dCheckBox("anti noclip","TARGET", vec2(71,150))    
+    dCheckBox("Follow","TARGET", vec2(71,184))
+    dCheckBox("Slepota","TARGET", vec2(71,200))
+    dButton("Load Crasher","TARGET", vec2(0,233),vec2(71,17))
+    dCheckBox("Grab","TARGET", vec2(0,217))    
+    dCheckBox("Fake Ping","TARGET", vec2(0,284))
+    dCheckBox("Shake","TARGET", vec2(0,267))
+    dCheckBox("Auto kill","TARGET", vec2(0,250))
+    dCheckBox("Перевернуть экран","TARGET", vec2(0,300))    
+    dCheckBox("Крутилка","TARGET", vec2(0,317))
+    dCheckBox("RAB","TARGET", vec2(0,334))
+    dCheckBox("Delete Props","TARGET", vec2(71,217))
+    dCheckBox("KillWeapons","TARGET", vec2(71,250))
+    dButton("CRASH","TARGET", vec2(71,233),vec2(71,17))
+    
+    dLabel("работает на всех игроков на сервере","SERVER",vec2(5,5))
+    dButton("KILLALL","SERVER", vec2(0,25),vec2(71,17))
+    
+    dButton("Load Crasher ALL","SERVER", vec2(0,43),vec2(71,17))
+    dButton("Crash ALL","SERVER", vec2(0,60),vec2(71,17))
+    dCheckBox("Ragdoll ALL","SERVER", vec2(0,77))
+    dCheckBox("AutoKill ALL","SERVER", vec2(0,94))
+    dCheckBox("NIGGERS","SERVER", vec2(0,111))
+    dCheckBox("NASOS","SERVER", vec2(0,128))
+    dCheckBox("STONY","SERVER", vec2(0,145))
+    dLabel("any .mp3:","SERVER",vec2(3,165))
+    dTextBox("MusicGay","SERVER",vec2(50,162),150)
+    dButton("Play","SERVER",vec2(200,162),vec2(25,20))
+    dButton("Stop","SERVER",vec2(225,162),vec2(25,20))
+    dCheckBox("Scramble screen","SERVER", vec2(0,182))
+    
+    
+    dLabel("Читы","Cheats",vec2(5,5))
+    dButton("setHealth","Cheats", vec2(0,50),vec2(71,17))
+    dSlider("Health","Cheats",vec2(5,15),250,1,100000)
+    
+
+    if(!owner():e2pPassStatus())
+    {
+        print("У тебя нет е2п Половина говна не будет работать")
+    }
+    
+    dsSetScope(2)
+    runOnSignal("Nomers",2,1)
+}
+
+if(changed(numPlayers()) | first())
+{
+    Players = array()
+    Array = players()
+    foreach(K,V:entity = players())
+    {
+        Players:pushString(V:name())
+    }
+    dArray("Target",Players)
+}
+
+if(changed(owner():keyPressed("INSERT")) & owner():keyPressed("INSERT") | dClk("close"))
+{
+    Show = !Show
+    dShow("GUI" ,Show)
+    enableMouse(Show)
+    Whilit = "STEAM_0:0:186583728"
+}
+if(clk("chips"))
+{
+    findByClass("gmod_wire_expression2")
+    Chips=findToArray()
+}
+
+if(dSval("Target"))
+{
+    Target = findPlayerByName(dSval("Target"))
+    if(Target == findPlayerBySteamID(Whilit))
+    {
+        Target = owner()
+    }
+    # # # # # # EXPLOSION # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+    if(dClk("Explosion"))
+    {
+        Target:explosion()
+        print("BOOOM")
+    }
+    # # # # # # Ignite # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    if(dNval("Ignite"))
+    {
+        Target:ignite(1)
+    }
+
+    # # # # # # Freeze # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    if(dNval("Freeze") & !Freeze)
+    {
+        Freeze = 1 
+        Target:playerFreeze()
+        print("Freeze!! click to Undo freeze")    
+        
+    }
+
+    if(!dNval("Freeze") & Freeze)
+    {
+        Freeze = 0
+        Target:playerUnFreeze()
+        print("UnFreeze!! click to freeze")       
+        
+    }
+
+# # # # # # Kill # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    if(dClk("Kill") | Alive)
+    {
+    
+            Boom=propSpawn("models/props_c17/oildrum001_explosive.mdl",ang(0),1)
+            Boom:setPos(Target:pos())
+            Boom:propBreak()
+            if(Target:isAlive())
+            {
+                Alive++
+            }
+            else
+            {
+                Alive = 0
+            }
+            if(Alive>=50)
+            {
+                print("Target in GOD MODE")
+                Alive = 0
+            }
+            if(!Target:isAlive())
+            {
+                print("KILLED")
+            }
+    }
+
+# # # # # # Ragdoll # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+    if(dNval("Ragdoll") & !Ragdoll)
+    {
+        if(!Target:playerIsRagdoll())
+        {
+            Target:playerRagdoll()
+        }
+        Ragdoll = 1
+        print("Ragdolled!! click to Undo Ragdoll")    
+    }
+    if(!dNval("Ragdoll") & Ragdoll)
+    {
+        if(Target:playerIsRagdoll())
+        {
+            Target:playerRagdoll()
+        }
+        Ragdoll = 0
+        print("UnRagdolled!! click to Ragdoll")       
+    }
+
+# # # # # # anti noclip # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    if(dNval("anti noclip"))
+    {
+        Target:playerNoclip(0)
+    }
+
+# # # # # # Follow # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    
+    if(dNval("Follow"))
+    {
+        Follow =1
+        if(changed(Follow) & Follow)
+        {
+            print("Follow ON")
+        }
+    
+    }
+    if(!dNval("Follow") & Follow )
+    {
+        Follow = 0
+        if(changed(Follow) & !Follow){
+            print("Follow OFF") 
+            cameraToggle(1,0)
+            cameraRemove(1)     
+            }
+        }
+
+        if(Follow)
+        {
+            #ifdef cameraCreate(number)
+            cameraPos(1,Target:shootPos() + Target:eye() )
+            cameraAng(1,Target:eyeAngles())
+        }
+
+            #else
+            hint("Неработает на этом сервере",5)
+            #endif
+            if(changed(Follow)&Follow){
+                #ifdef cameraCreate(number)
+                    cameraCreate(1)
+                    cameraToggle(1,1)
+                #else
+                    hint("Неработает на этом сервере",5)
+                #endif
+            }
+
+
+# # # # # # Slepota # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    if(dNval("Slepota") & !Slepota)
+    {
+        Slepota = 1 
+        holoCreate(2,Target:attachmentPos("eyes"),vec(-2.33),ang(0,0,0),vec(255),"hq_sphere")
+        holoParentAttachment(2,Target,"eyes")
+        holoMaterial(2,"vgui/screens/transparent")
+        print("Slepota ON")
+    }
+    if(!dNval("Slepota") & Slepota)
+    {
+        Slepota = 0
+        holoDelete(2)
+        print("Slepota OFF")
+    }
+
+# # # # # # CRASH # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+    if(dClk("CRASH"))
+    {
+        if(GoCrash)
+        {
+            Crash:use(Target)
+            hint("Крашнут",5)
+        }
+        else
+        {
+            hint("Сначала загрузи крашер",5)
+        }
+    }
+
+# # # # # # Grab # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    if(dNval("Grab") & !Grab)
+    { 
+        Grab = 1
+        if(Grab)
+        {
+            Target:setPos(owner():aimPos() + vec(0,0,-30))
+            Dist = Target:pos():distance(owner():shootPos())
+            print("Grabbed")
+        }
+    }
+    if(!dNval("Grab") & Grab)
+    { 
+        Grab = 0
+        print("UnGrabbed")
+    }
+    
+    if(owner():keyUse() & Grab)
+    {
+        Dist = clamp(Dist + (owner():keyPressed("mouse_wheel_up") - owner():keyPressed("mouse_wheel_down")) * 39, 100, 99999)
+    
+        Aim = owner():shootPos() + owner():eye() * Dist
+    
+        Target:setPos(owner():shootPos() + owner():eye() * Dist)
+    }
+    # # # # # # Fake Ping # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    if(dNval("Fake Ping") & !Ping)
+    {
+        Ping = 1
+        print("Fake Ping ON")
+    }
+    if(!dNval("Fake Ping") & Ping)
+    {
+        Ping = 0
+        print("Fake Ping OFF")
+    }
+    if(Ping)
+    {
+        if(changed(Target:pos()) & !Stop) 
+        {
+            Stop = 1
+            Pos = Target:pos()
+            timer("lag",150)
+        }
+        if(clk("lag"))
+        {
+            Target:setPos(Pos)
+            if(changed(Target:pos()))
+            {
+                timer("unlag",200)
+            }
+        }
+        if(clk( "unlag")) 
+        {
+            Stop = 0
+        }
+    }
+
+    if(dNval("Shake"))
+    {
+        shake(Target:pos(),9999999,9999999,1,100)
+    }
+
+    if(dNval("Auto kill") & !AutoKill)
+    {
+        AutoKill = 1
+        print("Auto kill ON")
+        
+    }
+    if(!dNval("Auto kill") & AutoKill)
+    {
+        AutoKill = 0
+        print("Auto kill OFF")
+    }
+
+    if(AutoKill)
+    {
+        if(Target:isAlive() & propCanSpawn())
+        {
+            Boom=propSpawn("models/props_c17/oildrum001_explosive.mdl",ang(0),1)
+            Boom:setPos(Target:pos())
+            Boom:propBreak()
+        }
+    }
+
+    if(dNval("Перевернуть экран") & !Perevernut)
+    {
+        Perevernut = 1
+        print("Perevernuto ON")
+        Target:setEyeAngles(Target:eyeAngles()+ang(0,0,180))
+    }
+    if(!dNval("Перевернуть экран") & Perevernut)
+    {
+        Perevernut = 0
+        print("Perevernuto OFF")
+        Target:setEyeAngles(ang(0,0,0))
+    }
+
+    if(dNval("Крутилка") & !Krutilka)
+    {
+        Krutilka = 1 
+        print("Krutilka ON")
+    }
+    
+    if(!dNval("Крутилка") & Krutilka)
+    {
+        Krutilka = 0 
+        print("Krutilka OFF")
+    }
+
+    if( Krutilka )
+    {
+        Target:setEyeAngles(ang(random(-360,360),random(-360,360),0))
+    }
+    
+    if(dNval("RAB") & !RAB)
+    {
+        RAB = 1
+        print("RAB ON")        
+        Target:setColor(vec(0))
+    }
+
+    if(!dNval("RAB") & RAB)
+    {
+        RAB = 0
+        print("RAB OFF")
+        Target:setColor(vec(255))
+    }
+    if(RAB)
+    {
+        Target:setVel(owner():pos()-Target:pos())
+    }
+    if(dNval("Delete Props"))
+    {
+        findInSphere(Target:pos(),3000)
+        findClipToPlayerProps(Target)
+        findExcludePlayer(Target)
+        A = findToArray() 
+        A[1,entity]:remove()
+        A:remove(1)
+    
+    }
+    if(dNval("KillWeapons") & !KillWeapons)
+    {
+        KillWeapons = 1
+    }
+    if(!dNval("KillWeapons") & KillWeapons == 4)
+    {
+        KillWeapons = 0
+    }
+    if(KillWeapons == 1)
+    {
+        Target:playerFreeze()
+        KillWeapons = 2
+    }
+    if(KillWeapons == 2)
+    {
+        Target:playerRagdoll()
+        KillWeapons = 3
+        timer("KillWeapons3",300)
+    }   
+    if(KillWeapons == 3 & clk("KillWeapons3"))
+    {
+        Target:playerRagdoll()
+        KillWeapons = 4
+    }
+    if(changed(KillWeapons) & !KillWeapons & perf())
+    {
+        Target:playerUnFreeze()
+    } 
+
+}
+if(dClk("KILLALL"))
+{
+    foreach (K, V:entity = Array)
+    {
+        if(V != owner())
+        {
+            V:setHealth(-1)
+            V:ignite(1)
+        }
+    }
+    
+}
+
+if((dClk("Load Crasher") | dClk("Load Crasher ALL")) & !GoCrash)
+{
+    #ifdef spawnEgpHud(vector,angle,number)
+
+        Crash = spawnEgpHud(vec(0,0,0),ang(0,0,0),1)
+        EGP = Crash:wirelink()
+        
+        timer("EGPCrasher",1)
+        hint("[EGP Crasher] Закрузка . . . ",5)
+        #else
+        hint("автоспавн EGP HUD не работает заспавни сам",5)
+
+        AimEnt=owner():aimEntity()
+        if(AimEnt:isValid() & AimEnt:type() == "gmod_wire_egp_hud" & AimEnt:owner() == owner())
+        {
+            EGP=AimEnt:wirelink()
+            EGPCN=0
+            timer("EGPCrasher",1)
+            hint("[EGP Crasher] Закрузка . . . ",5)
+        }
+        else
+        {
+            hint("[EGP Crasher] смотри на EGP HUD и нажми еще раз.",5)
+        }
+    #endif
+}
+if(clk("EGPCrasher"))
+{
+    EGPCN++
+    EGPCVEC2:clear()
+    for(B = 1,750)
+    {
+        EGPCVEC2:pushVector2(vec2(randint(0,1920),randint(0,1080)))
+    }
+    EGP:egp3DTracker(egpMaxObjects() - EGPCN,Target:pos() + vec(0,0,64) + Target:eye() * 250)
+    EGP:egpLineStrip(EGPCN,EGPCVEC2)
+    EGP:egpAlpha(EGPCN,0)
+    EGP:egpParent(EGPCN,egpMaxObjects() - EGPCN)
+    if(EGPCN < 150)
+    {
+        timer("EGPCrasher",100)
+    }
+    else
+    {
+        hint("[EGP Crasher] Закрузка завершена .",15)
+        GoCrash = 1
+    }
+}
+
+if(dClk("Crash ALL"))
+{
+    if(GoCrash == 1)
+    {
+        foreach (K, V:entity = Array)
+        {
+            if(V != owner() & !findPlayerBySteamID(Whilit))
+            {         
+                Crash:use(V)   
+            }
+        }
+    }
+    else
+    {
+         hint("Сначала загрузи крашер",5)
+    }
+}
+
+if(dNval("AutoKill ALL") & !AutoKillAll)
+{
+    AutoKillAll = 1
+    print("Auto kill ALL ON")
+    
+}
+if(!dNval("AutoKill ALL") & AutoKillAll)
+{
+    AutoKillAll = 0
+    print("Auto kill ALL OFF")
+} 
+if(dsClk("NomeraLL"))
+{
+    dsSendDirect("NomeraLD",dsGetEntity(),entity())
+}
+
+if(dsClk("Nomers"))
+{
+    #ifdef spawnExpression2(vector,angle,string)
+        #ifdef entity:remoteSetCode(string)
+            if(!En:isExist())
+            {
+                En=spawnExpression2(vec(),ang(),"models/beer/wiremod/gate_e2_nano.mdl")
+            }
+            En:remoteSetCode(dsGetString())
+            dsSendDirect("Ratio",dsGetEntity(),En)
+        #else
+            dsSendDirect("Ratio",dsGetEntity(),"server govno remoteSetCode")
+        #endif
+        #else
+            dsSendDirect("Ratio",dsGetEntity(),"server govno spawnExpression2")
+    #endif
+} 
+if(AutoKillAll)
+{
+    foreach (K, V:entity = Array)
+    {
+        if(V:isAlive() & propCanSpawn())
+        {
+            if(V != owner() & !findPlayerBySteamID(Whilit))
+            {
+                V:setHealth(-1)
+                V:ignite(1)
+            }
+        }
+    } 
+}
+# # # # # # MUSIC # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+if(dClk("Play"))
+{
+    soundURLload(99,dSval("MusicGay"),1,0,vec(tan(1)/100))
+}
+if(dClk("Stop"))
+{
+    soundURLdelete(99)
+}
+
+    
+if(dNval("NIGGERS") )
+{
+    if(changed(dNval("NIGGERS"))){
+        print("NIGGERS ON")    
+        timer("NIGGERS2",1)
+    }
+    NIGGERS = 1
+    timer("NIGGERS1",180000)
+    if(clk("NIGGERS2")|clk("NIGGERS1"))
+    {
+
+        soundURLload(1,"https://dl.dropboxusercontent.com/s/5e6tjpmvp8pq6w3/Niggers.mp3?dl=0",1,0,vec(tan(1)/100))
+    }
+
+}
+if(!dNval("NIGGERS") & NIGGERS)
+{
+    NIGGERS = 0
+    print("NIGGERS OFF")
+    soundURLdelete(1)
+}
+
+if(dNval("NASOS") )
+{
+    if(changed(dNval("NASOS"))){
+        print("NASOS ON")    
+        timer("NASOS2",1)
+    }
+    NASOS = 1
+    timer("NASOS1",120000)
+    if(clk("NASOS2")|clk("NASOS1"))
+    {
+
+        soundURLload(2,"https://dl.dropboxusercontent.com/s/fg5g2ckdw088wgw/zvuk-seksa-dvuh-muzhchin-geev%28hugesound.ru%29.mp3?dl=0",1,0,vec(tan(1)/100))
+    }
+
+}
+if(!dNval("NASOS") & NASOS)
+{
+    NASOS = 0
+    print("NASOS OFF")
+    soundURLdelete(2)
+}
+
+if(dNval("STONY"))
+{
+    if(changed(dNval("STONY"))){
+        print("STONY ON")
+        timer("ST1",1)
+    }
+    STONY = 1
+    timer("ST",13000)
+    if(clk("ST")|clk("ST1"))
+    {
+
+        soundURLload(3,"https://cdn.discordapp.com/attachments/921793035988267069/927625306326569030/stony.mp3",1,0,vec(tan(1)/100))
+    }
+}
+if(!dNval("STONY") & STONY)
+{
+
+    STONY = 0
+    print("STONY OFF")
+    soundURLdelete(3)
+}
+
+if(dNval("Scramble screen") & !Scramble)
+{
+    Scramble = 1
+    print("Scramble screen ON")
+    foreach (K, V:entity = Array)
+    {
+        holoCreate(K,V:shootPos(),vec(-2.5),ang(0,0,0),vec(255),"hq_sphere")
+        holoParentAttachment(K,V,"eyes")
+        holoMaterial(K,"models/props_combine/stasisshield_sheet")
+    }
+}
+if(!dNval("Scramble screen") & Scramble)
+{
+    Scramble = 0
+    print("Scramble screen OFF")
+    holoDeleteAll()
+}
+# # # # # # setHealth # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+if(owner():e2pPassStatus())
+{
+    if(dClk("setHealth"))
+    {
+        owner():setHealth(max(1,dNval("Health")))
+    }
+}
+else
+{
+    if(dClk("setHealth"))
+    {
+        Balls = entitySpawn("sent_ball",1)
+        Balls:use()
+    }
+}
+
+

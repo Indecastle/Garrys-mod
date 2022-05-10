@@ -4,8 +4,8 @@
 
 
 local Target = owner()
-Target = find.playersByName("Markiz")[1]
-
+Target = find.playersByName("bra")[1]
+--throw(tostring(Target))
 
 
 local O = player()
