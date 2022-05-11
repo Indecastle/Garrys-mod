@@ -7,6 +7,8 @@
 local HOLD_TIME = 2
 local USE_DISTANCE = 100
 
+local CRACK_WEAPON = "keypad_cracker"
+
 
 local keypad = class("keypad")
 local button = class("button")
@@ -108,7 +110,7 @@ function keypad:draw()
     if timer.systime() > (self.holdCracking or 0)
                 and not self.cracking and player():keyDown(IN_KEY.ATTACK) 
                 and player():getEyeTrace().Entity == render.getScreenEntity()
-                and activeWeapon:getClass() == "keypad_cracker" then
+                and activeWeapon:getClass() == CRACK_WEAPON then
         self.cracking = true
         self.crackingTime = 5
         self.endCrackingTime = timer.systime() + self.crackingTime

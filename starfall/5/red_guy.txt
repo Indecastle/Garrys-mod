@@ -1,23 +1,22 @@
---@name Cuties
---@author Sevii
+--@name Red Guys
+--@author Sevii, MOST
 
-local count = 4
+local count = 20
 local jump_delay = 2
 local volume = 0.5
 
-local size = 7
-local offset = Vector()
-local img = "https://u.teknik.io/vzisz.png"
+local size = 9
+local offset = Vector(0, 0, 0)
+local img = "https://u.teknik.io/aDpH5.png"
 
 -- local size = 12
 -- local offset = Vector(0, 0, 20)
 -- local img = "https://u.teknik.io/Q0PCw.png"
 
 local sounds = {
-    "https://u.teknik.io/ZqXJ1.ogg",
-    "https://u.teknik.io/6z7mf.ogg",
-    "https://u.teknik.io/K0qEc.ogg",
-    "https://u.teknik.io/q3nHb.ogg",
+    "https://u.teknik.io/4cupC.mp3",
+    "https://u.teknik.io/dzrfy.mp3",
+    "https://u.teknik.io/OavJo.mp3"
 }
 
 ----------------------------------------
@@ -33,6 +32,8 @@ if SERVER then
             local ent = prop.create(chip():localToWorld(Vector(0, 0, 24)), Angle(), "models/sprops/cuboids/height24/size_1/cube_24x24x24.mdl", true)
             ent:enableMotion(true)
             ent:setColor(Color(0, 0, 0, 0))
+            ent:setPhysMaterial("rubber")
+            ent:setPhysMaterial("gmod_silent")
             
             table.insert(ents, {
                 ent = ent,
@@ -117,7 +118,7 @@ else
                 
                 ents[id] = {
                     holo = holo,
-                    next_sound = timer.curtime() + math.rand(5, 10),
+                    next_sound = timer.curtime() + math.rand(10, 20),
                     pause_sound = 0
                 }
             end
@@ -163,7 +164,8 @@ else
                 data.sound:setPitch(pitch)
                 data.sound:setVolume(volume * math.rand(0.8, 1.2))
                 
-                data.next_sound = time + math.rand(3, 6)
+                //data.next_sound = time + math.rand(3, 6)
+                data.next_sound = time + math.rand(10, 20)
                 data.pause_sound = time + data.sound:getLength() * pitch - timer.frametime() * 2
             end
             

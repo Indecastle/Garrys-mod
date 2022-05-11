@@ -8,8 +8,8 @@ local radiusVel = 0.5
 local angVel = 0.4
 local spread = 10
 
-local startFor = 5
-local maxFor = 40
+local startFor = 2
+local maxFor = 20
 
 -------------------------------------------------
 

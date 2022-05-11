@@ -8,6 +8,7 @@ local OnlyOwner = false
 local Distance = 80
 local Distance_Render = 100
 local LimitSavePass = 10
+local MinKeyToSave = 2 -- max 4
 
 local IsDevelop = false
 
@@ -90,7 +91,7 @@ if SERVER then
     net.receive("passHandler", function (len, ply)
         local key = net.readString()
         local keypad = net.readEntity()
-        if string.len(key) >= 2 then
+        if string.len(key) >= MinKeyToSave then
             save_pass(keypad, key)
         end
     end)
@@ -263,7 +264,7 @@ else
         local m0Plane = tr.Entity:localToWorld(Vector(offset,0,0))
         local plane = getPlane(dirPlane, m0Plane)
         
-        local dir = OO:getEyeAngles():getForward()
+        local dir = eyeAngles():getForward()
         local m0 = tr.StartPos
         
         return getPoint(dir, m0, plane)
@@ -401,7 +402,7 @@ else
     
     
     if IsDevelop and isOwner then
-        local holo1 = holograms.create(chip():getPos(), Angle(), "models/holograms/cube.mdl", Vector(0.003, 0.003, 0.003))
+        local holo1 = holograms.create(chip():getPos(), Angle(), "models/holograms/cube.mdl", Vector(0.01))
         holo1:setColor(Color(255,150,0))
         
         timer.create("test", 0.01, 0, function()
