@@ -1,0 +1,32 @@
+--@name CriticalPD Example
+--@author Mar
+--@include libs/criticalpd.txt
+--@server
+
+local EntityCriticalPD = require("libs/criticalpd.txt")
+
+
+local E = chip()
+
+
+local pos = E:getPos() + Vector(0,0,50)
+local ang = E:getAngles()
+local pos2 = pos + Vector(0,0,10)
+
+
+local ents = find.byClass("prop_physics", function(ent)
+    return ent:getPos():getDistance(E:getPos()) < 1000
+end)
+local p = find.closest(ents, E:getPos())
+
+local pd = EntityCriticalPD:new(p, 500, 500)
+
+
+hook.add("think", "", function()
+    pos = E:localToWorld(Vector(0,0,50))
+    ang = E:getAngles()
+    --pd:refreshMassInertia()
+    pd:setTarget(pos, ang)
+    pd:simulate()
+    --pd:simulateForceCustomError(Vector(100,0,10), Vector(100,0,0))
+end)
