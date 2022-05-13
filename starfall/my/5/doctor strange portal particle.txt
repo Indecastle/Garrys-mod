@@ -26,9 +26,9 @@ local radiusMove = -1
 local m = material.create("UnlitGeneric")
 m:setTexture("$basetexture","effects/spark") -- effects/spark
 
-local VertexAlpha= false
+local VertexAlpha= true
 local VertexColor= true
-local AlphaTest= true
+local AlphaTest= false
 local Additive= true
 local Translucent= false
 

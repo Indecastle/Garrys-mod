@@ -1,7 +1,7 @@
 --@name Red Guys
 --@author Sevii, MOST
 
-local count = 20
+local count = 5
 local jump_delay = 2
 local volume = 0.5
 

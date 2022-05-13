@@ -1,0 +1,81 @@
+--@name Rain
+--@author
+--@client
+
+
+local Target = player()
+Target = find.playersByName("Markiz")[1]
+--print(Target)
+
+
+local maxRadius = 1000
+local forMax = 20
+local startZ = 300
+
+local enableSound = true
+local volume = 1
+
+
+local soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348343148584/f969747680e8276.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
+soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348645146684/28f2bf70e8d0701.mp3" -- https://zvukipro.com/index.php?do=download&id=11777
+
+-------------------------------------------------
+
+--if player() ~= Target then return end
+
+local emitter = nil
+local sound = nil
+local m = material.load("effects/spark")
+
+
+if enableSound then
+    bass.loadURL(soundUrl, "3d noblock noplay", function(snd)
+        if snd then
+            sound = snd
+            sound:setLooping(true)
+            sound:setVolume(volume)
+            sound:play()
+        end
+    end)
+end
+
+
+function rain(radius, degree)
+    local x =  radius * math.cos(degree)
+    local y = -radius * math.sin(degree)
+    local pos = Target:getPos() + Vector(x, y, startZ)
+    
+    -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
+    local part = emitter:add( m, pos, 2, 0, 20, 1, 0, 100, 1 ) -- Create a new particle at pos
+    if ( part ) then
+        part:setCollide(true)
+        part:setBounce(0.05)
+        part:setColor(Color(0,math.rand(150,200),255))
+        part:setGravity( Vector( 0, 0, -600 ) ) -- Gravity of the particle
+        part:setVelocity( Vector(0,0,-50)*10 ) -- Initial velocity of the particle
+    end
+end
+
+function startRain()
+    if (emitter) then emitter:destroy() end
+    emitter = particle.create(Vector(), false)
+    
+    for i=0, forMax do
+        local radius, degree = math.rand(0, maxRadius), math.rand(0, 360)
+        rain(radius, degree)
+    end
+    --emitter:destroy()
+end
+
+timer.create("rain", 0.05, 0, function()
+--hook.add("think", "", function()
+    startRain()
+end)
+
+
+hook.add("think", "", function()
+    if enableSound and sound then
+        sound:setPos(Target:getPos())
+    end
+end)
+
