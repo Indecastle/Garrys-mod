@@ -4,16 +4,16 @@
 
 
 local Target = player()
-Target = find.playersByName("Markiz")[1]
+--Target = find.playersByName("Markiz")[1]
 --print(Target)
 
 
-local maxRadius = 1000
-local forMax = 20
+local maxRadius = 500
+local forMax = 10
 local startZ = 300
 
 local enableSound = true
-local volume = 1
+local volume = 2
 
 
 local soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348343148584/f969747680e8276.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
@@ -46,7 +46,7 @@ function rain(radius, degree)
     local pos = Target:getPos() + Vector(x, y, startZ)
     
     -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
-    local part = emitter:add( m, pos, 2, 0, 20, 1, 0, 100, 1 ) -- Create a new particle at pos
+    local part = emitter:add( m, pos, 2, 0, 20, 1, 0, 200, 1 ) -- Create a new particle at pos
     if ( part ) then
         part:setCollide(true)
         part:setBounce(0.05)

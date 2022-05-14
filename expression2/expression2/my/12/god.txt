@@ -1,0 +1,28 @@
+@name God
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if(first()) {
+    local H = holoCreate(1, owner():pos() + vec(0,0,50), vec(1), owner():angles())
+    holoAlpha(1, 0)
+    local Ag = propSpawn("models/hunter/blocks/cube2x2x2.mdl", H:pos(), H:angles(), 1)
+    Ag:propDraw(0)
+    noCollideAll(Ag,1) 
+    Ag:parentTo(H) 
+    holoParent(1, owner())
+    
+    runOnKeys(owner(), 1)
+}
+
+if(changed(owner():keyPressed("lalt")))
+{
+    if (owner():keyPressed("lalt")) {
+        holoUnparent(1)
+        holoPos(1, entity():pos())
+    } else {
+        holoPos(1, owner():pos() + vec(0,0,50))
+        holoParent(1, owner())
+    }
+}
