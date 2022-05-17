@@ -1,0 +1,53 @@
+--@name Rip Map
+--@author
+--@server
+
+
+local Target = owner()
+--Target = find.playersByName("Markiz")[1]
+--print(Target)
+--if player() ~= Target then return end
+
+
+local scale = 100
+
+
+local j = 0
+
+
+local holo = holograms.create(
+    chip():localToWorld(Vector(0,0,10)), 
+    chip():getAngles() + Angle(90,0,0), 
+    "models/sprops/geometry/sphere_144.mdl", 
+    Vector(-scale))
+holo:setMaterial("debug/debugportals")
+holo:setParent(chip())
+
+
+hook.add("think", "", function()
+    j = (j + 1) % 360
+    holo:setColor(Color(j, 1, 1):hsvToRGB())
+end)
+
+--[[
+@name Rip Map
+@persist J
+
+if(first()) {
+    holoCreate(1)
+    holoColor(1, vec(0))
+    holoModel(1, "models/sprops/geometry/sphere_144.mdl")
+    holoScale(1, vec(-1000))
+    holoPos(1, entity():pos())
+    holoMaterial(1, "debug/debugportals")
+}
+
+interval(10)
+
+J = (J + 1) % 360
+
+holoColor(1, hsv2rgb(J, 1, 1))
+
+]]
+
+

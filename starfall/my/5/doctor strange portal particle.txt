@@ -47,9 +47,22 @@ end
 local holoScaleK = 23
 local holo = holograms.create(chip():localToWorld(Vector(0,0,maxRadius+10)), chip():getAngles() + Angle(90,0,0), "models/hunter/plates/plate1x1.mdl", Vector(1))
 holo:setMaterial("models/props_c17/fisheyelens")
-holo:setColor(Color(255,255,255,10))
+holo:setColor(Color(255,255,255,255))
 holo:setParent(chip())
+--holo:setClip(1, true, holo:getPos(), Vector(0,0,0))
 
+/*
+for i=1, 8 do
+    local x =  maxRadius * math.cos(math.rad((i-1) * 360 / 8))
+    local y = -maxRadius * math.sin(math.rad((i-1) * 360 / 8))
+    local localPos = Vector(0, x, y)
+    local worldPos = chip():localToWorld(Vector(0,0,maxRadius+10) + localPos)
+    local worldCenterPos = chip():localToWorld(Vector(0,0,maxRadius+10))
+    local localPos = chip():worldToLocal(worldPos)
+    local dir = (worldPos - worldCenterPos):getNormalized()
+    holo:setClip(i, true, localPos, -dir, chip())
+end
+*/
 
 function portal()
     local x =  radius * math.cos(degree)

@@ -2,7 +2,7 @@
 @persist Follow Slepota Grab Ping AutoKill Krutilka RAB Perevernut KillWeapons RagdollAll AutoKillAll NIGGERS NASOS STONY Scramble 
 @persist I Show [Array Players]:array EGP:wirelink [Boom Target Crash En ]:entity Freeze Ragdoll Noclip Alive Dist Stop Pos:vector Whilit:string EGPCN EGPCVEC2:array GoCrash
 interval(100)
-#STEAM_0:1:602138378 -- pidoras ebashit' srazu ------rep
+#STEAM_0:1:602138378 -- pidoras ebashit' srazu
 if(first())
 {
     
@@ -13,14 +13,14 @@ if(first())
         
 Author: valera 41
 SteamID: STEAM_0:0:186583728
-Last Update in: 27.03.2022
+Last Update in: 27/03/2022
 Press \"INSERT\" To open/close menu
         "
     
     
     )
     
-    setName("")
+    setName("Generic")
     dPanel("GUI",vec2(scrW(),scrH())/2,vec2(310,421))
     dShow("GUI",0)
     dShowCloseButton("GUI",0)
@@ -262,7 +262,7 @@ if(dSval("Target"))
     {
         if(GoCrash)
         {
-            Crash:use(Target)
+            Crash:use(owner())
             hint("Крашнут",5)
         }
         else
@@ -513,7 +513,7 @@ if(dClk("Crash ALL"))
         {
             if(V != owner() & !findPlayerBySteamID(Whilit))
             {         
-                Crash:use(V)   
+                Crash:use(owner())   
             }
         }
     }

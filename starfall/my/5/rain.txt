@@ -1,5 +1,5 @@
 --@name Rain
---@author
+--@author Markiz
 --@client
 
 
@@ -13,7 +13,7 @@ local forMax = 10
 local startZ = 300
 
 local enableSound = true
-local volume = 2
+local volume = 1
 
 
 local soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348343148584/f969747680e8276.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
@@ -57,17 +57,17 @@ function rain(radius, degree)
 end
 
 function startRain()
-    if (emitter) then emitter:destroy() end
     emitter = particle.create(Vector(), false)
     
     for i=0, forMax do
-        local radius, degree = math.rand(0, maxRadius), math.rand(0, 360)
+        local radius, degree = math.rand(0, maxRadius), math.rand(0, math.pi*2)
         rain(radius, degree)
     end
     --emitter:destroy()
+    if emitter then emitter:destroy() end
 end
 
-timer.create("rain", 0.05, 0, function()
+timer.create("rain", 0.1, 0, function()
 --hook.add("think", "", function()
     startRain()
 end)

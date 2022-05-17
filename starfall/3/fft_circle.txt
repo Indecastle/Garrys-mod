@@ -1,5 +1,5 @@
 --@name FFT Circle
---@author EGR
+--@author
 --@client
 
 local n = 32

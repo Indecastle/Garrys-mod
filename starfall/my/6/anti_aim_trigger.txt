@@ -48,8 +48,8 @@ end
 
 function isLookingAtHead()
     for i, v in ipairs(find.allPlayers()) do
-        local dir = owner():getEyeAngles():getForward()
-        local dir2 = (v:getShootPos() - eyePos()):getNormalized()
+        local dir = eyeAngles():getForward()
+        local dir2 = (v:getEyePos() - eyePos()):getNormalized()
         local cos = dir:dot(dir2)
         local degree = math.acos(cos) / 3.14 * 180
         if degree < HeadDegree then

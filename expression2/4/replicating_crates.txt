@@ -1,0 +1,269 @@
+@name Replicating Crates
+@persist [SpawnQueue CrateStructs Characters CharacterSounds]:table [Sounds Models]:array 
+@persist Duped Ind SpawnQueueMaxCap NumActiveSounds MaxActiveSounds MonitorPerf SpawnRadius SeparationForce
+@persist CycleAction:string 
+@strict 
+
+# Made by Iratus Hominem, Dec 11 2021
+# https://steamcommunity.com/id/IratusHominem
+if (duped()) {
+    Duped = 1   
+    timer("reset", 250)
+}
+
+if (first()) {
+    
+    runOnTick(1)
+    runOnLast(1)
+    propSpawnUndo(0)
+    
+    SpawnQueue = table()    # crate tables with null entities go here to be replaced.
+    CrateStructs = table()  # stores crate entity tables
+    SpawnQueueMaxCap = 4    # determined by prop spawn burst amount cvar
+    MonitorPerf = 20        # Max ops dedicated to monitoring CrateStructs, (0.2 * 10,000) = ~2,000 ops while idle.
+    SpawnRadius = 80        # Props will be spawned with SpawnRadius units of where they died
+    SeparationForce = 300   # How much force the props fly apart with
+    NumActiveSounds = 0     
+    MaxActiveSounds = 10    # Sounds have a limit in E2
+    Ind = 1                 # Used to index CrateStructs
+    
+    #possible actions:
+    #  Monitor, Spawn Replacements: "monitor" "spawn_replace"
+    CycleAction = "monitor"
+    
+    function void table:playSound() {
+        if (NumActiveSounds > MaxActiveSounds) {
+            NumActiveSounds = 0
+            soundPurge()  
+        } 
+        NumActiveSounds++
+        local Sounds = CharacterSounds[This["Char", string], array]
+        This["Entity", entity]:soundPlay(NumActiveSounds, 0, Sounds[randint(1, Sounds:count()), string])   
+    }
+    
+    function entity spawnNewCrate(Position:vector) {
+        Model = Models[randint(1, Models:count()), string]
+        local CrateStruct = table(
+            "Entity" = propSpawn(Model, Position, 0),
+            "Pos"    = Position,
+            "Mdl"    = Model,
+            "Color"  = hsv2rgb(curtime() % 360, 1, 1),
+            "Char"   = Characters[Model, string]
+        )
+        CrateStruct:playSound()
+        CrateStructs:pushTable(CrateStruct)
+        return CrateStruct["Entity", entity]
+    }
+    
+    Models = array(
+            "models/props_c17/shelfunit01a.mdl",
+            "models/props_junk/wood_crate002a.mdl",
+            "models/props_combine/breenbust.mdl",
+            "models/props_c17/FurnitureTable001a.mdl",
+            "models/props_c17/FurnitureTable003a.mdl",
+            "models/props_phx/misc/potato_launcher_explosive.mdl"
+    ) 
+    
+    Characters = table(
+            Models[1, string] = "vortigaunt",
+            Models[2, string] = "npc1",
+            Models[3, string] = "breen",
+            Models[4, string] = "alyx",
+            Models[5, string] = "metro",
+            Models[6, string] = "barney"        
+    )
+        
+    CharacterSounds = table(
+            "vortigaunt" = array(
+                "vo/npc/vortigaunt/allfornow.wav",
+                "vo/npc/vortigaunt/allowme.wav",
+                "vo/npc/vortigaunt/asyouwish.wav",
+                "vo/npc/vortigaunt/dedicate.wav",
+                "vo/npc/vortigaunt/fmbeware.wav",
+                "vo/npc/vortigaunt/fminway.wav",
+                "vo/npc/vortigaunt/fmmustmove.wav",
+                "vo/npc/vortigaunt/hopeless.wav",
+                "vo/npc/vortigaunt/vques05.wav",
+                "vo/npc/vortigaunt/wewillcharge.wav",
+                "vo/npc/vortigaunt/worthless.wav",
+                "coast.vort_extract01",
+                "coast.vort_podsforyou01",
+                "coast.vort_podnag",
+                "eli_lab.vort_elab_use03",
+                "npc_vortigaunt.affirmed",
+                "npc_vortigaunt.chant03",
+                "npc_vortigaunt.empowerus",
+                "npc_vortigaunt.fearfailed",
+                "npc_vortigaunt.fmdoesushonor",
+                "npc_vortigaunt.gloriousend",
+                "NPC_Vortigaunt.Kick"
+            ),
+            "breen"      = array(
+                "vo/breencast/br_welcome01.wav",
+                "vo/breencast/br_welcome02.wav",
+                "vo/breencast/br_welcome03.wav",
+                "vo/breencast/br_welcome04.wav",
+                "vo/breencast/br_welcome05.wav",
+                "vo/breencast/br_welcome06.wav",
+                "vo/breencast/br_welcome07.wav",
+                "vo/breencast/br_disruptor01.wav",
+                "vo/breencast/br_disruptor02.wav",
+                "vo/breencast/br_disruptor03.wav",
+                "vo/breencast/br_disruptor04.wav",
+                "vo/breencast/br_disruptor05.wav",
+                "vo/breencast/br_disruptor06.wav",
+                "vo/breencast/br_disruptor07.wav",
+                "breencast.br_collaboration01_pl",
+                "breencast.br_collaboration02_pl",
+                "breencast.br_collaboration03_pl",
+                "breencast.br_collaboration04_pl",
+                "breencast.br_collaboration05_pl",
+                "breencast.br_collaboration06_pl",
+                "breencast.br_collaboration07_pl",
+                "breencast.br_collaboration08_pl",
+                "breencast.br_collaboration09_pl",
+                "breencast.br_collaboration10_pl",
+                "breencast.br_collaboration11_pl"
+            ),
+            "alyx"       = array(
+                "vo/npc/alyx/coverme01.wav",
+                "vo/npc/alyx/coverme02.wav",
+                "vo/npc/alyx/coverme03.wav",
+                "vo/npc/alyx/gasp02.wav",
+                "vo/npc/alyx/gasp03.wav",
+                "vo/npc/alyx/getback01.wav",
+                "vo/npc/alyx/getback02.wav",
+                "vo/npc/alyx/hurt04.wav",
+                "vo/npc/alyx/hurt05.wav",
+                "vo/npc/alyx/hurt06.wav",
+                "vo/npc/alyx/hurt08.wav",
+                "vo/npc/alyx/no01.wav",
+                "vo/npc/alyx/no02.wav",
+                "vo/npc/alyx/no03.wav",
+                "npc_alyx.brutal02",
+                "npc_alyx.excuseme01",
+                "npc_alyx.excuseme02",
+                "npc_alyx.excuseme03",
+                "npc_alyx.gordon_dist01",
+                "npc_alyx.lookout01",
+                "npc_alyx.lookout03",
+                "npc_alyx.ohgod01",
+                "npc_alyx.uggh01",
+                "npc_alyx.uggh02"
+            ),
+            "npc1"       = array(
+                "vo/canals/male01/gunboat_breakcamp.wav",
+                "vo/canals/male01/gunboat_farewell.wav",
+                "vo/canals/male01/gunboat_moveon.wav",
+                "vo/canals/male01/stn6_go_nag02.wav",
+                "vo/canals/male01/stn6_incoming.wav",
+                "vo/canals/male01/stn6_shellingus.wav",
+                "vo/coast/barn/male01/crapships.wav",
+                "vo/canals/male01/gunboat_giveemhell.wav",
+                "vo/coast/barn/male01/lite_gunship01.wav",
+                "vo/coast/barn/male01/exit_comewith.wav",
+                "vo/coast/barn/male01/youmadeit.wav",
+                "vo/coast/bugbait/male01/pheropod_nag02.wav",
+                "vo/coast/bugbait/male01/pheropod_nag03.wav",
+                "vo/coast/bugbait/male01/pheropod_nag01.wav"
+            ),
+            "barney"     = array(
+                "npc_barney.ba_grenade01",
+                "npc_barney.ba_grenade02",
+                "npc_barney.ba_hereitcomes",
+                "npc_barney.ba_ohshit03",
+                "npc_barney.ba_ohyeah",
+                "npc_barney.ba_openfiregord",
+                "npc_barney.ba_pain01",
+                "npc_barney.ba_pain02",
+                "npc_barney.ba_pain03",
+                "npc_barney.ba_pain04",
+                "npc_barney.ba_pain05",
+                "npc_barney.ba_pain06",
+                "npc_barney.ba_pain07",
+                "npc_barney.ba_pain08",
+                "npc_barney.ba_pain09",
+                "npc_barney.ba_pain10"
+            ),
+            "metro"      = array(
+                "NPC_MetroPolice.DeploySpeech",
+                "NPC_MetroPolice.Warn",
+                "NPC_MetroPolice.Cupcop.GoAway",
+                "NPC_MetroPolice.takedown",
+                "NPC_MetroPolice.Cupcop.PutItInTheTrash",
+                "NPC_MetroPolice.Cupcop.PickUpTheCan.Nag",
+                "NPC_MetroPolice.Cupcop.PickUpTheCan",
+                "NPC_MetroPolice.Pain",
+                "NPC_MetroPolice.Die"
+            )
+        )
+    # Very important line! Spawns initial breakable!
+    # This gets the whole show on the road, without it, you will be sad.
+    spawnNewCrate(entity():pos() + vec(0,0,12))   
+}
+if (!Duped) {
+    # Register broken crates into spawn queue 
+    if (CycleAction == "monitor") {
+        
+        while (Ind <= CrateStructs:count() & perf(MonitorPerf) & SpawnQueue:count() < SpawnQueueMaxCap) {
+            local Crate = CrateStructs[Ind, table]
+            if (!Crate["Entity", entity]) {
+                SpawnQueue:pushTable(Crate)   
+            } else {
+                Crate["Pos", vector] = Crate["Entity", entity]:pos()   
+            }
+            Ind++
+        }
+        
+        # Two conditions to break out of monitor loop:
+        # Full cycle of the loop where Ind reaches the number of breakables
+        # or there were enough broken things in the loop so far to reach
+        # max spawn capacity for a single propCanCreate() interval (4 on most servers)
+        if (Ind > CrateStructs:count()) {
+            Ind = 1
+            CycleAction = "spawn_replace"    
+        }
+        
+        if (SpawnQueue:count() == SpawnQueueMaxCap) {
+            CycleAction = "spawn_replace"    
+        }
+    }
+    
+    # replace broken crates, and spawn new ones, tables are by reference so just replacing
+    # CrateToRep["Entity", entity] with a new one works great!
+    if (CycleAction == "spawn_replace") { 
+        
+        while (propCanCreate() & perf() & SpawnQueue:count()) {
+            
+            local CrateToRep = SpawnQueue:popTable()
+            CrateToRep["Entity", entity] = propSpawn(CrateToRep["Mdl", string], CrateToRep["Pos", vector], 0)
+            CrateToRep["Entity", entity]:setColor(CrateToRep["Color", vector])
+            CrateToRep:playSound()
+            NewCrate = spawnNewCrate(CrateToRep["Pos", vector] + (randvec() * SpawnRadius):setZ(0))
+            local Force = randvec()
+            NewCrate:propDrag(0)
+            NewCrate:applyForce( Force * NewCrate:mass() * SeparationForce)
+            CrateToRep["Entity", entity]:propDrag(0)
+            CrateToRep["Entity", entity]:applyForce(Force * CrateToRep["Entity", entity]:mass() * -SeparationForce)
+            CrateToRep["Entity", entity]:setPos(CrateToRep["Entity", entity]:pos() + vec(0,0, CrateToRep["Entity", entity]:boxSize():z()/2))   
+        }   
+        
+        if (SpawnQueue:count() == 0) {
+            CycleAction = "monitor"   
+        }
+    }
+}
+
+if (clk("reset")) {
+    reset()   
+}
+
+if (last()) {
+    propDeleteAll()    
+}
+
+
+
+    
+
+

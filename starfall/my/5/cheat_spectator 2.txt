@@ -26,6 +26,9 @@ local IndexPlayer = 1;
 local TargetPlayer = player()
 local ThirdPerson = false
 
+local ttime = 0
+local ttimeDiff = 0
+
 local font = render.createFont("Arial" // font
                                     ,50 // size
                                     ,2000 // weight
@@ -67,6 +70,7 @@ function nextPlayer()
     end
 end
 
+
 function prevPlayer()
     IndexPlayer = IndexPlayer > 1 and IndexPlayer-1 or #Players
     if isValid(Players[IndexPlayer]) then
@@ -78,8 +82,21 @@ function prevPlayer()
 end
 
 
+hook.add("tick", "timeDiff", function()
+    if not ON then
+        local ttime = timer.curtime()
+        local ttime2 = timer.curtime()
+        timeDiff = ttime2 - ttime
+    end
+end)
+
+
 --calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
 hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    local ttime2 = timer.curtime()
+    ttimeDiff = ttime2 - ttime
+    ttime = ttime2
+    
     if FreeCumOn then
         local velocity = Vector()
         if Key_W then velocity = velocity + eyeAngles():getForward() end
@@ -88,7 +105,7 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
         if Key_D then velocity = velocity + eyeAngles():getRight() end
         if velocity:getDistance(Vector()) ~= 0 then
             velocity = velocity:getNormalized()
-            FreeCumPos = FreeCumPos + velocity * (Key_Shift and FreeCumVelocityShift or FreeCumVelocity)
+            FreeCumPos = FreeCumPos + velocity * (Key_Shift and FreeCumVelocityShift or FreeCumVelocity) * ttimeDiff*70
         end
         
         return {

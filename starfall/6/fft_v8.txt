@@ -1,5 +1,5 @@
 --@name fft_v8
---@author Eiji 
+--@author 
 --@client
 
 --local url = "https://ru.hitmotop.com/get/music/20210528/MORGENSHTERN_-_NOMINALO_72984963.mp3"
