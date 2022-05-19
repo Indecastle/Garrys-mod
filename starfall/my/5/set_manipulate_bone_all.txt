@@ -1,0 +1,23 @@
+--@name Set Manipulate Bone All
+--@author
+--@client
+
+local Target = owner()
+--Target = find.playersByName("mark")[1]
+
+local i = 0
+local maxI = 5
+local move = 1
+
+
+hook.add('think', '', function()
+    i = i + move * 0.05
+    if i > maxI then i = maxI; move = -1 end
+    if i < 0 then i = 0; move = 1 end
+    
+    for j, player in ipairs(find.allPlayers()) do
+        local head_bone = player:lookupBone("ValveBiped.Bip01_Head1")
+        
+        player:manipulateBoneScale(head_bone, Vector(i)) -- Vector(i, 0.01, i)
+    end
+end)

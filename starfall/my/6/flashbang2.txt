@@ -13,7 +13,7 @@ local alphaVel = 5
 
 local IsCreateHolo2 = true
 
-local EnableSound = true
+local EnableSound = false
 local Volume = 2
 
 local soundPaths = {

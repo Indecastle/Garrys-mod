@@ -1,12 +1,13 @@
 --@name Rip Map
 --@author
---@server
+--@client
 
 
 local Target = owner()
---Target = find.playersByName("Markiz")[1]
+--Target = find.playersByName("mar")[1]
 --print(Target)
---if player() ~= Target then return end
+
+if player() ~= Target then return end
 
 
 local scale = 100

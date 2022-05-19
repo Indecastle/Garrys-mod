@@ -13,7 +13,7 @@ if(first()) {
 }
 
 #owner():setModel("models/weapons/shell.mdl") 
-P:weapon():setAlpha(0)
+#P:weapon():setAlpha(0)
 
 
 if(changed(O:keyPressed("P"))&O:keyPressed("P")){

@@ -1,0 +1,104 @@
+--@name Bones Debuging
+--@author
+--@client
+
+local Target = owner()
+--Target = find.playersByName("senk")[1]
+
+local H = holograms.create(chip():getPos(), Angle(), "models/monk.mdl", Vector(1,1,1))
+Target = H
+
+
+--print(Target)
+
+
+if player() == owner() then enableHud(nil, true) end
+
+
+--local font = render.createFont("Roboto", 15, 500, true)
+local font = render.createFont("Arial" // font
+                                    ,12 // size
+                                    ,2000 // weight
+                                    ,false // antialias
+                                    ,false // additive
+                                    ,true // shadow
+                                    ,true // outline
+                                    ,false // blur
+                                    ,false //extended
+                                    )
+
+hook.add("drawhud","myshook",function()
+    for i = 0, Target:getBoneCount() - 1 do
+        local pos = Target:getBonePosition(i):toScreen()
+        
+        local BoneName = Target:getBoneName(i)
+        BoneName = string.sub(BoneName, 18)
+        local BonePos = Target:getManipulateBonePosition(i)
+        local BoneAngles = Target:getManipulateBoneAngles(i)
+        
+        local result = ''..i..' - '..BoneName
+        --local result = ''..i..' - '..BoneName.. ' = '..tostring(BonePos)
+        --local result = ''..i..' - '..BoneName.. ' = '..tostring(BoneAngles)
+        
+        render.setFont(font)
+        render.setColor(Color(255,200,0))
+        render.drawText(pos.x, pos.y-10, result, 1)
+    end
+end)
+
+
+
+
+
+local bone_head1 = Target:lookupBone("ValveBiped.Bip01_Head1")
+local bone_Pelvis = Target:lookupBone("ValveBiped.Bip01_Pelvis")
+local bone_Spine = Target:lookupBone("ValveBiped.Bip01_Spine")
+local bone_Spine1 = Target:lookupBone("ValveBiped.Bip01_Spine1")
+local bone_Spine2 = Target:lookupBone("ValveBiped.Bip01_Spine2")
+local bone_Spine4 = Target:lookupBone("ValveBiped.Bip01_Spine4")
+local bone_L_Thigh = Target:lookupBone("ValveBiped.Bip01_L_Thigh")
+local bone_R_Thigh = Target:lookupBone("ValveBiped.Bip01_R_Thigh")
+local bone_L_UpperArm = Target:lookupBone("ValveBiped.Bip01_L_UpperArm")
+local bone_R_UpperArm = Target:lookupBone("ValveBiped.Bip01_R_UpperArm")
+local bone_L_Forearm = Target:lookupBone("ValveBiped.Bip01_L_Forearm")
+local bone_R_Forearm = Target:lookupBone("ValveBiped.Bip01_R_Forearm")
+
+
+for i = 0, Target:getBoneCount() - 1 do
+    Target:manipulateBoneAngles(i, Angle(0))
+    Target:manipulateBonePosition(i, Vector(0))
+    Target:manipulateBoneScale(i, Vector(1))
+end
+
+
+--Target:manipulateBoneAngles(bone_Pelvis, Angle(0, 0, -30))
+--Target:manipulateBoneAngles(bone_L_Thigh, Angle(0, 30, 0))
+--Target:manipulateBoneAngles(bone_R_Thigh, Angle(0, 30, 0))
+
+--Target:manipulateBoneScale(bone_Pelvis, Vector(0))
+
+
+
+local i3 = 0
+local maxI3 = 5
+local move3 = 1
+hook.add('think', '3', function()
+    i3 = i3 + move3 * 0.5
+    if i3 > maxI3 then i3 = maxI3; move3 = -1 end
+    if i3 < 0 then i3 = 0; move3 = 1 end
+    
+    --Target:manipulateBonePosition(head_bone, Vector(i3, 0, 0))
+    --Target:manipulateBoneScale(head_bone, Vector(2))
+    Target:manipulateBonePosition(bone_Pelvis, Vector(i3, 0, 0))
+    Target:manipulateBonePosition(bone_Spine, Vector(0, 0, -i3))
+    --Target:manipulateBonePosition(bone_Spine2, Vector(0, -i3, 0))
+    --Target:manipulateBonePosition(bone_Spine4, Vector(0, -i3, 0))
+    Target:manipulateBonePosition(bone_L_Thigh, Vector(0, 0, -i3))
+    Target:manipulateBonePosition(bone_R_Thigh, Vector(0, 0, -i3))
+    
+    Target:manipulateBoneAngles(bone_L_UpperArm, Angle(0, -40, 40))
+    Target:manipulateBoneAngles(bone_L_Forearm, Angle(0, -40, -50))
+    
+    Target:manipulateBoneAngles(bone_R_UpperArm, Angle(0, -40, -40))
+    Target:manipulateBoneAngles(bone_R_Forearm, Angle(0, -40, 50))
+end)

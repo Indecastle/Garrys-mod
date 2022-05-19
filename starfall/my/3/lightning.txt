@@ -7,7 +7,7 @@ local OO = owner()
 local E = chip()
 local worldE = game.getWorld()
 
-if O ~= OO then return end
+--if O ~= OO then return end
 
 local effectData = effect:create()
 

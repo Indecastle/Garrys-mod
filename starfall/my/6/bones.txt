@@ -1,0 +1,72 @@
+--@name Bones
+--@author Markiz
+--@client
+
+
+local Target = owner()
+--Target = find.playersByName("senk")[1]
+
+local H = holograms.create(chip():getPos(), Angle(), "models/monk.mdl", Vector(1,1,1))
+Target = H
+
+
+--print(Target)
+
+
+if player() == owner() then enableHud(nil, true) end
+
+
+--local font = render.createFont("Roboto", 15, 500, true)
+local font = render.createFont("Arial" // font
+                                    ,12 // size
+                                    ,2000 // weight
+                                    ,false // antialias
+                                    ,false // additive
+                                    ,true // shadow
+                                    ,true // outline
+                                    ,false // blur
+                                    ,false //extended
+                                    )
+
+hook.add("drawhud","myshook",function()
+    for i = 0, math.min(25, Target:getBoneCount() - 1) do
+        local pos = Target:getBonePosition(i):toScreen()
+        
+        local BoneName = Target:getBoneName(i)
+        BoneName = string.sub(BoneName, 18)
+        local BonePos = Target:getManipulateBonePosition(i)
+        local BoneAngles = Target:getManipulateBoneAngles(i)
+        
+        --local result = ''..i..' - '..BoneName
+        --local result = ''..i..' - '..BoneName.. ' = '..tostring(BonePos)
+        local result = ''..i..' - '..BoneName.. ' = '..tostring(BoneAngles)
+        
+        render.setFont(font)
+        render.setColor(Color(255,200,0))
+        render.drawText(pos.x, pos.y-10, result, 1)
+    end
+end)
+
+
+local head_bone = Target:lookupBone("ValveBiped.Bip01_Head1") -- Grab the head bone (read: https://wiki.facepunch.com/gmod/ValveBiped_Bones)
+--Target:manipulateBoneScale(head_bone, Vector(3,0.01,3))
+
+/*
+for i = 0, Target:getBoneCount() - 1 do
+    Target:manipulateBoneJiggle(i, false) -- Make them jiggly wiggly :)
+end
+*/
+
+/*
+local i = 0
+local maxI = 5
+local move = 1
+
+hook.add('think', '', function()
+    i = i + move * 0.05
+    if i > maxI then i = maxI; move = -1 end
+    if i < 0 then i = 0; move = 1 end
+    
+    Target:manipulateBoneScale(head_bone, Vector(i)) -- Vector(i, 0.01, i)
+end)
+*/

@@ -83,7 +83,7 @@ function smoke(dir)
         table.insert(parts, 1, {p=part, t=timer.curtime()+dieTime})
         part:setCollide(true)
         part:setBounce(0)
-        --part:setColor(Color(0,math.rand(150,200),255))
+        --part:setColor(Color(219,200,147))
         --part:setGravity( Vector( 0, 0, 0 ) ) -- Gravity of the particle
         part:setVelocity( dir*velocity ) -- Initial velocity of the particle
         part:setAngles(eyeAngle)

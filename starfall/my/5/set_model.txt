@@ -73,3 +73,18 @@ timer.create("anim", 0.2, 0, function()
     Target = closestPlayer
     
 end)
+
+
+
+local i = 0
+local maxI = 5
+local move = 1
+local head_bone = owner():lookupBone("ValveBiped.Bip01_Head1")
+
+hook.add('think', '', function()
+    i = i + move * 0.05
+    if i > maxI then i = maxI; move = -1 end
+    if i < 0 then i = 0; move = 1 end
+    
+    owner():manipulateBoneScale(head_bone, Vector(i)) -- Vector(i, 0.01, i)
+end)

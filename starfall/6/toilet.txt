@@ -1,0 +1,43 @@
+--@name Toilet
+--@author
+--@server
+
+chip():setColor(Color(0,0,0,0))
+
+
+wire.adjustPorts(
+    {
+        A="number",
+    },
+    {}
+)
+            
+function playSound()
+    chip():emitSound("ambient/machines/usetoilet_flush1.wav")
+end
+    
+
+hook.add("input", "toilet", function(key, value)
+    if key == 'A' and value == 1 then
+        playSound()
+    end
+end)
+
+
+--prop.createSent(self:GetPos(), self:GetAng(), self.Class, true, {
+--    model = self.Model,
+--})
+local Holo_Toilet = holograms.create(chip():localToWorld(Vector(0,0,14)), chip():localToWorldAngles(Angle(0,90,0)), "models/props_wasteland/prison_toilet01.mdl", Vector(1))
+local Seat = prop.createSeat(chip():localToWorld(Vector(0,1,8)), chip():getAngles(), "models/nova/airboat_seat.mdl", true)
+
+Holo_Toilet:setParent(chip())
+Seat:setParent(chip())
+Seat:setColor(Color(0,0,0,0))
+Seat:setNoDraw(true)
+
+
+hook.add("PlayerLeaveVehicle", "", function(ply, vehicle)
+    if vehicle == Seat then
+        playSound()
+    end
+end)
