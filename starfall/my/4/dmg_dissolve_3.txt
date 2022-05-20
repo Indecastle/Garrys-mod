@@ -1,0 +1,327 @@
+--@name cheat spectator 3
+--@author Markiz
+--@shared
+
+--local Target = owner()
+--Target = find.playersByName("owner")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+//print(Target)
+
+
+
+if SERVER then
+    local Waiting = false
+    local Hud, Seat, ExitPointer
+    
+    wire.adjustPorts(
+        {
+        },
+        {
+            LocalPos="vector",
+            Seat="entity",
+        }
+    )
+    
+    local li = chip():getLinkedComponents()
+    if #li > 0 and li[1]:getClass() == 'starfall_hud' then
+        Hud = li[1]
+    else
+        Hud = prop.createComponent(chip():localToWorld(Vector(0,8,0)), chip():getAngles(), 'starfall_hud', 'models/bull/dynamicbuttonsf.mdl', true)
+        Hud:linkComponent(chip())
+    end
+    
+    local li2 = Hud:getLinkedComponents()
+    if #li2 > 0 and li2[1]:getClass() == 'prop_vehicle_prisoner_pod' then
+        Seat = li2[1]
+    else
+        Seat = prop.createSeat(chip():getPos(), chip():getAngles(), "models/nova/chair_plastic01.mdl", true)
+        Hud:linkComponent(Seat)
+    end
+    
+    local li3 = find.inSphere(chip():getPos(), 10, function(ent)
+        return ent:getClass() == 'gmod_wire_exit_point'
+    end)
+    if #li3 > 0 then
+        ExitPointer = find.closest(li3, chip():getPos())
+    else
+        ExitPointer = prop.createSent(chip():localToWorld(Vector(8,0,0)), chip():getAngles(), 'gmod_wire_exit_point', true, {
+            Model = 'models/jaanus/wiretool/wiretool_range.mdl'
+        })
+    end
+    
+    wire.ports.LocalPos = Vector(0,0,1)
+    wire.ports.Seat = Seat
+    
+    wire.create(ExitPointer, chip(), 'Local Position', 'LocalPos')
+    wire.create(ExitPointer, chip(), 'Entity', 'Seat')
+    Hud:setNocollideAll(true)
+    Seat:setNocollideAll(true)
+    --Seat:setColor(Color(0,0,0,0))
+    --Seat:setNoDraw(true)
+    
+    net.receive("teleport", function (len, ply)
+        local pos = net.readVector()
+        Waiting = true
+        
+        if ply == owner() then
+            Seat:use()
+        end
+        Seat:setPos(pos)
+        Seat:ejectDriver()
+        Seat:setPos(chip():getPos())
+        --timer.simple(0.2, function()  end)
+        Waiting = false
+    end)
+    return
+end
+
+
+local IsHead = false
+local FreeCumOn = false
+local FreeCumVelocity = 15
+local FreeCumVelocityShift = 200
+
+
+
+local GameW, GameH;
+
+local Players = find.allPlayers()
+local IndexPlayer = 1;
+local TargetPlayer = player()
+local ThirdPerson = false
+
+local ttime = 0
+local ttimeDiff = 0
+
+local font = render.createFont("Arial" // font
+                                    ,50 // size
+                                    ,2000 // weight
+                                    ,false // antialias
+                                    ,false // additive
+                                    ,true // shadow
+                                    ,true // outline
+                                    ,false // blur
+                                    ,false //extended
+                                    )
+                                    
+local Key_W = false;
+local Key_S = false;
+local Key_A = false;
+local Key_D = false;
+local Key_Shift = false;
+local FreeCumPos = eyePos();
+
+
+function gethead(ent)
+    if TargetPlayer:lookupAttachment("eyes") then
+        local pos, ang = ent:getAttachment(TargetPlayer:lookupAttachment("eyes"))
+        return pos
+    elseif ent:lookupBone("ValveBiped.Bip01_Head1") then
+        local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+        return pos
+    end
+    return ent:localToWorld(ent:obbCenter())
+end
+
+
+function nextPlayer()
+    IndexPlayer = IndexPlayer < #Players and IndexPlayer+1 or 1
+    if isValid(Players[IndexPlayer]) then
+        TargetPlayer = Players[IndexPlayer]
+    else
+        Players = find.allPlayers()
+        prevPlayer()
+    end
+end
+
+
+function prevPlayer()
+    IndexPlayer = IndexPlayer > 1 and IndexPlayer-1 or #Players
+    if isValid(Players[IndexPlayer]) then
+        TargetPlayer = Players[IndexPlayer]
+    else
+        Players = find.allPlayers()
+        nextPlayer()
+    end
+end
+
+
+hook.add("tick", "timeDiff", function()
+    if not ON then
+        local ttime = timer.curtime()
+        local ttime2 = timer.curtime()
+        timeDiff = ttime2 - ttime
+    end
+end)
+
+
+--calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
+hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    local ttime2 = timer.curtime()
+    ttimeDiff = ttime2 - ttime
+    ttime = ttime2
+    
+    if FreeCumOn then
+        local velocity = Vector()
+        if Key_W then velocity = velocity + eyeAngles():getForward() end
+        if Key_S then velocity = velocity - eyeAngles():getForward() end
+        if Key_A then velocity = velocity - eyeAngles():getRight() end
+        if Key_D then velocity = velocity + eyeAngles():getRight() end
+        if velocity:getDistance(Vector()) ~= 0 then
+            velocity = velocity:getNormalized()
+            FreeCumPos = FreeCumPos + velocity * (Key_Shift and FreeCumVelocityShift or FreeCumVelocity) * ttimeDiff*70
+        end
+        
+        return {
+            origin= FreeCumPos
+            ,angles= eyeAngles()
+            ,fov=fov
+            ,znear=znear
+            ,zfar=zfar,
+            drawviewer=true}
+    else
+        local head = IsHead and gethead(TargetPlayer) or TargetPlayer:getEyePos()
+        --local head = gethead(TargetPlayer)
+    
+        local angle;
+        local originPos = head
+        if ThirdPerson then
+            angle = player():getEyeAngles()
+            originPos = originPos - ( angle:getForward() * 100 )
+        else
+            angle = TargetPlayer:getEyeAngles()
+            originPos = originPos + ( angle:getForward() * (IsHead and 0 or 10) )
+        end
+        --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
+        return {
+            origin= originPos
+            ,angles= angle
+            ,fov=fov
+            ,znear=znear + (IsHead and 5 or 10)
+            ,zfar=zfar,
+            drawviewer=true}
+    end
+end)
+
+
+timer.create("isHUDActive", 0.2, 0, function()
+    local newIsHUDActive = render.isHUDActive()
+    if oldIsHUDActive ~= newIsHUDActive then
+        oldIsHUDActive = newIsHUDActive
+        if newIsHUDActive then
+            printMessage(4, [[
+NUMLOCK - Turn nn/off HUD
+ALT - Change eye pos
+CTRL - Enable third person
+ArrowUp/ArrowDown - Switching to another player
+M - Switching cheat / free spectate
+ATTACK1 - Teleport to free spectate position
+A/W/S/D - move free camera (only for free spectating)
+
+
+]])
+        end
+    end
+end)
+
+
+hook.add("drawhud","cheat spectator",function()
+    if GameW == nil then
+        GameW, GameH = render.getGameResolution()
+    end
+    
+    render.setFont(font)
+    render.setColor(team.getColor(TargetPlayer:getTeam()))
+    render.drawText(1, 1, ""..TargetPlayer:getName(), 0)  
+    
+    render.setColor(Color(0,200,200, 100))
+    render.drawRoundedBox(100, GameW/2-10-2, GameH/2-0.7, 23, 2)
+    render.drawRoundedBox(100, GameW/2-1.5, GameH/2-10+1, 2, 19)
+end)
+
+/*
+timer.create("LockControls", 0.3, 0, function()
+    if input.canLockControls() then
+        if (FreeCumOn and not input.isControlLocked()) or (not FreeCumOn and input.isControlLocked()) then
+            input.lockControls(FreeCumOn)
+            print(FreeCumOn and 1 or 0)
+        end
+        
+    end
+end)
+*/
+
+local oldIsHUDActive = false
+hook.add("inputPressed", "cheat spectator", function(key)
+    if key == KEY.NUMLOCK and player() == owner() then
+        enableHud(owner(), not render.isHUDActive())
+    end
+    
+    if ON and render.isHUDActive() then
+        if not FreeCumOn then
+            if key == KEY.UPARROW then
+                nextPlayer()
+            end
+            
+            if key == KEY.DOWNARROW then
+                prevPlayer()
+            end
+            
+            if key == KEY.CTRL then
+                ThirdPerson = !ThirdPerson
+            end
+            if key == KEY.ALT then
+                IsHead = !IsHead
+            end
+        end
+        
+        if key == KEY.M then
+            FreeCumOn = !FreeCumOn
+        end
+        
+        if key == MOUSE.MOUSE1 and ON and FreeCumOn then
+            net.start("teleport")
+            net.writeVector(FreeCumPos)
+            net.send()
+        end
+        
+        if key == KEY.W then Key_W = true end
+        if key == KEY.S then Key_S = true end
+        if key == KEY.A then Key_A = true end
+        if key == KEY.D then Key_D = true end
+        if key == KEY.SHIFT then Key_Shift = true end
+    end
+end)
+
+hook.add("inputReleased", "cheat spectator", function(key)
+    if ON and render.isHUDActive() then    
+        if key == KEY.W then Key_W = false end
+        if key == KEY.S then Key_S = false end
+        if key == KEY.A then Key_A = false end
+        if key == KEY.D then Key_D = false end
+        if key == KEY.SHIFT then Key_Shift = false end
+    end
+end)
+
+
+function hudConnecting(isCon)
+    ON = isCon and 1 or 0
+end
+
+hook.add("hudconnected", "", function ()
+    hudConnecting(true)
+end)
+hook.add("huddisconnected", "", function ()
+    hudConnecting(false)
+end)
+
+
+
+if player() == owner() then
+    --enableHud(nil, true)
+end
+

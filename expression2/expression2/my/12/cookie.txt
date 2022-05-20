@@ -53,12 +53,12 @@ if(first()){
     timer("fire", 1)
     CookieDelay = CookieDelay * 1000
     
-    lightCreate(1)
-    lightPos(1, E:toWorld(vec(0,0,20)))
-    lightParent(1, E)
-    lightBrightness(1, 5)
-    lightDistance(1, 200)
-    lightColor(1, vec(255,100,0))
+    #lightCreate(1)
+    #lightPos(1, E:toWorld(vec(0,0,20)))
+    #lightParent(1, E)
+    #lightBrightness(1, 5)
+    #lightDistance(1, 200)
+    #lightColor(1, vec(255,100,0))
     E:soundPlay("fire", 0, "coast.campfire")
 
     function number checkCoo (Ent:entity) {

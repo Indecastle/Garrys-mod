@@ -28,8 +28,12 @@ end)
 --    model = self.Model,
 --})
 local Holo_Toilet = holograms.create(chip():localToWorld(Vector(0,0,14)), chip():localToWorldAngles(Angle(0,90,0)), "models/props_wasteland/prison_toilet01.mdl", Vector(1))
+local Holo_Water = holograms.create(chip():localToWorld(Vector(0,2.5,10)), chip():localToWorldAngles(Angle(0,90,0)), "models/props_phx/construct/metal_angle360.mdl", Vector(0.17, 0.12, 0.01))
+--local Holo_Water = holograms.create(chip():localToWorld(Vector(0,2.5,8)), chip():getAngles() + Angle(0,90,0), "models/props_phx/construct/metal_angle360.mdl", Vector(0.17, 0.105, 0.01))
 local Seat = prop.createSeat(chip():localToWorld(Vector(0,1,8)), chip():getAngles(), "models/nova/airboat_seat.mdl", true)
 
+Holo_Water:setMaterial("models/shadertest/predator")
+Holo_Water:setParent(chip())
 Holo_Toilet:setParent(chip())
 Seat:setParent(chip())
 Seat:setColor(Color(0,0,0,0))
