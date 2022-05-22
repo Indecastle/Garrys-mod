@@ -1,4 +1,4 @@
---@name Anti Aim trigger
+--@name Aim trigger
 --@author
 --@shared
 

@@ -12,6 +12,11 @@ end)[1]*/
 //print(Target)
 
 
+local FreeCumVelocity = 15
+local FreeCumVelocityShift = 200
+local FreeCumVelocityCtrl = 2
+local WH = true
+
 
 if SERVER then
     local Waiting = false
@@ -60,17 +65,22 @@ if SERVER then
     wire.create(ExitPointer, chip(), 'Entity', 'Seat')
     Hud:setNocollideAll(true)
     Seat:setNocollideAll(true)
+    ExitPointer:setNocollideAll(true)
+    chip():setNocollideAll(true)
     --Seat:setColor(Color(0,0,0,0))
     --Seat:setNoDraw(true)
     
     net.receive("teleport", function (len, ply)
+        local freeCumOn = net.readBool()
         local pos = net.readVector()
+        local driver = isValid(Seat:getDriver()) and Seat:getDriver() or player()
+        local offset = driver:getEyePos().z - driver:getPos().z
         Waiting = true
         
         if ply == owner() then
             Seat:use()
         end
-        Seat:setPos(pos)
+        Seat:setPos(pos + Vector(0, 0, freeCumOn and -offset or 0))
         Seat:ejectDriver()
         Seat:setPos(chip():getPos())
         --timer.simple(0.2, function()  end)
@@ -82,16 +92,11 @@ end
 
 local IsHead = false
 local FreeCumOn = false
-local FreeCumVelocity = 15
-local FreeCumVelocityShift = 200
-
-
-
 local GameW, GameH;
 
 local Players = find.allPlayers()
-local IndexPlayer = 1;
 local TargetPlayer = player()
+local IndexPlayer = table.keyFromValue(Players, TargetPlayer);
 local ThirdPerson = false
 
 local ttime = 0
@@ -108,11 +113,24 @@ local font = render.createFont("Arial" // font
                                     ,false //extended
                                     )
                                     
+local font2 = render.createFont("Arial" // font
+                                    ,19 // size
+                                    ,2000 // weight
+                                    ,false // antialias
+                                    ,false // additive
+                                    ,true // shadow
+                                    ,true // outline
+                                    ,false // blur
+                                    ,false //extended
+                                    )
+                                    
 local Key_W = false;
 local Key_S = false;
 local Key_A = false;
 local Key_D = false;
+local Key_Space = false;
 local Key_Shift = false;
+local Key_Ctrl = false;
 local FreeCumPos = eyePos();
 
 
@@ -129,22 +147,28 @@ end
 
 
 function nextPlayer()
+    Players = find.allPlayers()
     IndexPlayer = IndexPlayer < #Players and IndexPlayer+1 or 1
     if isValid(Players[IndexPlayer]) then
         TargetPlayer = Players[IndexPlayer]
     else
-        Players = find.allPlayers()
         prevPlayer()
     end
 end
 
 
 function prevPlayer()
+    Players = find.allPlayers()
     IndexPlayer = IndexPlayer > 1 and IndexPlayer-1 or #Players
     if isValid(Players[IndexPlayer]) then
         TargetPlayer = Players[IndexPlayer]
     else
-        Players = find.allPlayers()
+        nextPlayer()
+    end
+end
+
+function checkValidPlayer()
+    if not isValid(TargetPlayer) then
         nextPlayer()
     end
 end
@@ -161,6 +185,8 @@ end)
 
 --calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
 hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    checkValidPlayer()
+    
     local ttime2 = timer.curtime()
     ttimeDiff = ttime2 - ttime
     ttime = ttime2
@@ -171,9 +197,19 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
         if Key_S then velocity = velocity - eyeAngles():getForward() end
         if Key_A then velocity = velocity - eyeAngles():getRight() end
         if Key_D then velocity = velocity + eyeAngles():getRight() end
+        if Key_Space then velocity = velocity + Vector(0,0,1) end
         if velocity:getDistance(Vector()) ~= 0 then
             velocity = velocity:getNormalized()
-            FreeCumPos = FreeCumPos + velocity * (Key_Shift and FreeCumVelocityShift or FreeCumVelocity) * ttimeDiff*70
+            
+            if Key_Ctrl then 
+                velocity = velocity * FreeCumVelocityCtrl
+            elseif Key_Shift then
+                velocity = velocity * FreeCumVelocityShift
+            else
+                velocity = velocity * FreeCumVelocity
+            end
+            
+            FreeCumPos = FreeCumPos + velocity * ttimeDiff*70
         end
         
         return {
@@ -214,12 +250,13 @@ timer.create("isHUDActive", 0.2, 0, function()
         oldIsHUDActive = newIsHUDActive
         if newIsHUDActive then
             printMessage(4, [[
-NUMLOCK - Turn nn/off HUD
+NUMLOCK - Turn on/off HUD
 ALT - Change eye pos
 CTRL - Enable third person
 ArrowUp/ArrowDown - Switching to another player
 M - Switching cheat / free spectate
-ATTACK1 - Teleport to free spectate position
+N - reset free spectate position to your position
+T - Teleport to free spectate position
 A/W/S/D - move free camera (only for free spectating)
 
 
@@ -233,6 +270,7 @@ hook.add("drawhud","cheat spectator",function()
     if GameW == nil then
         GameW, GameH = render.getGameResolution()
     end
+    checkValidPlayer()
     
     render.setFont(font)
     render.setColor(team.getColor(TargetPlayer:getTeam()))
@@ -241,6 +279,28 @@ hook.add("drawhud","cheat spectator",function()
     render.setColor(Color(0,200,200, 100))
     render.drawRoundedBox(100, GameW/2-10-2, GameH/2-0.7, 23, 2)
     render.drawRoundedBox(100, GameW/2-1.5, GameH/2-10+1, 2, 19)
+    
+    render.setColor(Color(255,0,0, 255))
+    render.drawText(1, 50, ""..math.clamp(TargetPlayer:getHealth(), 0, 999), 0) 
+    render.setColor(Color(0,100,255, 255))
+    render.drawText(100, 50, ""..math.clamp(TargetPlayer:getArmor(), 0, 999), 0) 
+    
+    if WH then
+        for i, p in ipairs(find.allPlayers()) do
+            if p ~= player() then
+                //if p:getPos():getDistance( owner():getPos() ) > 1300 then continue end
+                local obbw = p:obbCenterW()
+                local obbhs = p:obbSize()
+                
+                local pos = (p:getPos() + Vector(0, 0, obbhs.z+10)):toScreen()
+                
+    
+                render.setFont(font2)
+                render.setColor(team.getColor(p:getTeam()))
+                render.drawText(pos.x, pos.y-10, p:getName(), 1)
+            end
+        end
+    end
 end)
 
 /*
@@ -265,10 +325,12 @@ hook.add("inputPressed", "cheat spectator", function(key)
         if not FreeCumOn then
             if key == KEY.UPARROW then
                 nextPlayer()
+                FreeCumPos = TargetPlayer:getEyePos()
             end
             
             if key == KEY.DOWNARROW then
                 prevPlayer()
+                FreeCumPos = TargetPlayer:getEyePos()
             end
             
             if key == KEY.CTRL then
@@ -279,13 +341,22 @@ hook.add("inputPressed", "cheat spectator", function(key)
             end
         end
         
-        if key == KEY.M then
+        if ON and key == KEY.M then
             FreeCumOn = !FreeCumOn
+            FreeCumPos = TargetPlayer:getEyePos()
+        end
+        if ON and FreeCumOn and key == KEY.N then
+            FreeCumPos = player():getEyePos()
         end
         
-        if key == MOUSE.MOUSE1 and ON and FreeCumOn then
+        if key == KEY.T and ON then
             net.start("teleport")
-            net.writeVector(FreeCumPos)
+            local pos = FreeCumPos
+            if not FreeCumOn then
+                pos = TargetPlayer:getPos()
+            end
+            net.writeBool(FreeCumOn)
+            net.writeVector(pos)
             net.send()
         end
         
@@ -293,7 +364,9 @@ hook.add("inputPressed", "cheat spectator", function(key)
         if key == KEY.S then Key_S = true end
         if key == KEY.A then Key_A = true end
         if key == KEY.D then Key_D = true end
+        if key == KEY.SPACE then Key_Space = true end
         if key == KEY.SHIFT then Key_Shift = true end
+        if key == KEY.CTRL then Key_Ctrl = true end
     end
 end)
 
@@ -303,7 +376,9 @@ hook.add("inputReleased", "cheat spectator", function(key)
         if key == KEY.S then Key_S = false end
         if key == KEY.A then Key_A = false end
         if key == KEY.D then Key_D = false end
+        if key == KEY.SPACE then Key_Space = false end
         if key == KEY.SHIFT then Key_Shift = false end
+        if key == KEY.CTRL then Key_Ctrl = false end
     end
 end)
 

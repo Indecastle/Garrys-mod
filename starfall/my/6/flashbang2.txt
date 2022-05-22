@@ -170,7 +170,8 @@ end
 createHolo()
 
 
-hook.add("hologrammatrix", "setPos", function()
+--hook.add("hologrammatrix", "setPos", function()
+hook.add("think", "setPos", function()
     if holo then
         holo:setPos(eyePos())
     end

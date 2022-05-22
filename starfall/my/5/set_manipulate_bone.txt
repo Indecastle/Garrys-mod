@@ -28,12 +28,12 @@ end
 /*
 local i1 = 0
 local maxI1 = 10
-local move1 = 1
+local move1 = 0.1
 
 hook.add('think', '1', function()
-    i1 = i1 + move1 * 0.05
-    if i1 > maxI1 then i1 = maxI1; move1 = -1 end
-    if i1 < 0 then i1 = 0; move1 = 1 end
+    i1 = i1 + move1
+    if i1 > maxI1 then i1 = maxI1; move1 = -move1 end
+    if i1 < 0 then i1 = 0; move1 = -move1 end
     
     Target:manipulateBoneScale(head_bone, Vector(i1)) -- Vector(i, 0.01, i)
 end)
@@ -49,15 +49,16 @@ hook.add('think', '2', function()
 end)
 */
 
-
+/*
 local i3 = 0
 local maxI3 = 10
 local move3 = 1
 hook.add('think', '3', function()
     i3 = i3 + move3 * 1
-    if i3 > maxI3 then i3 = maxI3; move3 = -1 end
-    if i3 < 0 then i3 = 0; move3 = 1 end
+    if i3 > maxI3 then i3 = maxI3; move3 = -move3 end
+    if i3 < 0 then i3 = 0; move3 = -move3 end
     
     Target:manipulateBonePosition(head_bone, Vector(i3, 0, 0))
-    Target:manipulateBoneScale(head_bone, Vector(2))
+    --Target:manipulateBoneScale(head_bone, Vector(2))
 end)
+*/

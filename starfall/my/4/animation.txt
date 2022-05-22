@@ -3,17 +3,17 @@
 --@author Markiz
 --@client
 
-local Animation = "taunt_dance"
---local Animation = "original_dance12"
+local Animation = "swimming_all"
+--local Animation = "original_dance11"
 --local Animation = "bunnyhop"
 --local MusicAnimation = "weapons/guitar/vdv.ogg" -- or nill
 --local MusicAnimation = "weapons/guitar/jackiechan.ogg" -- or nill
 --local MusicAnimation = "weapons/guitar/animeshniki.ogg" -- or nill
---local MusicAnimation = "mmd/original_dance12.mp3" -- or nill
+--local MusicAnimation = "mmd/original_dance11.mp3" -- or nill
 --local MusicAnimation = "npc/zombie/moan_loop3.wav" -- or nill
 
-local Speed = 0.5
-local Volume = 1
+local Speed = 2
+local Volume = 0.2
 
 local Target = owner()
 --Target = find.playersByName("Mark")[1]

@@ -1,0 +1,214 @@
+--@name Grenade WH
+--@author Markiz
+--@model models/items/grenadeammo.mdl
+--@shared
+
+local IsHookMode = true
+local IsOnlyPlayers = true 
+
+local Radius = 300
+local Delay = 3  -- seconds
+local HeadDegree = 90
+
+local Wait2 = 0.5
+local DieTime = 10
+local alphaVel = 5
+
+local IsCreateHolo2 = true
+
+local EnableSound = false
+local Volume = 2
+
+local soundPaths = {
+    "sound/weapons/flashbang/flashbang_explode1.wav",
+    "sound/weapons/flashbang/flashbang_explode2.wav",
+}
+local SoundBouncePath = "Flashbang.Bounce"
+
+
+-------------------------------------------------
+
+local sounds = {}
+local sound = nil
+local alpha = 255
+local E = chip()
+local part = nil
+local grenades = {}
+local soundValues = {}
+local HitedPlayersData = {}
+
+
+if SERVER then
+    E:setPos(E:localToWorld(Vector(0,0,4)))
+    E:setFrozen(false)
+    --E:setColor(Color(255,255,255,255))
+    E:setMaterial("models/debug/debugwhite")
+    --E:setNocollideAll(true)
+    --E:setUnbreakable(false)
+    --E:enableMotion(true)
+    
+    --timer.simple(DieTime, function()
+    --    E:remove()
+    --end)
+    
+    hook.add("ClientInitialized", "", function(ply)
+        --print(ply)
+    end)
+    
+    return
+end
+
+--if player() ~= owner() then return end
+
+------------------------
+
+local m = material.create("UnlitGeneric")
+m:setTexture("$basetexture","effects/flashlight/soft") -- effects/spark
+
+local VertexAlpha= true
+local VertexColor= true
+local AlphaTest= false
+local Additive= true
+local Translucent= false
+
+local flags = 
+    (VertexColor and 16 or 0) +
+    (VertexAlpha and 32 or 0) +
+    (Additive and 128 or 0) +
+    (AlphaTest and 256 or 0) +
+    (Translucent and 2097152 or 0)
+    
+    
+if flags ~= 0 then
+    m:setInt("$flags",  
+        flags)    
+end
+m:recompute()
+
+------------------------
+
+
+function table.first(t, func)    
+    for i=1, #t do
+        if func(t[i]) then
+            return t[i]
+        end
+    end
+    return nil
+end
+
+
+if EnableSound then
+    E:emitSound(SoundBouncePath, 75, 100, Volume, 0)
+    
+    for i, path in ipairs(soundPaths) do
+        bass.loadFile(path, '3d mono noplay', function(snd)
+            if snd then
+                sound = snd
+                snd:setPitch(1.5)
+                snd:setVolume(Volume)
+                soundValues[#soundValues+1] = snd
+            end
+        end)
+    end
+    
+    
+end
+
+
+function createParticle(pos)
+    local emitter = particle.create(pos, true)
+    emitter:setNoDraw(false)
+    part = emitter:add( m, pos, 500, 0, 0, 0, 0, 255, 0.3 ) -- Create a new particle at pos
+    part:setCollide(true)
+    part:setBounce(0)
+    --part:setColor(Color(0,math.rand(150,200),255))
+    part:setGravity( Vector( 0, 0, 0 ) ) -- Gravity of the particle
+    if emitter and emitter:isValid() then emitter:destroy() end
+end
+
+
+hook.add("hologrammatrix", "setPos", function()
+    if part then
+        local eyeAngle = (-eyeVector()):getAngle() + Angle(0,0,-90)
+        part:setAngles(eyeAngle)
+    end
+end)
+
+
+function start(pos)
+    if EnableSound and snd then
+        --grenade:emitSound(SoundExplodePath, 75, 100, Volume, 0)
+        local snd, _ = table.random(soundValues)
+        snd:setPos(pos)
+        snd:play()
+    end
+    
+    createParticle(pos)
+    
+    local hitedPlayers = find.inSphere(pos, Radius, function(ent)
+        return ent ~= player()
+            and (not IsOnlyPlayers or ent:getClass() == 'player')
+            and (IsOnlyPlayers or ent:getClass() == 'player' or ent:getClass() == 'prop_physics')
+            --and ent and isValid(ent) and ent:getPhysicsObject():isValid()
+    end)
+    
+    for i, ply in ipairs(hitedPlayers) do
+        local t = table.first(HitedPlayersData, function(t) return t.player == ply end)
+        if t then
+            t.time = timer.curtime() + Delay
+        else
+            local holo = holograms.create(chip():getPos(), Angle(), ply:getModel(), Vector(1))
+            holo:setMaterial("debug/debugportals")
+            holo:setColor(Color(255,255,0, 255))
+            holo:setParent( ply )
+            holo:addEffects( 1 )
+            table.insert(HitedPlayersData, 1, { player = ply, holo = holo, time = timer.curtime() + Delay })
+        end
+    end
+end
+
+
+if IsHookMode then
+    hook.add('EntityRemoved', '', function(ent)
+        if not ent or not ent:isValid() or ent:getClass() ~= 'npc_grenade_frag' then return end
+        start(ent:getPos())
+    end)
+else
+    hook.add('OnEntityCreated', '', function(ent)
+        if ent:getClass() == 'npc_grenade_frag' then
+            local t = table.first(grenades, function(t) return t.e == ent end)
+            if not t then
+                table.insert(grenades, 1, { e = ent, p = ent:getPos() })
+            end
+        end
+    end)
+end
+
+
+--timer.create('FindAndRemoveGrenades', 0.1, 0, function()
+hook.add("tick", "FindAndRemoveGrenades", function()
+    if not IsHookMode then
+        for i=1, #grenades do
+            local t = grenades[i]
+            if t.e and t.e:isValid() then
+                t.p = t.e:getPos()
+            else
+                table.removeByValue(grenades, t)
+                start(t.p)
+            end
+        end
+    end
+    
+    local curtime = timer.curtime()
+    for i, t in ipairs(HitedPlayersData) do
+        local diffTime = t.time - curtime
+        if t.player and t.player:isValid() and diffTime > 0 then
+            t.holo:setColor(t.holo:getColor():setA(255 * (diffTime / Delay) ))
+        else
+            t.holo:setColor(Color(0,0,0,0))
+            t.holo:remove()
+            table.removeByValue(HitedPlayersData, t)
+        end
+    end
+end)

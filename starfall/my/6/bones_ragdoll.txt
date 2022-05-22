@@ -1,0 +1,63 @@
+--@name CCCC
+--@author Markiz
+--@client
+
+
+local isAttachment = false
+
+if player() == owner() then enableHud(nil, true) end
+
+
+--local font = render.createFont("Roboto", 15, 500, true)
+local font = render.createFont("Arial" // font
+                                    ,12 // size
+                                    ,2000 // weight
+                                    ,false // antialias
+                                    ,false // additive
+                                    ,true // shadow
+                                    ,true // outline
+                                    ,false // blur
+                                    ,false //extended
+                                    )
+
+hook.add("drawhud","myshook",function()
+    for i, ragdoll in ipairs(find.byClass('prop_ragdoll')) do
+        if not isAttachment then
+        
+            for i = 0, ragdoll:getBoneCount() - 1 do
+                local pos = ragdoll:getBonePosition(i):toScreen()
+                
+                local BoneName = ragdoll:getBoneName(i)
+                BoneName = string.sub(BoneName, 18)
+                local BonePos = ragdoll:getManipulateBonePosition(i)
+                local BoneAngles = ragdoll:getManipulateBoneAngles(i)
+                
+                local result = ''..i..' - '..BoneName
+                --local result = ''..i..' - '..BoneName.. ' = '..tostring(BonePos)
+                --local result = ''..i..' - '..BoneName.. ' = '..tostring(BoneAngles)
+                
+                render.setFont(font)
+                render.setColor(Color(255,200,0))
+                render.drawText(pos.x, pos.y-10, result, 1)
+            end
+        
+        else
+        
+            for i, x in ipairs(ragdoll:getAttachments()) do
+                local pos, ang = ragdoll:getAttachment(x.id)
+                local localPos = pos:toScreen()
+                
+                local attachmentName = x.name
+                --attachmentName = string.sub(attachmentName, 18)
+                
+                local result = ''..x.id..' - '..attachmentName
+                
+                render.setFont(font)
+                render.setColor(Color(255,200,0))
+                render.drawText(localPos.x, localPos.y-10, result, 1)
+            end
+        end
+    end
+end)
+
+

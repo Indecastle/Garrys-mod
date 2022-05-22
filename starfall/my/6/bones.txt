@@ -4,10 +4,10 @@
 
 
 local Target = owner()
---Target = find.playersByName("senk")[1]
+Target = find.playersByName("Dele")[1]
 
 local H = holograms.create(chip():getPos(), Angle(), "models/monk.mdl", Vector(1,1,1))
-Target = H
+--Target = H
 
 
 --print(Target)
@@ -27,7 +27,7 @@ local font = render.createFont("Arial" // font
                                     ,false // blur
                                     ,false //extended
                                     )
-
+/*
 hook.add("drawhud","myshook",function()
     for i = 0, math.min(25, Target:getBoneCount() - 1) do
         local pos = Target:getBonePosition(i):toScreen()
@@ -37,13 +37,30 @@ hook.add("drawhud","myshook",function()
         local BonePos = Target:getManipulateBonePosition(i)
         local BoneAngles = Target:getManipulateBoneAngles(i)
         
-        --local result = ''..i..' - '..BoneName
+        local result = ''..i..' - '..BoneName
         --local result = ''..i..' - '..BoneName.. ' = '..tostring(BonePos)
-        local result = ''..i..' - '..BoneName.. ' = '..tostring(BoneAngles)
+        --local result = ''..i..' - '..BoneName.. ' = '..tostring(BoneAngles)
         
         render.setFont(font)
         render.setColor(Color(255,200,0))
         render.drawText(pos.x, pos.y-10, result, 1)
+    end
+end)
+*/
+
+hook.add("drawhud","myshook",function()
+    for i, x in ipairs(Target:getAttachments()) do
+        local pos, ang = Target:getAttachment(x.id)
+        local localPos = pos:toScreen()
+        
+        local attachmentName = x.name
+        --attachmentName = string.sub(attachmentName, 18)
+        
+        local result = ''..x.id..' - '..attachmentName
+        
+        render.setFont(font)
+        render.setColor(Color(255,200,0))
+        render.drawText(localPos.x, localPos.y-10, result, 1)
     end
 end)
 

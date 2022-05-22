@@ -1,4 +1,4 @@
---[[@name Copy]]--
+//@name = Copy =
 --@name Pristavka
 --@author
 --@shared
@@ -178,7 +178,7 @@ function initData()
     DataEnts = {}
     DupeData = { 
         DataEnts = DataEnts
-        ,MapName = '' -- Preserve frozen state after paste
+        ,MapName = ''
     };
     
 end

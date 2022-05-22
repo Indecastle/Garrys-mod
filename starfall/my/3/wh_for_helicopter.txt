@@ -87,7 +87,7 @@ else
     local godPlayers = {}
     local arFilter = find.all(function (e) return !e:isPlayer() end)
     arFilter[#arFilter+1] = OO
-    print(#arFilter)
+    --print(#arFilter)
 
     local function getBBox(verts)
         local xmin, ymin, xmax, ymax 

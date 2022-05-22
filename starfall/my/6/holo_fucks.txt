@@ -7,12 +7,23 @@
 
 
 local Target = owner()
---Target = find.playersByName("pry")[1]
+Target = find.playersByName("Mark")[1]
 --print(Target)
 
+local Mode = 7
+
+local Velocity = 1
+local AmplitudeForward = 5
+local AmplitudeBack = -3
 
 
---if player() == Target then return end
+if player() == Target then return end
+
+
+--if player() ~= owner() then return end
+
+
+------------------------------------------------------------------
 
 
 local Holo = holograms.create(Target:localToWorld(Vector(-30,0,0)), Target:getAngles(), "models/monk.mdl", Vector(1))
@@ -58,22 +69,20 @@ end
 
 
 
-local i3 = 0
-local maxI3 = 5
-local move3 = 1
+local i = 0
 hook.add('think', '3', function()
-    i3 = i3 + move3 * 2
-    if i3 > maxI3 then i3 = maxI3; move3 = -1 end
-    if i3 < 0 then i3 = 0; move3 = 1 end
+    i = i + Velocity
+    if i > AmplitudeForward then i = AmplitudeForward; Velocity = -Velocity end
+    if i < AmplitudeBack then i = AmplitudeBack; Velocity = -Velocity end
     
-    --Holo:manipulateBonePosition(head_bone, Vector(i3, 0, 0))
+    --Holo:manipulateBonePosition(head_bone, Vector(i, 0, 0))
     --Holo:manipulateBoneScale(head_bone, Vector(2))
-    Holo:manipulateBonePosition(bone_Pelvis, Vector(i3, 0, 0))
-    Holo:manipulateBonePosition(bone_Spine, Vector(0, 0, -i3))
-    --Holo:manipulateBonePosition(bone_Spine2, Vector(0, -i3, 0))
-    --Holo:manipulateBonePosition(bone_Spine4, Vector(0, -i3, 0))
-    Holo:manipulateBonePosition(bone_L_Thigh, Vector(0, 0, -i3))
-    Holo:manipulateBonePosition(bone_R_Thigh, Vector(0, 0, -i3))
+    Holo:manipulateBonePosition(bone_Pelvis, Vector(i, 0, 0))
+    Holo:manipulateBonePosition(bone_Spine, Vector(0, 0, -i))
+    --Holo:manipulateBonePosition(bone_Spine2, Vector(0, -i, 0))
+    --Holo:manipulateBonePosition(bone_Spine4, Vector(0, -i, 0))
+    Holo:manipulateBonePosition(bone_L_Thigh, Vector(0, 0, -i))
+    Holo:manipulateBonePosition(bone_R_Thigh, Vector(0, 0, -i))
     
     Holo:manipulateBoneAngles(bone_L_UpperArm, Angle(0, -40, 40))
     Holo:manipulateBoneAngles(bone_L_Forearm, Angle(0, -40, -50))
@@ -82,81 +91,117 @@ hook.add('think', '3', function()
     Holo:manipulateBoneAngles(bone_R_Forearm, Angle(0, -40, 50))
 end)
 
+if Mode == 1 then
 
-/*
-hook.add("hologrammatrix", "holo", function()
-    local dir = Target:getEyeAngles():setP(0)
-    local dirVec = dir:getForward()
-    local TargetBonePos = Target:getBonePosition(bone_Pelvis)
-    Holo:setPos(Target:getPos() - dirVec*20 + Vector(0,0,0))
-    Holo:setAngles(dir)
-    local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
-    Holo_Dick:setPos(HoloBonePos + dirVec*8)
-    Holo_Dick:setAngles(dir + Angle(0,90,-90))
-end)
-*/
+    hook.add("hologrammatrix", "holo", function()
+        local dir = Target:getEyeAngles():setP(0)
+        local dirVec = dir:getForward()
+        local TargetBonePos = Target:getBonePosition(bone_Pelvis)
+        Holo:setPos(Target:getPos() - dirVec*20 + Vector(0,0,0))
+        Holo:setAngles(dir)
+        local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
+        Holo_Dick:setPos(HoloBonePos + Vector(0,0,-5) + dirVec*12)
+        Holo_Dick:setAngles(dir + Angle(0,90,-90))
+    end)
 
-/*
-hook.add("hologrammatrix", "holo", function()
-    local dir = Target:getEyeAngles():setP(0)
-    local dirVec = dir:getForward()
-    local TargetBonePos = Target:getBonePosition(bone_Pelvis)
-    Holo:setPos(TargetBonePos - dirVec*20 + Vector(0,0,-35))
-    Holo:setAngles(dir)
-    local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
-    Holo_Dick:setPos(HoloBonePos + dirVec*8)
-    Holo_Dick:setAngles(dir + Angle(0,90,-90))
-end)
-*/
+elseif Mode == 2 then
 
-/*
-hook.add("hologrammatrix", "holo", function()
-    local dir = Target:getEyeAngles():setP(0)
-    local dirVec = -dir:getForward()
-    dir = dirVec:getAngle()
-    local TargetBonePos = Target:getBonePosition(bone_head1)
-    Holo:setPos(TargetBonePos - dirVec*20 + Vector(0,0,-40))
-    Holo:setAngles(dir)
-    local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
-    Holo_Dick:setPos(HoloBonePos + dirVec*8)
-    Holo_Dick:setAngles(dir + Angle(0,90,-90))
-end)
-*/
+    hook.add("hologrammatrix", "holo", function()
+        local dir = Target:getEyeAngles():setP(0)
+        local dirVec = -dir:getForward()
+        dir = dirVec:getAngle()
+        local TargetEyePos = Target:getEyePos()
+        Holo:setPos(TargetEyePos - dirVec*20 + Vector(0,0,-40))
+        Holo:setAngles(dir)
+        local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
+        Holo_Dick:setPos(HoloBonePos + Vector(0,0,-5) + dirVec*12)
+        Holo_Dick:setAngles(dir + Angle(0,90,-90))
+    end)
+    
+elseif Mode == 3 then
 
+    hook.add("hologrammatrix", "holo", function()
+        local dir = Target:getEyeAngles():setP(0)
+        local dirVec = dir:getForward()
+        local TargetBonePos = Target:getBonePosition(bone_Pelvis)
+        Holo:setPos(TargetBonePos - dirVec*20 + Vector(0,0,-35))
+        Holo:setAngles(dir)
+        local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
+        Holo_Dick:setPos(HoloBonePos + Vector(0,0,-5) + dirVec*12)
+        Holo_Dick:setAngles(dir + Angle(0,90,-90))
+    end)
 
-hook.add("hologrammatrix", "holo", function()
-    --local dir = Target:getEyeAngles():setP(0)-- + Angle(0,90,0)
-    local _, dir = Target:getBonePosition(bone_Pelvis)
-    dir = dir + Angle(0,0,0)
-    _, dir = localToWorld(Vector(), Angle(-90,-90,0),
-            Vector(), dir)
-    local dirVec = dir:getForward()
-    dir = dirVec:getAngle()
-    dir = dir:setP(0)
-    local TargetBonePos = Target:getBonePosition(bone_head1)
-    Holo:setPos(TargetBonePos - dirVec*25 + Vector(0,0,-60))
-    Holo:setAngles(dir)
-    local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
-    Holo_Dick:setPos(HoloBonePos + dirVec*9)
-    Holo_Dick:setAngles(dir + Angle(0,90,-90))
-end)
+elseif Mode == 4 then
+    
+    hook.add("hologrammatrix", "holo", function()
+        local dir = Target:getEyeAngles():setP(0)
+        local dirVec = -dir:getForward()
+        dir = dirVec:getAngle()
+        local TargetBonePos = Target:getBonePosition(bone_head1)
+        Holo:setPos(TargetBonePos - dirVec*20 + Vector(0,0,-40))
+        Holo:setAngles(dir)
+        local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
+        Holo_Dick:setPos(HoloBonePos + dirVec*12)
+        Holo_Dick:setAngles(dir + Angle(0,90,-90))
+    end)
 
+elseif Mode == 5 then
+    
+    hook.add("hologrammatrix", "holo", function()
+        --local dir = Target:getEyeAngles():setP(0)-- + Angle(0,90,0)
+        local _, dir = Target:getBonePosition(bone_Pelvis)
+        dir = dir + Angle(0,0,0)
+        _, dir = localToWorld(Vector(), Angle(-90,-90,0),
+                Vector(), dir)
+        dir = dir:setP(0)
+        local dirVec = dir:getForward()
+        dir = dirVec:getAngle()
+        local TargetBonePos = Target:getBonePosition(bone_head1)
+        Holo:setPos(TargetBonePos - dirVec*25 + Vector(0,0,-60))
+        Holo:setAngles(dir)
+        local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
+        Holo_Dick:setPos(HoloBonePos + Vector(0,0,-5) + dirVec*12)
+        Holo_Dick:setAngles(dir + Angle(0,90,-90))
+    end)
 
-/*
-hook.add("hologrammatrix", "holo", function()
-    --local dir = Target:getEyeAngles():setP(0)-- + Angle(0,90,0)
-    local _, dir = Target:getBonePosition(bone_head1)
-    dir = dir + Angle(0,0,0)
-    _, dir = localToWorld(Vector(), Angle(180,-90,-90),
-            Vector(), dir)
-    local dirVec = dir:getForward()
-    dir = dirVec:getAngle()
-    dir = dir:setP(0)
-    local TargetBonePos = Target:getBonePosition(bone_head1)
-    Holo:setPos(TargetBonePos - dirVec*20 + Vector(0,0,-35))
-    Holo:setAngles(dir)
-    local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
-    Holo_Dick:setPos(HoloBonePos + dirVec*8)
-    Holo_Dick:setAngles(dir + Angle(0,90,-90))
-end)
-*/
+elseif Mode == 6 then
+
+    hook.add("hologrammatrix", "holo", function()
+        --local dir = Target:getEyeAngles():setP(0)-- + Angle(0,90,0)
+        local _, dir = Target:getBonePosition(bone_head1)
+        dir = dir + Angle(0,0,0)
+        _, dir = localToWorld(Vector(), Angle(180,-90,-90),
+                Vector(), dir)
+        dir = dir:setP(0)
+        local dirVec = dir:getForward()
+        dir = dirVec:getAngle()
+        local TargetBonePos = Target:getBonePosition(bone_head1)
+        Holo:setPos(TargetBonePos - dirVec*20 + Vector(0,0,-34))
+        Holo:setAngles(dir)
+        local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
+        Holo_Dick:setPos(HoloBonePos + Vector(0,0,-5) + dirVec*12)
+        Holo_Dick:setAngles(dir + Angle(0,90,-90))
+    end)
+    
+elseif Mode == 7 then
+
+    
+    hook.add("hologrammatrix", "holo", function()
+        local eyesAttachmentId = Target:lookupAttachment('eyes')
+        --local dir = Target:getEyeAngles():setP(0)-- + Angle(0,90,0)
+        local pos, dir = Target:getAttachment(eyesAttachmentId)
+        dir = dir
+        _, dir = localToWorld(Vector(), Angle(180,0,0),
+                Vector(), dir)
+        dir = dir:setP(0)
+        local dirVec = dir:getForward()
+        dir = dirVec:getAngle()
+        --dir = dir:setP(0)
+        Holo:setPos(pos - dirVec*20 + Vector(0,0,-35))
+        Holo:setAngles(dir)
+        local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
+        Holo_Dick:setPos(HoloBonePos + Vector(0,0,-5) + dirVec*12)
+        Holo_Dick:setAngles(dir + Angle(0,90,-90))
+    end)
+    
+end
