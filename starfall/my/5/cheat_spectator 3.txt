@@ -11,6 +11,9 @@
 end)[1]*/
 //print(Target)
 
+-- Third person
+local ThPersDist = 100
+local ThPersDistAddValue = 50
 
 local FreeCumVelocity = 15
 local FreeCumVelocityShift = 200
@@ -173,13 +176,33 @@ function checkValidPlayer()
     end
 end
 
+function getThirdPersonPos(headPos, originPos)
+    local dir = (originPos - headPos):getNormalized()
+    --local tr = trace.trace(headPos, originPos+dir*20, Players, bit.bor(MASK.ALL, 2^14), nil, false)
+    local tr = trace.trace(headPos, originPos+dir*20, nil, 24737, nil, false)
+    
+    local hitPos = tr.Hit and tr.HitPos - dir*20 or originPos
+    
+    return hitPos
+end
+
+function reset_keys()
+    Key_W = false;
+    Key_S = false;
+    Key_A = false;
+    Key_D = false;
+    Key_Space = false;
+    Key_Shift = false;
+    Key_Ctrl = false;
+end
+
 
 hook.add("tick", "timeDiff", function()
-    if not ON then
+    --if not ON then
         local ttime = timer.curtime()
         local ttime2 = timer.curtime()
         timeDiff = ttime2 - ttime
-    end
+    --end
 end)
 
 
@@ -227,11 +250,13 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
         local originPos = head
         if ThirdPerson then
             angle = player():getEyeAngles()
-            originPos = originPos - ( angle:getForward() * 100 )
+            originPos = originPos - ( angle:getForward() * ThPersDist )
+            originPos = getThirdPersonPos(head, originPos)
         else
             angle = TargetPlayer:getEyeAngles()
             originPos = originPos + ( angle:getForward() * (IsHead and 0 or 10) )
         end
+        
         --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
         return {
             origin= originPos
@@ -319,6 +344,7 @@ local oldIsHUDActive = false
 hook.add("inputPressed", "cheat spectator", function(key)
     if key == KEY.NUMLOCK and player() == owner() then
         enableHud(owner(), not render.isHUDActive())
+        reset_keys()
     end
     
     if ON and render.isHUDActive() then
@@ -341,11 +367,11 @@ hook.add("inputPressed", "cheat spectator", function(key)
             end
         end
         
-        if ON and key == KEY.M then
+        if key == KEY.M then
             FreeCumOn = !FreeCumOn
             FreeCumPos = TargetPlayer:getEyePos()
         end
-        if ON and FreeCumOn and key == KEY.N then
+        if FreeCumOn and key == KEY.N then
             FreeCumPos = player():getEyePos()
         end
         
@@ -358,6 +384,8 @@ hook.add("inputPressed", "cheat spectator", function(key)
             net.writeBool(FreeCumOn)
             net.writeVector(pos)
             net.send()
+            
+            reset_keys()
         end
         
         if key == KEY.W then Key_W = true end
@@ -369,6 +397,15 @@ hook.add("inputPressed", "cheat spectator", function(key)
         if key == KEY.CTRL then Key_Ctrl = true end
     end
 end)
+
+
+hook.add("mouseWheeled", "", function(delta)
+    ThPersDist = ThPersDist-ThPersDistAddValue*delta
+    
+    if ThPersDist < 50 then ThPersDist = 50 end
+    if ThPersDist > 1000 then ThPersDist = 1000 end
+end)
+
 
 hook.add("inputReleased", "cheat spectator", function(key)
     if ON and render.isHUDActive() then    

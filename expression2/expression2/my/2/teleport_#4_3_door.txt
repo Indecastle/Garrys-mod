@@ -1,5 +1,5 @@
-@name Teleport #4_2_door
-@inputs Active W:wirelink [A B]:entity
+@name Teleport #4_3_door
+@inputs Active W:wirelink [A B Vehicle]:entity
 @outputs LocalPosition:vector Angle:angle
 @persist [A B Vehicle]:entity SoundOk [WhiteList BlackList]:array AllP LetFriend TPSoundA TPSoundB [SoundPath1 SoundPath2]:string SoundDuration Back 
 @persist Delay
@@ -7,16 +7,16 @@
 interval(100)
 if(first() | dupefinished()) { runOnChat(1) OK = 1 LocalPosition = vec(0,0,1)#vec(-25,0,-50) 
     
-    findIncludePlayerProps(owner())
-    findByModel("models/props_c17/door01_left.mdl")
-    findSortByDistance(entity():pos())
-    A = findResult(1) ### A:propFreeze(1) ###########
-    B = findResult(2) ### B:propFreeze(1) ###########
+    #findIncludePlayerProps(owner())
+    #findByModel("models/props_c17/door01_left.mdl")
+    #findSortByDistance(entity():pos())
+    #A = findResult(1) ### A:propFreeze(1) ###########
+    #B = findResult(2) ### B:propFreeze(1) ###########
     #print(A)
     #print(B)
     
-    findByClass("prop_vehicle_*")
-    Vehicle = findClosest(entity():pos()) ### Vehicle:propFreeze(1) ####################  #Vehicle:noCollideAll(1)
+    #findByClass("prop_vehicle_*")
+    #Vehicle = findClosest(entity():pos()) ### Vehicle:propFreeze(1) ####################  #Vehicle:noCollideAll(1)
     #print(Vehicle)
     
     findClearWhiteList()

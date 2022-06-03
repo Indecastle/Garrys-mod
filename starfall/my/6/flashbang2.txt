@@ -7,6 +7,8 @@
 local Radius = 1000
 local HeadDegree = 90
 
+local IsHookMode = true
+
 local Wait2 = 0.5
 local DieTime = 10
 local alphaVel = 5
@@ -171,7 +173,7 @@ createHolo()
 
 
 --hook.add("hologrammatrix", "setPos", function()
-hook.add("think", "setPos", function()
+hook.add("hologrammatrix", "setPos", function()
     if holo then
         holo:setPos(eyePos())
     end
@@ -223,24 +225,33 @@ function wait(pos)
     end
 end
 
+
+if IsHookMode then
+    hook.add('EntityRemoved', '', function(ent)
+        if not ent or not ent:isValid() or ent:getClass() ~= 'npc_grenade_frag' then return end
+        wait(ent:getPos())
+    end)
+else
+    hook.add('OnEntityCreated', '', function(ent)
+        if ent:getClass() == 'npc_grenade_frag' then
+            local t = table.first(grenades, function(t) return t.e == ent end)
+            if not t then
+                table.insert(grenades, 1, { e = ent, p = ent:getPos() })
+            end
+        end
+    end)
+end
+
+
 --timer.create('FindAndRemoveGrenades', 0.1, 0, function()
 hook.add("tick", "FindAndRemoveGrenades", function()
-    local ents = find.byClass("npc_grenade_frag")
-    for i=1, #ents do
-        local ent = ents[i]
-        local t = table.first(grenades, function(t) return t.e == ent end)
-        if t then
-            t.p = t.e:getPos()
-        else
-            table.insert(grenades, 1, { e = ent, p = ent:getPos() })
-        end
-    end
-    
-    for i=1, #grenades do
-        local t = grenades[i]
-        if not t.e:isValid() then
-            table.removeByValue(grenades, t)
-            wait(t.p)
+    if not IsHookMode then        
+        for i=1, #grenades do
+            local t = grenades[i]
+            if not t.e:isValid() then
+                table.removeByValue(grenades, t)
+                wait(t.p)
+            end
         end
     end
 end)

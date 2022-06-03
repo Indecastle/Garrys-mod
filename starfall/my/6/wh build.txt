@@ -144,7 +144,7 @@ hook.add("think", "UpdateHolo", function()
     
     for i, t in ipairs(HitedEntitiesData) do
         local diffTime = t.time - curtime
-        if t.ent and t.ent:isValid() and diffTime > 0 then
+        if t.ent and t.ent:isValid() and (not t.ent:isPlayer() or t.ent:isAlive()) and diffTime > 0 then
             t.myTime = t.myTime + (diffTime > Delay-DelayDiffTimer and diffMyTime or -diffMyTime)
             t.myTime = math.clamp(t.myTime, 0, Delay)
         

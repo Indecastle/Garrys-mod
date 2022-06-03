@@ -20,18 +20,27 @@ if (first()) {
     #Target = findPlayerBySteamID("STEAM_0:0:513687777")
     print(Target)
     
+    #local H = holoCreate(1, Vehicle:pos(), vec(1), owner():angles())
+    #holoAlpha(1, 0)
+    #Vehicle:parentTo(H) 
+    #holoPos(1, Target:shootPos() + vec(0, 0, 0) + Target:eye()*20 )
+    #holoAng(1, Target:eye():toAngle() + ang(90,0,0) )
+    #holoParentAttachment(1, Target, "eyes")
+    #holoParent(1, owner())
+    
     findByClass("gmod_wire_pod")
     local Pod = findClosest(E:pos())
     W = Pod:wirelink()
     W["Vehicle", entity] = Vehicle
     Pod:createWire(Pod, "Terminate", "Active")
     
-    Vehicle:setAlpha(0)
-    Vehicle:setMaterial("Models/effects/vol_light001")
+    #Vehicle:setAlpha(0)
+    #Vehicle:setMaterial("Models/effects/vol_light001")
+    #Vehicle:noDraw(1)
     Vehicle:propFreeze(1)
-    #Vehicle:noCollideAll(1)
+    Vehicle:noCollideAll(1)
     #Vehicle:propNotSolid(0)
-    Vehicle:propStatic(1)
+    #Vehicle:propStatic(1)
     
     function show_help() {
         printColor(vec(255,255,0), "key '", vec(0,255,255), "l", vec(255,255,0), "' - ", vec(0,255,0), "ON", vec(200,200,200), "/", vec(255,0,0), "OFF")
@@ -85,6 +94,8 @@ if(changed(O:keyPressed("l")) && O:keyPressed("l")) {
 }
 
 if (IsEnabled) {
-    Vehicle:setPos(Target:shootPos() + vec(0, 0, 20) - Target:forward()*10 + Target:right()*20 )
-    Vehicle:setAng(Target:eye():toAngle() + ang(90,60,90))
+    #Vehicle:setPos(Target:shootPos() + vec(0, 0, 20) - Target:forward()*10 + Target:right()*20 )
+    #Vehicle:setAng(Target:eye():toAngle() + ang(90,60,90))
+    Vehicle:setPos(Target:shootPos() + vec(0, 0, 0) + Target:eye()*20 )
+    Vehicle:setAng(Target:eye():toAngle() + ang(90,0,0))
 }

@@ -8,8 +8,11 @@ local OO = player()
 
 if SERVER then
 
-    function handler(key, keyName)
+    function printKey(key, keyName)
         print(""..key.." - "..keyName)
+    end
+    function printWheel(delta)
+        print("wheel delta =  "..delta)
     end
     
     hook.add("ClientInitialized", "cl_init", function(ply)
@@ -18,7 +21,12 @@ if SERVER then
     net.receive("keyHandler", function (len, ply)
         local key = net.readInt(7)
         local keyName = net.readString()
-        handler(key, keyName)
+        printKey(key, keyName)
+    end)
+    
+    net.receive("wheelHandler", function (len, ply)
+        local delta = net.readInt(7)
+        printWheel(delta)
     end)
     
 else
@@ -35,6 +43,13 @@ else
             net.writeString(input.getKeyName(button))
             net.send()
         end)
+        
+        hook.add("mouseWheeled", "", function(delta)
+            net.start("wheelHandler")
+            net.writeInt(delta, 7)
+            net.send()
+        end)
+        
     
     end
 end

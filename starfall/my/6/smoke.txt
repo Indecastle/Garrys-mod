@@ -106,7 +106,7 @@ end
 startSmoke()
 
 
-hook.add("hologrammatrix", "", function()
+hook.add("think", "", function()
 --timer.create("updateAng", 0.05, 0, function()
     --local angles = player():localToWorldAngles(Angle(0,180,0) + BaseAngle) --eyeAngles() + Angle(0,180,0)
     local time = timer.curtime()
