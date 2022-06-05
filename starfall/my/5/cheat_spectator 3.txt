@@ -262,7 +262,7 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
             origin= originPos
             ,angles= angle
             ,fov=fov
-            ,znear=znear + (IsHead and 5 or 10)
+            ,znear=znear + (ThirdPerson and 0 or (IsHead and 5 or 10))
             ,zfar=zfar,
             drawviewer=true}
     end

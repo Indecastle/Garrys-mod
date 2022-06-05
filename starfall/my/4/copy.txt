@@ -612,6 +612,7 @@ function parentAll()
         Parent = true,
     }))*/
     for i, data in ipairs(DataEnts) do
+        if data._entity2 == nil then continue end
         for j, parentData in ipairs(data.ParentData) do
             if DataEnts[parentData.id]._entity2 ~= nil then
                 DataEnts[parentData.id]._entity2:setParent(data._entity2)

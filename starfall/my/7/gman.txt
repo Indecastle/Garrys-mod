@@ -1,0 +1,32 @@
+--@name Gman
+--@author Markiz
+--@server
+
+
+
+local prop1 =  prop.create(chip():localToWorld(Vector(-0,0,0)), chip():getAngles(), "models/hunter/misc/lift2x2.mdl", true)
+prop1:setMaterial("engine/writez")
+--prop1:setParent(chip())
+
+holo = holograms.create(
+    prop1:localToWorld(Vector(0,0,0.2)),
+    chip():getAngles(), 
+    "models/hunter/misc/lift2x2.mdl", 
+    Vector(0.99))
+holo:setMaterial("debug/debugsolidmodelhulls")
+--holo2:setColor(Color(255,255,255,0))
+holo:setParent(prop1)
+
+    
+holo2 = holograms.create(
+    prop1:localToWorld(Vector(0,0,3)),
+    chip():getAngles(), 
+    "models/gman_high.mdl", 
+    Vector(1))
+holo2:setParent(prop1)
+
+
+timer.create('gman', 5, 0, function()
+    -- tiefidget
+    holo2:setAnimation('tiefidget', nil, nil)
+end)
