@@ -2,8 +2,12 @@
 --@author
 --@client
 
+local Target = owner()
+--Target = find.playersByName("Markiz")[1]
+--print(Target)
 
-if player() ~= owner() then return end
+
+if player() ~= Target then return end
 
 
 local IsOnlyPlayers = true 

@@ -6,10 +6,10 @@
 local IsOnlyPlayers = true 
 
 local Radius = 1000
-local Delay = 3  -- seconds
+local Delay = 10  -- seconds
 
 local ColorAlphaTime = 40
-local ColorAlphaDistance = 215
+local ColorAlphaDistance = 150
 
 
 -------------------------------------------------
