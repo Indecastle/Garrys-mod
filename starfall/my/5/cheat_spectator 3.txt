@@ -30,6 +30,7 @@ if SERVER then
         },
         {
             LocalPos="vector",
+            Angle="angle",
             Seat="entity",
         }
     )
@@ -61,10 +62,11 @@ if SERVER then
         })
     end
     
-    wire.ports.LocalPos = Vector(0,0,1)
+    wire.ports.LocalPos = Vector(0,0,0.01)
     wire.ports.Seat = Seat
     
     wire.create(ExitPointer, chip(), 'Local Position', 'LocalPos')
+    wire.create(ExitPointer, chip(), 'Angle', 'Angle')
     wire.create(ExitPointer, chip(), 'Entity', 'Seat')
     Hud:setNocollideAll(true)
     Seat:setNocollideAll(true)
@@ -72,6 +74,12 @@ if SERVER then
     chip():setNocollideAll(true)
     --Seat:setColor(Color(0,0,0,0))
     --Seat:setNoDraw(true)
+    
+    --timer.create("update_ang", 0.1, 0, function()
+    hook.add("tick", "update_ang", function()
+        local driver = isValid(Seat:getDriver()) and Seat:getDriver() or player()
+        wire.ports.Angle = driver:getEyeAngles()
+    end)
     
     net.receive("teleport", function (len, ply)
         local freeCumOn = net.readBool()
@@ -280,7 +288,7 @@ ALT - Change eye pos
 CTRL - Enable third person
 ArrowUp/ArrowDown - Switching to another player
 M - Switching cheat / free spectate
-N - reset free spectate position to your position
+N - reset free spectate position to your position and set to your Target
 T - Teleport to free spectate position
 A/W/S/D - move free camera (only for free spectating)
 
@@ -371,8 +379,10 @@ hook.add("inputPressed", "cheat spectator", function(key)
             FreeCumOn = !FreeCumOn
             FreeCumPos = TargetPlayer:getEyePos()
         end
-        if FreeCumOn and key == KEY.N then
-            FreeCumPos = player():getEyePos()
+        if key == KEY.N then
+            TargetPlayer = player()
+            IndexPlayer = table.keyFromValue(Players, TargetPlayer);
+            FreeCumPos = TargetPlayer:getEyePos()
         end
         
         if key == KEY.T and ON then
@@ -426,6 +436,9 @@ end
 
 hook.add("hudconnected", "", function ()
     hudConnecting(true)
+    if FreeCumOn then
+        FreeCumPos = player():getEyePos()
+    end
 end)
 hook.add("huddisconnected", "", function ()
     hudConnecting(false)

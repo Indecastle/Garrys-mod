@@ -7,12 +7,12 @@
 
 
 local Target = owner()
-Target = find.playersByName("Mark")[1]
+Target = find.playersByName("mark")[1]
 --print(Target)
 
-local Mode = 7
+local Mode = 3
 
-local Velocity = 1
+local Velocity = 5
 local AmplitudeForward = 5
 local AmplitudeBack = -3
 
@@ -36,7 +36,7 @@ Holo_Dick:setMaterial('models/shiny')
 
 timer.create("sex", 4, 0, function()
     local path = 'ravenholm.monk_pain'..string.format('%02d', math.round(math.rand(1,12)))
-    Holo:emitSound(path)
+    --Holo:emitSound(path)
 end)
 
 

@@ -38,6 +38,7 @@ local s1 = sounds.create(OO, "NPC_FloorTurret.AlarmPing", true)
 
 
 function warn(v)
+    if O ~= OO then return end
     net.start("WarnAim")
     net.writeFloat(v, 16)
     net.send()

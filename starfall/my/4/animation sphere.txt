@@ -9,7 +9,7 @@ local Radius = 100
 
 local Animation = "taunt_dance"
 local MusicAnimation --= "weapons/guitar/animeshniki.ogg" -- or nill
-local Speed = 0.5
+local Speed = 1.5
 local Volume = 0.2
 
 local SphereAlpha = 50
