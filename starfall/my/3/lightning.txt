@@ -27,7 +27,7 @@ local sound;
 
 //holo:addEffects(bit.bor(EF.NODRAW, EF.FOLLOWBONE))
 
-timer.create("kek", 0.01, 0, function()
+timer.create("kek", 0.05, 0, function()
     local tr = O:getEyeTrace()
     local target = tr.Entity 
     local hitPos = tr.HitPos

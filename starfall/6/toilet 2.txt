@@ -5,6 +5,12 @@
 local ToiletModel = 1
 local AutoFlushDown = true
 
+local AdditionalLocalPos = Vector(0,0,0)
+local AdditionalLocalAngle = Angle(0,0,0)
+
+
+
+
 chip():setColor(Color(0,0,0,0))
 chip():setNocollideAll(true)
 
@@ -16,28 +22,36 @@ local Toilet_datas = {
         ToiletLocalPos = Vector(0,0,15),
         WaterLocalPos = Vector(2.8,0,-4),
         WaterScale = Vector(0.17, 0.12, 0.01)*0.9,
-        SeatLocalPos = Vector(0,0,-5)
+        SeatLocalPos = Vector(0,0,-5),
+        EjectLocalPos = Vector(0,40,-15),
+        EjectLocalAngle = Angle(45,-90,0),
     },
     [2] = {
         Model = 'models/props_c17/furnituretoilet001a.mdl',
         ToiletLocalPos = Vector(0,0,47),
         WaterLocalPos = Vector(2.5,0,-32),
         WaterScale = Vector(0.17, 0.12, 0.01)*1.1,
-        SeatLocalPos = Vector(0,0,-32)
+        SeatLocalPos = Vector(0,0,-32),
+        EjectLocalPos = Vector(0,40,-20),
+        EjectLocalAngle = Angle(45,-90,0),
     },
     [3] = {
         Model = 'models/env/furniture/ensuite1_toilet/ensuite1_toilet.mdl',
         ToiletLocalPos = Vector(0,0,0),
         WaterLocalPos = Vector(20,0,15),
         WaterScale = Vector(0.17, 0.12, 0.01)*1.3,
-        SeatLocalPos = Vector(17,0,15)
+        SeatLocalPos = Vector(17,0,15),
+        EjectLocalPos = Vector(0,40,-20),
+        EjectLocalAngle = Angle(45,-90,0),
     },
     [4] = {
         Model = 'models/env/furniture/ensuite1_toilet/ensuite1_toilet_b.mdl',
         ToiletLocalPos = Vector(0,0,0),
         WaterLocalPos = Vector(15,0,15),
         WaterScale = Vector(0.17, 0.12, 0.01)*1.3,
-        SeatLocalPos = Vector(12,0,15)
+        SeatLocalPos = Vector(12,0,15),
+        EjectLocalPos = Vector(0,40,-20),
+        EjectLocalAngle = Angle(45,-90,0),
     },
 }
 
@@ -53,6 +67,7 @@ wire.adjustPorts(
     },
     {
         LocalPos="vector",
+        Angle="angle",
         Seat="entity",
     }
 )
@@ -106,15 +121,20 @@ end)
 if #li > 0 then
     ExitPointer = find.closest(li, chip():getPos())
 else
-    ExitPointer = prop.createSent(chip():localToWorld(Vector(8,0,0)), chip():getAngles(), 'gmod_wire_exit_point', true, {
+    ExitPointer = prop.createSent(chip():localToWorld(Vector(5,0,0)), chip():getAngles(), 'gmod_wire_exit_point', true, {
         Model = 'models/jaanus/wiretool/wiretool_range.mdl'
     })
 end
 
-wire.ports.LocalPos = Vector(0,40,1)
+wire.ports.LocalPos = data.EjectLocalPos + AdditionalLocalPos
 wire.ports.Seat = Seat
 wire.create(ExitPointer, chip(), 'Local Position', 'LocalPos')
+wire.create(ExitPointer, chip(), 'Angle', 'Angle')
 wire.create(ExitPointer, chip(), 'Entity', 'Seat')
+
+timer.create("Update Angle", 0.1, 0, function()
+    wire.ports.Angle = Seat:localToWorldAngles(data.EjectLocalAngle + AdditionalLocalAngle)
+end)
 
 
 local Shits = {
@@ -150,8 +170,10 @@ Seat:setColor(Color(0,0,0,0))
 Seat:setNoDraw(true)
 Seat:setNocollideAll(true)
 
-ExitPointer:setNoDraw(true)
-ExitPointer:setParent(Seat)
+--ExitPointer:setNoDraw(true)
+--ExitPointer:setParent(Seat)
+ExitPointer:setColor(Color(0,0,0,0))
+ExitPointer:setNocollideAll(true)
 
 function FlushDown()
     timer.remove('hide_kek')

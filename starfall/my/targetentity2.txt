@@ -3,6 +3,7 @@
 --@shared
 --@include libs/my_methods.txt
 
+
 dofile("libs/my_methods.txt")
 
 local O = owner()
@@ -18,7 +19,11 @@ local oldIsPressed = nil
 function func()
     local tr = O:getEyeTrace()          
     target = tr.Entity 
-    targetP = target:getPhysicsObject()
+    print(target)
+    --targetP = target:getPhysicsObject()
+    --target:setPos(target:getPos() + Vector(0,0,50))
+    print(target:getOwner())
+    --target:setFrozen(false)
     --printTable(O:getNWVarTable())
     
     //local kek = target.Password 
@@ -62,7 +67,7 @@ function func()
     
     --print(target:getChipName())
     --print(target:isWeldedTo())
-    printTable(constraint.getTable(target))
+    --printTable(constraint.getTable(target))
     --print(target:getCollisionGroup())
     --printTable(target:getAllConstrained())
     /*printTable(target:getAllConstrained({
