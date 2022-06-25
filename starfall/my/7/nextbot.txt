@@ -1,0 +1,157 @@
+--@name nextbot my
+--@author
+--@shared
+
+
+local E = chip()
+local bot, H
+        
+
+local SoundFly
+local IsBlockSound = false
+local toPos = Vector()
+
+function func()
+    
+
+    timer.create("bot", 1, 0, function()
+    end)
+    
+    local tr = owner():getEyeTrace()          
+    target = tr.Entity 
+    
+    toPos = tr.HitPos + Vector(0,0,10)
+    bot:setGotoPos(toPos)
+end
+
+
+function jumpTo()
+    local tr = owner():getEyeTrace()          
+    
+    local pos0 = bot:getPos()
+    local pos1 = tr.HitPos
+    
+    local power = math.sqrt((pos1 - pos0):getLength() * 510)
+    --ent.ent:applyForceCenter(((pos1 - pos0):getNormalized() + Vector(0, 0, 1)) * power)
+    bot:setVelocity(((pos1 - pos0):getNormalized() + Vector(0, 0, 1)) * power)
+    
+    toPos = pos1 + Vector(0,0,10)
+    bot:setGotoPos(toPos) 
+end
+
+
+
+if SERVER then
+    bot = nextbot.create(E:getPos(), "models/AntLion.mdl")
+    --physBot = bot:getPhysicsObject()
+    timer.simple(0.1, function()
+        bot:setMoveSpeed(200)
+        bot:setJumpHeight(200)
+        bot:setAcceleration(500)
+        bot:setDeceleration(20)
+        bot:setAvoidAllowed(true)
+        bot:setClimbAllowed(false)
+        bot:setJumpGapsAllowed(false)
+    end)
+    H = holograms.create(bot:getPos(), Angle(), "models/holograms/hq_rcube_thin.mdl", Vector(0))
+    --H:setAlpha(0)
+    H:setParent(bot)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.writeEntity(H)
+        net.send(ply)
+    end)
+    
+    
+    timer.create("isOnGround", 0.1, 0, function()
+        if bot then
+            if bot:isOnGround() then
+                net.start("isOnGround")
+                --net.writeBool(true)
+                net.send(nil, true)
+            else
+                bot:faceTowards(toPos)
+            end
+        end
+        
+        
+    end)
+    
+else
+    
+    net.receive("init", function(len)
+        net.readEntity(function(ent)
+            if ent==nil then error("Failed to get Hologram!") end
+            H = ent
+        end)
+    end)
+    
+    net.receive("isOnGround", function(len)
+        if !IsBlockSound and SoundFly and SoundFly:isValid() then
+            SoundFly:pause()
+            
+        end
+    end)
+    
+    bass.loadFile('sound/npc/antlion/fly1.wav', '3d mono noplay', function(snd)
+        if snd then
+            SoundFly = snd
+            snd:setPos(chip():getPos())
+            --snd:setPitch(1)
+            --snd:setVolume(1)
+            --snd:play()
+        end
+    end) 
+    
+    
+    hook.add("think", "dd", function()
+        if H and SoundFly and SoundFly:isValid() then
+            SoundFly:setPos(H:getPos())
+        end
+    end)
+end
+
+
+
+
+if owner() == player() then
+    if SERVER then
+        net.receive("keyHandler", function (len, ply)
+            local key = net.readInt(8)
+            if key == KEY.ALT then
+                func(key)
+            end
+            
+            if key == KEY.R then
+                bot:jump()
+                jumpTo(key)
+                IsBlockSound = true
+                timer.simple(0.2, function() IsBlockSound = false end)
+            end
+            
+            if key == KEY.SPACE then
+                bot:jump()
+                --bot:setVelocity(Vector(1,0,1)*1000)
+                --bot:getRunAct()
+            end
+        end)
+        
+    else        
+        
+        hook.add("inputPressed", "", function(key)
+            if key == KEY.R or key == KEY.SPACE then
+                if SoundFly and SoundFly:isValid() then
+                    IsBlockSound = true
+                    timer.simple(0.1, function() IsBlockSound = false end)
+                    SoundFly:play()
+                end
+            end
+            
+            net.start("keyHandler")
+            net.writeInt(key, 8)
+            net.send()
+        end)
+        
+    end
+end

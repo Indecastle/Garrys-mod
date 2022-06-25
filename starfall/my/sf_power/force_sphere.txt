@@ -3,8 +3,8 @@
 --@shared
 
 
-local Radius = 500
-local Speed = 15
+local Radius = 1000
+local Speed = 17  -- 18 = no gravity
 
 local ToUp = true
 
@@ -19,7 +19,7 @@ local IsSetPosOnGround = false
 local IsTriggerWorldEntity = true
 
 
-local IsOnlyPlayers = true
+local IsOnlyPlayers = false
 
 local Friends = {
     --'Markiz',
@@ -34,13 +34,14 @@ local InvisibleTest = false
 
 
 local E = chip()
+
     
 if CLIENT then
-    local SphereAlpha = 20
+    local SphereAlpha = 60
     
     local H = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(Radius/5.8))
     H:setColor(Color(255,255,255, SphereAlpha))
-    if InvisibleTest then H:setMaterial("engine/writez") end
+    if InvisibleTest then H:setMaterial("engine/writez") H:setColor(Color(255)) end
     local H2 = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_sphere.mdl", -Vector(Radius/5.8))
     H2:setColor(Color(255,255,255, SphereAlpha))
     
@@ -50,13 +51,19 @@ if CLIENT then
 end
 
 
+local ttime = timer.curtime()
+local W = wire.getWirelink(E)
+
+
 wire.adjustPorts(
     {
         Friends="array",
+        Force="number",
     },
     {
     }
 )
+
 
 function table.any(t, func)
     for i=1, #t do
@@ -104,6 +111,10 @@ end
 
 --timer.create("ff", 1.1, 0, function()
 hook.add("think", "", function()
+    local ttime2 = timer.curtime()
+    ttimeDiff = ttime2 - ttime
+    ttime = ttime2
+    
     /*local players = find.allPlayers(function(p)
         if inSphere(p) then
             return true
@@ -126,20 +137,23 @@ hook.add("think", "", function()
         local dir0 = (p:getPos() - E:getPos()):getNormalized()
         local dir = ToUp and Vector(0,0,1) or dir0
         
-        if p:getClass() == 'player' then
-            --p:setVelocity(Vector(0,0,Speed))
-            p:setVelocity(dir*Speed)
-        else
-            --p:applyForceCenter(Vector(0,0,20)*p:getMass()) 
-            --p:applyForceCenter(dir*Speed*p:getMass()) 
-            pcall(function()
-                phys:addVelocity(dir*Speed)
+        local Force = W:isWired("Force") and wire.ports.Force and wire.ports.Force or Speed
+        
+        pcall(function()
+            if p:getClass() == 'player' then
+                --p:setVelocity(Vector(0,0,Speed))
+                p:setVelocity(dir*Force*ttimeDiff*34.272)
+            else
+                --p:applyForceCenter(Vector(0,0,20)*p:getMass()) 
+                --p:applyForceCenter(dir*Speed*p:getMass()) 
+            
+                phys:addVelocity(dir*Force*ttimeDiff*33.272)
                 
                 if IsUnfrozingProps then
                     p:setFrozen(false)
                 end
-            end)
-        end
+            end
+        end)
         
         
         --p:applyTorque(Vector(0,0,20)*p:getMass()) 

@@ -1,0 +1,143 @@
+--@name Plutonium-238
+--@author
+--@shared
+
+
+local Radius = 400
+local Speed = 0.2
+
+local IsDamaging = true
+local MaxDamage = 2
+
+
+function convertToDamage(num)
+    return num ^ 7
+end
+
+-- =====================================================
+
+
+local E = chip()
+local Model = 'models/mechanics/wheels/wheel_smooth_24.mdl'
+local Prop
+
+
+if SERVER then
+    local li = find.inSphere(chip():getPos(), 50, function(ent)
+        return ent:getModel() == Model
+    end)
+    if #li > 0 then
+        Prop = find.closest(li, E:getPos())
+        E:setPos(Prop:getPos())
+        E:setAngles(Prop:getAngles())
+    else
+        Prop = prop.create(E:getPos(), E:getAngles(), Model, true)
+    end
+    if Prop:getOwner() == owner() then
+        Prop:setMass(35)
+    end
+    
+    local H1 = holograms.create(Prop:getPos(), Prop:getAngles(), "models/holograms/hq_rcylinder.mdl", Vector(2.06,2.06,0.65))
+    local H2 = holograms.create(Prop:getPos(), Prop:getAngles(), "models/holograms/hq_rcylinder.mdl", Vector(-2.05,-2.05,-0.5))
+    
+    H1:setColor(Color(105,105,105))
+    H2:setColor(Color(105,105,105))
+    
+    
+    E:setNoDraw(true)
+    E:setNocollideAll(true)
+    
+    E:setParent(Prop)
+    H1:setParent(Prop)
+    H2:setParent(Prop)
+    
+    
+    net.receive("damage", function(len, ply)
+        dist = net.readFloat(16)
+        
+        local damage = (Radius - dist)/Radius
+        --print(convertToDamage(damage))
+        
+        if IsDamaging then
+            ply:applyDamage(MaxDamage * convertToDamage(damage), chip(), chip())
+        end
+    end)
+    
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.writeEntity(Prop)
+        net.send(ply)
+    end)
+    
+else
+    
+    local m = material.load("sun/overlay")
+    
+    local tt = 0
+    
+    
+    timer.create("ddd", 0.1, 0, function()
+        if !Prop then return end
+        
+        emitter = particle.create(Vector(), false)
+        local pos = Prop:getPos() + Vector(math.rand(-9,9),math.rand(-9,9),math.rand(-3,3))
+        local part = emitter:add( m, pos, 20, 0, 50, 0, 200, 0, 0.25 ) -- Create a new particle at pos
+        if ( part ) then
+            part:setCollide(true)
+            part:setBounce(0.05)
+            part:setColor(Color(5,25,5))
+            part:setGravity(Vector())
+            part:setVelocity( Vector(math.rand(-170,170),math.rand(-170,170),math.rand(-170,170)) ) -- Initial velocity of the particle
+        end
+        if emitter then emitter:destroy() end
+    end)
+    
+    
+    local xx = 0
+    
+    hook.add("think", "sound", function()
+        if !Prop then return end
+        
+        local tt2 = timer.curtime()
+        
+        local dist = player():getPos():getDistance(E:getPos())
+        if dist < Radius then
+            xx = xx + Speed * ((Radius-dist)/Radius)
+            if xx > 1 then
+                xx = 0
+                local soundPath = math.rand(0,1) < 0.5 and "Geiger.BeepLow" or "Geiger.BeepHigh"
+                Prop:emitSound(soundPath, 75, 100, 1, 0)
+                
+                net.start("damage")
+                net.writeFloat(dist, 16)
+                net.send(ply)
+            end
+        end
+    end)
+    
+    
+    net.receive("init", function(len)
+        -- Since the client may not have created the hologram yet, it's important to use the callback of net.readEntity to wait and be sure it exists first.
+        net.readEntity(function(ent)
+            if ent==nil then error("Failed to get hologram!") end
+            Prop = ent
+            --Prop:emitSound("d3_citadel.small_elevator_move", 75, 1000, 0.2, 0)
+            
+            bass.loadFile("sound/plats/elevator_move_loop1.wav", "3d", function(snd)
+                snd:setPitch(2.55)
+                snd:setLooping(true)
+                
+                hook.add("think", "sound123", function()
+                    snd:setPos(Prop:getPos())
+
+                    if player():getPos():getDistance(E:getPos()) < 1000 then
+                        snd:setVolume(0.02)
+                    else
+                        snd:setVolume(0)
+                    end
+                end)
+            end)
+        end)
+    end)
+end

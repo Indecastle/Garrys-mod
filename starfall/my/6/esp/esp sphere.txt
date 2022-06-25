@@ -1,13 +1,13 @@
---@name ESP Sphere
+--@name ESP WH
 --@author
 --@client
 
-
-local Target = player()
-Target = find.playersByName("Markiz")[1]
+local Target = owner()
+Target = find.playersByName("andre")[1]
 --print(Target)
 
-if Target ~= player() then return end
+
+if player() ~= Target then return end
 
 
 local IsOnlyPlayers = true 
@@ -21,7 +21,7 @@ local hitedEnts = find.inSphere(chip():getPos(), Radius, function(ent)
 end)
 
 for i=1, #hitedEnts do
-    --if i == 199 then print("The holograms limit has been reached. (200)") break end
+    if i == 199 then print("The holograms limit has been reached. (200)") break end
     ent = hitedEnts[i]
     local holo = holograms.create(chip():getPos(), Angle(), ent:getModel(), Vector(1))
     holo:setMaterial("debug/debugportals")
