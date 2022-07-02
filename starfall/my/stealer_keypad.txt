@@ -22,34 +22,6 @@ local isOwner = O == OO
 
 local Keypads = {"gmod_wire_keypad", "Keypad", "Keypad_Wire"}
 
-Button_tupples = {
-    {"1", Vector(-2.1991503238678, 0), Vector(-0.95033568143845, 1.298828125)},
-    {"2", Vector(-0.59584319591522, 0), Vector(0.64439177513123, 1.296875)},
-    {"3", Vector(1, 0), Vector(2.2496118545532, 1.302734375)},
-    {"4", Vector(-2.1998481750488, 1.6025390625), Vector(-0.95399779081345, 2.900390625)},
-    {"5", Vector(-0.59157073497772, 1.6005859375), Vector(0.64341521263123, 2.9072265625)},
-    {"6", Vector(1, 1.6015625), Vector(2.2496118545532, 2.8974609375)},
-    {"7", Vector(-2.1998481750488, 3.298828125), Vector(-0.95399779081345, 4.5498046875)},
-    {"8", Vector(-0.59157073497772, 3.298828125), Vector(0.64341521263123, 4.5498046875)},
-    {"9", Vector(1, 3.298828125), Vector(2.2496118545532, 4.5498046875)},
-    {"ABORT", Vector(-2.1981415748596, -1.599609375), Vector(-0.15102256834507, -0.302734375)},
-    {"OK", Vector(0.29994156956673, -1.59765625), Vector(2.2520849704742, -0.302734375)}
-}
-Button_tupples2 = {
-    {"1", Vector(-2.7869443893433, -0.27388191223145), Vector(-1.1507804393768, 1.2175617218018)},
-    {"2", Vector(-0.82061326503754, -0.27388191223145), Vector(0.81837368011475, 1.2175617218018)},
-    {"3", Vector(1.1525144577026, -0.27388191223145), Vector(2.7871122360229, 1.2175617218018)},
-    {"4", Vector(-2.7869443893433, 1.6488265991211), Vector(-1.1507804393768, 3.1318473815918)},
-    {"5", Vector(-0.82061326503754, 1.6488265991211), Vector(0.81837368011475, 3.1318473815918)},
-    {"6", Vector(1.1525144577026, 1.6488265991211), Vector(2.7871122360229, 3.1318473815918)},
-    {"7", Vector(-2.7869443893433, 3.5755424499512), Vector(-1.1507804393768, 5.075984954834)},
-    {"8", Vector(-0.82061326503754, 3.5755424499512), Vector(0.81837368011475, 5.075984954834)},
-    {"9", Vector(1.1525144577026, 3.5755424499512), Vector(2.7871122360229, 5.075984954834)},
-    {"ABORT", Vector(-2.7869443893433, -2.070442199707), Vector(0.19112414121628, -0.62849426269531)},
-    {"OK", Vector(0.46103295683861, -2.070442199707), Vector(2.7871122360229, -0.62849426269531)},
-}
-
-
 
 function table.findByValue(t, f) -- find element v of l satisfying f(v)
     for _, v in ipairs(t) do
@@ -132,305 +104,337 @@ if SERVER then
     end)
     
     
-    
-else    
+    return
+end    
 
-    Input_Keys = {
-        [KEY.PAD_1] = "1",
-        [KEY.PAD_2] = "2",
-        [KEY.PAD_3] = "3",
-        [KEY.PAD_4] = "4",
-        [KEY.PAD_5] = "5",
-        [KEY.PAD_6] = "6",
-        [KEY.PAD_7] = "7",
-        [KEY.PAD_8] = "8",
-        [KEY.PAD_9] = "9",
-        [KEY.ENTER] = "OK",
-        [KEY.PAD_ENTER] = "OK",
-        [KEY.PAD_MINUS] = "ABORT",
-        [KEY.E] = "E",
+
+
+Button_tupples = {
+    {"1", Vector(-2.1991503238678, 0), Vector(-0.95033568143845, 1.298828125)},
+    {"2", Vector(-0.59584319591522, 0), Vector(0.64439177513123, 1.296875)},
+    {"3", Vector(1, 0), Vector(2.2496118545532, 1.302734375)},
+    {"4", Vector(-2.1998481750488, 1.6025390625), Vector(-0.95399779081345, 2.900390625)},
+    {"5", Vector(-0.59157073497772, 1.6005859375), Vector(0.64341521263123, 2.9072265625)},
+    {"6", Vector(1, 1.6015625), Vector(2.2496118545532, 2.8974609375)},
+    {"7", Vector(-2.1998481750488, 3.298828125), Vector(-0.95399779081345, 4.5498046875)},
+    {"8", Vector(-0.59157073497772, 3.298828125), Vector(0.64341521263123, 4.5498046875)},
+    {"9", Vector(1, 3.298828125), Vector(2.2496118545532, 4.5498046875)},
+    {"ABORT", Vector(-2.1981415748596, -1.599609375), Vector(-0.15102256834507, -0.302734375)},
+    {"OK", Vector(0.29994156956673, -1.59765625), Vector(2.2520849704742, -0.302734375)}
+}
+Button_tupples2 = {
+    {"1", Vector(-2.7869443893433, -0.27388191223145), Vector(-1.1507804393768, 1.2175617218018)},
+    {"2", Vector(-0.82061326503754, -0.27388191223145), Vector(0.81837368011475, 1.2175617218018)},
+    {"3", Vector(1.1525144577026, -0.27388191223145), Vector(2.7871122360229, 1.2175617218018)},
+    {"4", Vector(-2.7869443893433, 1.6488265991211), Vector(-1.1507804393768, 3.1318473815918)},
+    {"5", Vector(-0.82061326503754, 1.6488265991211), Vector(0.81837368011475, 3.1318473815918)},
+    {"6", Vector(1.1525144577026, 1.6488265991211), Vector(2.7871122360229, 3.1318473815918)},
+    {"7", Vector(-2.7869443893433, 3.5755424499512), Vector(-1.1507804393768, 5.075984954834)},
+    {"8", Vector(-0.82061326503754, 3.5755424499512), Vector(0.81837368011475, 5.075984954834)},
+    {"9", Vector(1.1525144577026, 3.5755424499512), Vector(2.7871122360229, 5.075984954834)},
+    {"ABORT", Vector(-2.7869443893433, -2.070442199707), Vector(0.19112414121628, -0.62849426269531)},
+    {"OK", Vector(0.46103295683861, -2.070442199707), Vector(2.7871122360229, -0.62849426269531)},
+}
+
+Input_Keys = {
+    [KEY.PAD_1] = "1",
+    [KEY.PAD_2] = "2",
+    [KEY.PAD_3] = "3",
+    [KEY.PAD_4] = "4",
+    [KEY.PAD_5] = "5",
+    [KEY.PAD_6] = "6",
+    [KEY.PAD_7] = "7",
+    [KEY.PAD_8] = "8",
+    [KEY.PAD_9] = "9",
+    [KEY.ENTER] = "OK",
+    [KEY.PAD_ENTER] = "OK",
+    [KEY.PAD_MINUS] = "ABORT",
+    [KEY.E] = "E",
+}
+
+
+local conectingPlayers = {}
+local keypads_passes = {}
+local pressed_buttons = {}
+current_Key = ""
+local ON = 1
+local hud_connected = false
+local font = render.createFont("Roboto", 20, 500, true)
+local wh_keypads = {}
+
+
+
+
+
+
+
+function update_current_key()
+    current_Key = table.concat(pressed_buttons, "")
+end
+function save_pass(keypad)
+    net.start("passHandler")
+    net.writeString(current_Key)
+    net.writeEntity(keypad)
+    net.send()
+end
+
+function number_handler(key, tupples, keypad)
+    if table.count(pressed_buttons) == 4 then
+        if tupples == Button_tupples then
+            table.empty(pressed_buttons)
+            //OK_handler(key, tupples, keypad)
+        else
+            // nothing
+        end
+    else
+        table.insert(pressed_buttons, key)
+    end
+end
+
+function OK_handler(_, _, keypad)
+    update_current_key()
+    save_pass(keypad)
+    table.empty(pressed_buttons)
+    //print(Color(255,255,0), "Key: ", Color(0,255,255), current_Key)
+end
+
+function ABORT_handler()
+    update_current_key()
+    table.empty(pressed_buttons)
+end
+
+local event_handler = {
+    ["1"] = number_handler,
+    ["2"] = number_handler,
+    ["3"] = number_handler,
+    ["4"] = number_handler,
+    ["5"] = number_handler,
+    ["6"] = number_handler,
+    ["7"] = number_handler,
+    ["8"] = number_handler,
+    ["9"] = number_handler,
+    ["Enter"] = number_handler,
+    ["OK"] = OK_handler,
+    ["ABORT"] = ABORT_handler,
+}
+
+function getTupples(type) 
+    if type == "gmod_wire_keypad" then
+        return Button_tupples
+    elseif type == "Keypad" or type == "Keypad_Wire" then
+        return Button_tupples2
+    end
+end
+
+function vec3_to_vec2(pos)
+    return Vector(pos.y, -pos.z)
+end
+
+function inrange(pos, pos1, pos2)
+    return pos.x >= pos1.x and pos.y >= pos1.y and
+        pos.x <= pos2.x and pos.y <= pos2.y
+end
+
+function getPlane(dir, m0)
+    return {
+        dir.x,
+        dir.y,
+        dir.z,
+        -(dir.x*m0.x + dir.y*m0.y + dir.z*m0.z)
     }
+end
 
+function getPoint(dir, m0, plane)
+    local t = - (plane[1]*m0.x + plane[2]*m0.y + plane[3]*m0.z + plane[4]) / (plane[1]*dir.x + plane[2]*dir.y + plane[3]*dir.z)
+    return Vector(dir.x * t + m0.x,
+                    dir.y * t + m0.y,
+                    dir.z * t + m0.z)
+end
 
-    local conectingPlayers = {}
-    local keypads_passes = {}
-    local pressed_buttons = {}
-    current_Key = ""
-    local ON = 1
-    local hud_connected = false
-    local font = render.createFont("Roboto", 20, 500, true)
-    local wh_keypads = {}
-    
-    
-    
-    
-    
-    
-    
-    function update_current_key()
-        current_Key = table.concat(pressed_buttons, "")
+function getOffSetPlane(keypad_type)
+    if keypad_type == "gmod_wire_keypad" then
+        return 1.05
+    else
+        return 1.44
     end
-    function save_pass(keypad)
-        net.start("passHandler")
-        net.writeString(current_Key)
-        net.writeEntity(keypad)
-        net.send()
-    end
-    
-    function number_handler(key, tupples, keypad)
-        if table.count(pressed_buttons) == 4 then
-            if tupples == Button_tupples then
-                table.empty(pressed_buttons)
-                //OK_handler(key, tupples, keypad)
-            else
-                // nothing
-            end
-        else
-            table.insert(pressed_buttons, key)
-        end
-    end
-    
-    function OK_handler(_, _, keypad)
-        update_current_key()
-        save_pass(keypad)
-        table.empty(pressed_buttons)
-        //print(Color(255,255,0), "Key: ", Color(0,255,255), current_Key)
-    end
-    
-    function ABORT_handler()
-        update_current_key()
-        table.empty(pressed_buttons)
-    end
-    
-    local event_handler = {
-        ["1"] = number_handler,
-        ["2"] = number_handler,
-        ["3"] = number_handler,
-        ["4"] = number_handler,
-        ["5"] = number_handler,
-        ["6"] = number_handler,
-        ["7"] = number_handler,
-        ["8"] = number_handler,
-        ["9"] = number_handler,
-        ["Enter"] = number_handler,
-        ["OK"] = OK_handler,
-        ["ABORT"] = ABORT_handler,
-    }
-    
-    function getTupples(type) 
-        if type == "gmod_wire_keypad" then
-            return Button_tupples
-        elseif type == "Keypad" or type == "Keypad_Wire" then
-            return Button_tupples2
-        end
-    end
-    
-    function vec3_to_vec2(pos)
-        return Vector(pos.y, -pos.z)
-    end
-    
-    function inrange(pos, pos1, pos2)
-        return pos.x >= pos1.x and pos.y >= pos1.y and
-            pos.x <= pos2.x and pos.y <= pos2.y
-    end
-    
-    function getPlane(dir, m0)
-        return {
-            dir.x,
-            dir.y,
-            dir.z,
-            -(dir.x*m0.x + dir.y*m0.y + dir.z*m0.z)
-        }
-    end
-    
-    function getPoint(dir, m0, plane)
-        local t = - (plane[1]*m0.x + plane[2]*m0.y + plane[3]*m0.z + plane[4]) / (plane[1]*dir.x + plane[2]*dir.y + plane[3]*dir.z)
-        return Vector(dir.x * t + m0.x,
-                        dir.y * t + m0.y,
-                        dir.z * t + m0.z)
-    end
-    
-    function getOffSetPlane(keypad_type)
-        if keypad_type == "gmod_wire_keypad" then
-            return 1.05
-        else
-            return 1.44
-        end
-    end
-    
-    function GetkeypadPoint(tr, keypad_type)
-        local dirPlane = tr.Entity:getForward()
-        local offset = getOffSetPlane(keypad_type)
-        local m0Plane = tr.Entity:localToWorld(Vector(offset,0,0))
-        local plane = getPlane(dirPlane, m0Plane)
-        
-        local dir = eyeAngles():getForward()
-        local m0 = tr.StartPos
-        
-        return getPoint(dir, m0, plane)
-    end
+end
 
-    function func(key)
-        local tr = OO:getEyeTrace()          
-        local keypad = tr.Entity 
-        //local aimPos = tr.HitPos
-        local keypad_type = table.findByValue(Keypads, keypad:getClass())
-        if key == "E" then
-            if keypad_type and OO:getShootPos():getDistance(tr.HitPos) < Distance then
-                local aimPos = GetkeypadPoint(tr, keypad_type)
-                local localAimPos = keypad:worldToLocal(aimPos)
-                local vec2 = vec3_to_vec2(localAimPos)
-                local tupples = getTupples(keypad_type)
-                
-                for _, tup in ipairs(tupples) do
-                    if (inrange(vec2, tup[2], tup[3])) then
-                        event_handler[tup[1]](tup[1], tupples, keypad)
-                        break
-                    end
-                end
-                if IsDevelop then print(vec2) end
-            end
-        else
-            event_handler[key](key, tupples, keypad)
-        end
-    end
+function GetkeypadPoint(tr, keypad_type)
+    local dirPlane = tr.Entity:getForward()
+    local offset = getOffSetPlane(keypad_type)
+    local m0Plane = tr.Entity:localToWorld(Vector(offset,0,0))
+    local plane = getPlane(dirPlane, m0Plane)
     
-    function drawConectingPlayers()
-        render.setFont("DermaLarge")
-        render.setColor(Color())
-        render.drawText(10, 10, "Keypad players:")
-        
-        for i=1, #conectingPlayers do
-            if conectingPlayers[i]:isValid() then
-                render.setColor(team.getColor(conectingPlayers[i]:getTeam()))
-                render.drawText(10, 40 + 30*(i-1), conectingPlayers[i]:getName())
-            end
-        end
-    end
+    local dir = eyeAngles():getForward()
+    local m0 = tr.StartPos
     
-    function drawKeypads()
-        render.setColor(Color(200,100,0))
-        
-        for i=1, #wh_keypads do
-            if wh_keypads[i]:isValid() then
-                local vec = wh_keypads[i]:getPos():toScreen()
-                render.drawRectFast(vec.x, vec.y, 10, 10)
-            end
-        end
-    end
-    
-    hook.add("drawhud","myshook",function()
-        render.setFont(font)
-        if ON >= 1 then
-            for k, v in pairs(keypads_passes) do
-                if k:isValid() and OO:getShootPos():getDistance(k:getPos()) < Distance_Render then
-                    local vec = k:localToWorld(Vector(2,3.5,-4)):toScreen()
-                    render.setColor(Color(100,200,100))
-                    for i, pass in ipairs(v) do
-                        render.drawText(vec.x,vec.y + i*15, pass, 0)
-                    end
-                        
-                    //render.setColor(healthColor)
-                    //render.drawRect(x0, y0+h-2, w*normHealth, 2)
-                end
-            end
-        end
-        
-        if ON >= 2 and (isOwner or !OnlyOwner) then
-            drawKeypads()
-        end
-        
-        if ON == 3 and (isOwner or !OnlyOwner) then
-            drawConectingPlayers()
-        end
-    end)
-    
-    hook.add("inputPressed", "", function(key)
-        if key == KEY.KP_DEL then 
-            if !OnlyOwner or isOwner then         
-                ON = (ON + 1) % 4
-            else
-                ON = (ON + 1) % 3
-            end
-        end
-        if not hud_connected or ON == 0 then
-        //if not ExceptSaveOwner or not isOwner then
-            local stealer_key = table.find(Input_Keys, key)
-            if stealer_key != nil then
-                try(function() func(stealer_key) end
-                    ,function(e) print(e) end)
-            end
-        end
-    end)
-    
-    function hudConnecting(isCon)
-        ON = isCon and 1 or 0
-        hud_connected = isCon
-        net.start("hud_connecting")
-        net.writeBool(isCon)
-        net.send()
-    end
-    
-    hook.add("hudconnected", "", function ()
-        hudConnecting(true)
-    end)
-    hook.add("huddisconnected", "", function ()
-        hudConnecting(false)
-    end)
-    net.receive("conecting_players", function (len)
-        conectingPlayers = net.readTable()
-    end)
-    
-    if render.isHUDActive() then
-        hudConnecting(true)
-    end
-        net.receive("passes", function (len)
-            keypads_passes = net.readTable()
-        end)
-    
-    timer.create("wh_keypads", 1, 0, function()
-        wh_keypads = find.byClass("gmod_wire_keypad")
-        table.add(wh_keypads, find.byClass("Keypad_Wire"))
-        table.add(wh_keypads, find.byClass("Keypad"))
-        /*wh_keypads = find.all(function(e)
-                local type = e:getClass()
-                return type == "gmod_wire_keypad"
-                    or type == "Keypad_Wire"
-                    or type == "Keypad"
-            end)*/
-    end)
-    
-    
-    if IsDevelop and isOwner then
-        local holo1 = holograms.create(chip():getPos(), Angle(), "models/holograms/cube.mdl", Vector(0.01))
-        holo1:setColor(Color(255,150,0))
-        
-        timer.create("test", 0.01, 0, function()
-            local tr = OO:getEyeTrace()    
-            local keypad = tr.Entity 
-            local keypad_type = table.findByValue(Keypads, keypad:getClass())
+    return getPoint(dir, m0, plane)
+end
+
+function func(key)
+    local tr = OO:getEyeTrace()          
+    local keypad = tr.Entity 
+    //local aimPos = tr.HitPos
+    local keypad_type = table.findByValue(Keypads, keypad:getClass())
+    if key == "E" then
+        if keypad_type and OO:getShootPos():getDistance(tr.HitPos) < Distance then
             local aimPos = GetkeypadPoint(tr, keypad_type)
-            if keypad_type and OO:getShootPos():getDistance(aimPos) < Distance then
-                local localAimPos = keypad:worldToLocal(aimPos)
-                local vec2 = vec3_to_vec2(localAimPos)
-                local tupples = getTupples(keypad_type)
-                
-                local toStart = true
-                for _, tup in ipairs(tupples) do
-                    if (inrange(vec2, tup[2], tup[3])) then
-                        //event_handler[tup[1]](tup[1], Type_enum, keypad)
-                        holo1:setPos(aimPos)
-                        toStart = false
-                        break
-                    end
+            local localAimPos = keypad:worldToLocal(aimPos)
+            local vec2 = vec3_to_vec2(localAimPos)
+            local tupples = getTupples(keypad_type)
+            
+            for _, tup in ipairs(tupples) do
+                if (inrange(vec2, tup[2], tup[3])) then
+                    event_handler[tup[1]](tup[1], tupples, keypad)
+                    break
                 end
-                if toStart then
-                    holo1:setPos(chip():getPos())
+            end
+            if IsDevelop then print(vec2) end
+        end
+    else
+        event_handler[key](key, tupples, keypad)
+    end
+end
+
+function drawConectingPlayers()
+    render.setFont("DermaLarge")
+    render.setColor(Color())
+    render.drawText(10, 10, "Keypad players:")
+    
+    for i=1, #conectingPlayers do
+        if conectingPlayers[i]:isValid() then
+            render.setColor(team.getColor(conectingPlayers[i]:getTeam()))
+            render.drawText(10, 40 + 30*(i-1), conectingPlayers[i]:getName())
+        end
+    end
+end
+
+function drawKeypads()
+    render.setColor(Color(200,100,0))
+    
+    for i=1, #wh_keypads do
+        if wh_keypads[i]:isValid() then
+            local vec = wh_keypads[i]:getPos():toScreen()
+            render.drawRectFast(vec.x, vec.y, 10, 10)
+        end
+    end
+end
+
+hook.add("drawhud","myshook",function()
+    render.setFont(font)
+    if ON >= 1 then
+        for k, v in pairs(keypads_passes) do
+            if k:isValid() and OO:getShootPos():getDistance(k:getPos()) < Distance_Render then
+                local vec = k:localToWorld(Vector(2,3.5,-4)):toScreen()
+                render.setColor(Color(100,200,100))
+                for i, pass in ipairs(v) do
+                    render.drawText(vec.x,vec.y + i*15, pass, 0)
                 end
-            else
+                    
+                //render.setColor(healthColor)
+                //render.drawRect(x0, y0+h-2, w*normHealth, 2)
+            end
+        end
+    end
+    
+    if ON >= 2 and (isOwner or !OnlyOwner) then
+        drawKeypads()
+    end
+    
+    if ON == 3 and (isOwner or !OnlyOwner) then
+        drawConectingPlayers()
+    end
+end)
+
+hook.add("inputPressed", "", function(key)
+    if key == KEY.KP_DEL then 
+        if !OnlyOwner or isOwner then         
+            ON = (ON + 1) % 4
+        else
+            ON = (ON + 1) % 3
+        end
+    end
+    if not hud_connected or ON == 0 then
+    //if not ExceptSaveOwner or not isOwner then
+        local stealer_key = table.find(Input_Keys, key)
+        if stealer_key != nil then
+            try(function() func(stealer_key) end
+                ,function(e) print(e) end)
+        end
+    end
+end)
+
+function hudConnecting(isCon)
+    ON = isCon and 1 or 0
+    hud_connected = isCon
+    net.start("hud_connecting")
+    net.writeBool(isCon)
+    net.send()
+end
+
+hook.add("hudconnected", "", function ()
+    hudConnecting(true)
+end)
+hook.add("huddisconnected", "", function ()
+    hudConnecting(false)
+end)
+net.receive("conecting_players", function (len)
+    conectingPlayers = net.readTable()
+end)
+
+if render.isHUDActive() then
+    hudConnecting(true)
+end
+    net.receive("passes", function (len)
+        keypads_passes = net.readTable()
+    end)
+
+timer.create("wh_keypads", 1, 0, function()
+    wh_keypads = find.byClass("gmod_wire_keypad")
+    table.add(wh_keypads, find.byClass("Keypad_Wire"))
+    table.add(wh_keypads, find.byClass("Keypad"))
+    /*wh_keypads = find.all(function(e)
+            local type = e:getClass()
+            return type == "gmod_wire_keypad"
+                or type == "Keypad_Wire"
+                or type == "Keypad"
+        end)*/
+end)
+
+
+if IsDevelop and isOwner then
+    local holo1 = holograms.create(chip():getPos(), Angle(), "models/holograms/cube.mdl", Vector(0.01))
+    holo1:setColor(Color(255,150,0))
+    
+    timer.create("test", 0.01, 0, function()
+        local tr = OO:getEyeTrace()    
+        local keypad = tr.Entity 
+        local keypad_type = table.findByValue(Keypads, keypad:getClass())
+        local aimPos = GetkeypadPoint(tr, keypad_type)
+        if keypad_type and OO:getShootPos():getDistance(aimPos) < Distance then
+            local localAimPos = keypad:worldToLocal(aimPos)
+            local vec2 = vec3_to_vec2(localAimPos)
+            local tupples = getTupples(keypad_type)
+            
+            local toStart = true
+            for _, tup in ipairs(tupples) do
+                if (inrange(vec2, tup[2], tup[3])) then
+                    //event_handler[tup[1]](tup[1], Type_enum, keypad)
+                    holo1:setPos(aimPos)
+                    toStart = false
+                    break
+                end
+            end
+            if toStart then
                 holo1:setPos(chip():getPos())
             end
-        end)
-    end
+        else
+            holo1:setPos(chip():getPos())
+        end
+    end)
+end
+
+if player() == owner() then
+    enableHud(nil, true)
 end
 

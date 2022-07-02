@@ -98,7 +98,7 @@ else
         if snd then
             SoundFly = snd
             snd:setPos(chip():getPos())
-            --snd:setPitch(1)
+            snd:setLooping(true)
             --snd:setVolume(1)
             --snd:play()
         end
@@ -115,43 +115,65 @@ end
 
 
 
-if owner() == player() then
-    if SERVER then
-        net.receive("keyHandler", function (len, ply)
-            local key = net.readInt(8)
-            if key == KEY.ALT then
-                func(key)
-            end
-            
-            if key == KEY.R then
-                bot:jump()
-                jumpTo(key)
-                IsBlockSound = true
-                timer.simple(0.2, function() IsBlockSound = false end)
-            end
-            
-            if key == KEY.SPACE then
-                bot:jump()
-                --bot:setVelocity(Vector(1,0,1)*1000)
-                --bot:getRunAct()
-            end
-        end)
+if SERVER then
+    net.receive("keyHandler", function (len, ply)
+        if owner() ~= ply then return end
         
-    else        
+        local key = net.readInt(8)
+        if key == KEY.ALT then
+            func(key)
+        end
         
-        hook.add("inputPressed", "", function(key)
-            if key == KEY.R or key == KEY.SPACE then
-                if SoundFly and SoundFly:isValid() then
-                    IsBlockSound = true
-                    timer.simple(0.1, function() IsBlockSound = false end)
-                    SoundFly:play()
-                end
-            end
-            
+        if key == KEY.R then
+            bot:jump()
+            jumpTo(key)
+            IsBlockSound = true
+            timer.simple(0.2, function() IsBlockSound = false end)
+        end
+        
+        if key == KEY.SPACE then
+            bot:jump()
+            --bot:setVelocity(Vector(1,0,1)*1000)
+            --bot:getRunAct()
+        end
+        
+        net.start("keyHandler")
+        net.writeEntity(ply)
+        net.writeInt(key, 8)
+        net.send()
+    end)
+    
+else        
+    
+    hook.add("inputPressed", "", function(key, ply)
+        net.start("keyHandler")
+        net.writeInt(key, 8)
+        net.send()
+    end)
+    
+    timer.create("move", 0.2, 0, function()
+        if input.isKeyDown(KEY.ALT) then
             net.start("keyHandler")
-            net.writeInt(key, 8)
+            net.writeInt(KEY.ALT, 8)
             net.send()
-        end)
+        end
         
-    end
+    end)
+    
+    
+    net.receive("keyHandler", function (len)
+        local ply = net.readEntity()
+        local key = net.readInt(8)
+        
+        if ply ~= owner() then return end
+        
+        if key == KEY.R or key == KEY.SPACE then
+            if SoundFly and SoundFly:isValid() then
+                IsBlockSound = true
+                timer.simple(0.1, function() IsBlockSound = false end)
+                SoundFly:play()
+            end
+        end
+    end)
+    
 end

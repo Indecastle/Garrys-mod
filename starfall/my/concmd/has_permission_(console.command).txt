@@ -1,0 +1,27 @@
+//@name Has permission (console.command)
+--@name Generic
+--@author
+--@shared
+
+
+if SERVER then
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.send(ply)
+    end)
+    
+    net.receive("hasPermission", function(len, ply)
+        hasPerm = net.readBool()
+        if hasPerm then
+            print(team.getColor(ply:getTeam()), ''..ply:getName()..' ', Color(255,255,255), '+')
+        end
+    end)
+    
+else
+    net.receive("init", function(len)
+        net.start("hasPermission")
+        net.writeBool(hasPermission("console.command"))
+        net.send(ply)
+    end)
+    
+end

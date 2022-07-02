@@ -59,7 +59,7 @@ if((changed(Change) & Change) | changed(Active)) {
     Switcher:setAng(Switch:toWorld(Ang))
     
     if (Who == 2) {
-        HelpProp1:setPos(Switch:toWorld(vec(160, -70, 4.5)))
+        HelpProp1:setPos(Switch:toWorld(vec(161, -69, 4.5)))
         HelpProp1:setAng(Switch:toWorld(ang(0, -65, 0)))
         
         HelpProp2:setPos(Switch:toWorld(vec(531, -59, 4.5)))

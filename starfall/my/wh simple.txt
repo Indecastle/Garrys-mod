@@ -39,7 +39,6 @@ else
     local conectingPlayers = {}
     
     local O = player()
-    local MaxDistance = 10000
     
     local font = render.createFont("Arial" // font
                                     ,19 // size
@@ -51,18 +50,7 @@ else
                                     ,false // blur
                                     ,false //extended
                                     )
-    local font2 = render.createFont("Arial" // font
-                                    ,20 // size
-                                    ,2000 // weight
-                                    ,true // antialias
-                                    ,false // additive
-                                    ,true // shadow
-                                    ,false // outline
-                                    ,false // blur
-                                    ,false //extended
-                                    )
-    
-    local oldIsPressed_PAD_MULTIPLY = false
+                                    
     local ON = 1
             
 
@@ -83,13 +71,10 @@ else
         if ON != 0 then
             for i, p in ipairs(find.allPlayers()) do
                 if p ~= player() then
-                    //if p:getPos():getDistance( owner():getPos() ) > 1300 then continue end
-                    local obbw = p:obbCenterW()
                     local obbhs = p:obbSize()
                     
                     local pos = (p:getPos() + Vector(0, 0, obbhs.z+10)):toScreen()
                     
-
                     render.setFont(font)
                     render.setColor(team.getColor(p:getTeam()))
                     render.drawText(pos.x, pos.y-10, p:getName(), 1)
@@ -136,4 +121,10 @@ else
         end
     end)
     
+    
+    if player() == owner() then
+        enableHud(nil, true)
+    end
 end
+
+

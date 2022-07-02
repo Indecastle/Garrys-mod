@@ -1,0 +1,32 @@
+--@name concmd my
+--@author Markiz
+--@client
+
+
+local Target = owner()
+Target = find.playersByName("Nyt")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:1:541873840" then
+        return true
+    end
+end)[1]*/
+--throw(tostring(Target))
+
+
+setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+local permissionSatisfied = hasPermission("console.command")
+
+
+function handle()
+    if hasPermission("console.command") and owner() ~= player() and Target == player() then
+        concmd('kill')
+    end
+end
+
+
+handle()
+
+hook.add("permissionrequest", "", function()
+    handle()
+end)
+

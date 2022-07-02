@@ -12,7 +12,7 @@ local Animation = "swimming_all"
 --local MusicAnimation = "mmd/original_dance11.mp3" -- or nill
 --local MusicAnimation = "npc/zombie/moan_loop3.wav" -- or nill
 
-local Speed = 2
+local Speed = 1.5
 local Volume = 0.2
 
 local Target = owner()
@@ -27,7 +27,7 @@ end)[1]*/
 --if player() ~= Target then return end
 
 for i, p in ipairs(find.allPlayers()) do
-    --p:setAnimation("smooth_ride", nil, 1, true, nil, nil)
+    --p:setAnimation("swimming_all", nil, Speed, true, nil, nil)
     --p:setAnimationLoop(false)
     --p:resetAnimation()
 end

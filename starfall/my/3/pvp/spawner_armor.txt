@@ -7,14 +7,14 @@ dofile("./quake_spawner.txt")
 
 local Vars = {
     Radius = Vector(100),
-    Limit = 6,
+    Limit = 1,
     Interval = 1,  -- sek
     
     OffsetZ = Vector(0, 0, 20),
     OffsetX = Vector(0,0,0),
     
     Class = "item_battery",
-    Model = "models/items/battery.mdl",
+    --Model = "models/items/battery.mdl",
     
     E = chip(),
     O = owner(),

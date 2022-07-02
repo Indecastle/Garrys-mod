@@ -1,0 +1,11 @@
+--@name Screen Shake
+--@author
+--@client
+
+
+
+timer.create("dd", 1, 0, function()
+    if render.isHUDActive() then
+        render.screenShake(2, 1, 1)
+    end
+end)

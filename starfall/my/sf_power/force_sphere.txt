@@ -4,7 +4,7 @@
 
 
 local Radius = 1000
-local Speed = 17  -- 18 = no gravity
+local Speed = 15  -- 18 = no gravity
 
 local ToUp = true
 
@@ -26,7 +26,7 @@ local Friends = {
     --'Raiden'
 }
 
-local InvisibleTest = false
+--local SphereMode = 'ihv' -- invisible / ihv
 
 
 
@@ -40,13 +40,38 @@ if CLIENT then
     local SphereAlpha = 60
     
     local H = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(Radius/5.8))
-    H:setColor(Color(255,255,255, SphereAlpha))
-    if InvisibleTest then H:setMaterial("engine/writez") H:setColor(Color(255)) end
     local H2 = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_sphere.mdl", -Vector(Radius/5.8))
+    
+    H:setColor(Color(255,255,255, SphereAlpha))
     H2:setColor(Color(255,255,255, SphereAlpha))
     
     H:setParent(E)
     H2:setParent(E)
+    
+    
+    if SphereMode == 'invisible' then
+        H:setMaterial("engine/writez") 
+        H:setColor(Color(255,0,0))
+    elseif SphereMode == 'ihv' then
+        local H3 = holograms.create(E:getPos(), E:getAngles(), "models/holograms/hq_sphere.mdl", -Vector(Radius/5.8))
+        H3:setParent(E)
+        
+        H:setMaterial("models/ihvtest/eyeball_r") 
+        H2:setMaterial("models/ihvtest/eyeball_r") 
+        H3:setMaterial("models/ihvtest/eyeball_r") 
+        
+        H:setColor(Color(255, 0, 0, 150))
+        H2:setColor(Color(0, 255, 0, 50))
+        H3:setColor(Color(0, 255, 0, 50))
+        
+        local i = 0
+        hook.add("think", "", function()
+            i = (i+2) % 360
+            local c = Color(i,1,1):hsvToRGB()
+            c.a = 50
+            H:setColor(c)
+        end)
+    end
     return
 end
 

@@ -1,4 +1,4 @@
--- Remote concmd
+// @name Remote concmd
 --@name Generic
 --@author
 --@server
@@ -14,8 +14,8 @@ Owner = find.allPlayers(function(p)
 end)[1]
 //print(Owner)
 
-local O = player()
-local OO = owner()
+
+local O = owner()
 
 
 --chip():setPos(chip():getPos()-Vector(0,0,10))

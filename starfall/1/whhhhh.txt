@@ -1,0 +1,16 @@
+--@name Very simple WH
+--@author
+--@client
+
+local function hud()
+    f = find.allPlayers()
+    for i = 1, #f do
+    render.setFont(render.createFont("BudgetLabel",20,1666,0,0,0,5))
+    render.setColor(team.getColor(f[i]:getTeam())) 
+    render.drawText(f[i]:getPos():toScreen().x, f[i]:getPos():toScreen().y, f[i]:getName(), TEXT_ALIGN_CENTER)
+    end
+end
+hook.add("drawhud","",hud)
+if player() == owner() then
+    enableHud(player(),true)
+end

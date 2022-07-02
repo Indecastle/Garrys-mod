@@ -2,22 +2,63 @@
 --@author Markiz
 --@client
 
+local IsTarget = false
+local TryAuto = false
+--local Target = nil --owner()
+Target = find.playersByName("")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:1:54066003" then
+        return true
+    end
+end)[1]*/
+
+if IsTarget == nil then return end
+
 local O = owner()
 local OO = player()
 local jumping = false
 local oldIsPressed = true
 local newIsPressed = true
 
+
+function updateAccess()
+    if hasPermission("console.command") and owner() ~= player() then
+        concmd("sf_permission_cl console.command client 3")
+    end
+end
+
+function thinkHandler()
+    -- timer.create("gg", 0.001, 0, function()
+    hook.add("think", "", function()
+        permissionSatisfied = hasPermission("console.command")
+        
+        if permissionSatisfied and (!IsTarget or !Target or Target == player()) then
+            concmd("impulse 100")
+        end
+    end)
+end
+
+
 local ii = false
 setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
 local permissionSatisfied = hasPermission("console.command")
 
--- timer.create("gg", 0.001, 0, function()
-hook.add("think", "", function()
+
+
+
+
+hook.add("permissionrequest", "perms", function()
     permissionSatisfied = hasPermission("console.command")
     
-    if permissionSatisfied then
-        concmd("impulse 100")
+    updateAccess()
+    
+    if !TryAuto then
+       thinkHandler() 
     end
 end)
+
+
+if TryAuto then
+   thinkHandler() 
+end
 

@@ -8,18 +8,13 @@ local jumping = false
 local oldIsPressed = true
 local newIsPressed = true
 
-
-setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
-local permissionSatisfied = hasPermission("console.command")
-
-hook.add("permissionrequest", "", function()
-    permissionSatisfied = hasPermission("console.command")
-end)
+local permissionSatisfied = false
 
 local myTimer = timer.curtime()
 local changed = true
 
-//if OO == O then
+
+function addHook()
     hook.add("think", "", function()
         if permissionSatisfied then
             newIsPressed = input.isKeyDown(KEY.SPACE)
@@ -69,7 +64,22 @@ local changed = true
             end*/
         end
     end)
-    
-//end
+end
+
+
+setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+permissionSatisfied = hasPermission("console.command")
+
+hook.add("permissionrequest", "", function()
+    permissionSatisfied = hasPermission("console.command")
+    if O ~= OO then
+        addHook() 
+    end
+end)
+
+
+if O == OO then
+   addHook() 
+end
 
 

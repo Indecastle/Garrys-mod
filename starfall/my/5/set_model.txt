@@ -3,7 +3,7 @@
 --@client
 
 local Target = owner()
---Target = find.playersByName("mark")[1]
+Target = find.playersByName("tsiv")[1]
 
 local TargetModel = Target
 --TargetModel = find.playersByName("rony")[1]
@@ -62,7 +62,7 @@ timer.create("anim", 0.2, 0, function()
     --H:unparent()
     --H:setParent( nil )
     local players = find.allPlayers()
-    table.removeByValue(players, owner())
+    table.removeByValue(players, Target)
     local closestPlayer = find.sortByClosest(players, owner():getPos(), false)[1]
     if closestPlayer then
         H:setModel(closestPlayer:getModel())
@@ -75,7 +75,7 @@ timer.create("anim", 0.2, 0, function()
 end)
 
 
-
+/*
 local i = 0
 local maxI = 5
 local move = 1
@@ -88,3 +88,4 @@ hook.add('think', '', function()
     
     owner():manipulateBoneScale(head_bone, Vector(i)) -- Vector(i, 0.01, i)
 end)
+*/

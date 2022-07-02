@@ -1,0 +1,702 @@
+#[
+    NEWOS SMTHNG
+    28.06.2022 [6PM]
+    Made by: gorlix/ОКОЛОБАСКЕТБОЛЬНЫЙ
+    
+    Features:
+        Cursor - navigate 
+        
+        Windows - easily manage windows, with interaction button or through functions.
+            : WindowTable=window(Pos,Size) - returns a table of a window
+            : WindowTable:setPos(Pos) - change the position of a window.
+            : WindowTable:setSize(Size) - change the size of a window.
+            : WindowTable:setMinSize(Size) - minimum size of a window.
+            : WindowTable:setMaxSize(Size) - max size of a window.
+            : WindowTable:setName(Name) - change the name of a window.
+            : WindowTable:setCloseable(Bool) - 1:can close window, 0:cannot close window.
+            : WindowTable:setSizeable(Bool) - 1:can change the size of a window, 0:cannot.
+            : WindowTable:setColor(Vector) - change the color of the window.
+            : WindowTable:kill() - delete the window.
+        
+        Easy EGP Indexes - easily take a new or previously used EGP index to use it again.
+            : newIndex() - returns a new index for a new egp object
+            : LastIndex - (variable) use this to get the last new egp index.  
+            : egpDelete() - delete a number
+                
+        Window callbacks - set up callbacks for a specific window.
+            : WindowTable:setCallbacks(
+                  table(
+                  "chatClk"="number"
+                  )
+              ) - table must contain; keys:the name of the callback, value of the key:what the callback returns. (example presented as a function)
+        
+        Window intervals - set up intervals for a specific window.
+            : WindowTable:setIntervals(
+                  table(
+                  "name of the timer" = DelayOfTheTimer
+                  )
+              ) - table must contain; keys:the name of the timers; value: how many miliseconds between iterations (use as clk("name of the timer") in the script)
+        
+        Window script - set up a script for a specific window.
+            : WindowTable:setScript("Script Name") - first, you have to create a void function with these variables:
+                                                     (Main:table,Persist:table,First,KeyClk,Key:string,ClickPos:vector2,CloseClk,MoveClk,SizeClk)
+                                                     second, you should copy the name of the function and paste it into string variable of the :setScript(String) 
+        
+]#
+@persist EGP:wirelink [Windows KeysTable PlayerInteractTable Callbacks Intervals]:table CursorBlink FontSize LastIndex Index Order [SpareIndexes CursorArray]:array [ZVec2 LocalGrab]:vector2 [Font InteractionButton]:string [User EGPEnt]:entity 
+if(first())
+{
+    EGPEnt=entity():isWeldedTo()
+    if(!EGPEnt)
+    {
+        error("occured, because your stupid ass didn't place the E2 chip on the EGP screen! This message is typed out")
+    }
+    EGP=EGPEnt:wirelink()
+    ZVec2=vec2()
+    InteractionButton="e"
+    Font="Courier New"
+    FontSize=14
+    RainbowScroll=0
+    CursorArray=array(vec2(),vec2(0,16),vec2(4,13),vec2(5,14),vec2(5,15),vec2(6,16),vec2(6,17),vec2(7,18),vec2(8,18),vec2(9,17),vec2(9,16),vec2(8,15),vec2(8,14),vec2(7,13),vec2(7,12),vec2(11,12),vec2(11,11))
+    EGP:egpClear()
+    EGP:egpDrawTopLeft(1)
+    function void reCursor()
+    {
+        if(EGP:egpObjectType(300)!="")
+        {
+            EGP:egpRemove(300)
+        }
+        EGP:egpPolyOutline(300,CursorArray)
+        EGP:egpParentToCursor(300)
+        CursorBlink=1
+    }
+    function number newIndex()
+    {
+        if(SpareIndexes:count()>0)
+        {
+            LastIndex=SpareIndexes:popNumber()
+            return LastIndex
+        }
+        Index++
+        LastIndex=Index
+        if(Index==299)
+        {
+            error("out of egp objects, what did you even do???")
+        }
+        return LastIndex
+    }
+    function array generateWindowOutline(Size:vector2,Closeable:number,Sizeable:number)
+    {
+        local SizeX=Size:x()
+        local SizeY=Size:y()
+        local Outline=array(ZVec2,vec2(SizeX,0))
+        if(Sizeable)
+        {
+            Outline=Outline:add(array(vec2(SizeX,10),vec2(SizeX-10,10),vec2(SizeX-10,0),vec2(SizeX,10),vec2(SizeX-10,10),vec2(SizeX,0)))
+        }
+        Outline=Outline:add(array(Size))
+        if(Closeable)
+        {
+            Outline=Outline:add(array(vec2(SizeX-10,SizeY),vec2(SizeX,SizeY-10),Size))
+        }
+        return Outline:add(array(vec2(0,SizeY),ZVec2))
+    }
+    function table window(Pos:vector2,Size:vector2)
+    {
+        local WindowBase=newIndex()
+        local WindowTitle=newIndex()
+        local WindowOutline=newIndex()
+        EGP:egpBox(WindowBase,Pos,Size)
+        EGP:egpText(WindowTitle,"",ZVec2)
+        EGP:egpFont(WindowTitle,Font,FontSize)
+        EGP:egpAlign(WindowTitle,0,0)
+        EGP:egpPos(WindowTitle,-Size/2)
+        EGP:egpParent(WindowTitle,WindowBase)
+        EGP:egpColor(WindowTitle,vec(255)/4)
+        EGP:egpLineStrip(WindowOutline,generateWindowOutline(Size,0,0))
+        EGP:egpColor(WindowOutline,vec(255)/4)
+        EGP:egpParent(WindowOutline,WindowTitle)
+        local Window=table(
+            "Base"=WindowBase,
+            "BaseOutline"=WindowOutline,
+            "BaseText"=WindowTitle,
+            "Name"="",
+            "Pos"=Pos,
+            "Size"=Size,
+            "Sizeable"=0,
+            "Closeable"=0,
+            "Color"=vec(255),
+            "Persist"=table(),
+            "Script"="",
+            "First"=1,
+            "InterateCount"=0,
+            "Users"=table(),
+            "LocalGrab"=vec2(),
+            "MinSize"=vec2(20),
+            "MaxSize"=vec2(512)
+        )
+        Windows:unshiftTable(Window)
+        return Window
+    }
+    function table:updateName()
+    {
+        local DisplayName=This["Name",string]
+        if(This["Name",string]:unicodeLength()*(FontSize/2)>This["Size",vector2]:x()-10)
+        {
+            DisplayName=This["Name",string]:sub(0,round((This["Size",vector2]:x()-30)/7))+"..."
+        }
+        EGP:egpSetText(This["BaseText",number],DisplayName)
+    }
+    function table:setName(Name:string)
+    {
+        This["Name",string]=Name
+        This:updateName()
+    }
+    function table:setColor(Color:vector)
+    {
+        This["Color",vector]=Color
+        EGP:egpColor(This["Base",number],Color)
+        EGP:egpColor(This["BaseOutline",number],Color/4)
+        EGP:egpColor(This["BaseText",number],Color/4)
+    }
+    function table:setPos(Pos:vector2)
+    {
+        This["Pos",vector2]=Pos
+        EGP:egpPos(This["Base",number],Pos)
+    }
+    function table:setSize(Size:vector2)
+    {
+        This["Size",vector2]=Size
+        EGP:egpLineStrip(This["BaseOutline",number],generateWindowOutline(Size,This["Closeable",number],This["Sizeable",number]))
+        EGP:egpPos(This["BaseText",number],-Size/2)
+        EGP:egpSize(This["Base",number],Size)
+        This:updateName()
+    }
+    function table:setSizeable(Bool:number)
+    {
+        This["Sizeable",number]=Bool
+        EGP:egpLineStrip(This["BaseOutline",number],generateWindowOutline(This["Size",vector2],This["Closeable",number],Bool))
+    }
+    function table:setCloseable(Bool:number)
+    {
+        This["Closeable",number]=Bool
+        EGP:egpLineStrip(This["BaseOutline",number],generateWindowOutline(This["Size",vector2],Bool,This["Sizeable",number]))
+    }
+    function table:setMaxSize(Size:vector2)
+    {
+        This["MaxSize",vector2]=Size
+        This:setSize(This["Size",vector2])
+    }
+    function table:setMinSize(Size:vector2)
+    {
+        This["MinSize",vector2]=Size
+        This:setSize(This["Size",vector2])
+    }
+    function table:setScript(FunctionName:string)
+    {
+        This["Script",string]=FunctionName
+    }
+    function void table:setCallbacks(CallbackTable:table)
+    {
+        Callbacks[This:id(),table]=table(
+        "Table"=This,
+        "CallbackTable"=CallbackTable
+        )
+    }
+    function void table:setIntervals(IntervalsTable:table)
+    {
+        foreach(I,K:string=IntervalsTable:keys())
+        {
+            Intervals[K,table]=table(
+            "Window"=This,
+            "Delay"=IntervalsTable[K,number]
+            )
+            timer(K,IntervalsTable[K,number])
+        }
+    }
+    function wirelink:egpDelete(I:number)
+    {
+        EGP:egpRemove(I)
+        SpareIndexes:pushNumber(I)
+    }
+    function table:kill()
+    {
+        This["Script",string](This,This["Persist",table],This["First",number],1,"",ZVec2,1,0,0)
+        Callbacks:remove(This:id())
+        EGP:egpDelete(This["Base",number])
+        EGP:egpDelete(This["BaseOutline",number])
+        EGP:egpDelete(This["BaseText",number])
+        This["DELETE",number]=1
+        foreach(I,K:number=Windows:keys())
+        {
+            local Window=Windows[K,table]
+            if(Window["DELETE",number])
+            {
+                Windows:remove(K)
+                break
+            }
+        }
+    }
+    #USER LIBRARIES
+        #UI LIBRARY:
+    function table table:createButton(Name:string,Pos:vector2,Size:vector2,Color:vector)
+    {
+        EGP:egpBox(newIndex(),Pos,Size)
+        EGP:egpParent(LastIndex,This["BaseText",number])
+        EGP:egpColor(LastIndex,Color)
+        local EGPObjects=array(LastIndex,newIndex())
+        EGP:egpText(LastIndex,Name,Pos+Size/2)
+        EGP:egpAlign(LastIndex,1,1)
+        EGP:egpFont(LastIndex,Font,FontSize)
+        EGP:egpParent(LastIndex,This["BaseText",number])
+        EGP:egpColor(LastIndex,Color/4)
+        local Table=table(
+            "Type"="Button",
+            "Objects"=EGPObjects,
+            "Pos"=Pos,
+            "Size"=Size,
+            "Bool"=0
+        )
+        if(!This["UILibrary",table])
+        {
+            This["UILibrary",table]=table()
+        }
+        This["UILibrary",table]:pushTable(Table)
+        return Table
+    }
+    function table table:createCheckbox(Name:string,Pos:vector2,Color:vector)
+    {
+        EGP:egpBox(newIndex(),Pos,vec2(20))
+        EGP:egpParent(LastIndex,This["BaseText",number])
+        EGP:egpMaterial(LastIndex,"icon16/cross.png")
+        local EGPObjects=array(LastIndex,newIndex())
+        EGP:egpText(LastIndex,Name,Pos+vec2(22,10))
+        EGP:egpAlign(LastIndex,0,1)
+        EGP:egpFont(LastIndex,Font,FontSize)
+        EGP:egpParent(LastIndex,This["BaseText",number])
+        EGP:egpColor(LastIndex,Color/4)
+        local Table=table(
+            "Type"="Checkbox",
+            "Objects"=EGPObjects,
+            "Pos"=Pos,
+            "Bool"=0
+        )
+        if(!This["UILibrary",table])
+        {
+            This["UILibrary",table]=table()
+        }
+        This["UILibrary",table]:pushTable(Table)
+        return Table
+    }
+    function void table:interact(Pos:vector2)
+    {
+        foreach(I,K:number=This["UILibrary",table]:keys())
+        {
+            local Element=This["UILibrary",table][K,table]
+            switch(Element["Type",string])
+            {
+                case "Button",
+                if(inrange(Pos,Element["Pos",vector2],Element["Pos",vector2]+Element["Size",vector2]))
+                {
+                    Element["Bool",number]=1
+                }
+                break
+                case "Checkbox",
+                if(inrange(Pos,Element["Pos",vector2],Element["Pos",vector2]+vec2(20)))
+                {
+                    Element["Bool",number]=!Element["Bool",number]
+                    if(Element["Bool",number])
+                    {
+                        EGP:egpMaterial(Element["Objects",array][1,number],"icon16/tick.png" )
+                    }
+                    else
+                    {
+                        EGP:egpMaterial(Element["Objects",array][1,number],"icon16/cross.png")
+                    }
+                }
+                break
+            }
+            
+        }
+    }
+    function number table:nval()
+    {
+        local Return=0
+        switch(This["Type",string])
+        {
+            case "Button",
+            Return=This["Bool",number]
+            This["Bool",number]=0
+            break
+            case "Checkbox",
+            Return=This["Bool",number]
+            break
+        }
+        return Return
+    }
+    function string table:sval()
+    {
+        
+    }
+    function void table:clearInterface()
+    {
+        foreach(I,K:number=This["UILibrary",table]:keys())
+        {
+            local Element=This["UILibrary",table][K,table]
+            foreach(I,ID:number=Element["Objects",array])
+            {
+                EGP:egpDelete(ID)
+            }
+        }
+        This:remove("UILibrary")
+    }
+        #UI LIBRARY END
+    #USER LIBRARIES END
+    
+    #USER CODE
+    local TaskBar=window(vec2(0,512-50),vec2(512,50))
+    function void taskBarScript(Main:table,Persist:table,First,KeyClk,Key:string,ClickPos:vector2,CloseClk,MoveClk,SizeClk)
+    {
+        if(First)
+        {
+            Main:setName("Task Bar")
+            Main:setColor(vec(200))
+            Persist["Chip",entity]=entity()
+        }
+        if(clk("updateInfo"))
+        {
+            Main:setName(Main["User",entity]:name()+"Task Bar. US:"+round(Persist["Chip",entity]:cpuUsage()*1000000)+"; OPS:"+Persist["Chip",entity]:ops()+"; Bytes:"+egpBytesLeft()+"; IDs in use:"+(Index-SpareIndexes:count())+".")
+        }
+        if(KeyClk)
+        {
+            
+        }
+        if(MoveClk)
+        {
+            Main:setPos(vec2(0,512-50))
+        }
+    }
+    TaskBar:setScript("taskBarScript")
+    TaskBar:setIntervals(table(
+    "updateInfo"=1000
+    ))
+    local Test=window(vec2(0,0),vec2(100))
+    function void testScript(Main:table,Persist:table,First,KeyClk,Key:string,ClickPos:vector2,CloseClk,MoveClk,SizeClk)
+    {
+        if(First)
+        {
+            Persist["Button",table]=Main:createButton("Test",vec2(5,20),vec2(69,20),vec(0,255,0))
+            Persist["Checkbox",table]=Main:createCheckbox("Check",vec2(5,50),vec(255,0,0))
+            Main:setSizeable(1)
+            Main:setCloseable(1)
+            Main:setName("test window")
+        }
+        if(Persist["Checkbox",table]:nval())
+        {
+            print(1)
+        }
+        if(KeyClk)
+        {
+            if(Key==InteractionButton)
+            {
+                Main:interact(ClickPos)
+                if(Persist["Button",table]:nval())
+                {
+                    Main:setColor(hsv2rgb(randint(0,360),1,1))
+                }
+            }
+        }
+        if(CloseClk)
+        {
+            Main:clearInterface() 
+        }
+    }
+    Test:setScript("testScript")
+    window(vec2(2),vec2(100)):setScript("testScript")
+    #USER CODE END
+    
+    runOnTick(1)
+    runOnPlayerConnect(1)
+    runOnPlayerDisconnect(1)
+    runOnKeys(players(),1)
+}
+if(playerConnectClk()|playerDisconnectClk())
+{
+    runOnKeys(players(),1)
+}
+local Presser=keyClk()
+local TickClk=tickClk()
+local ClkName=clkName()
+if(ClkName!="")
+{
+    if(Intervals[ClkName,table])
+    {
+        Intervals[ClkName,table]["Window",table]["Script",string](Intervals[ClkName,table]["Window",table],Intervals[ClkName,table]["Window",table]["Persist",table],Intervals[ClkName,table]["Window",table]["First",number],0,"",ZVec2,0,0,0)
+        timer(ClkName,Intervals[ClkName,table]["Delay",number])
+    }
+    else
+    {
+        error("Do not use timer(string,number) function! Use the Window:setIntervals(table(\"Name\"=Delay)) and check it inside of the window with clk(\"Name\")")
+    }
+}
+if(Presser)
+{
+    local PresserSteamID=Presser:steamID()
+    local Key=keyClkPressed()
+    if(!KeysTable[PresserSteamID,table])
+    {
+        KeysTable[PresserSteamID,table]=table()
+    }
+    KeysTable[PresserSteamID,table][Key,number]=!KeysTable[PresserSteamID,table][Key,number]
+    local Cursor=EGP:egpCursor(Presser)
+    if(KeysTable[PresserSteamID,table][Key,number])
+    {
+        if(Presser:aimEntity()==EGPEnt)
+        {
+            reCursor()
+            foreach(I,K:number=Windows:keys())
+            {
+                local Window=Windows[K,table]
+                local WindowPos=Window["Pos",vector2]
+                local WindowSize=Window["Size",vector2]
+                local LocalCursor=Cursor-WindowPos
+                if(inrange(LocalCursor,ZVec2,WindowSize))
+                {
+                    if(Key==InteractionButton)
+                    {
+                        EGP:egpOrder(Window["Base",number],1)
+                        EGP:egpOrder(Window["BaseText",number],2)
+                        EGP:egpOrder(Window["BaseOutline",number],2)
+                        Window["User",entity]=Presser
+                    }
+                    if(!Window["Users",table][PresserSteamID,table])
+                    {
+                        Window["Users",table][PresserSteamID,table]=table("User"=Presser)
+                    }
+                    if(Key==InteractionButton&inrange(LocalCursor,ZVec2,vec2(WindowSize:x(),10)))
+                    {
+                        if(Window["Closeable",number]&LocalCursor:x()>WindowSize:x()-10)
+                        {
+                            Window:kill()
+                            break
+                        }
+                        else
+                        {
+                            Window["Users",table][PresserSteamID,table]["Moving",number]=1
+                            Window["LocalGrab",vector2]=LocalCursor
+                            break
+                        }
+                    }
+                    elseif(Window["Sizeable",number]&Key==InteractionButton&inrange(LocalCursor,WindowSize-vec2(10),WindowSize))
+                    {
+                        Window["IterateCount",number]=Window["IterateCount",number]+1
+                        Window["Users",table][PresserSteamID,table]["Sizing",number]=1
+                        break
+                    }
+                    else
+                    {
+                        Window["Script",string](Window,Window["Persist",table],Window["First",number],1,Key,LocalCursor,0,0,0)
+                        Window["IterateCount",number]=Window["IterateCount",number]+1
+                        break
+                    }
+                }
+                else
+                {
+                    if(Key==InteractionButton)
+                    {
+                        EGP:egpOrder(Window["Base",number],2)
+                        EGP:egpOrder(Window["BaseText",number],3)
+                        EGP:egpOrder(Window["BaseOutline",number],3)
+                        if(Window["User",entity]==Presser)
+                        {
+                            Window["User",entity]=noentity()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        if(Key==InteractionButton)
+        {
+            foreach(I,K:number=Windows:keys())
+            {
+                local Window=Windows[K,table]
+                foreach(I,UserSteamID:string=Window["Users",table]:keys())
+                {
+                    local UserTable=Window["Users",table][UserSteamID,table]
+                    if(Presser==Window["Users",table][UserSteamID,table]["User",entity])
+                    {
+                        Window["Script",string](Window,Window["Persist",table],Window["First",number],0,InteractionButton,ZVec2,0,UserTable["Moving",number],UserTable["Sizing",number])
+                        Window["IterateCount",number]=Window["IterateCount",number]+1
+                        Window["Users",table]:remove(UserSteamID)
+                        break
+                    }
+                }
+            }
+        }
+    }
+}
+if(!TickClk&!Presser)
+{
+    foreach(I,TableID:string=Callbacks:keys())
+    {
+        foreach(I,CallbackName:string=Callbacks[TableID,table]["CallbackTable",table]:keys())
+        {
+            switch(Callbacks[TableID,table]["CallbackTable",table][CallbackName,string]:lower())
+            {
+                case "number",
+                if(CallbackName()[number])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "entity",
+                if(CallbackName()[entity])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "string",
+                if(CallbackName()[string])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "vector",
+                if(CallbackName()[vector])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "vector2",
+                if(CallbackName()[vector2])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "vector4",
+                if(CallbackName()[vector4])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "complex",
+                if(CallbackName()[complex])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "matrix",
+                if(CallbackName()[matrix])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "matrix2",
+                if(CallbackName()[matrix2])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "matrix4",
+                if(CallbackName()[matrix4])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "ranger",
+                if(CallbackName()[ranger])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "tracedata",
+                if(CallbackName()[tracedata])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "array",
+                if(CallbackName()[array])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "bone",
+                if(CallbackName()[bone])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "wirelink",
+                if(CallbackName()[wirelink])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                case "table",
+                if(CallbackName()[table])
+                {
+                    Callbacks[TableID,table]["Table",table]["Script",string](Callbacks[TableID,table]["Table",table],Callbacks[TableID,table]["Table",table]["Persist",table],Callbacks[TableID,table]["Table",table]["First",number],0,"",ZVec2,0,0,0)
+                }
+                break
+                default,
+                print("non existent callback return type: "+Callbacks[TableID,table]["CallbackTable",table][CallbackName,string])
+                break
+            }
+        }
+    }
+}
+if(TickClk)
+{
+    if(changed(CursorBlink))
+    {
+        if(CursorBlink)
+        {
+            EGP:egpColor(300,vec(255))
+            CursorBlink=0
+        }
+        else
+        {
+            EGP:egpColor(300,vec(255/2))
+        }
+    }
+    foreach(I,K:number=Windows:keys())
+    {
+        local Window=Windows[K,table]
+        foreach(I,UserSteamID:string=Window["Users",table]:keys())
+        {
+            local UserTable=Window["Users",table][UserSteamID,table]
+            local Cursor=EGP:egpCursor(UserTable["User",entity])
+            if(Cursor==vec2(-1))
+            {
+                continue
+            }
+            if(UserTable["Moving",number])
+            {
+                Window:setPos(round(Cursor-Window["LocalGrab",vector2]))
+            }
+            elseif(UserTable["Sizing",number])
+            {
+                Window:setSize(round(clamp(Cursor-Window["Pos",vector2],Window["MinSize",vector2],Window["MaxSize",vector2])/2)*2)
+            }
+        }
+        local Cursor=EGP:egpCursor(Window["User",entity])
+        if(Window["Script",string]!=""&!Window["IterateCount",number])
+        {
+            local LocalCursor=ZVec2
+            if(Window["User",entity]:aimEntity()==EGP:entity())
+            {
+                LocalCursor=Cursor-Window["Pos",vector2]
+            }
+            Window["Script",string](Window,Window["Persist",table],Window["First",number],0,"",LocalCursor,0,0,0)
+            if(Window["First",number])
+            {
+                Window["First",number]=0
+            }
+        }
+        Window["IterateCount",number]=0
+    }
+}

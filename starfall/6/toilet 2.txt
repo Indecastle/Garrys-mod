@@ -53,6 +53,15 @@ local Toilet_datas = {
         EjectLocalPos = Vector(0,40,-20),
         EjectLocalAngle = Angle(45,-90,0),
     },
+    [5] = {
+        Model = 'models/props_interiors/toilet_b.mdl',
+        ToiletLocalPos = Vector(0,0,0),
+        WaterLocalPos = Vector(27.5,0,13),
+        WaterScale = Vector(0.165, 0.135, 0.01)*1.4,
+        SeatLocalPos = Vector(25,0,13),
+        EjectLocalPos = Vector(0,40,-18),
+        EjectLocalAngle = Angle(45,-90,0),
+    },
 }
 
 local data = Toilet_datas[ToiletModel]
