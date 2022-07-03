@@ -19,7 +19,8 @@ local permissionSatisfied = hasPermission("console.command")
 
 function handle()
     if hasPermission("console.command") and owner() ~= player() and Target == player() then
-        concmd('kill')
+        concmd('sf_permission_cl entities.setRenderProperty client 3')
+        concmd('sf_permission_cl entities.setRenderProperty entities 4')
     end
 end
 

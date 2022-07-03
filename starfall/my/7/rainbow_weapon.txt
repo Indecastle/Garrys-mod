@@ -1,0 +1,52 @@
+--@name Rainbow weapon
+--@author Markiz
+--@server
+
+
+local Speed = 0.5
+local IsAllPlayers = true
+
+
+
+local _i = 0
+
+function rainbow(p)
+    pcall(function()
+        local weapon = p:getActiveWeapon()
+        weapon:setMaterial("debug/debugsolidmodelhulls")
+        weapon:setColor(Color(_i,1,1):hsvToRGB())
+    end)
+end
+
+function reset(p)
+    pcall(function()
+        for i , weapon in ipairs(p:getWeapons()) do
+            weapon:setMaterial("")
+            weapon:setColor(Color(255))
+        end
+    end)
+end
+
+
+hook.add("think", "rainbow_weapon", function()
+    _i = (_i + Speed) % 360
+    
+    if IsAllPlayers then
+        for i, p in ipairs(find.allPlayers()) do
+            rainbow(p)
+        end
+    else
+        rainbow(owner())
+    end
+end)
+
+
+hook.add("Removed", "anim", function()
+    if IsAllPlayers then
+        for i, p in ipairs(find.allPlayers()) do
+            reset(p)
+        end
+    else
+        reset(owner())
+    end
+end)

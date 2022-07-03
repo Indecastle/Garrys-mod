@@ -4,16 +4,87 @@
 --@shared
 
 
+local Delay = 2
+local AutoRemoveChip = false
+
+
+
 if SERVER then
+    chip():setSolid(false)
+    
+    local _counter = 0
+    local _havePermPlayers = {}
+    local _noHavePermPlayers = {}
+    local _theEnd = false
+    local _theEndFirstMessage = true
+    
+    function printPositivePlayer(player)
+        print(Color(200,255,200), '+ ', team.getColor(player:getTeam()), player:getName())
+    end
+    function printNegativePlayer(player)
+        print(Color(255,0,0), '- ', team.getColor(player:getTeam()), player:getName())
+    end
+    function printConnectingPlayer(player)
+        print(Color(200,0,0), '- ', team.getColor(player:getTeam()), player:getName(), Color(200,0,0), ' is connecting')
+    end
+    function printUnknownPlayer(player)
+        print(Color(150,0,0), '- ', team.getColor(player:getTeam()), player:getName(), Color(150,0,0), ' is unknown')
+    end
+    
+    print(Color(255), "========================")
+    
     hook.add("ClientInitialized", "cl_init", function(ply)
+        if ply == owner() then
+            timer.simple(Delay, function()
+                print(
+                    Color(200,255,200), 'Were hacked players: ', 
+                    Color(0,100,255), _counter, 
+                    Color(255), ' / ', 
+                    Color(0,100,255), #find.allPlayers())
+                    
+                print(Color(255), "========================")
+                print(Color(255,100,100), "No have permission players:")
+                for i, p in ipairs(_noHavePermPlayers) do
+                    printNegativePlayer(p)
+                end
+                for i, p in ipairs(find.allPlayers()) do
+                    if !table.hasValue(_havePermPlayers, p) and !table.hasValue(_noHavePermPlayers, p) then
+                        if p:isConnected() then
+                            printUnknownPlayer(p)
+                        else
+                            printConnectingPlayer(p)
+                        end
+                    end
+                end
+                print(Color(255), "========================")
+                
+                _theEnd = true
+                
+                if AutoRemoveChip then
+                   chip():remove() 
+                end
+            end)
+        end
+        
         net.start("init")
         net.send(ply)
     end)
     
     net.receive("hasPermission", function(len, ply)
         hasPerm = net.readBool()
+        if _theEnd and _theEndFirstMessage then
+            _theEndFirstMessage = false
+            print(Color(255), 'Other players:')
+        end
         if hasPerm then
-            print(team.getColor(ply:getTeam()), ''..ply:getName()..' ', Color(255,255,255), '+')
+            table.insert(_havePermPlayers, ply)
+            _counter = _counter + 1
+            printPositivePlayer(ply)
+        else
+            table.insert(_noHavePermPlayers, ply)
+            if _theEnd then
+                printNegativePlayer(ply)
+            end
         end
     end)
     

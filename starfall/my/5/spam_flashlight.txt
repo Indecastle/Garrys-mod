@@ -5,7 +5,7 @@
 local IsTarget = false
 local TryAuto = false
 --local Target = nil --owner()
-Target = find.playersByName("")[1]
+Target = find.playersByName("fir")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:1:54066003" then
         return true
@@ -32,7 +32,7 @@ function thinkHandler()
     hook.add("think", "", function()
         permissionSatisfied = hasPermission("console.command")
         
-        if permissionSatisfied and (!IsTarget or !Target or Target == player()) then
+        if input.isKeyDown(KEY.F) and permissionSatisfied and (!IsTarget or !Target or Target == player()) then
             concmd("impulse 100")
         end
     end)

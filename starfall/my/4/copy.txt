@@ -647,7 +647,7 @@ function constraintAll()
         for j, constData in ipairs(data.ConstraintData) do
             local first = DataEnts[constData.id]._entity2
             local second = data._entity2
-            if first ~= nil and second ~= nil then
+            if first ~= nil and first:isValid() and second ~= nil and second:isValid() then
                 if constData.Type == "Weld" then weldHandler(first, second)
                 elseif constData.Type == "NoCollide" then noCollideHandler(first, second)
                 elseif constData.Type == "Rope" then ropeHandler(first, second, constData) end

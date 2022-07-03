@@ -8,6 +8,7 @@ if(changed(owner():keyPressed("e")) & owner():keyPressed("e") & owner():aimEntit
 {
     #owner():aimEntity():remove()
     #print("owner: " + owner():name())
+    print("id: " + owner():aimEntity():id())
     print("name: " + owner():aimEntity():getName())
     print("owner: " + owner():aimEntity():owner():toString())
     print("entity: " + owner():aimEntity():toString())

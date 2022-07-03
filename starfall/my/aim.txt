@@ -13,8 +13,8 @@ local screenH = 900
 
 
 function gethead(ent)
-    if ent:lookupBone("ValveBiped.Bip01_Head1") then
-        local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+    if ent:lookupBone("ValveBiped.Bip01_Spine4") then
+        local pos = ent:getBonePosition(ent:lookupBone("ValveBiped.Bip01_Spine4"))
         return pos
     end
     return ent:localToWorld(ent:obbCenter())
@@ -26,7 +26,7 @@ function getclosest(r)
     for i, v in ipairs(find.allPlayers())
     do
         local kek = gethead(v)
-        print(kek)
+        --print(kek)
         local tbl = kek:toScreen()
         local x = tbl.x
         local y = tbl.y
@@ -34,7 +34,7 @@ function getclosest(r)
         if v != O and dist <= r and dist < min then
             lox = v
             min = dist
-		        end
+                end
     end
     return lox
 end
@@ -43,13 +43,13 @@ end
 if O == OO then
     if SERVER then
     
-        hook.add("Think", "aim Markiz",	function()
+        hook.add("Think", "aim Markiz",    function()
             local angle
-            if curastate then								
+            if curastate then                                
                 if tar != nil then
-                    angle = (gethead(tar) + tar:getVelocity() * game.getTickInterval() * 0.6 - O:getShootPos() - O:getVelocity() * game.getTickInterval() * 0.6):getAngle()
+                    angle = (gethead(tar) + tar:getVelocity() * game.getTickInterval() * -3 - O:getShootPos() - O:getVelocity() * game.getTickInterval() * 1.5+ Vector(0,0,0)):getAngle()
                 end
-                if angle != nil then		
+                if angle != nil then        
                     O:setEyeAngles(angle)      
                 end
             end
@@ -69,10 +69,12 @@ if O == OO then
     else        
         
         hook.add("inputPressed", "", function(button)
-            if button == MOUSE.MOUSE4 then
+            if button == KEY.X then
                 curastate = true
                 tar = getclosest(200)
-                print(tar)
+                --print(tar)
+                
+                if tar == nil then return end
                 
                 net.start("keyPressedHandler")
                 net.writeEntity(tar)
@@ -82,10 +84,10 @@ if O == OO then
         end)
         
         hook.add("inputReleased", "", function(button)
-            if button == MOUSE.MOUSE4 then
+            if button == KEY.X then
                 curastate = true
-                tar = getclosest(200)
-                print(tar)
+                --tar = getclosest(200)
+                --print(tar)
                 
                 net.start("keyReleasedHandler")
                 net.send()

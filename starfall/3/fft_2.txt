@@ -1,8 +1,7 @@
-//@name FFT
---@name 3D Music
+--@name FFT 
 --@author
 --@client
---@model models/props_lab/citizenradio.mdl
+--@model models/sligwolf/grocel/radio/ghettoblaster.mdl
 
 local fft={}
 
@@ -10,13 +9,13 @@ local fft={}
 mat = material.create("UnlitGeneric")
 mat:setInt("$flags",138414080)
 //mat:setInt("$flags", bit.bxor(bit.bor(2^11, 2^22, 2^27, 2^22)))
-mat:setTexture("$basetexture","gm_construct/grass1")
+mat:setTexture("$basetexture","models/alyx/emptool_glow")
 
-local url1 = "http://radio.licen777.ru/chechnya"
-local url2 = "http://radio.licen777.ru/stream"
-local url3 = "https://play.sas-media.ru/play_256"
-local url4 = "http://sv.wargaming.fm:8051/128"
-local url5 = "https://u.teknik.io/o2Fly.mp3"
+local url1 = "https://ru.hitmotop.com/get/music/20210521/Neizvesten_-_PUPPETMASTER_-_SWEET_DREAMS_72975732.mp3"
+local url2 = "https://ru.hitmotop.com/get/music/20210521/Neizvesten_-_PUPPETMASTER_-_SWEET_DREAMS_72975732.mp3"
+local url3 = "https://ru.hitmotop.com/get/music/20210521/Neizvesten_-_PUPPETMASTER_-_SWEET_DREAMS_72975732.mp3"
+local url4 = "https://ru.hitmotop.com/get/music/20210521/Neizvesten_-_PUPPETMASTER_-_SWEET_DREAMS_72975732.mp3"
+local url5 = "https://ru.hitmotop.com/get/music/20210521/Neizvesten_-_PUPPETMASTER_-_SWEET_DREAMS_72975732.mp3"
 
 local url = url4
 
@@ -50,7 +49,7 @@ function start()
                     
         for i=0,50,1 do
             render.setMaterial()
-            render.setColor(Color(i*4,1,1):hsvToRGB())
+            render.setColor(Color(0,0,255))
             render.draw3DBox(Vector(0+i*10,511,250),Angle(),Vector(),Vector(10,-50-(fft[i+1] or 0)*700,10))
         end
     end)

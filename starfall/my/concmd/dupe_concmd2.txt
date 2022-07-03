@@ -2,10 +2,12 @@
 --@name Generic
 --@author
 --@server
---@model models/spacecode/sfchip_small.mdl
+--@model models/cheeze/wires/nano_value.mdl
 
 chip():setNoDraw(true)
 chip():setSolid(false)
+chip():setColor(Color(0,0,0,0))
+chip():setMaterial("Models/effects/vol_light001")
 
 local Owner = owner()
 --Owner = find.playersByName("Mark")[1]
@@ -24,5 +26,5 @@ end
 
 
 hook.add("DupeFinished", "abc", function()
-    chip():remove()
+    --chip():remove()
 end)
