@@ -1,9 +1,9 @@
 --@name AFK 3
 --@author Markiz & OctopuSSX
---@client
+--@server
 
 local AFK = chip()
-//AFK = find.playersByName("mark")[1]
+--AFK = find.playersByName("mark")[1]
 /*AFK = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -16,7 +16,7 @@ local timerDelay = 2 // seconds
 local isHideTarget = false
 local ColorSpeed = 100
 local rotateSpeed = 100
-local textSize = Vector(1, 1.5, 1) * 2
+local textSize = Vector(1, 1.5, 1) * 10
 local textOffsetZ = 30 + 5 * textSize.z + textSize.z/1.1
 
 local materialName = "debug/debugportals" // models/debug/debugwhite
@@ -35,8 +35,8 @@ end
 
 local _startX, _startY = 512 - iterations, 512 + iterations
 local _endX, _endY = 512, 512
-render.createRenderTarget("afkscreen0")
-render.createRenderTarget("afkscreen")
+--render.createRenderTarget("afkscreen0")
+--render.createRenderTarget("afkscreen")
 
 
 local Base = holograms.create(pos(), Angle(), "models/holograms/cube.mdl")

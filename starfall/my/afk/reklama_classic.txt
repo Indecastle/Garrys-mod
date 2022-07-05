@@ -1,0 +1,80 @@
+--@name Reklama classic
+--@author Markiz
+--@include libs/3d2dtext.txt
+--@client
+
+dofile("libs/3d2dtext.txt")
+
+local Target = chip()
+--Target = find.playersByName("mark")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+//print(Target)
+
+local Data = {
+    {   text={"Классический Sandbox"}, 
+        //font = "Courier New",
+        fontSize=60, 
+        fontBold=1000, 
+        //bold=true,
+        color=Color(0,255,0),
+        margin=60,
+        --colorMode = 3,
+        rainbowColorSpace = 50,
+        rainbowReverse = false,
+        //colorSpeed = 1.3,
+    },
+    {   text={"не любишь PVP? Пропиши !build в чат",}, 
+        fontSize=40, 
+        fontBold=1000, 
+        margin=60,
+        //bold=true,
+        color=Color(255,180,50),
+        //colorMode = 3,
+        rainbowColorSpace = 10,
+        rainbowReverse = true,
+        //colorSpeed = 0.3,
+    },
+    {text={"----------------------------------------------"}, fontSize=40, fontBold=1000, marginUp=50},
+    {   text={"правила: !motd",
+                "сервер: 95.181.153.62:27015",}, 
+        fontSize=40, 
+        fontBold=1000, 
+        marginUp=40,
+    }
+}
+
+local Vars = {
+    Target= Target,
+
+    Mode=3,
+    isRotate=false,
+    rotateSpeed=100,
+    swaySpeed=2,
+    swayDegreesMax=0,
+    
+    IsStaticVertical=true,
+    IsDoubleData=true,
+    isHideTarget=true,
+    
+    shadowIterations=10,
+    shadowAlphaReverce=0,
+    shadowOffset=1,
+    
+    alphaGlobal=255,
+    
+    textSize=100*30,
+    DataOffsetZ=50,
+    
+    isParentPos=false,
+    isParentAngle=true,
+}
+
+
+
+
+obj = Text3D2D:new(Data, Vars)
+obj:run()

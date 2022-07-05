@@ -6,7 +6,7 @@
 local Radius = 400
 local Speed = 0.2
 
-local IsDamaging = true
+local IsDamaging = false
 local MaxDamage = 2
 
 

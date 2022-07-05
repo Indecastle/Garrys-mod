@@ -1,0 +1,72 @@
+--@name Flag Ukraine
+--@author
+--@client
+
+local _flag_ukraine = "https://i.imgur.com/xegOERy.png"
+
+local URL = _flag_ukraine
+
+local BoneScale = Vector(4,0.0001,0.0001)
+local BoneHeight = 1
+
+local FlagModel = 'models/pac/jiggle/base_cloth_4.mdl'
+
+
+local HPole = holograms.create(chip():localToWorld(Vector(0,0,42.231)), chip():getAngles(), "models/sprops/cylinders/size_1/cylinder_1_5x54.mdl", Vector(0.6,0.6,1.6))
+HPole:setMaterial("models/props_docks/dock01a")
+HPole:setParent(chip())
+
+local HPoleCap = holograms.create(chip():localToWorld(Vector(0,0,86)), chip():getAngles(), "models/sprops/geometry/sphere_24.mdl", Vector(0.075,0.075,0.075))
+HPoleCap:setMaterial("models/props_docks/dock01a")
+HPoleCap:setParent(chip())
+
+local HFlag = holograms.create(chip():localToWorld(Vector(0,-2,65)), chip():localToWorldAngles(Angle(0,0,-90)), FlagModel, Vector(1))
+HFlag:setParent(chip())
+HFlag:setMaterial("brick/brick_model")
+
+
+for i = 0, HFlag:getBoneCount() - 1 do
+    HFlag:manipulateBoneScale(i, BoneScale)
+    HFlag:manipulateBonePosition(i, Vector(0,0, BoneHeight))
+end
+
+
+local mat = material.create("UnlitGeneric")
+
+mat:setInt("$flags", 256)
+
+mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+    if m == nil then return end
+
+    local ratio = w / h
+
+    --local sh = maxh
+    --local sw = sh * ratio
+    --HFlag:setSize(Vector(sh, sw, 1))
+    
+    l(0, 0, m:getWidth(), m:getHeight())
+    
+    HFlag:setMaterial("!" .. mat:getName())
+end)
+
+
+
+
+hook.add("drawhud","myshook",function()
+    for i = 0, math.min(25, HFlag:getBoneCount() - 1) do
+        local pos = HFlag:getBonePosition(i):toScreen()
+        
+        local BoneName = HFlag:getBoneName(i)
+        --BoneName = string.sub(BoneName, 18)
+        local BonePos = HFlag:getManipulateBonePosition(i)
+        local BoneAngles = HFlag:getManipulateBoneAngles(i)
+        
+        local result = ''..i..' - '..BoneName
+        --local result = ''..i..' - '..BoneName.. ' = '..tostring(BonePos)
+        --local result = ''..i..' - '..BoneName.. ' = '..tostring(BoneAngles)
+        
+        --render.setFont(font)
+        render.setColor(Color(255,200,0))
+        render.drawText(pos.x, pos.y-10, result, 1)
+    end
+end)

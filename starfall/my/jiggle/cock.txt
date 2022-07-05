@@ -1,0 +1,98 @@
+--@name Cock
+--@author
+--@client
+
+local _flag1 = "https://i.imgur.com/zzN3yB7.png"
+local _flag_usa = "https://i.imgur.com/kw75Kap.png"
+local _flag_usa2 = "https://i.imgur.com/MfSJK63.png"
+
+local URL = _flag_usa2
+
+local BoneScale = Vector(2,2,0.0001)
+local BoneHeight = 2
+
+
+local effectData = effect:create()
+
+//effectData:setEntity(target)
+//effectData:setMagnitude(5)
+//effectData:setScale(0.2)
+//effectData:setRadius(1)
+//effectData:setNormal(hitNormal)
+
+//effectData:setFlags(5)
+//effectData:setSurfaceProp(254)
+//effectData:setDamageType(2^35 - 1)
+
+//effectData:setStart(hitPos)
+//effectData:setOrigin(hitPos))    
+
+
+
+
+
+local H1 = holograms.create(chip():getPos()+Vector(0,0,5), chip():getAngles(), "models/pac/jiggle/base_jiggle_5_gravity.mdl", Vector(1))
+
+
+H1:setParent(chip())
+H1:setMaterial("brick/brick_model")
+
+for i = 0, H1:getBoneCount() - 1 do
+    H1:manipulateBoneScale(i, BoneScale)
+    H1:manipulateBonePosition(i, Vector(0,0, BoneHeight))
+end
+
+H1:manipulateBoneScale(6, BoneScale*1.5)
+H1:manipulateBoneScale(7, BoneScale*0.5)
+H1:manipulateBoneScale(8, BoneScale*0.1)
+H1:manipulateBonePosition(8, Vector(0,0, -5))
+
+
+local mat = material.create("UnlitGeneric")
+
+mat:setInt("$flags", 256)
+
+mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+    if m == nil then return end
+
+    local ratio = w / h
+
+    --local sh = maxh
+    --local sw = sh * ratio
+    --H1:setSize(Vector(sh, sw, 1))
+    
+    l(0, 0, m:getWidth(), m:getHeight())
+    
+    H1:setMaterial("!" .. mat:getName())
+end)
+
+
+timer.create("cum", 0.2, 0, function()
+    local headPos, headAngles = H1:getBonePosition(H1:getBoneCount() - 1)
+    effectData:setNormal((headAngles + Angle(90,0,0)):getForward())
+    effectData:setOrigin(headPos)
+    --effectData:setStart(Vector(1,0,0))
+    effectData:setScale(0.5)
+    
+    effectData:play("StriderBlood")
+end)
+
+
+hook.add("drawhud","myshook",function()
+    for i = 0, math.min(25, H1:getBoneCount() - 1) do
+        local pos = H1:getBonePosition(i):toScreen()
+        
+        local BoneName = H1:getBoneName(i)
+        --BoneName = string.sub(BoneName, 18)
+        local BonePos = H1:getManipulateBonePosition(i)
+        local BoneAngles = H1:getManipulateBoneAngles(i)
+        
+        local result = ''..i..' - '..BoneName
+        --local result = ''..i..' - '..BoneName.. ' = '..tostring(BonePos)
+        --local result = ''..i..' - '..BoneName.. ' = '..tostring(BoneAngles)
+        
+        --render.setFont(font)
+        render.setColor(Color(255,200,0))
+        render.drawText(pos.x, pos.y-10, result, 1)
+    end
+end)
