@@ -1,0 +1,27 @@
+@name steering front
+@inputs A D BASE:entity 
+@outputs Turn TURN_ANGLE
+@persist SLAVE:entity [TURN_SPEED TURN_ANGLE TURN TILTRATE TILT]
+@model models/sprops/rectangles_thin/size_2/rect_12x12x1_5.mdl
+
+
+if (first()||duped()) {
+
+    interval(10)
+    
+    TURN_SPEED = 2
+    TURN_ANGLE = 90
+    SLAVE = entity()
+    
+} elseif (clk()) {
+
+    interval(10)
+
+if (!SLAVE:isPlayerHolding()) {
+    
+    TURN += clamp((A-D)*TURN_ANGLE - TURN, -TURN_SPEED, TURN_SPEED)
+    SLAVE:setAng(BASE:toWorld(ang(0, 90+TURN,0 )) )
+    SLAVE:propFreeze(1)
+
+    }
+}

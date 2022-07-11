@@ -6,26 +6,36 @@ local EntityCriticalPD = require("libs/criticalpd.txt")
 
 -------------- Init ---------------------------------------------
 
-local HoloTest = false
-local DegreeSpeed = 1
-local DiffTrace = 3
-local MaxTraces = 11
+local HoloTest = true
+local DiffTrace = 3.9
+local MaxTraces = 15
 
 local IsSetPos = false
-local CustomForceSpeed = 100
+local CustomSetPosSpeed = 150
+local CustomForceSpeed = 300
+
+local LocalPos1 = Vector(100,50,0)
+local LocalPos2 = Vector(-100,50,0)
+local LocalPosCenter= Vector(0,50,0)
+local OffsetHeight = 50
+
 
 function calcDegree(degree)
     if IsSetPos then
-        return degree
+        return degree*1.15
     else
-        return math.sign(degree) * (degree^2) * 2
+        --degree = degree + 2
+        --return math.sign(degree) * ((degree*0.5)^2) * 2 - 2
+        return math.sign(degree) * ((degree*1)^2) * 2.2
     end
 end
 
 
-
 -----------------------------------------------------------------
 
+local _MaxDiff = DiffTrace * MaxTraces
+local _CenterDiff = _MaxDiff / 2
+    
 local CenterNumber = math.round(MaxTraces / 2)
 local E = chip()
 local pos = E:getPos() + Vector(0,0,50)
@@ -76,10 +86,6 @@ local _pos = P:getPos()
 local _ang = P:getAngles()
 
 
-local LocalPos1 = Vector(100,50,0)
-local LocalPos2 = Vector(-100,50,0)
-local LocalPosCenter= Vector(0,50,0)
-
 --local H1 = holograms.create(P:localToWorld(LocalPos1), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.5)) --H1:setParent(P)
 --local H2 = holograms.create(P:localToWorld(LocalPos2), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.5)) --H2:setParent(P)
 
@@ -98,7 +104,7 @@ end
 function rotate(pos, ang)
     local down = Vector(0,0,-1)
     local pos0 = P:getPos()
-    local tr = trace.trace(pos0, pos0 + down:getNormalized()*100, {P}, MASK.ALL, nil, false)
+    local tr = trace.trace(pos0, pos0 + down:getNormalized()*(OffsetHeight+200), {P}, MASK.ALL, nil, false)
     local dist = tr.Hit and pos0:getDistance(tr.HitPos) or 0
     
     local dir = ang:getForward()
@@ -108,7 +114,7 @@ function rotate(pos, ang)
     if tr.Hit then
         --print(dist)
         --local dist2 = (50-dist) * 5
-        pos.z = tr.HitPos.z + 50
+        pos.z = tr.HitPos.z + OffsetHeight
         --pd:simulateForceCustomError(Vector(0,0,0), Vector(0,0,dist) - P:getVelocity())
         
         --local force = Vector(0,0,dist2) - P:getVelocity()
@@ -127,36 +133,34 @@ function rotate(pos, ang)
 end
 
 function getRotate(p0, a0, localPos, degree)
-    local p1, a1 = localToWorld(localPos, Angle(0, calcDegree(degree*DegreeSpeed), 0), p0, a0)
+    local p1, a1 = localToWorld(localPos, Angle(0, calcDegree(degree), 0), p0, a0)
     local p2, a2 = localToWorld(-localPos, Angle(0,0,0), p1, a1)
     return p2, a2
 end
 
 
 function findMetal(trs, trdist, hs)
-    local diffH = 5
+    local diffH = 2
     
-    local maxI = 0
+    local maxI = 1
+    local minI1 = 1
+    local maxI1 = 1
+    
+    --------------------
     for i=1, MaxTraces do
-        if maxI == 0 then
-            maxI = i;
-        elseif trdist[i] < trdist[maxI] then
+        if trdist[i] < trdist[maxI] then
             maxI = i
         end
     end
-    
     --------------------
-    local minI1 = 0
     for i=1, MaxTraces do
-        if minI1 == 0 then
-            minI1 = i;
-        elseif trdist[i] > trdist[maxI] + diffH then
+        if trdist[i] > trdist[maxI] + diffH then
             minI1 = i
             break
         end
     end
     --------------------
-    local maxI1 = minI1
+    --maxI1 = minI1
     for i=minI1, MaxTraces do
         if trdist[i] < trdist[maxI] + diffH then
             maxI1 = i
@@ -179,9 +183,6 @@ function trace_one(localPos, hs, isPositiveRotate)
     local down = Vector(0,0,-1)
     local right = P:getRight()
     
-    local maxDiff = DiffTrace * MaxTraces
-    local centerDiff = maxDiff / 2
-    
     local trs = {}
     --local trb = {}
     local trdist = {}
@@ -193,7 +194,7 @@ function trace_one(localPos, hs, isPositiveRotate)
         
         --local worldPos, _ = localToWorld(localPos, Angle(), p0, a0)
         local worldPos = P:localToWorld(localPos)
-        local pos = worldPos - balanceDir*(-centerDiff + DiffTrace*(i-1))
+        local pos = worldPos - balanceDir*(-_CenterDiff + DiffTrace*(i-1))
         trs[#trs+1] = trace.trace(pos, pos + down:getNormalized()*1000, {P}, MASK.ALL, nil, false)
         trdist[#trdist+1] = trs[i].Hit and pos:getDistance(trs[i].HitPos) or 0
         --trb[#trb+1] = trs[i].MatType == MAT.METAL
@@ -237,24 +238,24 @@ function trace_handle()
     end
 end
 
-
+/*
 local oldVel = 0
 function balance_handle()
     local down = P:getUp() * -1
     local pos = P:getPos()
-    local tr = trace.trace(pos, pos + down:getNormalized()*100, {P}, MASK.ALL, nil, false)
+    local tr = trace.trace(pos, pos + down:getNormalized()*(OffsetHeight+100), {P}, MASK.ALL, nil, false)
     local dist = tr.Hit and pos:getDistance(tr.HitPos) or 0
     
     if tr.Hit then
         --print(dist)
-        local dist2 = (50-dist) * 5
+        local dist2 = (OffsetHeight) * 5
         --pd:simulateForceCustomError(Vector(0,0,0), Vector(0,0,dist) - P:getVelocity())
         
         local force = Vector(0,0,dist2) - P:getVelocity()
         P:applyForceCenter(force*P:getMass())
     end
 end
-
+*/
 
 function customForce(speed)
     if IsSetPos then
@@ -283,12 +284,12 @@ hook.add("think", "", function()
     trace_handle()
     --balance_handle()
     
-    
+    local forceValue = IsSetPos and CustomSetPosSpeed or CustomForceSpeed
     if _IsKeyPressed_G then
-        customForce(CustomForceSpeed)
+        customForce(forceValue)
     end
     if _IsKeyPressed_H then
-        customForce(-CustomForceSpeed)
+        customForce(-forceValue)
     end
     
     
