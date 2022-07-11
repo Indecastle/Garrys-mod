@@ -308,7 +308,7 @@ mapperLocal = {
         end,
         update = function(data)
             local targetData = DataEnts[data.SentData.BaseId]
-            if targetData._entity2 ~= nil then
+            if targetData ~= nil and targetData._entity2 ~= nil then
                 data.SentData.Base = targetData._entity2
                 data.SentData.BaseId = nil
                 --data.SentData.LAxis = targetData.ConstraintData.LAxis

@@ -202,8 +202,8 @@ else
                         end
                         
                         local color = Color(0,0,0)
-                        if dist != -1 then
-                            if bit.band(tr.SurfaceFlags, 8) != 0 then
+                        if dist ~= -1 then
+                            if bit.band(tr.SurfaceFlags, 8) ~= 0 then
                                 color = Color(0,200,200)
                             else
                                 color = render.traceSurfaceColor(tr.HitNormal + tr.HitPos, tr.HitPos - tr.HitNormal)

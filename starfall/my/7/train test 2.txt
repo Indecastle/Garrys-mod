@@ -1,0 +1,299 @@
+--@name sf train test 2
+--@author Mar
+--@include libs/criticalpd.txt
+--@shared
+local EntityCriticalPD = require("libs/criticalpd.txt")
+
+-------------- Init ---------------------------------------------
+
+local HoloTest = false
+local DegreeSpeed = 1
+local DiffTrace = 3
+local MaxTraces = 11
+
+local IsSetPos = false
+local CustomForceSpeed = 100
+
+function calcDegree(degree)
+    if IsSetPos then
+        return degree
+    else
+        return math.sign(degree) * (degree^2) * 2
+    end
+end
+
+
+
+-----------------------------------------------------------------
+
+local CenterNumber = math.round(MaxTraces / 2)
+local E = chip()
+local pos = E:getPos() + Vector(0,0,50)
+local ang = E:getAngles()
+local pos2 = pos + Vector(0,0,10)
+
+local _IsKeyPressed_G = false
+local _IsKeyPressed_H = false
+
+-----------------------------------------------------------------
+if CLIENT then
+    if owner() == player() then
+        hook.add("inputPressed", "", function(key)
+            net.start("inputPressed")
+            net.writeInt(key, 8)
+            net.send()
+        end)
+        hook.add("inputReleased", "cheat spectator", function(key)
+            net.start("inputReleased")
+            net.writeInt(key, 8)
+            net.send()
+        end)
+    end
+    return
+end
+net.receive("inputPressed", function (len, ply)
+    local key = net.readInt(8)
+    if key == KEY.G then _IsKeyPressed_G = true end
+    if key == KEY.H then _IsKeyPressed_H = true end
+end)
+net.receive("inputReleased", function (len, ply)
+    local key = net.readInt(8)
+    if key == KEY.G then _IsKeyPressed_G = false end
+    if key == KEY.H then _IsKeyPressed_H = false end
+end)
+-----------------------------------------------------------------
+
+
+local ents = find.byClass("prop_physics", function(ent)
+    return ent:getPos():getDistance(E:getPos()) < 1000
+end)
+local P = find.closest(ents, E:getPos())  -- models/sprops/rectangles/size_6/rect_96x240x3.mdl
+--P:enableGravity(false)
+
+local pd = EntityCriticalPD:new(P, 500, 500)
+
+local _pos = P:getPos()
+local _ang = P:getAngles()
+
+
+local LocalPos1 = Vector(100,50,0)
+local LocalPos2 = Vector(-100,50,0)
+local LocalPosCenter= Vector(0,50,0)
+
+--local H1 = holograms.create(P:localToWorld(LocalPos1), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.5)) --H1:setParent(P)
+--local H2 = holograms.create(P:localToWorld(LocalPos2), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.5)) --H2:setParent(P)
+
+local Hs1 = {}
+local Hs2 = {}
+if HoloTest then
+    for i=1, MaxTraces do
+        Hs1[#Hs1+1] = holograms.create(P:localToWorld(LocalPos1), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.2))
+    end
+    for i=1, MaxTraces do
+        Hs2[#Hs2+1] = holograms.create(P:localToWorld(LocalPos2), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.2))
+    end
+end
+
+
+function rotate(pos, ang)
+    local down = Vector(0,0,-1)
+    local pos0 = P:getPos()
+    local tr = trace.trace(pos0, pos0 + down:getNormalized()*100, {P}, MASK.ALL, nil, false)
+    local dist = tr.Hit and pos0:getDistance(tr.HitPos) or 0
+    
+    local dir = ang:getForward()
+    dir.z = 0
+    local balanceAng = (dir:getNormalized():getAngle())
+    
+    if tr.Hit then
+        --print(dist)
+        --local dist2 = (50-dist) * 5
+        pos.z = tr.HitPos.z + 50
+        --pd:simulateForceCustomError(Vector(0,0,0), Vector(0,0,dist) - P:getVelocity())
+        
+        --local force = Vector(0,0,dist2) - P:getVelocity()
+        --P:applyForceCenter(force*P:getMass())
+        
+        _pos = pos
+        _ang = ang
+        if IsSetPos then
+            P:setPos(pos)
+            P:setAngles(balanceAng)
+        else
+            pd:setTarget(pos, balanceAng)
+            pd:simulate()
+        end
+    end
+end
+
+function getRotate(p0, a0, localPos, degree)
+    local p1, a1 = localToWorld(localPos, Angle(0, calcDegree(degree*DegreeSpeed), 0), p0, a0)
+    local p2, a2 = localToWorld(-localPos, Angle(0,0,0), p1, a1)
+    return p2, a2
+end
+
+
+function findMetal(trs, trdist, hs)
+    local diffH = 5
+    
+    local maxI = 0
+    for i=1, MaxTraces do
+        if maxI == 0 then
+            maxI = i;
+        elseif trdist[i] < trdist[maxI] then
+            maxI = i
+        end
+    end
+    
+    --------------------
+    local minI1 = 0
+    for i=1, MaxTraces do
+        if minI1 == 0 then
+            minI1 = i;
+        elseif trdist[i] > trdist[maxI] + diffH then
+            minI1 = i
+            break
+        end
+    end
+    --------------------
+    local maxI1 = minI1
+    for i=minI1, MaxTraces do
+        if trdist[i] < trdist[maxI] + diffH then
+            maxI1 = i
+            break
+        end
+    end
+    --------------------
+    
+    if HoloTest then
+        hs[minI1]:setColor(Color(255,255,0))
+        hs[maxI1]:setColor(Color(0,255,0))
+    end
+    
+    return maxI1
+end
+
+
+function trace_one(localPos, hs, isPositiveRotate)
+    --local down = P:getUp() * -1
+    local down = Vector(0,0,-1)
+    local right = P:getRight()
+    
+    local maxDiff = DiffTrace * MaxTraces
+    local centerDiff = maxDiff / 2
+    
+    local trs = {}
+    --local trb = {}
+    local trdist = {}
+    local isHaveMetal = false
+    for i=1, MaxTraces do
+        local dir = P:getForward()
+        dir.z = 0
+        local balanceDir = (dir:getNormalized():getAngle()):getRight()
+        
+        --local worldPos, _ = localToWorld(localPos, Angle(), p0, a0)
+        local worldPos = P:localToWorld(localPos)
+        local pos = worldPos - balanceDir*(-centerDiff + DiffTrace*(i-1))
+        trs[#trs+1] = trace.trace(pos, pos + down:getNormalized()*1000, {P}, MASK.ALL, nil, false)
+        trdist[#trdist+1] = trs[i].Hit and pos:getDistance(trs[i].HitPos) or 0
+        --trb[#trb+1] = trs[i].MatType == MAT.METAL
+        if trs[i].MatType == MAT.METAL then
+            isHaveMetal = true
+        end
+        
+        if HoloTest then
+            hs[i]:setColor(Color(255,0,0))
+            hs[i]:setPos(trs[i].HitPos)
+        end
+    end
+    
+    if !isHaveMetal then
+        return nil
+    end
+    local maxI1 = findMetal(trs, trdist, hs)
+    if maxI1 ~= 0 then
+        local diffNum = CenterNumber - maxI1
+        return isPositiveRotate and diffNum or -diffNum
+        --if diffNum ~= 0 then rotate(localPos2, isPositiveRotate and diffNum or -diffNum) end
+    end
+end
+
+
+function trace_handle()
+    local pos, ang = P:getPos(), P:getAngles()
+    
+    local diffNum1 = trace_one(LocalPos1, Hs1, false)
+    if diffNum1 ~= nil and diffNum1 ~= 0 then 
+        pos, ang = getRotate(pos, ang, LocalPos2, diffNum1) 
+    end
+    
+    local diffNum2 = trace_one(LocalPos2, Hs2, true)
+    if diffNum2 ~= nil and diffNum2 ~= 0 then 
+        pos, ang = getRotate(pos, ang, LocalPos1, diffNum2) 
+    end
+    
+    if diffNum1 ~= nil and diffNum2 ~= nil then
+        rotate(pos, ang)
+    end
+end
+
+
+local oldVel = 0
+function balance_handle()
+    local down = P:getUp() * -1
+    local pos = P:getPos()
+    local tr = trace.trace(pos, pos + down:getNormalized()*100, {P}, MASK.ALL, nil, false)
+    local dist = tr.Hit and pos:getDistance(tr.HitPos) or 0
+    
+    if tr.Hit then
+        --print(dist)
+        local dist2 = (50-dist) * 5
+        --pd:simulateForceCustomError(Vector(0,0,0), Vector(0,0,dist) - P:getVelocity())
+        
+        local force = Vector(0,0,dist2) - P:getVelocity()
+        P:applyForceCenter(force*P:getMass())
+    end
+end
+
+
+function customForce(speed)
+    if IsSetPos then
+        P:setPos(P:localToWorld(Vector(speed,0,0)))
+    else
+        pd:simulateForceCustomError(P:getForward()*speed, Vector(0))
+    end
+end
+
+
+hook.add("think", "", function()
+    /*local ang = P:getAngles()
+    local dir = ang:getForward()
+    dir.z = 0
+    local balanceAng = (dir:getNormalized():getAngle())
+    --balanceAng.y = 0
+    
+    pd:setTargetAng(balanceAng)
+    P:setAngles(balanceAng)
+    pd:simulateAngForce()*/
+    
+    --pd:setTarget(E:getPos() + Vector(0,-50,0), E:getAngles())
+    --pd:simulate()
+    --pd:simulateForceCustomError(Vector(100,0,10), Vector(100,0,0))
+    
+    trace_handle()
+    --balance_handle()
+    
+    
+    if _IsKeyPressed_G then
+        customForce(CustomForceSpeed)
+    end
+    if _IsKeyPressed_H then
+        customForce(-CustomForceSpeed)
+    end
+    
+    
+end)
+
+
+
+

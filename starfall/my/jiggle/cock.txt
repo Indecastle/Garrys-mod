@@ -5,8 +5,13 @@
 local _flag1 = "https://i.imgur.com/zzN3yB7.png"
 local _flag_usa = "https://i.imgur.com/kw75Kap.png"
 local _flag_usa2 = "https://i.imgur.com/MfSJK63.png"
+local _flag1 = "https://i.imgur.com/zzN3yB7.png"
+local _flag_belarus = "https://i.imgur.com/XUxgnEu.png"
+local _flag_ukraine = "https://i.imgur.com/xegOERy.png"
+local _flag_russia = "https://i.imgur.com/jR2vDAC.png"
+local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
 
-local URL = _flag_usa2
+local URL = _flag_usa
 
 local BoneScale = Vector(2,2,0.0001)
 local BoneHeight = 2

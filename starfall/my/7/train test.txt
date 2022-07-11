@@ -1,0 +1,146 @@
+--@name sf train test
+--@author Mar
+--@include libs/criticalpd.txt
+--@server
+
+local EntityCriticalPD = require("libs/criticalpd.txt")
+
+
+local E = chip()
+local DiffTrace = 2
+local MaxTraces = 21
+local CenterNumber = math.round(MaxTraces / 2)
+
+
+local pos = E:getPos() + Vector(0,0,50)
+local ang = E:getAngles()
+local pos2 = pos + Vector(0,0,10)
+
+
+local ents = find.byClass("prop_physics", function(ent)
+    return ent:getPos():getDistance(E:getPos()) < 1000
+end)
+local P = find.closest(ents, E:getPos())  -- models/sprops/rectangles/size_6/rect_96x240x3.mdl
+P:enableGravity(false)
+
+local pd = EntityCriticalPD:new(P, 500, 500)
+
+
+
+local LocalPos1 = Vector(100,50,0)
+local LocalPos2 = Vector(-100,50,0)
+local LocalPosCenter= Vector(0,50,0)
+
+--local H1 = holograms.create(P:localToWorld(LocalPos1), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.5)) --H1:setParent(P)
+--local H2 = holograms.create(P:localToWorld(LocalPos2), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.5)) --H2:setParent(P)
+
+local Hs1 = {}
+for i=1, MaxTraces do
+    Hs1[#Hs1+1] = holograms.create(P:localToWorld(LocalPos1), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.2))
+end
+local Hs2 = {}
+for i=1, MaxTraces do
+    Hs2[#Hs2+1] = holograms.create(P:localToWorld(LocalPos2), E:getAngles(), "models/holograms/hq_sphere.mdl", Vector(0.2))
+end
+
+
+function rotate(localPos, degree)
+    local p1, a1 = localToWorld(-localPos, Angle(0,0,0), P:localToWorld(localPos), P:localToWorldAngles(Angle(0,degree/2,0)))
+    P:setPos(p1)
+    P:setAngles(a1)
+    --pd:setTarget(p1, a1)
+    --pd:simulate()
+end
+
+
+function trace_handle()
+    local down = P:getUp() * -1
+    local right = P:getRight()
+    
+    local pos1 = P:localToWorld(LocalPos1)
+    local pos2 = P:localToWorld(LocalPos2)
+    local maxDiff = DiffTrace * MaxTraces
+    local centerDiff = maxDiff / 2
+    
+    local trs1 = {}
+    local trb1 = {}
+    local isNotForced1 = true
+    for i=1, MaxTraces do
+        local pos = P:localToWorld(LocalPos1 + Vector(0,-centerDiff + DiffTrace*(i-1),0))
+        trs1[#trs1+1] = trace.trace(pos, pos + down:getNormalized()*1000, {P}, MASK.ALL, nil, false)
+        trb1[#trb1+1] = trs1[i].MatType == MAT.METAL
+        
+        if trb1[i] and isNotForced1 then
+            isNotForced1 = false
+            local diffNum = CenterNumber - i
+            if diffNum ~= 0 then rotate(LocalPos2, -diffNum) end
+        end
+        
+        if trb1[i] then
+            Hs1[i]:setColor(Color(0,255,0))
+        else
+            Hs1[i]:setColor(Color(255,0,0))
+        end
+        Hs1[i]:setPos(trs1[i].HitPos)
+    end
+    
+    local trs2 = {}
+    local trb2 = {}
+    local isNotForced2 = true
+    for i=1, MaxTraces do
+        local pos = P:localToWorld(LocalPos2 + Vector(0,-centerDiff + DiffTrace*(i-1),0))
+        trs2[#trs2+1] = trace.trace(pos, pos + down:getNormalized()*1000, {P}, 24737, nil, false)
+        trb2[#trb2+1] = trs2[i].MatType == MAT.METAL
+        
+        if trb2[i] and isNotForced2 then
+            isNotForced2 = false
+            local diffNum = CenterNumber - i
+            if diffNum ~= 0 then rotate(LocalPos1, diffNum) end
+        end
+        
+        if trb2[i] then
+            Hs2[i]:setColor(Color(0,255,0))
+        else
+            Hs2[i]:setColor(Color(255,0,0))
+        end
+        Hs2[i]:setPos(trs2[i].HitPos)
+    end
+    
+    
+    
+    
+end
+
+local oldVel = 0
+function balance_handle()
+    local down = P:getUp() * -1
+    local pos = P:getPos()
+    local tr = trace.trace(pos, pos + down:getNormalized()*100, nil, 24737, nil, false)
+    local dist = tr.Hit and pos:getDistance(tr.HitPos) or 0
+    
+    if tr.Hit then
+        --print(dist)
+        local dist2 = (50-dist) * 5
+        --pd:simulateForceCustomError(Vector(0,0,0), Vector(0,0,dist) - P:getVelocity())
+        
+        local force = Vector(0,0,dist2) - P:getVelocity()
+        P:applyForceCenter(force*P:getMass())
+    end
+end
+
+
+hook.add("think", "", function()
+    local ang = P:getAngles()
+    local dir = ang:getForward()
+    dir.z = 0
+    local balanceAng = (dir:getNormalized():getAngle())
+    --balanceAng.y = 0
+    
+    pd:setTargetAng(balanceAng)
+    pd:simulateAngForce()
+    --pd:simulateForceCustomError(Vector(100,0,10), Vector(100,0,0))
+    
+    --test_holo()
+    trace_handle()
+    balance_handle()
+end)

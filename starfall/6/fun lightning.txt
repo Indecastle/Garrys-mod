@@ -1,4 +1,4 @@
---@name crush lightning
+--@name fun lightning
 --@author
 --@client
 
@@ -31,7 +31,7 @@ timer.create("kek", 0.01, 0, function()
     
         
         effectData:setEntity(target)
-        effectData:setMagnitude(1000)
+        effectData:setMagnitude(10)
         effectData:setScale(4)
         effectData:setRadius(4000)
         

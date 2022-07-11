@@ -32,16 +32,11 @@ if SERVER then
     end
     
     print(Color(255), "========================")
+    print(Color(200,255,200), "Have permission players:")
     
     hook.add("ClientInitialized", "cl_init", function(ply)
         if ply == owner() then
-            timer.simple(Delay, function()
-                print(
-                    Color(200,255,200), 'Were hacked players: ', 
-                    Color(0,100,255), _counter, 
-                    Color(255), ' / ', 
-                    Color(0,100,255), #find.allPlayers())
-                    
+            timer.simple(Delay, function()    
                 print(Color(255), "========================")
                 print(Color(255,100,100), "No have permission players:")
                 for i, p in ipairs(_noHavePermPlayers) do
@@ -56,6 +51,13 @@ if SERVER then
                         end
                     end
                 end
+                print(
+                    Color(255,0,255), "( ",
+                    Color(255,200,0), 'Were hacked players: ', 
+                    Color(100,255,100), _counter, 
+                    Color(255), ' / ', 
+                    Color(255), #find.allPlayers(),
+                    Color(255,0,255), " )")
                 print(Color(255), "========================")
                 
                 _theEnd = true

@@ -9,13 +9,13 @@ local _flag_russia = "https://i.imgur.com/jR2vDAC.png"
 local _flag_usa = "https://i.imgur.com/lIfVWWm.png"
 local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
 
-local URL = _flag_usa
+local URL = _flag_belarus
 
 local BoneScale = Vector(4,0.0001,0.0001)
 local Degree = 0
 local BoneHeight = 1
 
-local FlagModel = 'models/pac/jiggle/base_cloth_4_gravity.mdl'
+local FlagModel = 'models/pac/jiggle/base_cloth_4.mdl'
 
 
 local HPole = holograms.create(chip():localToWorld(Vector(0,0,42.231)), chip():getAngles(), "models/sprops/cylinders/size_1/cylinder_1_5x54.mdl", Vector(0.6,0.6,1.6))
@@ -44,7 +44,7 @@ mat:setInt("$flags", 256)
 mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
     if m == nil then return end
 
-    local ratio = w / h
+    --ocal ratio = w / h
 
     --local sh = maxh
     --local sw = sh * ratio

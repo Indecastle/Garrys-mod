@@ -1,0 +1,156 @@
+@name [A] - Train test
+@inputs 
+@outputs 
+@persist [Long Speed]:number
+@persist Localisation:number
+@persist E:entity
+@persist Y Z
+@persist [RFD RFM RFG]:ranger
+@persist [RBD RBM RBG]:ranger
+@trigger 
+@model models/hunter/plates/plate075x105.mdl
+
+
+if(first() | dupefinished()){
+    runOnTick(1)
+    runOnLast(1)
+    hint("Made By Adrien",20)
+
+    Long=50 #Long of the train
+    Speed=15
+    Localisation=1 #Does the service of localisation is on
+    E=entity()
+    timer("retest",2000)
+    
+    if(Localisation){print("Localisation.. Wait")}
+    
+    holoCreate(1, E:toWorld(vec(50,Long,0)), vec(0.1), E:toWorld(ang(0,0,0)))
+    holoParent(1, E)
+    
+    holoCreate(2, holoEntity(1):toWorld(vec(-4,0,0)), vec(0.1), E:toWorld(ang(0,0,0)))
+    holoParent(2, holoEntity(1))
+    
+    holoCreate(3, holoEntity(1):toWorld(vec(4,0,0)), vec(0.1), E:toWorld(ang(0,0,0)))
+    holoParent(3, holoEntity(1))
+    
+    holoCreate(4)
+    holoParent(4, holoEntity(1))
+    holoCreate(5)
+    holoParent(5, holoEntity(2))
+    holoCreate(6)
+    holoParent(6, holoEntity(3))
+    
+    holoCreate(7, E:toWorld(vec(50,-Long,0)), vec(0.1), E:toWorld(ang(0,0,0)))
+    holoParent(7, E)
+    
+    holoCreate(8, holoEntity(7):toWorld(vec(-4,0,0)), vec(0.1), E:toWorld(ang(0,0,0)))
+    holoParent(8, holoEntity(7))
+    
+    holoCreate(9, holoEntity(7):toWorld(vec(4,0,0)), vec(0.1), E:toWorld(ang(0,0,0)))
+    holoParent(9, holoEntity(7))
+    
+    holoCreate(10)
+    holoParent(10, holoEntity(7))
+    holoCreate(11)
+    holoParent(11, holoEntity(8))
+    holoCreate(12)
+    holoParent(12, holoEntity(9))
+    
+
+}
+
+function vector heightc(RD:ranger, RM:ranger, RG:ranger){
+    RDLong=RD:pos():z()
+    RMLong=RM:pos():z()
+    RGLong=RG:pos():z()
+    
+    if(floor(RDLong)<floor(RMLong) & floor(RDLong)==floor(RGLong)){
+        return vec(0,1,0)
+    }
+    if(floor(RGLong)<floor(RMLong) & floor(RDLong)==floor(RGLong)){
+        return vec(0,1,0)
+    }
+    if(floor(RGLong)==floor(RMLong)==floor(RDLong)){
+        return vec(0,0,0)
+    }
+    if(floor(RDLong)>floor(RMLong) & floor(RDLong)>floor(RGLong)){
+        return vec(1,0,0)
+    }
+    if(floor(RGLong)>floor(RMLong) & floor(RGLong)>floor(RDLong)){
+        return vec(0,0,1)
+    }
+    if(floor(RGLong)==floor(RMLong) & floor(RMLong)>floor(RDLong)){
+        return vec(0,1,1)
+    }
+    if(floor(RGLong)==floor(RMLong) & floor(RMLong)>floor(RDLong)){
+        return vec(1,1,0)
+    }
+    if(floor(RGLong)==floor(RMLong)==floor(RDLong)){
+        return vec(1,1,1)
+    }
+    else{return vec(1,1,1)}
+    
+
+}
+RFD = rangerOffset(300, holoEntity(2):toWorld(vec(0,0,0)),vec(0,0,-1))
+RFM = rangerOffset(300, holoEntity(1):toWorld(vec(0,0,0)),vec(0,0,-1))
+RFG = rangerOffset(300, holoEntity(3):toWorld(vec(0,0,0)),vec(0,0,-1))
+
+RBD = rangerOffset(300, holoEntity(8):toWorld(vec(0,0,0)),vec(0,0,-1))
+RBM = rangerOffset(300, holoEntity(7):toWorld(vec(0,0,0)),vec(0,0,-1))
+RBG = rangerOffset(300, holoEntity(9):toWorld(vec(0,0,0)),vec(0,0,-1))
+
+
+
+
+if(Localisation==1){
+    
+    if(heightc(RFD,RFM,RFG)!=vec(0,1,0)){
+        holoPos(1, holoEntity(1):toWorld(vec(-0.5,0,0)))
+    }
+    if(heightc(RBD,RBM,RBG)!=vec(0,1,0)){
+        holoPos(7, holoEntity(7):toWorld(vec(-0.5,0,0)))
+    }
+    
+    if(clk("retest") & Localisation==1){
+        timer("retest",2000)
+        holoPos(1, E:toWorld(vec(50,Long,0)))
+        holoPos(7, E:toWorld(vec(50,-Long,0)))
+    }
+    if(heightc(RFD,RFM,RFG)==vec(0,1,0) & heightc(RBD,RBM,RBG)==vec(0,1,0)){
+        Localisation=0
+        print("Localisation finished")
+    }
+}
+if(Localisation==0){
+    
+    if(heightc(RFD,RFM,RFG):z()==1){
+        Y=-0.1*Speed
+    }
+    
+    if(heightc(RFD,RFM,RFG):x()==1){
+        Y=0.1*Speed
+    }
+    if(heightc(RFD,RFM,RFG):x()==0 & heightc(RFD,RFM,RFG):z()==0){
+        Y=0
+    }
+    
+        
+    if(heightc(RFD,RFM,RFG):y()==1){
+        Z=RBM:distance()-RFM:distance()
+    }
+    if(heightc(RFD,RFM,RFG):y()==0){
+        Z=0
+    }
+        
+    if (owner():keyPressed("g")) {
+        E:setPos(E:toWorld(vec(0,Speed, (RBM:pos():z()-E:pos():z())+50 )))
+    }
+    
+    E:setAng(E:toWorld(ang(0,Y,Z)))
+}
+
+
+
+
+

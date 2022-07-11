@@ -1,0 +1,125 @@
+@name e2 train test
+@inputs Seat:entity
+@outputs Throttle
+@persist Height [RanFR RanFL RanRR RanRL RanFL1 RanFR2 RanRL3 RanRR4]:ranger [RanFL1ang RanFR2ang RanRL3ang RanRR4ang]:angle
+
+@trigger  
+@model models/sprops/rectangles/size_6/rect_96x240x3.mdl
+
+interval(10)
+
+    E = entity()
+if(first())
+
+{
+    holoCreate(1, RanFR:pos())
+    holoCreate(2, RanFL:pos())
+    holoCreate(3, RanRR:pos())
+    holoCreate(4, RanRL:pos())
+
+    holoCreate(5, RanFL1:pos())
+    holoCreate(6, RanFR2:pos())
+    holoCreate(7, RanRL3:pos())
+    holoCreate(8, RanRR4:pos())    
+    
+    #holoCreate(10, (RanFR:pos() + RanFL:pos()) / 2)
+    #holoParent(10, E)
+    #holoAng(10, (RanFL1ang + RanFR2ang) / 2)
+    
+}
+
+
+Driver = Seat:driver()
+W = Driver:keyForward()
+S = Driver:keyBack()
+
+rangerFilter(E)
+rangerFilter(players())
+
+#Ranger = rangerOffset(100, E:pos() + vec(0, 0, -8), -E:up())
+#Height = Ranger:distance()
+
+Forward = E:forward() * E:mass() * 15
+
+rangerFilter(E)
+rangerFilter(players())
+RanFL = rangerOffset(50, E:toWorld(vec(90, 42, 0)), -E:up())
+rangerFilter(E)
+rangerFilter(players())
+RanFR = rangerOffset(50, E:toWorld(vec(90, -42, 0)), -E:up())
+rangerFilter(E)
+rangerFilter(players())
+RanRL = rangerOffset(50, E:toWorld(vec(-90, 42, 0)), -E:up())
+rangerFilter(E)
+rangerFilter(players())
+RanRR = rangerOffset(50, E:toWorld(vec(-90, -42, 0)), -E:up())
+
+rangerFilter(E)
+rangerFilter(players())
+RanFL1 = rangerOffset(44,  E:toWorld(vec(90, -0, -51)), -E:right())
+rangerFilter(E)
+rangerFilter(players())
+RanFR2 = rangerOffset(44,  E:toWorld(vec(90, -0, -51)), E:right())
+rangerFilter(E)
+rangerFilter(players())
+RanRL3 = rangerOffset(44,  E:toWorld(vec(-90, -0, -51)), -E:right())
+rangerFilter(E)
+rangerFilter(players())
+RanRR4 = rangerOffset(44,  E:toWorld(vec(-90, -0, -51)), E:right())
+
+RanFRDist = RanFR:distance()
+RanFLDist = RanFL:distance()
+RanRRDist = RanRR:distance()
+RanRLDist = RanRL:distance()
+
+RanFLDist1 = RanFL1:distance()
+RanFRDist2 = RanFR2:distance()
+RanRLDist3 = RanRL3:distance()
+RanRRDist4 = RanRR4:distance()
+
+RanFL1ang = E:toWorld(RanFL1:hitNormal():toAngle())
+RanFR2ang = E:toWorld(RanFR2:hitNormal():toAngle())
+RanRL3ang = E:toWorld(RanRL3:hitNormal():toAngle())
+RanRR4ang = E:toWorld(RanRR4:hitNormal():toAngle())
+
+Angles = (RanFL1ang + RanFR2ang + RanRL3ang + RanRR4ang) / 4
+            
+Pidors = (RanFR:pos() + RanFL:pos() + RanRR:pos() + RanRL:pos() + RanFL1:pos() + RanFR2:pos() + RanRL3:pos() + RanRR4:pos()) / 8
+
+if(RanFL:matType()=="metal" & RanFR:matType()=="metal" & RanRL:matType()=="metal" & RanRR:matType()=="metal" & RanFL1:matType()=="metal" & RanFR2:matType()=="metal" & RanRL3:matType()=="metal" & RanRR4:matType()=="metal")
+{
+    E:setPos(Pidors + vec(0, 0, 50))
+   # E:setAng())
+}
+
+#print(floor(RanFL1ang:yaw()), floor(E:angles():yaw()))
+#print(floor((E:angles():yaw() + RanFL1ang:yaw())))
+#print(floor(Angles:yaw()) , floor(E:angles():yaw()))
+
+holoPos(1, RanFR:pos())
+holoPos(2, RanFL:pos())
+holoPos(3, RanRR:pos())
+holoPos(4, RanRL:pos())
+
+holoPos(5, RanFL1:pos())
+holoPos(6, RanFR2:pos())
+holoPos(7, RanRL3:pos())
+holoPos(8, RanRR4:pos())
+
+holoAng(1, E:toWorld(ang(0, RanFL1ang:yaw(), 0)))
+holoAng(2, E:toWorld(ang(0, RanFR2ang:yaw(), 0)))
+holoAng(3, E:toWorld(ang(0, RanRL3ang:yaw(), 0)))
+holoAng(4, E:toWorld(ang(0, RanRR4ang:yaw(), 0)))
+
+holoAng(5, E:toWorld(ang(0, RanFL1ang:yaw(), 0)))
+holoAng(6, E:toWorld(ang(0, RanFR2ang:yaw(), 0)))
+holoAng(7, E:toWorld(ang(0, RanRL3ang:yaw(), 0)))
+holoAng(8, E:toWorld(ang(0, RanRR4ang:yaw(), 0)))
+
+holoColor(5, vec(255,0,0))
+holoColor(6, vec(0,255,0))
+
+if(W){Throttle += 2}elseif(S){Throttle -= 1}
+Throttle = clamp(Throttle, 0 , 100)
+
+if(Driver:isValid()){E:applyForce(Forward + $Forward * Throttle)}
