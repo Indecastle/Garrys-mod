@@ -9,7 +9,7 @@ local _flag_russia = "https://i.imgur.com/jR2vDAC.png"
 local _flag_usa = "https://i.imgur.com/lIfVWWm.png"
 local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
 
-local URL = _flag_belarus
+local URL = _flag_usa
 
 local BoneScale = Vector(4,0.0001,0.0001)
 local Degree = 0

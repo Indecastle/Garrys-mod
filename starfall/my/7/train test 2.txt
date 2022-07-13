@@ -8,7 +8,7 @@ local EntityCriticalPD = require("libs/criticalpd.txt")
 
 local HoloTest = true
 local DiffTrace = 3.9
-local MaxTraces = 15
+local MaxTraces = 11
 
 local IsSetPos = false
 local CustomSetPosSpeed = 150

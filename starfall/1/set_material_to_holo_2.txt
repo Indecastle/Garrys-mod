@@ -1,0 +1,66 @@
+--@name set material to holo 2
+--@author
+--@client
+
+
+local offsetZ = 50
+
+
+local m2 = material.load("effects/tp_eyefx/tpeye")
+--local m2 = render.createMaterial("effects/alyxmonitor_idle")
+
+render.createRenderTarget("afkscreen")
+    
+local m = material.create("VertexLitGeneric")
+m:setTextureRenderTarget("$basetexture", "afkscreen")
+
+
+local VertexAlpha= false
+local VertexColor= false
+local AlphaTest= false
+local Additive= true
+local Translucent= false
+
+local flags = 
+    (VertexColor and 16 or 0) +
+    (VertexAlpha and 32 or 0) +
+    (Additive and 128 or 0) +
+    (AlphaTest and 256 or 0) +
+    (Translucent and 2097152 or 0)
+    
+    
+if flags ~= 0 then
+    m:setInt("$flags",  
+        flags)    
+end
+m:recompute()
+
+
+local holo = holograms.create(chip():localToWorld(Vector(0,0, offsetZ+10)), chip():getAngles() + Angle(90,0,0), "models/holograms/plane.mdl", Vector(1))
+--holo:setColor(Color(255,255,255,10))
+--holo:setParent(chip())
+holo:setSize(Vector(20,30,30))
+holo:setMaterial("!" .. m:getName())
+
+
+
+
+hook.add("renderoffscreen", "", function()
+    render.selectRenderTarget("afkscreen")
+    render.clear(Color(0, 0, 0, 0))
+    
+    render.setMaterial(m2)
+    --render.setColor(Color(255,255,255,255))
+    render.drawTexturedRect(0,0,1024,1024)
+end)
+
+if owner() == player() then
+    hook.add("hologrammatrix", "setPos", function()
+        local eyeP = eyePos()
+        local eyeA = eyeAngles()
+        eyeA.r = -eyeA.r
+        holo:setPos(eyeP + eyeA:getForward()*10)
+        --holo:setAngles((-eyeD):getAngle() + Angle(90,0,0))
+        holo:setAngles(eyeA + Angle(-90,0,0))
+    end)
+end

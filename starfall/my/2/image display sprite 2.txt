@@ -8,8 +8,8 @@ dofile("libs/sprites_data.txt")
 local GifToSpritesheet = require("libs/gifspritesheet.txt")
 
 
-local img = "city"
-local maxh = 10*500
+local img = "cat"
+local maxh = 10*50
 local delay = 1
 
 local maxRTs = 5
@@ -84,6 +84,8 @@ else
     local FPS = 5
     local frame = 0
     local delta = 1/FPS
+    
+    local w, h
 
     local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
     
@@ -174,7 +176,7 @@ else
         end)*/
         http.get(URL, function(data)
             GifToSpritesheet(data, maxRTs, function(spritesheet, decoder)
-                local w, h = spritesheet.framew, spritesheet.frameh
+                w, h = spritesheet.framew, spritesheet.frameh
                 
                 local ratio = w / h
                 local sh = maxh
@@ -235,7 +237,12 @@ else
         
         say("Set height to " .. maxh)
         
-        loadImage()
+        --loadImage()
+        if w == nil then return end
+        local ratio = w / h
+        local sh = maxh
+        local sw = sh * ratio
+        screen:setSize(Vector(sh, sw, 1))
     end)
     net.receive("setUrl", function(l)
         url = net.readString()

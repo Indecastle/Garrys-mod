@@ -31,6 +31,8 @@ if(first() | dupefinished()) { Hide = 1 #setName(randint(1000):toString())
     #URL = "http://trans.zillyhuhn.com/translate"
     URL = "http://indecastle.pythonanywhere.com/api/translate/"
     
+    #URL = "https://translate.googleapis.com/translate_a/single?client=gtx&ie=UTF-8&oe=UTF-8&sl="
+    
     printColor(vec(200), "Print in the chat: ", vec(0,255,0), "\"!Thelp\"")
     
     Commands = array("!TON","!TME","!FUN","!sl","!tl","!autot","!resl","!reft","!tallp","!taddw","!taddb")

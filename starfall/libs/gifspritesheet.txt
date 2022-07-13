@@ -26,7 +26,7 @@
 local workers = {}
 local function execWorker(worker)
     local status
-    while quotaAverage()<quotaMax()*0.4 do
+    while math.max(quotaAverage(), quotaUsed()) < quotaMax()*0.4 do
         status = worker()
         if status=="wait" or status=="done" then
             break
