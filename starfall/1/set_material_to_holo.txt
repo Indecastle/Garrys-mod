@@ -41,6 +41,7 @@ local holo = holograms.create(chip():localToWorld(Vector(0,0, offsetZ+10)), chip
 holo:setParent(chip())
 holo:setSize(Vector(100))
 holo:setMaterial("!" .. m:getName())
+holo:suppressEngineLighting(true)
 
 
 

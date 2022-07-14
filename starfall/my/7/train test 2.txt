@@ -14,10 +14,11 @@ local IsSetPos = false
 local CustomSetPosSpeed = 150
 local CustomForceSpeed = 300
 
-local LocalPos1 = Vector(100,50,0)
-local LocalPos2 = Vector(-100,50,0)
-local LocalPosCenter= Vector(0,50,0)
+local LocalPos1 = Vector(100, 50, 0)
+local LocalPos2 = Vector(-100, 50, 0)
+local LocalPosCenter= Vector(0, 50, 0)
 local OffsetHeight = 50
+local AddOwnAngle = Angle(0, 90, 0)
 
 
 function calcDegree(degree)
@@ -181,7 +182,6 @@ end
 function trace_one(localPos, hs, isPositiveRotate)
     --local down = P:getUp() * -1
     local down = Vector(0,0,-1)
-    local right = P:getRight()
     
     local trs = {}
     --local trb = {}
@@ -190,7 +190,7 @@ function trace_one(localPos, hs, isPositiveRotate)
     for i=1, MaxTraces do
         local dir = P:getForward()
         dir.z = 0
-        local balanceDir = (dir:getNormalized():getAngle()):getRight()
+        local balanceDir = (dir:getNormalized():getAngle() + AddOwnAngle):getRight()
         
         --local worldPos, _ = localToWorld(localPos, Angle(), p0, a0)
         local worldPos = P:localToWorld(localPos)
@@ -258,10 +258,12 @@ end
 */
 
 function customForce(speed)
+    local forward = (P:getAngles() + AddOwnAngle):getForward()
     if IsSetPos then
-        P:setPos(P:localToWorld(Vector(speed,0,0)))
+        --P:setPos(P:localToWorld(Vector(speed,0,0)))
+        P:setPos(P:getPos() + forward * speed)
     else
-        pd:simulateForceCustomError(P:getForward()*speed, Vector(0))
+        pd:simulateForceCustomError(forward*speed, Vector(0))
     end
 end
 

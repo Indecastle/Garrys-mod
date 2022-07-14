@@ -1,6 +1,6 @@
 --@name AFK 10
 --@author Markiz & OctopuSSX
---@includedir libs
+--@include libs/3d2dtext.txt
 --@client
 
 dofile("libs/3d2dtext.txt")

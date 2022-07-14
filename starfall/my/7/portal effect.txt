@@ -7,7 +7,9 @@ local RadiusMode = true
 local Radius = 500
 
 
-local Material = "effects/tp_eyefx/tpeye"
+local Material = "effects/tp_eyefx/tpeye" -- "matsys_regressiontest/background"
+local HaveAlpha = true
+
 local Offset = 8
 local Resolution = 27
 
@@ -84,7 +86,7 @@ m:setTextureRenderTarget("$basetexture", "TargetScreen")
 local VertexAlpha= false
 local VertexColor= false
 local AlphaTest= false
-local Additive= true
+local Additive= HaveAlpha
 local Translucent= false
 
 local flags = 
