@@ -1,0 +1,114 @@
+--@name Siren
+--@author
+--@shared
+
+
+local Speed = 10
+
+
+local E = chip()
+local O = owner()
+local OO = player()
+local NoEntity = entity(0)
+
+local _Base, _BaseHolo
+local _Light1, _Light2, _LightHolo1, _LightHolo2
+local _I1 = 0
+
+if SERVER then
+    wire.adjustPorts(
+        {
+            Active="number",
+        },
+        {
+            On="number",
+            RGB="vector",
+        })
+        
+    local _Base = holograms.create(E:localToWorld(Vector(0,0,10)), E:localToWorldAngles(Angle(0)), "models/holograms/cube.mdl", Vector(1))
+    _Base:setParent(E)
+    
+    local _BaseHolo = holograms.create(E:localToWorld(Vector(6,0,0)), E:localToWorldAngles(Angle(180, 0, 0)), "models/props_c17/light_cagelight02_off.mdl", Vector(1.5))
+    _BaseHolo:setParent(E)
+    
+    local _LightHolo1 = holograms.create(E:localToWorld(Vector(0,0,6)), _Base:localToWorldAngles(Angle(90, 0, 0)), "models/effects/vol_light256x512.mdl", Vector(0.08, 0.05, 0.05))
+    local _LightHolo2 = holograms.create(E:localToWorld(Vector(0,0,6)), _Base:localToWorldAngles(Angle(90, 180, 0)), "models/effects/vol_light256x512.mdl", Vector(0.05, 0.05, 0.05))
+    
+    _LightHolo1:setParent(_Base)
+    _LightHolo2:setParent(_Base)
+    _LightHolo1:setColor(Color(255,0,0, 10))
+    _LightHolo2:setColor(Color(255,0,0, 10))
+    _Base:setNoDraw(true)
+    
+    local li1 = find.inSphere(chip():getPos(), 20, function(ent)
+        return ent:getClass() == 'gmod_wire_lamp'
+    end)
+    if #li1 >= 2 then
+        local closests = find.sortByClosest(li1, E:getPos())
+        _Light1 = closests[1]
+        _Light2 = closests[2]
+    else
+        _Light1 = prop.createSent(_Base:getPos(), _Base:localToWorldAngles(Angle()), 'gmod_wire_lamp', true, {
+            Model = 'models/maxofs2d/lamp_flashlight.mdl'
+        })
+        _Light2 = prop.createSent(_Base:getPos(), _Base:localToWorldAngles(Angle(180, 0, 0)), 'gmod_wire_lamp', true, {
+            Model = 'models/maxofs2d/lamp_flashlight.mdl'
+        })
+    end
+    
+    _Light1:getPos(E:localToWorld(Vector(0,0,10)))
+    _Light2:getPos(E:localToWorld(Vector(0,0,10)))
+    _Light1:setAngles(E:localToWorldAngles(Angle()))
+    _Light2:setAngles(E:localToWorldAngles(Angle(180, 0, 0)))
+    
+    _Light1:setNocollideAll(1)
+    _Light2:setNocollideAll(1)
+    
+    _Light1:setParent(_Base)
+    _Light2:setParent(_Base)
+    
+    _Light1:setNoDraw(true)
+    _Light2:setNoDraw(true)
+    
+    wire.create(_Light1, E, 'On', 'On')
+    wire.create(_Light2, E, 'On', 'On')
+    wire.create(_Light1, E, 'RGB', 'RGB')
+    wire.create(_Light2, E, 'RGB', 'RGB')
+
+    
+    hook.add("input", "", function(key, value)
+        if key == 'Active' then
+            wire.ports.On = value
+            
+            if value == 1 then
+                _LightHolo1:setColor(_LightHolo1:getColor():setA(255))
+                _LightHolo2:setColor(_LightHolo1:getColor():setA(255))
+                _BaseHolo:setModel("models/props_c17/light_cagelight01_on.mdl")
+                E:emitSound("lostcoast.siren_citizen")
+                
+            else
+                _LightHolo1:setColor(_LightHolo1:getColor():setA(0))
+                _LightHolo2:setColor(_LightHolo1:getColor():setA(0))
+                _BaseHolo:setModel("models/props_c17/light_cagelight02_off.mdl")
+                E:stopSound("lostcoast.siren_citizen")
+            end
+        end
+    end)
+    
+
+    hook.add("think", "Siren", function()
+        if wire.ports.Active == 1 then
+            --local ttime = timer.systime()
+            wire.ports.RGB = Vector(255,0,0)
+            --_Base:setPos(E:localToWorld(Vector(0,0,10)))
+            
+            _I1 = (_I1 + Speed) % 360
+            _Base:setAngles(E:localToWorldAngles(Angle(0, _I1, 0)))
+        else
+        end
+    end)
+
+    return
+end
+
+-- lostcoast.siren_citizen

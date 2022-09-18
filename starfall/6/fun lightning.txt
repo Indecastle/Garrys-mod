@@ -1,10 +1,20 @@
---@name fun lightning
+//@name = fun lightning =
+--@name Generic
 --@author
---@client
+--@shared
+
+
+if SERVER then
+    chip():setNoDraw(true)
+    chip():setSolid(false)
+    chip():setColor(Color(0,0,0,0))
+    chip():setMaterial("Models/effects/vol_light001")
+    return
+end
 
 
 local Target = owner()
-Target = find.playersByName("Nyto")[1]
+Target = find.playersByName("Const")[1]
 --throw(tostring(Target))
 
 

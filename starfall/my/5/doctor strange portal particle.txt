@@ -93,14 +93,14 @@ function portal()
 end
 
 function startPortal()
-    if radius <= 0 then return end
+    if (emitter) then emitter:destroy() end
+    emitter = particle.create(Vector(), false) -- Particle emitter in this position
     
     for i=0, (startFor + maxFor*radK) do
         degree = (degree + angVel + math.rand(0,0.5))
         if degree > (2*math.pi) then
             degree = degree % (2*math.pi)
-            if (emitter) then emitter:destroy() end
-            emitter = particle.create(Vector(), false) -- Particle emitter in this position
+            
         end
         
         portal()
@@ -110,6 +110,7 @@ end
 
 timer.create("rain", 0.05, 0, function()
 --hook.add("think", "", function()
+    if radius <= 0 then return end
     startPortal()
 end)
 

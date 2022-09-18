@@ -8,7 +8,7 @@ local AutoFlushDown = true
 local AdditionalLocalPos = Vector(0,0,0)
 local AdditionalLocalAngle = Angle(0,0,0)
 
-
+local IsWomanSounds = true
 
 
 chip():setColor(Color(0,0,0,0))
@@ -86,7 +86,14 @@ function playSound()
 end
 
 function playKekSound()
-    local path = 'vo/npc/male01/pain'..string.format('%02d', math.round(math.rand(1,9)))..'.wav'
+    local path = ''
+    
+    if IsWomanSounds then
+        path = 'vo/npc/female01/pain'..string.format('%02d', math.round(math.rand(1,9)))..'.wav'
+    else
+        path = 'vo/npc/male01/pain'..string.format('%02d', math.round(math.rand(1,9)))..'.wav'
+    end
+    
     Seat:emitSound(path)
 end
 

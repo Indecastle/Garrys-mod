@@ -12,7 +12,7 @@ Target = find.playersByName("mark")[1]
 
 local Mode = 3
 
-local Velocity = 5
+local Velocity = 1
 local AmplitudeForward = 5
 local AmplitudeBack = -3
 

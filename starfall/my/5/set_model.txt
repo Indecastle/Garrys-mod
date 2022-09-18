@@ -3,7 +3,7 @@
 --@client
 
 local Target = owner()
-Target = find.playersByName("tsiv")[1]
+Target = find.playersByName("mark")[1]
 
 local TargetModel = Target
 --TargetModel = find.playersByName("rony")[1]
@@ -62,7 +62,7 @@ timer.create("anim", 0.2, 0, function()
     --H:unparent()
     --H:setParent( nil )
     local players = find.allPlayers()
-    table.removeByValue(players, Target)
+    table.removeByValue(players, TargetModel)
     local closestPlayer = find.sortByClosest(players, owner():getPos(), false)[1]
     if closestPlayer then
         H:setModel(closestPlayer:getModel())

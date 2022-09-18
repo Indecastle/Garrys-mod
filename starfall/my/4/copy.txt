@@ -2,9 +2,9 @@
 --@name Pristavka
 --@author
 --@shared
---@include libs/my_methods.txt
+// --@include libs/my_methods.txt
 
-dofile("libs/my_methods.txt")
+// dofile("libs/my_methods.txt")
 
 
 local Scale = 5
@@ -35,6 +35,34 @@ local _scale = _scaleBase * Scale
 
 function isValidFileName(name)
     return string.match(name, "^[a-zA-Z0-9_]+$") ~= nil
+end
+
+function table.map(t, func, ExcludeNil)
+    local maped = {}
+    if ExcludeNil == nil then ExcludeNil = false end
+    for i=1, #t do
+        local result = func(i, t[i])
+        if !ExcludeNil or result ~= nil then
+            maped[#maped + 1] = func(i, t[i])
+        end
+    end
+    return maped
+end
+function table.first(t, func)    
+    for i=1, #t do
+        if func(t[i]) then
+            return t[i]
+        end
+    end
+    return nil
+end
+function table.any(t, func)
+    for i=1, #t do
+        if func(t[i]) then
+            return true
+        end
+    end
+    return false
 end
 
 
@@ -395,7 +423,7 @@ function setSentData()
         --local w = data._entity:getWirelink()
         --local inputs = w:inputs()
         
-        local sentData = getLocalSentData(data._entity, data)
+        local sentData = data._entity:isValid() and getLocalSentData(data._entity, data) or {}
 
         data.SentData = sentData
     end
@@ -659,7 +687,7 @@ end
 
 function collisionGroupAll()
     for i, data in ipairs(DataEnts) do
-        if data._entity2 ~= nil and data.CollisionGroup ~= 0 then
+        if data._entity2 ~= nil and data._entity2:isValid() and data.CollisionGroup ~= 0 then
             data._entity2:setCollisionGroup(data.CollisionGroup)
         end
     end

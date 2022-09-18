@@ -4,7 +4,7 @@
 
 
 local Target = owner()
-Target = find.playersByName("Dele")[1]
+Target = find.playersByName("mark")[1]
 
 local H = holograms.create(chip():getPos(), Angle(), "models/monk.mdl", Vector(1,1,1))
 --Target = H

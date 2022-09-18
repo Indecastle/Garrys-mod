@@ -17,7 +17,7 @@ local volume = 1
 
 
 local soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348343148584/f969747680e8276.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
-soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348645146684/28f2bf70e8d0701.mp3" -- https://zvukipro.com/index.php?do=download&id=11777
+--soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348645146684/28f2bf70e8d0701.mp3" -- https://zvukipro.com/index.php?do=download&id=11777
 
 -------------------------------------------------
 
@@ -52,7 +52,7 @@ function rain(radius, degree)
         part:setBounce(0.05)
         part:setColor(Color(0,math.rand(150,200),255))
         part:setGravity( Vector( 0, 0, -600 ) ) -- Gravity of the particle
-        part:setVelocity( Vector(0,0,-50)*10 ) -- Initial velocity of the particle
+        part:setVelocity( Vector(0,0,-50)*20 ) -- Initial velocity of the particle
     end
 end
 

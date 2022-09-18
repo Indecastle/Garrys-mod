@@ -1,16 +1,17 @@
 @name Prop Force Spawner
 @inputs
 @outputs [ActiveProps]:table
-@persist [O E]:entity ShockingTime DistanceSpawn Force Model:string IsKeyPressed AttackDelay IsNoCollide
+@persist [O E]:entity LivingTime DistanceSpawn Force Mass Model:string IsKeyPressed AttackDelay IsNoCollide
 
 if(first() | dupefinished()) {
     O = owner(), E = entity()
     
     Model = "models/props_junk/watermelon01.mdl"
-    ShockingTime = 1 # Seconds
-    DistanceSpawn = 50
+    LivingTime = 4 # Seconds
+    DistanceSpawn = 10
     Force = 3000
-    AttackDelay = 0.2 # Seconds
+    Mass = 100
+    AttackDelay = 0.4 # Seconds
     
     IsNoCollide = 1  # Boolean
     
@@ -39,12 +40,12 @@ if(first() | dupefinished()) {
     function number table:addEnt(Ent:entity) {
         local OK = 0
         if(!This:checkAr(Ent)) { 
-            This:pushArray(array(Ent, curtime() + ShockingTime)) 
+            This:pushArray(array(Ent, curtime() + LivingTime)) 
             OK=1 
         } else {
             for(I=1,This:count()) {
                 if(This[I, array]:entity(1) == Ent) { 
-                    This[I, array][2, number] = curtime() + ShockingTime 
+                    This[I, array][2, number] = curtime() + LivingTime 
                     break 
                 }
             }
@@ -66,7 +67,7 @@ if(first() | dupefinished()) {
         
         if (P:isValid()) {
             P:setAng(EyeAngles)
-            P:setMass(100)
+            P:setMass(Mass)
             #:setAlpha(0)
             P:propFreeze(0)
             P:propSetVelocity(Dir * Force)

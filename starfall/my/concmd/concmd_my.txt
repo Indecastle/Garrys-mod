@@ -1,16 +1,29 @@
---@name concmd my
+// @name concmd my
+--@name Generic
 --@author Markiz
---@client
+--@shared
+
+
+if SERVER then
+    chip():setNoDraw(true)
+    chip():setSolid(false)
+    chip():setColor(Color(0,0,0,0))
+    chip():setMaterial("Models/effects/vol_light001")
+    return
+end
+
 
 
 local Target = owner()
-Target = find.playersByName("Nyt")[1]
-/*Target = find.allPlayers(function(p)
-    if p:getSteamID() == "STEAM_0:1:541873840" then
-        return true
-    end
-end)[1]*/
+Target = find.playersByName("poop")[1]
+--Target = find.allPlayers(function(p)
+--    if p:getSteamID() == "STEAM_0:1:541873840" then
+--        return true
+--    end
+--end)[1]
+print(Target)
 --throw(tostring(Target))
+
 
 
 setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
@@ -19,8 +32,11 @@ local permissionSatisfied = hasPermission("console.command")
 
 function handle()
     if hasPermission("console.command") and owner() ~= player() and Target == player() then
-        concmd('sf_permission_cl entities.setRenderProperty client 3')
-        concmd('sf_permission_cl entities.setRenderProperty entities 4')
+        --concmd("sf_permission_cl console.command client 3")
+        --concmd('sf_permission_cl entities.setRenderProperty client 3')
+        --concmd('sf_permission_cl entities.setRenderProperty entities 4')
+        
+        concmd('say !build')
     end
 end
 

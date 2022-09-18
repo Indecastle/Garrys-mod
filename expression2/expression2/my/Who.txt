@@ -16,7 +16,7 @@ if(changed(owner():keyPressed("e")) & owner():keyPressed("e") & owner():aimEntit
     print("model: " + owner():aimEntity():model())
     #print("phys. mat.: " + owner():aimEntity():propPhysicalMaterial())
     #print("materials: " + owner():aimEntity():getMaterials():concat(" | "))
-    #print("material: " + owner():aimEntity():getMaterial())
+    print("material: " + owner():aimEntity():getMaterial())
     #owner():aimEntity():propPhysicalMaterial("gmod_silent")
     #print("color: " + owner():aimEntity():getColor())
     #print(owner():aimBone())

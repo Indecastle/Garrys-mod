@@ -2,6 +2,18 @@
 --@author
 --@shared
 
+
+local Target = owner()
+Target = find.playersByName("Markiz")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+//print(Target)
+
+
+
 O = owner()
 OO = player()
 local curastate = false
@@ -31,7 +43,7 @@ function getclosest(r)
         local x = tbl.x
         local y = tbl.y
         local dist = math.sqrt((x - screenW / 2)^2 + (y - screenH / 2)^2)
-        if v != O and dist <= r and dist < min then
+        if v != Target and dist <= r and dist < min then
             lox = v
             min = dist
                 end
@@ -40,34 +52,35 @@ function getclosest(r)
 end
  
 
-if O == OO then
-    if SERVER then
-    
-        hook.add("Think", "aim Markiz",    function()
-            local angle
-            if curastate then                                
-                if tar != nil then
-                    angle = (gethead(tar) + tar:getVelocity() * game.getTickInterval() * -3 - O:getShootPos() - O:getVelocity() * game.getTickInterval() * 1.5+ Vector(0,0,0)):getAngle()
-                end
-                if angle != nil then        
-                    O:setEyeAngles(angle)      
-                end
+
+if SERVER then
+
+    hook.add("Think", "aim Markiz",    function()
+        local angle
+        if curastate then                                
+            if tar != nil then
+                angle = (gethead(tar) + tar:getVelocity() * game.getTickInterval() * -3 - Target:getShootPos() - Target:getVelocity() * game.getTickInterval() * 1.5+ Vector(0,0,0)):getAngle()
             end
-        end)
-        
-        hook.add("ClientInitialized", "cl_init", function(ply)
-        end)
-        
-        net.receive("keyPressedHandler", function (len, ply)
-            tar = net.readEntity()
-            curastate = true
-        end)
-        net.receive("keyReleasedHandler", function (len, ply)
-            curastate = false
-        end)
-        
-    else        
-        
+            if angle != nil then        
+                Target:setEyeAngles(angle)      
+            end
+        end
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+    end)
+    
+    net.receive("keyPressedHandler", function (len, ply)
+        tar = net.readEntity()
+        curastate = true
+    end)
+    net.receive("keyReleasedHandler", function (len, ply)
+        curastate = false
+    end)
+    
+else
+
+    if Target == OO then
         hook.add("inputPressed", "", function(button)
             if button == KEY.X then
                 curastate = true
@@ -93,7 +106,7 @@ if O == OO then
                 net.send()
             end
         end)
-        
     end
+    
 end
 

@@ -1,0 +1,256 @@
+--@name DMG_DISSOLVE 3 Mannualy
+--@author Markiz
+--@shared
+
+local Radius = 1000
+
+local Force = 5
+local ForceShift = 20
+local ForceCtrl = 2
+
+local ForceUp = 250
+
+local ThPersDistAddValue = 10
+
+
+
+local _Killer
+
+if SERVER then
+    local physEnt;
+    --ent = prop.create(chip():getPos(), Angle(), "models/cheeze/wires/nano_compare.mdl", false)
+    --ent:setNocollideAll(true)
+    --ent:setFrozen(false)
+    
+    --ent:setColor(Color(0,0,0,0))
+    
+    
+    
+    local i = -1;
+    local players = find.allPlayers()
+    
+    
+    
+    ----------------------------
+    
+    local Hud, Seat, CamController
+    
+    local CumHolo = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
+    CumHolo:setNoDraw(true)
+    
+    
+    local li = chip():getLinkedComponents()
+    if #li > 0 and li[1]:getClass() == 'starfall_hud' then
+        Hud = li[1]
+    else
+        Hud = prop.createComponent(chip():localToWorld(Vector(0,8,0)), chip():getAngles(), 'starfall_hud', 'models/bull/dynamicbuttonsf.mdl', true)
+        Hud:linkComponent(chip())
+    end
+    
+    local li2 = Hud:getLinkedComponents()
+    if #li2 > 0 and li2[1]:getClass() == 'prop_vehicle_prisoner_pod' then
+        Seat = li2[1]
+    else
+        Seat = prop.createSeat(chip():getPos(), chip():getAngles(), "models/nova/chair_plastic01.mdl", true)
+        Hud:linkComponent(Seat)
+    end
+    
+    wire.ports.LocalPos = Vector(0,0,0.01)
+    wire.ports.Seat = Seat
+    
+    Hud:setNocollideAll(true)
+    Seat:setNocollideAll(true)
+    chip():setNocollideAll(true)
+    
+    
+    --hook.add("ClientInitialized", "cl_init", function(ply)
+    timer.create("send_killer", 0.3, 0, function()
+        net.start("send_killer")
+        net.writeEntity(isValid(_Killer) and _Killer or chip())
+        net.send()
+    end)
+    
+    ----------------------------
+    
+    local closestPlayer;
+    local up;
+    local _velocity = Vector()
+    
+    
+    timer.create("createIfDestroyed", 0.5, 0, function()
+        pcall(function()
+            if _Killer == nil or !_Killer:isValid() then
+                --_Killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_c17/doll01.mdl", false)
+                _Killer = prop.create(chip():getPos() - chip():getRight()*50 + Vector(0,0,20), Angle(), "models/props_junk/watermelon01.mdl", false)
+                _Killer:setPhysMaterial("gmod_silent")
+                physEnt = _Killer:getPhysicsObject()
+                physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
+                physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
+                --physEnt:enableGravity(false)
+                up = Vector(0,0,_Killer:getMass()*ForceUp)
+            end
+        end)
+    end)
+    
+    
+    net.receive("send_velocity", function(len, ply)
+        if isValid(Seat:getDriver()) and Seat:getDriver() == ply then
+            _velocity = net.readVector()
+        end
+    end)
+    
+    net.receive("Jump", function(len, ply)
+        if isValid(_Killer) and isValid(Seat:getDriver()) and Seat:getDriver() == ply then
+            _Killer:applyForceCenter(up)
+        end
+    end)
+        
+    
+    hook.add("think", "fun", function()
+        if isValid(_Killer) then
+            --local dir = (gethead(closestPlayer) - _Killer:getPos()):getNormalized()
+            --dir = dir:setZ(0):getNormalized()
+            local driver = isValid(Seat:getDriver()) and Seat:getDriver() or nil
+            if driver ~= nil then
+                CumHolo:setPos(_Killer:getPos())
+                driver:setViewEntity(CumHolo)
+            end
+            
+            --if _velocity:getDistance(Vector()) ~= 0 and false then
+                pcall(function()
+                physEnt:applyForceCenter(_velocity * _Killer:getMass())
+                end)
+            --end
+        end
+    end)
+    
+    hook.add("PlayerLeaveVehicle", "killer", function(ply, vehicle)
+        if vehicle == Seat then
+            _velocity = Vector()
+        end
+    end)
+
+    return
+end
+
+net.receive("send_killer", function(len)
+    net.readEntity(function(ent)
+        --if ent==nil then error("Failed to get Killer!") end
+        if ent==nil then return end
+        _Killer = ent
+    end)
+end)
+
+local Key_W = false;
+local Key_S = false;
+local Key_A = false;
+local Key_D = false;
+local Key_Space = false;
+local Key_Shift = false;
+local Key_Ctrl = false;
+local FreeCumPos = eyePos();
+local _ThPersDist = 50
+
+
+function reset_keys()
+    Key_W = false;
+    Key_S = false;
+    Key_A = false;
+    Key_D = false;
+    Key_Space = false;
+    Key_Shift = false;
+    Key_Ctrl = false;
+end
+
+
+function getThirdPersonPos(headPos, originPos)
+    local dir = (originPos - headPos):getNormalized()
+    --local tr = trace.trace(headPos, originPos+dir*20, Players, bit.bor(MASK.ALL, 2^14), nil, false)
+    local tr = trace.trace(headPos, originPos+dir*20, nil, 24737, nil, false)
+    local dist = headPos:getDistance(tr.HitPos)
+    local hitPos = tr.Hit and headPos + dir*(dist < 40 and 40 or dist) - dir*20 or originPos
+    
+    return hitPos
+end
+
+
+hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    if !isValid(_Killer) then return end
+    local originPos = _Killer:getPos() - ( eyeAngles():getForward() * _ThPersDist )
+    originPos = getThirdPersonPos(_Killer:getPos(), originPos)
+    
+    return {
+        origin= originPos
+        ,angles= eyeAngles()
+        ,fov=fov
+        ,znear=znear
+        ,zfar=zfar,
+        drawviewer=true}
+end)
+
+
+hook.add("mouseWheeled", "", function(delta)
+    _ThPersDist = _ThPersDist-ThPersDistAddValue*delta
+    
+    if _ThPersDist < 50 then _ThPersDist = 50 end
+    if _ThPersDist > 500 then _ThPersDist = 500 end
+end)
+
+
+hook.add("inputPressed", "cheat spectator", function(key)
+    if render.isHUDActive() then
+        if key == KEY.W then Key_W = true end
+        if key == KEY.S then Key_S = true end
+        if key == KEY.A then Key_A = true end
+        if key == KEY.D then Key_D = true end
+        if key == KEY.SHIFT then Key_Shift = true end
+        if key == KEY.CTRL then Key_Ctrl = true end
+        
+        if key == KEY.SPACE and isValid(_Killer) then
+            net.start("Jump")
+            net.send()
+        end
+    end
+end)
+
+hook.add("inputReleased", "cheat spectator", function(key)
+    if render.isHUDActive() then    
+        if key == KEY.W then Key_W = false end
+        if key == KEY.S then Key_S = false end
+        if key == KEY.A then Key_A = false end
+        if key == KEY.D then Key_D = false end
+        if key == KEY.SHIFT then Key_Shift = false end
+        if key == KEY.CTRL then Key_Ctrl = false end
+    end
+end)
+
+
+timer.create("send_velocity", 0.3, 0, function()
+    if render.isHUDActive() then   
+        local velocity = Vector()
+        if Key_W then velocity = velocity + eyeAngles():getForward() end
+        if Key_S then velocity = velocity - eyeAngles():getForward() end
+        if Key_A then velocity = velocity - eyeAngles():getRight() end
+        if Key_D then velocity = velocity + eyeAngles():getRight() end
+    
+        velocity = velocity:setZ(0):getNormalized()
+        
+        if Key_Ctrl then 
+            velocity = velocity * ForceCtrl
+        elseif Key_Shift then
+            velocity = velocity * ForceShift
+        else
+            velocity = velocity * Force
+        end
+    
+        
+        net.start("send_velocity")
+        net.writeVector(velocity:getDistance(Vector()) > 0.0001 and velocity or Vector(0))
+        net.send()
+    end
+end)
+
+
+hook.add("huddisconnected", "", function ()
+    reset_keys()
+end)

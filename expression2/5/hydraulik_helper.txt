@@ -1,0 +1,28 @@
+@name Hydraulic helper
+@inputs TargetLength Length In Out
+@outputs In2 Out2
+@persist IsUp 
+@trigger 
+
+if (first()) {
+    
+    
+}
+
+
+if (~In & TargetLength >= 1) {
+    In2 = 1
+    #Out2 = 0
+}
+
+if (~Out & TargetLength < Length) {
+    #In2 = 0
+    Out2 = 1
+}
+
+if (~TargetLength) {
+    if (TargetLength <= 1 | TargetLength >= Length) {
+        In2 = 0
+        Out2 = 0
+    }
+}

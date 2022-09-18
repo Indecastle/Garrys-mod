@@ -6,6 +6,7 @@
 local HeadDegree = 5
 local WarnDiffDegree = 80
 local WarnLimitDistance = 1000
+local HoldOnHeadDelay = 0.1  -- sec
 
 
 
@@ -29,12 +30,15 @@ local O = player()
 
 --if O ~= OO then return end
 
-local oldAngles = eyeVector() --O:getEyeAngles():getForward()
-local oldPos = eyePos() --O:getEyeAngles():getForward()
-local oldStateInVehicle = O:inVehicle()
+local _oldAngles = eyeVector() --O:getEyeAngles():getForward()
+local _oldPos = eyePos() --O:getEyeAngles():getForward()
+local _oldStateInVehicle = O:inVehicle()
+local _oldStateLookingAtHead = false
+local _holdState = false
 
-local lastTime = 0
-local s1 = sounds.create(OO, "NPC_FloorTurret.AlarmPing", true)
+local _lastTime = 0
+local _lastTimeLookingAtHead = 0
+local _s1 = sounds.create(OO, "NPC_FloorTurret.AlarmPing", true)
 
 
 function warn(v)
@@ -43,8 +47,8 @@ function warn(v)
     net.writeFloat(v, 16)
     net.send()
     
-    s1:stop()
-    s1:play()
+    _s1:stop()
+    _s1:play()
 end
 
 function isLookingAtHead()
@@ -67,27 +71,44 @@ hook.add("think", "Anti Aim trigger", function()
     local newPos = eyePos()
     local newStateInVehicle = O:inVehicle()
     
-    local acos = math.acos(newAngles:dot(oldAngles))
+    local acos = math.acos(newAngles:dot(_oldAngles))
     local degree = acos / 3.14 * 180
-    --warn(tostring(newAngles:dot(oldAngles)))
+    --warn(tostring(newAngles:dot(_oldAngles)))
     local now = timer.curtime()
     
     
-    if oldStateInVehicle ~= newStateInVehicle then
-        lastTime = now + 0.5
+    local isLooking = isLookingAtHead()
+    if isLooking ~= _oldStateLookingAtHead and isLooking then
+        _lastTimeLookingAtHead = now + HoldOnHeadDelay
     end
-    if oldPos:getDistance(newPos) < WarnLimitDistance 
-        and lastTime < now 
+    if !isLooking then
+        _holdState = false
+    end
+    _oldStateLookingAtHead = isLooking
+    
+    
+    if _oldStateInVehicle ~= newStateInVehicle then
+        _lastTime = now + 0.5
+    end
+    if _oldPos:getDistance(newPos) < WarnLimitDistance 
         and degree > WarnDiffDegree 
-        and isLookingAtHead() then
-        warn(degree)
-        
-        lastTime = now + 2
+        and isLooking then
+            _holdState = true
     end
     
+    
+    if _holdState
+        and _lastTime < now 
+        and _lastTimeLookingAtHead < now then
+
+        warn(degree)
+
+        _holdState = false
+        _lastTime = now + 2
+    end
     
     --print(acos / 3.14 * 360)
-    oldAngles = newAngles
-    oldPos = newPos
-    oldStateInVehicle = newStateInVehicle
+    _oldAngles = newAngles
+    _oldPos = newPos
+    _oldStateInVehicle = newStateInVehicle
 end)

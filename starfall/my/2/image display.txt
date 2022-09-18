@@ -12,12 +12,18 @@ local URLS = {
     horny = "https://media.discordapp.net/attachments/542043404629180417/849195384470503444/paLNxVWlfEM.png",
     malina_booba = "https://media.discordapp.net/attachments/854459216839049267/854459668261109790/O2NFX9U5dT8.jpg",
     malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
+    
+    obunga = "https://i.imgur.com/wEBb6mG.png",
     custom = nil
 }
 
-local img = "rikka_ch"
+local img = "obunga"
 
-local maxh = 120*10
+local maxh = 120*2
+
+local ParentAngle = false
+local VerticalAngle = true
+local PosUp = true
 
 function isLookingAtChip()
     local dir = owner():getEyeAngles():getForward()
@@ -67,7 +73,24 @@ else
     local delta = 1/FPS
 
     local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
-    screen:setParent(chip())
+    --screen:setParent(chip())
+    
+    hook.add("tick", "", function()
+        --local d = -eyeVector()
+        local d = (player():getEyePos() - screen:getPos()):getNormalized()
+        local eyeAngle = d:getAngle() + Angle(90,0,0)
+        if ParentAngle then
+            screen:setAngles(chip():getAngles())
+            screen:setPos(chip():localToWorld(Vector(0, 0, 5)))
+        else
+            if VerticalAngle then
+                eyeAngle = eyeAngle:setP(90)
+            end
+            screen:setAngles(eyeAngle)
+            --:setPos(chip():getPos())
+            screen:setPos(owner():getPos())
+        end
+    end)
     
     render.createRenderTarget("cantload")
     
@@ -110,7 +133,11 @@ else
             local sw = sh * ratio
             screen:setSize(Vector(sh, sw, 1))
             
-            l(0, 0, m:getWidth(), m:getHeight())
+            local x,y,w,h;
+            if PosUp then x=m:getWidth()/4 y=0 w=m:getWidth()/2 h=m:getHeight()/2
+            else x=0 y=0 w=m:getWidth() h=m:getHeight() end
+        
+            l(x, y, w, h)
             
             screen:setMaterial("!" .. mat:getName())
         end)
@@ -162,7 +189,7 @@ else
         render.drawText(512, 270, "Image source is not whitelisted!", 1)
         render.drawText(512, 330, "Press E on the dot to allow loading!", 1)
         
-        render.draw3DSphere(Vector(512, 512, 20), 30, 20, 20)
+        render.draw3DSphere(Vector(w, h, 20), 30, 20, 20)
         
         // render.drawCircle(512, 512, 10)
     end)

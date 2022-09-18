@@ -14,20 +14,20 @@ local IsSetPos = false
 local CustomSetPosSpeed = 150
 local CustomForceSpeed = 300
 
-local LocalPos1 = Vector(100, 50, 0)
-local LocalPos2 = Vector(-100, 50, 0)
+local LocalPos1 = Vector(50, 100, 0)
+local LocalPos2 = Vector(50, -100, 0)
 local LocalPosCenter= Vector(0, 50, 0)
-local OffsetHeight = 50
+local OffsetHeight = 100
 local AddOwnAngle = Angle(0, 90, 0)
 
 
 function calcDegree(degree)
     if IsSetPos then
-        return degree*1.15
+        return degree*1.0
     else
         --degree = degree + 2
         --return math.sign(degree) * ((degree*0.5)^2) * 2 - 2
-        return math.sign(degree) * ((degree*1)^2) * 2.2
+        return math.sign(degree) * ((degree*1)^2) * 2.0
     end
 end
 

@@ -4,10 +4,11 @@
 
 -- To use, simply place the chip and link a starfall screen to it
 
-local HOLD_TIME = 2
+local CRACKING_TIME = 10
+local HOLD_CRACKING_TIME = 2
 local USE_DISTANCE = 100
 
-local CRACK_WEAPON = "keypad_cracker"
+local CRACK_WEAPON = "none" -- "keypad_cracker"
 
 
 local keypad = class("keypad")
@@ -29,11 +30,11 @@ if SERVER then
         if success then
             wire.ports.Success = 1
             chip():emitSound("buttons/button24.wav")
-            timer.simple(HOLD_TIME, function() wire.ports.Success = 0 end)
+            timer.simple(HOLD_CRACKING_TIME, function() wire.ports.Success = 0 end)
         else
             wire.ports.Fail = 1
             chip():emitSound("buttons/button8.wav")
-            timer.simple(HOLD_TIME, function() wire.ports.Fail = 0 end)
+            timer.simple(HOLD_CRACKING_TIME, function() wire.ports.Fail = 0 end)
         end
         net.start("password")
         net.writeBool(success)
@@ -112,7 +113,7 @@ function keypad:draw()
                 and player():getEyeTrace().Entity == render.getScreenEntity()
                 and activeWeapon:getClass() == CRACK_WEAPON then
         self.cracking = true
-        self.crackingTime = 5
+        self.crackingTime = CRACKING_TIME
         self.endCrackingTime = timer.systime() + self.crackingTime
     end
     
@@ -136,7 +137,7 @@ function keypad:draw()
         else
             self.cracking = false
             if timer.systime() >= self.endCrackingTime then
-                self.holdCracking = timer.systime() + HOLD_TIME
+                self.holdCracking = timer.systime() + HOLD_CRACKING_TIME
                 net.start("crack")
                 net.send()
             end

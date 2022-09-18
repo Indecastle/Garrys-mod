@@ -3,27 +3,31 @@
 --@shared
 
 
-local Radius = 1000
-local Speed = 15  -- 18 = no gravity
+local Radius = 500
+local Speed = 100  -- 18 = no gravity
 
-local ToUp = true
+local ToUp = false
 
 local IsUnfrozingProps = false
 
 local IsSetPosProps = false
 local IsSetPosPlayers = false
-local IsSetPosNoclipPlayers = false
+local IsSetPosNoclipPlayers = true
 
 local IsSetPosOnGround = false
 
 local IsTriggerWorldEntity = true
 
 
+local IsWorkByTimer = false
+local WorkTimerDelay = 0.5
+
 local IsOnlyPlayers = false
 
 local Friends = {
-    --'Markiz',
-    --'Raiden'
+    'Markiz',
+    --'Force2005',
+    --'prostocrifte',
 }
 
 --local SphereMode = 'ihv' -- invisible / ihv
@@ -134,8 +138,20 @@ function checkEntity(ent)
     
 end
 
---timer.create("ff", 1.1, 0, function()
-hook.add("think", "", function()
+
+if IsWorkByTimer then
+    timer.create("ff", WorkTimerDelay, 0, function()
+        handleForce()
+    end)
+else
+    hook.add("think", "", function()
+        handleForce()
+    end)
+end
+
+
+function handleForce()
+    
     local ttime2 = timer.curtime()
     ttimeDiff = ttime2 - ttime
     ttime = ttime2
@@ -196,5 +212,5 @@ hook.add("think", "", function()
             p:setPos(E:getPos() + dir0*(Radius+20))           
         end
     end
-end)
-
+    
+end

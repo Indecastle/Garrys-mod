@@ -2,6 +2,15 @@
 --@author
 --@server
 
+local Target = owner()
+Target = find.playersByName("mark")[1]
+/*AFK = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+--print(AFK)
+
 local j = 0
 local rad = 60
 local holo = {}
@@ -16,7 +25,7 @@ hook.add('tick','',function()
     for i=1,#holo do
         local targetPos = nil
         if i==1 then
-            target= owner()
+            target= Target
             targetPos = target:getPos() + Vector(math.cos(j) * rad,math.sin(j) * rad,80)
         else
             target = holo[i-1]

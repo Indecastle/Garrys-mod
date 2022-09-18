@@ -1,11 +1,8 @@
 @name no_dublication
 @model models/cheeze/wires/nano_compare.mdl
-#@inputs [A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]:entity
-#@persist Entities:array
 
 if (first() || duped()) {
     setName("generic")
-    #Entities = array(A, B, C, D, E, F, G, H ,I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z)
 }
 
 if (dupefinished()) {

@@ -19,11 +19,15 @@ local FreeCumVelocity = 15
 local FreeCumVelocityShift = 200
 local FreeCumVelocityCtrl = 2
 local WH = true
+local IsOnlyOwnerViewEntity = true
 
 
 if SERVER then
     local Waiting = false
     local Hud, Seat, ExitPointer
+    
+    local CumHolo = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
+    CumHolo:setNoDraw(true)
     
     wire.adjustPorts(
         {
@@ -77,14 +81,35 @@ if SERVER then
     
     --timer.create("update_ang", 0.1, 0, function()
     hook.add("tick", "update_ang", function()
-        local driver = isValid(Seat:getDriver()) and Seat:getDriver() or player()
+        local driver = isValid(Seat:getDriver()) and Seat:getDriver() or owner()
         wire.ports.Angle = driver:getEyeAngles()
+    end)
+    
+    net.receive("Set_OriginCumPos", function (len, ply)
+        local driver = nil
+
+        if IsOnlyOwnerViewEntity then
+            driver = ply == owner() and ply or nil
+        elseif isValid(Seat:getDriver()) and Seat:getDriver() == ply or !isValid(Seat:getDriver()) and ply == owner() then
+            driver = ply
+        end
+
+        pcall(function()
+            local originCumPos = net.readVector()
+            if originCumPos == Vector() then
+                ply:setViewEntity()
+            elseif driver ~= nil then
+                CumHolo:setPos(originCumPos)
+                
+                driver:setViewEntity(CumHolo)    
+            end
+        end)
     end)
     
     net.receive("teleport", function (len, ply)
         local freeCumOn = net.readBool()
         local pos = net.readVector()
-        local driver = isValid(Seat:getDriver()) and Seat:getDriver() or player()
+        local driver = isValid(Seat:getDriver()) and Seat:getDriver() or owner()
         local offset = driver:getEyePos().z - driver:getPos().z
         Waiting = true
         
@@ -97,6 +122,7 @@ if SERVER then
         --timer.simple(0.2, function()  end)
         Waiting = false
     end)
+
     return
 end
 
@@ -143,6 +169,8 @@ local Key_Space = false;
 local Key_Shift = false;
 local Key_Ctrl = false;
 local FreeCumPos = eyePos();
+
+local OriginCumPos = Vector()
 
 
 function gethead(ent)
@@ -222,6 +250,10 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
     ttimeDiff = ttime2 - ttime
     ttime = ttime2
     
+    local originResult, anglesResult, znearResult
+    
+    
+    
     if FreeCumOn then
         local velocity = Vector()
         if Key_W then velocity = velocity + eyeAngles():getForward() end
@@ -243,14 +275,12 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
             FreeCumPos = FreeCumPos + velocity * ttimeDiff*70
         end
         
-        return {
-            origin= FreeCumPos
-            ,angles= eyeAngles()
-            ,fov=fov
-            ,znear=znear
-            ,zfar=zfar,
-            drawviewer=true}
+        originResult = FreeCumPos
+        anglesResult = eyeAngles()
+        znearResult = znear
+
     else
+
         local head = IsHead and gethead(TargetPlayer) or TargetPlayer:getEyePos()
         --local head = gethead(TargetPlayer)
     
@@ -265,16 +295,36 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
             originPos = originPos + ( angle:getForward() * (IsHead and 0 or 10) )
         end
         
-        --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
-        return {
-            origin= originPos
-            ,angles= angle
-            ,fov=fov
-            ,znear=znear + (ThirdPerson and 0 or (IsHead and 5 or 10))
-            ,zfar=zfar,
-            drawviewer=true}
+        originResult = originPos
+        anglesResult = angle
+        znearResult = znear + (ThirdPerson and 0 or (IsHead and 5 or 10))
     end
+    
+    OriginCumPos = originResult
+    
+    return {
+            origin = originResult
+            ,angles = anglesResult
+            ,fov = fov
+            ,znear = znearResult
+            ,zfar = zfar,
+            drawviewer = true}
 end)
+
+
+function sendOriginCumPos(pos)
+    net.start("Set_OriginCumPos")
+    net.writeVector(pos)
+    net.send()
+end
+
+--if player() == owner() then
+    timer.create("OriginCumPos", 0.2, 0, function()
+        if ON and render.isHUDActive() then
+            sendOriginCumPos(OriginCumPos)
+        end
+    end)
+--end
 
 
 timer.create("isHUDActive", 0.2, 0, function()
@@ -350,9 +400,10 @@ end)
 
 local oldIsHUDActive = false
 hook.add("inputPressed", "cheat spectator", function(key)
-    if key == KEY.NUMLOCK and player() == owner() then
+    if key == KEY.F12 and player() == owner() then
         enableHud(owner(), not render.isHUDActive())
         reset_keys()
+        sendOriginCumPos(Vector())
     end
     
     if ON and render.isHUDActive() then

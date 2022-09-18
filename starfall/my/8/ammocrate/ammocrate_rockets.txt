@@ -1,0 +1,138 @@
+--@name Ammocrate rockets
+--@author Markiz
+--@shared
+
+
+local Ammocrate_Index = 4
+
+
+local Prop, Holo
+
+
+local _Locked = false
+local _Old_sent = nil
+
+
+local Ammocrate_datas = {
+    [1] = {
+        Model = 'models/items/ammocrate_rockets.mdl',
+        Send_Class = 'item_rpg_round',
+    },
+    [2] = {
+        Model = 'models/items/ammocrate_ar2.mdl',
+        Send_Class = 'item_ammo_ar2_large',
+    },
+    [3] = {
+        Model = 'models/items/ammocrate_buckshot.mdl',
+        Send_Class = 'item_box_buckshot',
+    },
+    [4] = {
+        Model = 'models/items/ammocrate_grenade.mdl',
+        Send_Class = 'weapon_frag',
+    },
+    [5] = {
+        Model = 'models/items/ammocrate_pistol.mdl',
+        Send_Class = 'item_ammo_pistol_large',
+    },
+    [6] = {
+        Model = 'models/items/ammocrate_smg1.mdl',
+        Send_Class = 'item_ammo_smg1_large',
+    },
+}
+
+local data = Ammocrate_datas[Ammocrate_Index]
+
+
+if SERVER then
+    chip():setNocollideAll(true)
+    
+    local li = find.inSphere(chip():getPos(), 100, function(ent)
+        return ent:getModel() == data.Model
+    end)
+    if #li > 0 then
+        Prop = find.closest(li, chip():getPos())
+    else
+        Prop = prop.create(chip():localToWorld(Vector(0,0,16)), chip():getAngles(), data.Model, true)
+    end
+    
+    Prop:setColor(Color(255,255,255,0))
+    
+    Holo = holograms.create(Prop:getPos(), Prop:getAngles(), Prop:getModel(), Vector(1))
+    Holo:setParent(Prop)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.writeEntity(Prop)
+        net.writeEntity(Holo)
+        net.send(ply)
+    end)
+    
+    
+    net.receive("keyHandler", function (len, ply)
+        local key = net.readInt(8)
+        
+        if key == KEY.E and !_Locked then
+            
+            _Locked = true
+            Holo:setAnimation("open")
+            timer.simple(2, function()
+                Holo:setAnimation("close")
+                timer.simple(0.5, function()
+                    _Locked = false
+                end)
+            end)
+    
+            --pcall(function()
+                if _Old_sent and _Old_sent:isValid() then
+                    _Old_sent:remove()
+                end
+            --end)
+            --pcall(function()
+                _Old_sent = prop.createSent(ply:getPos(), ply:getAngles(), data.Send_Class, true)
+                _Old_sent:setColor(Color(255,255,255,0))
+            --end)
+            
+    
+            net.start("keyHandler")
+            net.writeEntity(ply)
+            net.writeInt(key, 8)
+            net.send()
+        end
+    end)
+    
+    return
+end
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get Prop!") end
+        Prop = ent
+    end)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get Hologram!") end
+        Holo = ent
+    end)
+end)
+
+
+
+hook.add("inputPressed", "", function(key, ply)
+    if key ~= KEY.E then return end
+    
+    local tr = player():getEyeTrace()          
+    target = tr.Entity 
+    
+    if target ~= Prop or player():getPos():getDistance(Prop:getPos()) > 100 then return end
+    
+    net.start("keyHandler")
+    net.writeInt(key, 8)
+    net.send()
+end)
+
+
+net.receive("keyHandler", function (len)
+    local ply = net.readEntity()
+    local key = net.readInt(8)
+end)
+

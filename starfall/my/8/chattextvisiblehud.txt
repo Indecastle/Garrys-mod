@@ -1,0 +1,112 @@
+--@name Chat Text Visible Hud
+--@author Markiz    
+--@shared
+
+
+local Distance_Render = 4000
+
+
+if SERVER then
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.send(ply)
+    end)
+    
+    net.receive("ChatChanged_Server", function (len, ply)
+        local txt = net.readString()
+        net.start("ChatChanged_Client")
+        net.writeEntity(ply)
+        net.writeString(txt)
+        net.send()
+    end)
+    
+    
+    return
+end
+
+
+local O = owner()
+local OO = player()
+local _oldText = ''
+local _playersData = {}
+local _font = render.createFont("Arial" // font
+                                ,22 // size
+                                ,2000 // weight
+                                ,false // antialias
+                                ,false // additive
+                                ,true // shadow
+                                ,true // outline
+                                ,false // blur
+                                ,false //extended
+                                )
+
+
+function playerChatChanged(ply, txt)
+    --local data = table.first(_playersData, function(x)  return x.ply == ply  end)
+    local data = _playersData[ply]
+    if data ~= nil then
+        if !ply:isValid() or txt == '' then
+            --table.remove(_playersData, data)
+            table.removeByValue(_playersData, data)
+        else
+            data.txt = txt
+        end
+    else
+        --table.insert(_playersData, {ply = ply, txt = txt })
+        _playersData[ply] = {txt=txt}
+    end
+end
+
+
+net.receive("init", function(len)
+end)
+
+
+net.receive("ChatChanged_Client", function(len)
+    local who = net.readEntity()
+    local txt = net.readString()
+    playerChatChanged(who, txt)
+    --printTable(_playersData)
+    --print(''..who:getName()..': '..txt)
+end)
+
+
+
+hook.add("ChatTextChanged", "", function(txt)
+    if _oldText != txt then
+        _oldText = txt
+        net.start("ChatChanged_Server")
+        net.writeString(txt)
+        net.send()
+    end
+end)
+
+hook.add("FinishChat", "", function()
+    net.start("ChatChanged_Server")
+    net.writeString('')
+    net.send()
+end)
+
+
+--------------------------------------------------
+
+
+hook.add("drawhud","myshook",function()
+    render.setFont(_font)
+
+    for k, v in pairs(_playersData) do
+        if k:isValid() and OO:getShootPos():getDistance(k:getEyePos()) < Distance_Render then
+            local vec = k:getEyePos():toScreen()
+            
+            render.setColor(Color(255,255,255))
+            render.drawText(vec.x + 50, vec.y, v.txt, 0)
+        end
+    end
+
+end)
+
+if player() == owner() then
+    enableHud(nil, true)
+end
+    

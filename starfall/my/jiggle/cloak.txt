@@ -1,8 +1,24 @@
---@name Flag cloth_4
---@author
+--@name Cloak
+--@author Markiz
 --@client
 
-local HasGravity = false
+
+local Target = owner()
+Target = find.playersByName("markiz")[1]
+/*AFK = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+--print(Target)
+
+if player() == Target then return end
+
+
+------------------------------------------------
+
+
+local HasGravity = true
 
 local _flag1 = "https://i.imgur.com/zzN3yB7.png"
 local _flag_belarus = "https://i.imgur.com/XUxgnEu.png"
@@ -11,29 +27,47 @@ local _flag_russia = "https://i.imgur.com/jR2vDAC.png"
 local _flag_usa = "https://i.imgur.com/lIfVWWm.png"
 local _flag_anime = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg"
 local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
+local _flag_gigachad = "https://cdn.discordapp.com/attachments/900794622878564362/1020975776096587776/unknown.png?size=4096"
 
 
+local URL = _flag_gigachad
 
-local URL = _flag_usa
+
+------------------------------------------------
+
+
 
 local BoneScale = Vector(4,0.0001,0.0001)
 local Degree = 0
-local BoneHeight = 1
+local BoneHeight = 0.1
 
 local FlagModel = 'models/pac/jiggle/base_cloth_4'..(HasGravity and '_gravity' or '')..'.mdl'
 
 
-local HPole = holograms.create(chip():localToWorld(Vector(0,0,42.231)), chip():getAngles(), "models/sprops/cylinders/size_1/cylinder_1_5x54.mdl", Vector(0.6,0.6,1.6))
-HPole:setMaterial("models/props_docks/dock01a")
-HPole:setParent(chip())
+local head_bone = Target:lookupBone("ValveBiped.Bip01_Spine4")
+local pos1, ang1 = Target:getBonePosition(head_bone)
+--local pos2, ang2 = localToWorld(Vector(-50, 31, -7), Angle(90,-90,0), pos1, ang1)
 
-local HPoleCap = holograms.create(chip():localToWorld(Vector(0,0,86)), chip():getAngles(), "models/sprops/geometry/sphere_24.mdl", Vector(0.075,0.075,0.075))
-HPoleCap:setMaterial("models/props_docks/dock01a")
-HPoleCap:setParent(chip())
-
-local HFlag = holograms.create(chip():localToWorld(Vector(0,-2,65)), chip():localToWorldAngles(Angle(0,Degree,-90)), FlagModel, Vector(1))
-HFlag:setParent(chip())
+local HFlag = holograms.create(pos1, ang1, FlagModel, Vector(1))
 HFlag:setMaterial("brick/brick_model")
+--HFlag:setParent(Target, nil, head_bone)
+
+
+timer.simple(2, function()
+    --hook.remove("think","myshook")
+    --HFlag:setParent(Target, nil, head_bone)
+end)
+
+
+function moveCloak()
+    local pos1, ang1 = Target:getBonePosition(head_bone)
+    local pos2, ang2 = localToWorld(Vector(5, -3, 0), Angle(180,-90+10,90), pos1, ang1)
+    HFlag:setPos(pos2)
+    HFlag:setAngles(ang2)
+end
+
+hook.add("think","myshook", moveCloak)
+hook.add("hologrammatrix","myshook", moveCloak)
 
 
 for i = 0, HFlag:getBoneCount() - 1 do
