@@ -1,0 +1,44 @@
+--@name Loud Music
+--@author Markiz
+--@client
+
+local Volume = 10
+local Speed = 1
+local URL = "pornhub_2"
+
+------------------------------------------------------------------------------------
+
+
+--local Target = find.playersByName("Markiz")[1]
+/*AFK = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+--print(Target)
+
+--if Target ~= nil and player() ~= Target then return end
+
+--if player() == Target then return end
+
+------------------------------------------------------------------------------------
+
+local _urls = {
+    morgenshtern_1 = "https://u.teknik.io/o2Fly.mp3",
+    pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
+    pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
+}
+
+-- =================================================================================
+
+
+bass.loadURL(_urls[URL], "3d noblock", function(Sound)
+    Sound:setPitch(Speed)
+    Sound:setVolume(player() == owner() and 1 or Volume)
+    
+    hook.add("think", "", function()
+        Sound:setPos(eyePos())
+    end)
+        
+end)
+

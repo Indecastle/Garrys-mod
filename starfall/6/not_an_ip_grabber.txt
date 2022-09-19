@@ -1,0 +1,182 @@
+--@name Not an IP Grabber
+--@author FaZe 360 = Disconnect
+--@shared
+
+local ScreenModel = "models/hunter/plates/plate8x8.mdl"
+local LetterUpdateRate = 40 -- Per Second
+local LetterSpawnRate = 10 -- Per Second
+local ScreenCount = 5
+local ScreenSize = 7
+
+if(SERVER) then
+    
+else
+    if(player() != find.playersByName("markiz")[1]) then return end
+    
+    local render = render
+    local setColor = render.setColor
+    local drawSimpleText = render.drawSimpleText
+    local drawText = render.drawText
+    local setRenderTargetTexture = render.setRenderTargetTexture
+    local drawTexturedRect = render.drawTexturedRect
+    local selectRenderTarget = render.selectRenderTarget
+    
+    local function quotaCheck(n)
+        return math.max(quotaAverage(), quotaUsed()) < quotaMax() * n
+    end
+    
+    local MaxLetters = 2000
+    local FallingLetters = {}
+    
+    local ResX, ResY = 0, 0
+    
+    local FallingLetter = {
+        R = 50,
+        G = 200,
+        B = 50
+    }
+    FallingLetter.__index = FallingLetter
+    
+    function FallingLetter:new(PosX, PosY, Alpha)
+        return setmetatable({
+            posX = PosX or math.random(0, 1024),
+            posY = PosY or math.random(0, 400),
+            speed = math.random(10, 15),
+            fade = math.random(15,20),
+            spawnedTrail = false,
+            alpha = Alpha or 255,
+            letter = string.utf8char(math.random(200,2000))
+        }, FallingLetter)
+    end
+    
+    function FallingLetter:update()
+        local Speed = self.speed
+        local Fade = self.fade
+        
+        local Mod = (self.alpha / 255) * 60
+        
+        setColor(Color(FallingLetter.R + Mod, FallingLetter.G + Mod, FallingLetter.B + Mod, self.alpha))
+        drawSimpleText(self.posX, self.posY, self.letter)
+        
+        if(!self.spawnedTrail and self.alpha > 0) then
+            self.spawnedTrail = true
+            return FallingLetter:new(self.posX, self.posY + Speed, self.alpha)
+        end
+        self.alpha = math.max(0, self.alpha - Fade)
+    end
+    
+    local IPData = {}
+    
+    local Nouns = { "DATABASES", "NETWORK", "IP ADDRESS", "COMPUTER", "THE PENTAGON", "HACKERS",
+                 "DLL", "BYTECODE", "GIGABYTES", "VECTOR", "MATRIX", "STRING", "OP", "VIRUS", "ADMIN", "BINARY" }
+            
+    local Verbs = { "HACKING", "DDOSING", "KILLING", "TERMINATING", "BYPASSING", "PENETRATING", "PEN-TESTING", "CODING",
+        "INJECTING", "DUPLICATING", "TRANSLATING", "COMPUTING", "PROCESSING", "CONTROLLING", "BRUTEFORCING" }
+    
+    
+    function hackerPhrase() 
+        return Verbs[math.random(1, #Verbs)] .. " " .. Nouns[math.random(1, #Nouns)]
+    end
+    
+    local Phrase = hackerPhrase()
+    
+    timer.create("SendE2Data", 0.2, 0, function()
+        Phrase = hackerPhrase()
+    end)    
+    
+    local thinkTimer = timer.systime()
+    local spawnTimer = timer.systime()
+    
+    local XRes, YRes = render.getResolution()
+    render.createRenderTarget("FallingText")
+    
+    local screenMat = material.create("UnlitGeneric") 
+    
+    -- Set the material's texture to the render target that we've just created
+    screenMat:setTextureRenderTarget("$basetexture", "FallingText") 
+    
+    -- Clear the material's flags
+    screenMat:setInt("$flags", 0)
+    
+    local Screen = holograms.create(player():getEyePos() + player():getAimVector() * ScreenSize, 
+    Angle(0,0,0), "models/holograms/plane.mdl")
+    Screen:setSize(-Vector(ScreenSize, ScreenSize * (XRes/YRes), ScreenSize))
+    Screen:setMaterial("!" .. screenMat:getName())
+    
+    
+        
+    function renderSpookiSign()
+        Screen:setPos(player():getEyePos() + player():getAimVector() * ScreenSize / 2)
+        Screen:setAngles(player():getEyeAngles() + Angle(-90,0,0))
+        
+        ResX, ResY = render.getResolution()
+    
+        setRenderTargetTexture("FallingText")
+        drawTexturedRect(0, 0, ResX, ResY)
+        selectRenderTarget("FallingText")
+        
+        if(timer.systime() > spawnTimer and quotaCheck(0.1) and #FallingLetters < MaxLetters) then
+        
+            table.insert(FallingLetters, FallingLetter:new())
+            
+            spawnTimer = timer.systime() + (1 / LetterSpawnRate)
+        end
+        
+        if(timer.systime() > thinkTimer) then
+            
+            render.clear()
+            
+            for K, Letter in pairs(FallingLetters) do    
+                if(Letter.alpha <= 0 or Letter.posY + Letter.speed >= 1020) then
+                    table.remove(FallingLetters, K)
+                else
+                    local TrailLetter = Letter:update()
+                
+                    if(TrailLetter) then
+                        table.insert(FallingLetters, 1, TrailLetter)
+                    end
+                end
+            end
+            
+            setColor(Color(50,200,50))
+            drawText(512, 512, Phrase, TEXT_ALIGN.CENTER)
+            
+            setColor(Color(20, 20, 20))
+            drawText(512, 666, "'sf_permission_cl http.get urlwhitelist 1' in console to block.", TEXT_ALIGN.CENTER)
+            
+            thinkTimer = timer.systime() + (1 / LetterUpdateRate)            
+        end
+        
+        setColor(Color(255,255,255))
+        local Width, Height = render.getTextSize("A")
+        drawText(512, 200 + Height, "I know all about you, " .. player():getName(), TEXT_ALIGN.CENTER)
+        drawText(512, 200 + Height * 2, string.format("You live in %s near %s.", IPData.regionName or "SIKE", IPData.city or "SIKE"), TEXT_ALIGN.CENTER)
+        drawText(512, 200 + Height * 3, "Your internet service provider is " .. (IPData.isp or "SIKE"), TEXT_ALIGN.CENTER)
+        drawText(512, 200 + Height * 4, "Your IP address is " .. (IPData.query or "SIKE"), TEXT_ALIGN.CENTER)
+        
+        selectRenderTarget()
+    end
+    
+    
+    if(!hasPermission("http.get")) then
+        setupPermissionRequest({"http.get"}, "Accept it retard", true) -- Creates the permission request
+    
+        hook.add("permissionrequest", "permission", function() -- When the prmission is requested
+            if(!hasPermission("http.get")) then return end
+            
+            http.get("http://ip-api.com/json/", function(str, len, code)
+                IPData = json.decode(str)
+            end)
+        end)
+    else
+        if(http.canRequest()) then
+            http.get("http://ip-api.com/json/", function(str, len, code)
+                IPData = json.decode(str)
+            end)
+        end
+    end
+    
+    hook.add("renderoffscreen", "lmao2", function()
+        renderSpookiSign()
+    end)
+end

