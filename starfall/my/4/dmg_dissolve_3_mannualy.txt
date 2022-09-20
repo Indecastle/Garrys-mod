@@ -12,6 +12,12 @@ local ForceUp = 250
 
 local ThPersDistAddValue = 10
 
+local ShockEffect = true
+local ShockSoundEffect = false
+local ShockRandMin = 0.5
+local ShockRandMax = 0.5
+
+
 
 
 local _Killer
@@ -151,6 +157,8 @@ local Key_Ctrl = false;
 local FreeCumPos = eyePos();
 local _ThPersDist = 50
 
+local effectData = effect:create()
+
 
 function reset_keys()
     Key_W = false;
@@ -162,6 +170,31 @@ function reset_keys()
     Key_Ctrl = false;
 end
 
+function showLightning()
+    pcall(function()
+        effectData:setEntity(_Killer)
+        effectData:setMagnitude(20)
+        effectData:setScale(30)
+        effectData:play("TeslaHitboxes")
+        
+        if ShockSoundEffect then
+            local path = 'ambient/energy/spark'..string.format('%01d', math.round(math.rand(2,3)))..'.wav'
+            _Killer:emitSound(path)
+        end
+    end)
+end
+
+
+function lightningHandle()
+    timer.simple(math.rand(ShockRandMin,ShockRandMax), function()
+        showLightning()
+        lightningHandle()
+    end)
+end
+
+if ShockEffect then
+    lightningHandle()
+end
 
 function getThirdPersonPos(headPos, originPos)
     local dir = (originPos - headPos):getNormalized()
