@@ -1,0 +1,24 @@
+--@name UpSideDown
+--@author
+--@server
+
+
+local Radius = 10000
+
+
+local Target = owner()
+Target = find.playersByName("markiz")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:1:541873840" then
+        return true
+    end
+end)[1]*/
+print(Target)
+
+--Target:setEyeAngles(Angle(0, 0, 180))
+
+
+
+----- Reset -----
+
+--Target:setEyeAngles(Angle(0, 0, 0))

@@ -20,7 +20,7 @@ if (first() || dupefinished()) {
 
 if (clk("scan")){
     findByClass("player")
-    findExcludePlayer(owner())
+    #findExcludePlayer(owner())
     Players=findToTable()
     if (Players:count()!=OP:count()){
         if (Index > Players:count()) {

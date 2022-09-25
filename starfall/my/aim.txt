@@ -1,5 +1,5 @@
 --@name AIM
---@author
+--@author Markiz
 --@shared
 
 
@@ -20,8 +20,8 @@ local curastate = false
 local aimed = false
 local tar = nil
 
-local screenW = 1440
-local screenH = 900
+local screenW = 1920
+local screenH = 1080
 
 
 function gethead(ent)
@@ -78,11 +78,17 @@ if SERVER then
         curastate = false
     end)
     
+    net.receive("Resolution", function(len)
+        screenW = net.readInt(16)
+        screenH = net.readInt(16)
+        print(''..Target:getName()..' - '..tostring(screenW)..', '..tostring(screenH))
+    end)
+    
 else
 
     if Target == OO then
         hook.add("inputPressed", "", function(button)
-            if button == KEY.X then
+            if button == KEY.SHIFT then
                 curastate = true
                 tar = getclosest(200)
                 --print(tar)
@@ -97,7 +103,7 @@ else
         end)
         
         hook.add("inputReleased", "", function(button)
-            if button == KEY.X then
+            if button == KEY.SHIFT then
                 curastate = true
                 --tar = getclosest(200)
                 --print(tar)
@@ -106,6 +112,20 @@ else
                 net.send()
             end
         end)
+        
+        
+        if player() == Target then
+            hook.add("renderoffscreen", "Resolution", function()
+                hook.remove("renderoffscreen", "Resolution")
+                screenW, screenH = render.getGameResolution()
+                --print(Width, Height, ' - ', Fov)
+                
+                net.start("Resolution")
+                net.writeInt(screenW, 16)
+                net.writeInt(screenH, 16)
+                net.send()
+            end)
+        end
     end
     
 end

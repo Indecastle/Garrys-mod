@@ -6,7 +6,7 @@
 
 if(first() | dupefinished()) { #[entity():setAng(owner():angles())]#    timer("s",100)}
 if(clk("s")) {
-    if(Door:isValid() & Door:model() == "models/props_c17/door01_left.mdl") {
+    if(Door:isValid() & (Door:model() == "models/props_c17/door01_left.mdl" | Door:model() == "models/props_doors/door03_slotted_left.mdl")) {
         timer("t",100)
     }
     else {
@@ -17,7 +17,7 @@ if(clk("t")) { #entity():setAlpha(0)
     SpeedD = 5
     
     HDoor = holoCreate(1,Door:pos())
-    holoModel(1,"models/props_c17/door01_left.mdl")
+    holoModel(1, Door:model())
     HDoor:setBodygroup(1,1)
     holoAng(1,Door:angles())
     #holoSkin(1, 2)

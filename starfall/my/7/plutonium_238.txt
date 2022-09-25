@@ -3,8 +3,10 @@
 --@shared
 
 
-local Radius = 400
-local Speed = 0.2
+local Radius = 4200
+local Speed = 0.1
+
+local IsGettingSounds = true
 
 local IsDamaging = false
 local MaxDamage = 2
@@ -22,7 +24,35 @@ local Model = 'models/mechanics/wheels/wheel_smooth_24.mdl'
 local Prop
 
 
+function table.all(t, func)
+    for i=1, #t do
+        if not func(t[i]) then
+            return false
+        end
+    end
+    return true
+end
+
+
 if SERVER then
+    
+    wire.adjustPorts(
+        {
+            ON="number",
+            NoDamagePlayers="array",
+        },
+        {
+        }
+    )
+    
+    hook.add("input", "", function(input_name, value) 
+        if input_name == 'ON' then
+            net.start("Active")
+            net.writeBool(value != 0 and true or false)
+            net.send()
+        end
+    end)
+
     local li = find.inSphere(chip():getPos(), 50, function(ent)
         return ent:getModel() == Model
     end)
@@ -31,7 +61,7 @@ if SERVER then
         E:setPos(Prop:getPos())
         E:setAngles(Prop:getAngles())
     else
-        Prop = prop.create(E:getPos(), E:getAngles(), Model, true)
+        Prop = prop.create(E:localToWorld(Vector(0,0,3  )), E:getAngles(), Model, true)
     end
     if Prop:getOwner() == owner() then
         Prop:setMass(35)
@@ -44,12 +74,15 @@ if SERVER then
     H2:setColor(Color(105,105,105))
     
     
-    E:setNoDraw(true)
+    --E:setNoDraw(true)
+    E:setColor(Color(0,0,0,0))
     E:setNocollideAll(true)
     
-    E:setParent(Prop)
+    --E:setParent(Prop)
     H1:setParent(Prop)
     H2:setParent(Prop)
+    
+    local WW = chip():getWirelink()
     
     
     net.receive("damage", function(len, ply)
@@ -58,7 +91,17 @@ if SERVER then
         local damage = (Radius - dist)/Radius
         --print(convertToDamage(damage))
         
-        if IsDamaging then
+        if wire.ports.Friends and #wire.ports.Friends > 0 then
+            for i, p in ipairs(wire.ports.Friends) do
+                if p == ent or p == ent:getOwner() then 
+                    return false 
+                end
+            end 
+        end
+
+        if IsDamaging 
+                    and (!WW:isWired('ON') or wire.ports.ON != 0) 
+                    and (!wire.ports.NoDamagePlayers or table.all(wire.ports.NoDamagePlayers, function(x) return x != ply end) ) then
             ply:applyDamage(MaxDamage * convertToDamage(damage), chip(), chip())
         end
     end)
@@ -67,16 +110,22 @@ if SERVER then
     hook.add("ClientInitialized", "cl_init", function(ply)
         net.start("init")
         net.writeEntity(Prop)
+        net.writeBool(!WW:isWired('ON') or wire.ports.ON != 0)
         net.send(ply)
     end)
     
 else
     
     local m = material.load("sun/overlay")
-    
+
     local tt = 0
+    local _isActive = true
     
     
+    net.receive("Active", function(len)
+        _isActive = net.readBool()
+    end)
+
     timer.create("ddd", 0.1, 0, function()
         if !Prop then return end
         
@@ -107,7 +156,9 @@ else
             if xx > 1 then
                 xx = 0
                 local soundPath = math.rand(0,1) < 0.5 and "Geiger.BeepLow" or "Geiger.BeepHigh"
-                Prop:emitSound(soundPath, 75, 100, 1, 0)
+                if IsGettingSounds and _isActive then
+                    Prop:emitSound(soundPath, 75, 100, 1, 0)
+                end
                 
                 net.start("damage")
                 net.writeFloat(dist, 16)
@@ -139,5 +190,7 @@ else
                 end)
             end)
         end)
+        
+        _isActive = net.readBool()
     end)
 end

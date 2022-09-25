@@ -13,9 +13,9 @@ local ForceUp = 250
 local ThPersDistAddValue = 10
 
 local ShockEffect = true
-local ShockSoundEffect = false
-local ShockRandMin = 0.5
-local ShockRandMax = 0.5
+local ShockSoundEffect = true
+local ShockRandMin = 0.2
+local ShockRandMax = 4
 
 
 

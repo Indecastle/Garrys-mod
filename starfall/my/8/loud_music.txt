@@ -1,10 +1,15 @@
 --@name Loud Music
 --@author Markiz
---@client
+--@shared
+
 
 local Volume = 10
 local Speed = 1
 local URL = "pornhub_intro"
+local IsLooping = false
+
+local IsAllServer = false
+local Radius = 4200
 
 ------------------------------------------------------------------------------------
 
@@ -27,17 +32,81 @@ local _urls = {
     morgenshtern_1 = "https://u.teknik.io/o2Fly.mp3",
     pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
     pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
+    bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
 }
 
 -- =================================================================================
 
 
-bass.loadURL(_urls[URL], "3d noblock", function(Sound)
-    Sound:setPitch(Speed)
-    Sound:setVolume(player() == owner() and 1 or Volume)
+if SERVER then
+    
+    local WW = chip():getWirelink()
+    
+    wire.adjustPorts(
+        {
+            ON="number",
+        },
+        {
+        }
+    )
+    
+    hook.add("input", "", function(input_name, value) 
+        if input_name == 'ON' then
+            net.start("Active")
+            net.writeBool(value != 0 and true or false)
+            net.send()
+        end
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("Active")
+        net.writeBool(!WW:isWired('ON') or wire.ports.ON != 0)
+        net.send(ply)
+    end)
+    
+    return
+end
+
+---------------
+
+local _isActive = true
+local _sound
+
+
+net.receive("Active", function(len)
+    _isActive = net.readBool()
+    if isValid(_sound) then
+        if _isActive then
+            _sound:play()
+        else
+            
+            _sound:pause()
+        end
+    end
+end)
+
+
+bass.loadURL(_urls[URL], "3d noblock noplay", function(Sound)
+    _sound = Sound
+    _sound:setLooping(IsLooping)
+    _sound:setPitch(Speed)
+    
+    if _isActive then
+        _sound:play()
+    else
+        
+        _sound:pause()
+    end
     
     hook.add("think", "", function()
-        Sound:setPos(eyePos())
+        if IsAllServer then
+            _sound:setVolume(Volume)
+        else
+            local distance = chip():getPos():getDistance(player():getPos())
+            _sound:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
+        end
+
+        _sound:setPos(eyePos())
     end)
         
 end)

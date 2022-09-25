@@ -1,0 +1,305 @@
+--@name Player's regions
+--@author Markiz
+--@shared
+
+
+local MaxRows = 15
+local mouseScale = 3
+
+local IsIPVisible = false
+
+
+
+
+local px, py = 20, 80
+
+local ow, oh = 360, 56
+
+local padd = 4
+
+local delta = 1/60
+local frame = 0
+
+
+local _IPData = {}
+
+
+if SERVER then
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init_server")
+        net.send(ply)
+    end)
+    
+    net.receive("init_client", function(len, ply)
+        if net.readBool() == true then
+            local ipdata = net.readTable()
+            _IPData[ply] = ipdata
+        else
+            _IPData[ply] = { NoActive = true }
+        end
+    end)
+    
+    timer.create("", 2, 0, function()
+        for ply, data in pairs(_IPData) do
+            if !isValid(ply) then
+                table.removeByValue(_IPData, data)
+            end
+        end
+        net.start("data")
+        net.writeTable(_IPData)
+        net.send()
+    end)
+    
+    return
+end
+
+
+local w, h = nil, nil
+local cx, cy = nil, nil
+local _isDetailedInfo = false
+local _detailedInfoData = nil
+local scr = nil
+--if player() ~= owner() then return end
+
+net.receive("init_server", function(len)
+    local ipdata
+
+    timer.create("abc", 1, 0, function()
+        if(!hasPermission("http.get")) then
+            timer.remove("abc")
+            net.start("init_client")
+            net.writeBool(false)
+            net.send()
+            return  
+        end
+        
+        if ipdata ~= nil then
+            timer.remove("abc")
+            net.start("init_client")
+            net.writeBool(true)
+            net.writeTable(ipdata)
+            net.send()
+            return
+        end
+    
+        pcall(function()
+            http.get("http://ip-api.com/json/", function(str, len, code)
+                ipdata = json.decode(str)
+            end)
+        end)
+    end)
+end)
+
+
+net.receive("data", function(len)
+    _IPData = net.readTable()
+end)
+
+
+local font1 = render.createFont("Arial", 18, 600, true)
+local font2 = render.createFont("Arial", 18, 400, true)
+local font3 = render.createFont("Arial", 25, 400, true)
+
+render.createRenderTarget("screen")
+
+
+local mouse = {
+    { x=0, y=0 },
+    { x=3, y=2 },
+    { x=1.1, y=2 },
+    { x=2.1, y=3.9 },
+    { x=1.9, y=4 },
+    { x=0.9, y=2.1 },
+    { x=0.1, y=3.75 },
+}
+
+function getMouse(curX, curY, scale)
+    local copyMouse = table.copy(mouse)
+    for i=1, #copyMouse do
+        copyMouse[i].x = copyMouse[i].x*scale + curX
+        copyMouse[i].y = copyMouse[i].y*scale + curY
+    end
+    return copyMouse
+end
+
+function drawMouse(curX, curY, scale)
+    render.setRenderTargetTexture()
+
+    copyMouse = getMouse(curX, curY, scale)
+    render.setColor(Color(255, 255, 255))
+    render.drawPoly(copyMouse)
+end
+
+function quota()
+    return math.max(quotaAverage(), quotaUsed()) / quotaMax()
+end
+
+
+function update()
+    me2 = find.byClass("gmod_wire_expression2")
+    msf = find.byClass(chip():getClass())
+    
+    e2 = {}
+    sf = {}
+    
+    try(function()
+    
+        for i = 1, #me2 do
+            local c = me2[i]
+            if not c:isValid() then continue end
+            e2[#e2 + 1] = {
+                name = c:getChipName(),
+                owner = c:getOwner() and c:getOwner():getName() or "nil"
+            }
+        end
+        
+        for i = 1, #msf do
+            local c = msf[i]
+            if not c:isValid() then continue end
+            sf[#sf + 1] = {
+                name = c:getChipName(),
+                author = c:getChipAuthor() or "nil",
+                owner = c:getOwner() and c:getOwner():getName() or "nil"
+            }
+        end
+        
+    end, function() end)
+end
+
+timer.create("Updater", 2, 0, update)
+
+hook.add("render", "", function()
+    local w, h = render.getResolution()
+    scr = render.getScreenEntity()
+
+    render.setRenderTargetTexture("screen")
+    render.drawTexturedRect(0, 0, w, h)
+    
+    cx, cy = render.cursorPos(player())
+    
+    if cx then
+        cx = cx * 2
+        cy = cy * 2
+    end
+    
+    if cx == nil then return end
+    
+    render.setColor(Color(255,255,255))
+
+    drawMouse(cx/2, cy/2, mouseScale)
+end)
+
+
+function findCardHandler(cx, cy)
+    local keys = table.getKeys(_IPData)
+    
+    if cx == nil then return end
+    
+    for i = 1, #keys do
+        local ply = keys[i]
+        local data = _IPData[ply]
+        
+        local bx = i <= MaxRows  and  px  or  w-px-ow
+        local by = py + (oh + padd) * (i - (i > MaxRows and MaxRows or 0) - 1)
+        
+        if cx > bx and cx < bx+ow
+            and cy > by and cy < by+oh then
+                return {ply=ply, data=data}
+        end
+    end
+
+    return
+end
+
+hook.add("renderoffscreen", "", function()
+    
+    if quota() > 0.05 then return end
+    local now = timer.systime()
+    if frame > now then return end
+    frame = now + delta
+
+    render.selectRenderTarget("screen")
+    
+    w, h = render.getResolution()
+    
+    render.clear(Color(14, 14, 14))
+    
+    render.setFont(font1)
+    
+    render.drawText(w / 2, 20, "Player regions", 1)
+    
+    local keys = table.getKeys(_IPData)
+    
+    
+    local findedData = findCardHandler(cx, cy)
+    
+    for i = 1, #keys do
+        local ply = keys[i]
+        local data = _IPData[ply]
+        
+        if !isValid(ply) then
+            table.removeByValue(_IPData, data)
+            continue
+        end
+        
+        local bx = i <= MaxRows  and  px  or  w-px-ow
+        local by = py + (oh + padd) * (i - (i > MaxRows and MaxRows or 0) - 1)
+        if !_isDetailedInfo and findedData and findedData.ply == ply then
+            render.setColor(Color(60,60,60))
+        else
+            render.setColor(Color(36,36,36))
+        end
+        
+        render.drawRoundedBox(5, bx, by, ow, oh)
+        render.setColor(team.getColor(ply:getTeam()))
+        render.setFont(font1)
+        render.drawText(bx + 5, by + 4, ply:getName(), 0)
+        render.setFont(font2)
+        if data.NoActive then
+            render.drawText(bx + 5, by + 30, "No Access", 0)
+        else
+            render.drawText(bx + 5, by + 30, "Country - " .. data.country, 0)
+        end
+    end
+    
+    if _isDetailedInfo then
+        render.setColor(Color(36,36,36))
+        render.drawRoundedBox(50, px + 100, py + 50, w-250, h-250)
+        
+        render.setFont(font3)
+        render.setColor(Color(255,255,255))
+        
+        if IsIPVisible then
+            render.drawText(px + 120, py+50 + 20, 'IP - ' .. _detailedInfoData.data.query, 0)
+        end
+        render.drawText(px + 120, py+50 + 60, 'Country - ' .. _detailedInfoData.data.country .. ' [' .. _detailedInfoData.data.countryCode .. ']', 0)
+        render.drawText(px + 120, py+50 + 100, 'Region - ' .. _detailedInfoData.data.regionName, 0)
+        render.drawText(px + 120, py+50 + 140, 'City - ' .. _detailedInfoData.data.city, 0)
+        render.drawText(px + 120, py+50 + 180, 'Provider - ' .. _detailedInfoData.data.isp, 0)
+        
+        render.setFont(font2)
+        render.drawText(px + 120, py+50 + 220, 'Provider (MoreInfo) - ' .. _detailedInfoData.data.as, 0)
+    end
+end)
+
+
+hook.add("inputPressed", "", function(btn)
+    if btn != MOUSE.MOUSE1 then return end
+    --if player():getPos():getDistance(chip():getPos()) > Distance then return end
+    if cx == nil or player():getEyeTrace().Entity ~= scr then return end
+    clk = true
+    
+
+    if _isDetailedInfo then
+        _isDetailedInfo = false
+        _detailedInfoData = nil
+        return
+    end
+
+    local data = findCardHandler(cx, cy)
+    if data and !data.data.NoActive then
+        _detailedInfoData = data
+        _isDetailedInfo = true
+    end
+end)

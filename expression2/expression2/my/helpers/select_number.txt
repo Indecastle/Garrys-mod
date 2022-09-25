@@ -1,0 +1,20 @@
+@name WireE2 Select Number
+@inputs Next Prev 
+@outputs Index
+@persist Min Max
+@trigger all
+
+if (first() || dupefinished()) {
+    Min = 1
+    Max = 7
+    
+    Index = Min
+}
+
+if(~Next && Next) {
+    Index = Index < Max ? Index+1 : Min
+}
+
+if(~Prev && Prev) {
+    Index = Index > Min ? Index-1 : Max
+}

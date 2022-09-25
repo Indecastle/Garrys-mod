@@ -152,6 +152,10 @@ hook.add("hologrammatrix", "setPos", function()
         holo:setPos(eyeP + eyeA:getForward()*Offset)
         --holo:setAngles((-eyeD):getAngle() + Angle(90,0,0))
         holo:setAngles(eyeA + Angle(90,0,180))
+        
+        local distance = chip():getPos():getDistance(player():getPos())
+        local x = math.min(1, ((Radius-distance) / Radius))
+        holo:setColor(Color(255*x,255*x,255*x))
     else
         holo:setPos(Vector())
     end
