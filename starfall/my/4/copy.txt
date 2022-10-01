@@ -31,6 +31,19 @@ local _scaleBase = 40
 local _scale = _scaleBase * Scale
 
 
+/*
+print("Helper:")
+print("Key G - ON/OFF the chip")
+print("Key Mouse1 - paste the build")
+print("Key Mouse2 - copy the build")
+print("Key ArrowUp - increase the area")
+print("Key ArrowDown - decrease the area")
+print("Key K - load from local file")
+print("Key L - save to local file")
+print("Key O - show all saved builds")
+print("Key P - change target file name")
+*/
+
 
 
 function isValidFileName(name)
@@ -884,17 +897,4 @@ hook.add("PlayerSay","Say",function(ply, txt)
     print("Changed FileName to '"..LoadFile.."'")
     return ''
 end)
-
-/*
-print("Helper:")
-print("Key G - ON/OFF the chip")
-print("Key Mouse1 - paste the build")
-print("Key Mouse2 - copy the build")
-print("Key ArrowUp - increase the area")
-print("Key ArrowDown - decrease the area")
-print("Key K - load from local file")
-print("Key L - save to local file")
-print("Key O - show all saved builds")
-print("Key P - change target file name")
-*/
 

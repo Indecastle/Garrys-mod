@@ -8,12 +8,12 @@ dofile("libs/sprites_data.txt")
 local SpriteManager = require("libs/sprites1.txt")
 
 
-local img = "anime1"
-local maxh = 10*20
+local img = "anime2"
+local maxh = 10*2000
 local delay = 0.05
 
 
-local ParentAngle = false
+local ParentAngle = true
 local VerticalAngle = true
 local PosUp = true
 

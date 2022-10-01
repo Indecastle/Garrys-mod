@@ -9,7 +9,7 @@ local GifToSpritesheet = require("libs/gifspritesheet.txt")
 
 
 local img = "cat"
-local maxh = 10*50
+local maxh = 10000
 local delay = 1
 
 local maxRTs = 5

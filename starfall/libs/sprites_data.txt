@@ -41,6 +41,11 @@ SpritesData = {
         size = {9, 9},
         frameCount = 9^2*2 - 4
     },
+    catfire = {
+        urls = {"https://i.imgur.com/zXOiu2b.png"},
+        size = {2, 2},
+        frameCount = 2*2
+    },
     triangle   = {
         urls = {"https://i.imgur.com/zzOLE8F.png"},
         size = {4, 4},
@@ -56,7 +61,31 @@ SpritesData = {
         size = {3, 2},
         frameCount = 3*2
     },
+    anime2 = {
+        urls = {"https://i.imgur.com/Um7cGnH.png"},
+        size = {3, 4},
+        frameCount = 3*4
+    },
+    vlad1   = {
+        urls = {"https://i.imgur.com/GWS6M68.png"},
+        size = {8, 8},
+        frameCount = 8*8 - 4
+    },
+    ded1 = {
+        urls = {"https://i.imgur.com/dH4bUPO.png"},
+        size = {8, 6},
+        frameCount = 8*6 - 2
+    },
+    fat1 = {
+        urls = {"https://i.imgur.com/4JEW1c1.png"},
+        size = {6, 6},
+        frameCount = 6*6 - 5
+    },
 }
+
+
+
+
 
 
 SpritesData2 = {
@@ -73,4 +102,5 @@ SpritesData2 = {
     tornado = "https://i.imgur.com/xIOeFDt.gif",
     --dicaprio = "https://u.teknik.io/VoX0P.gif",
     city = "https://i.imgur.com/ROf54Np.gif",
+    anime1 = "https://u.teknik.io/cN1eo.gif",
 }

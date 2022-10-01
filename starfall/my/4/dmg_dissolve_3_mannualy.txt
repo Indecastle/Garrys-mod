@@ -2,8 +2,6 @@
 --@author Markiz
 --@shared
 
-local Radius = 1000
-
 local Force = 5
 local ForceShift = 20
 local ForceCtrl = 2

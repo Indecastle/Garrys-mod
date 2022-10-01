@@ -24,6 +24,7 @@ local maxh = 120*2
 local ParentAngle = false
 local VerticalAngle = true
 local PosUp = true
+local ParentOnMe = true
 
 function isLookingAtChip()
     local dir = owner():getEyeAngles():getForward()
@@ -87,8 +88,12 @@ else
                 eyeAngle = eyeAngle:setP(90)
             end
             screen:setAngles(eyeAngle)
-            --:setPos(chip():getPos())
-            screen:setPos(owner():getPos())
+           
+            if ParentOnMe then
+                screen:setPos(owner():getPos())
+            else
+                screen:setPos(chip():getPos())
+            end
         end
     end)
     

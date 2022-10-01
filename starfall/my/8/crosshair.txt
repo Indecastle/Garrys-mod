@@ -1,0 +1,33 @@
+--@name Crosshair
+--@author Markiz
+--@client
+
+local O = player()
+
+local GameW, GameH
+
+
+
+hook.add("drawhud","",function()    
+    if GameW == nil then
+        GameW, GameH = render.getGameResolution()
+    end
+    
+    local tr = O:getEyeTrace()
+    local target = tr.Entity
+    
+    if isValid(target) and target:getClass() == 'player' then
+        render.setColor(Color(200,0,0, 200))
+    else
+        render.setColor(Color(0,200,200, 200))
+    end
+    
+    render.drawRoundedBox(100, GameW/2-10-2, GameH/2-0.7, 23, 2)
+    render.drawRoundedBox(100, GameW/2-1.5, GameH/2-10+1, 2, 19)
+end)    
+
+
+
+if player() == owner() then
+    enableHud(nil, true)
+end

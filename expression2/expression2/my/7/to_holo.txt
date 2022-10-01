@@ -6,7 +6,7 @@ if (first()) {
     runOnKeys(O, 1) 
 }
 
-if((changed(O:keyPressed("b")) || O:keyPressed("b")) && O:aimEntity():isValid()) {
+if((changed(O:keyPressed("lalt")) || O:keyPressed("lalt")) && O:aimEntity():isValid()) {
     local Prop = O:aimEntity()
     #Entity=holoCreate(number index,vector position,vector scale,angle ang,vector4 color,string model)
     local Holo = holoCreate(J, Prop:pos(), vec(1), Prop:angles(), Prop:getColor4(), Prop:model())

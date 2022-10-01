@@ -25,9 +25,9 @@ local WorkTimerDelay = 0.5
 local IsOnlyPlayers = false
 
 local Friends = {
-    'Markiz',
-    --'Force2005',
-    --'prostocrifte',
+    --'Markiz',
+    'Force2005',
+    'prostocrifte',
 }
 
 --local SphereMode = 'ihv' -- invisible / ihv

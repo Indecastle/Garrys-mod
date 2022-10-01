@@ -1,0 +1,73 @@
+--@name Remove toolgun
+--@author
+--@server
+
+
+local IsBlackList = true
+
+local players = {
+    'STEAM_0:1:54066003', -- Markiz,
+    'STEAM_0:1:100356779', -- Force2005,
+}
+
+
+local DupeTools = { 
+    advdupe2 = 1, 
+    duplicator = 1, 
+    starfall_processor = 1
+}
+
+-------------------------------------------------------------------------------------
+
+
+local O = owner()
+local E = chip()
+
+
+function table.all(t, func)
+    for i=1, #t do
+        if not func(t[i]) then
+            return false
+        end
+    end
+    return true
+end
+function table.any(t, func)
+    for i=1, #t do
+        if func(t[i]) then
+            return true
+        end
+    end
+    return false
+end
+
+function isInArray(ply)
+    return table.any(players, function(x) return x == ply:getSteamID() end)
+end
+
+
+timer.create("AntiDupe", 0.1, 0, function()
+    for i, ply in ipairs(find.allPlayers()) do
+        --if ply == O then print(ply:getActiveWeapon():getToolMode()) end
+        
+        if isValid(ply)
+            and (IsBlackList and isInArray(ply) or !IsBlackList and !isInArray(ply))
+            and isValid(ply:getActiveWeapon())
+            and DupeTools[ply:getActiveWeapon():getToolMode()] then
+                ply:getActiveWeapon():remove()
+        end
+    end
+end)
+
+
+/*
+hook.add("PlayerSwitchWeapon", "AntiDupe", function(ply, oldWeapon, newWeapon)
+    --if ply == O then print(ply:getActiveWeapon():getToolMode()) end
+    
+    if isValid(newWeapon)
+        and table.all(players, function(x) return x ~= ply end) then
+            
+        newWeapon:remove()
+    end
+end)
+*/

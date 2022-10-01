@@ -47,6 +47,6 @@ hook.add("KeyPress", "test", function(pl, key)
 end)
 
 hook.add("DupeFinished", "abc", function()
-    print("owned")
+    --print("owned")
     --chip():remove()
 end)

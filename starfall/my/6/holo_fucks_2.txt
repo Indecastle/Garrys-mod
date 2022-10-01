@@ -85,8 +85,8 @@ function validHandler()
         Holo_Dick:setColor(Color(255,0,191))
         return true
     else
-        Holo:setColor(Color())
-        Holo_Dick:setColor(Color())
+        Holo:setColor(Color(0,0,0,0))
+        Holo_Dick:setColor(Color(0,0,0,0))
         
         Holo:setPos(Vector())
         Holo:setAngles(Angle())
@@ -164,7 +164,6 @@ hook.add("hologrammatrix", "holo", function()
         
         local dir = Target:getEyeAngles():setP(0)
         local dirVec = dir:getForward()
-        local TargetBonePos = Target:getBonePosition(bone_Pelvis)
         Holo:setPos(Target:getPos() - dirVec*20 + Vector(0,0,0))
         Holo:setAngles(dir)
         local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
@@ -208,7 +207,6 @@ hook.add("hologrammatrix", "holo", function()
         
     elseif Mode == 5 then
         
-        --local dir = Target:getEyeAngles():setP(0)-- + Angle(0,90,0)
         local _, dir = Target:getBonePosition(bone_Pelvis)
         dir = dir + Angle(0,0,0)
         _, dir = localToWorld(Vector(), Angle(-90,-90,0),
@@ -225,7 +223,6 @@ hook.add("hologrammatrix", "holo", function()
         
     elseif Mode == 6 then
 
-        --local dir = Target:getEyeAngles():setP(0)-- + Angle(0,90,0)
         local _, dir = Target:getBonePosition(bone_head1)
         dir = dir + Angle(0,0,0)
         _, dir = localToWorld(Vector(), Angle(180,-90,-90),
@@ -243,7 +240,6 @@ hook.add("hologrammatrix", "holo", function()
     elseif Mode == 7 then
         
         local eyesAttachmentId = Target:lookupAttachment('eyes')
-        --local dir = Target:getEyeAngles():setP(0)-- + Angle(0,90,0)
         local pos, dir = Target:getAttachment(eyesAttachmentId)
         dir = dir
         _, dir = localToWorld(Vector(), Angle(180,0,0),
@@ -251,12 +247,11 @@ hook.add("hologrammatrix", "holo", function()
         dir = dir:setP(0)
         local dirVec = dir:getForward()
         dir = dirVec:getAngle()
-        --dir = dir:setP(0)
         Holo:setPos(pos - dirVec*20 + Vector(0,0,-35))
         Holo:setAngles(dir)
         local HoloBonePos = Holo:getBonePosition(bone_Pelvis)
         Holo_Dick:setPos(HoloBonePos + Vector(0,0,-5) + dirVec*12)
-        
+        Holo_Dick:setAngles(dir + Angle(0,90,-90))
     end
 end)
 

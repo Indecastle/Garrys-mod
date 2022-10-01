@@ -1,0 +1,88 @@
+@name Turret Melon auto
+@inputs WhiteList:array CheckGod
+@outputs Target:entity 
+@persist Defaultpos MaxDegree Radius [Turret H]:entity W:wirelink E
+@trigger none
+interval(10)
+if(first()) { 
+    MaxDegree = 45
+    Radius = 1000
+    E = 0.5      #intervaltick(0.015..)*E
+    
+    #runOnKeys(owner(),1)
+    findByClass("gmod_wire_turret")
+    Turret = findClosest(entity():pos())
+    W = Turret:wirelink()
+    #findExcludePlayer(owner())
+    timer("scan",100)
+    
+    
+    
+    H = holoCreate(1,entity():toWorld(vec(0,0,10)),vec(0.3)) H:setAlpha(0)
+    holoParent(1,entity())
+}
+
+Turret:setPos(H:toWorld(vec(10,0,0)))
+
+
+function number getDegreeDiff(Dir1:vector, Dir2:vector) {
+    Cos = (Dir1:x()*Dir2:x()+Dir1:y()*Dir2:y()+Dir1:z()*Dir2:z()) / (Dir1:distance(vec(0))*Dir2:distance(vec(0)))
+    return acos(Cos)
+}
+
+if(clk("scan")) {
+    findClearWhiteList()
+    findClearBlackList()
+    if(WhiteList:count() > 0) { findExcludeEntities(WhiteList) }
+    
+    findByModel("models/props_junk/watermelon01.mdl")
+    Players = findToArray() 
+    local R = array()
+    for(I=1,Players:count()) {
+        Pos = holoEntity(1):angles():forward()
+        Pos0 = (Players:entity(I):pos() - holoEntity(1):pos()):normalized()
+        Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
+        Acos = acos(Cos)
+        if(Acos<MaxDegree & Players:entity(I):isValid()) {
+            #if(!CheckGod | 0) {
+                R:pushEntity(Players:entity(I))
+            #}
+        }
+    }
+    
+    #findIncludeClass("player")
+    findIncludeEntities(R)
+    findInSphere(Turret:pos(),Radius)
+    local Count = 0
+    if(R:count() > 0) { Count = findSortByDistance(Turret:pos()) }
+    else { Count = 0 }
+    Target = noentity()
+    for(I=1, Count) {
+        Ranger = rangerOffset(Turret:pos()+vec(0,0,20),findResult(I):massCenter())
+        if(!Ranger:hitWorld() & Ranger:entity():model()=="models/props_junk/watermelon01.mdl") { Target = findResult(I) break }
+    }
+    timer("scan",400)
+}
+
+if(Target:isValid()) {
+    Ang = (Target:massCenter() - Turret:pos() + Target:vel() * tickInterval()*E ):toAngle()
+    Turret:setAng(Ang)
+    timer("fire",100)
+}
+else { 
+    timer("stopfire",100) 
+    Turret:setAng(holoEntity(1):angles())
+    }
+
+if(clk("fire")) { W["Fire",number] = 1 }
+if(clk("stopfire")) { W["Fire",number] = 0 }
+
+if(changed(Target:isPlayer())&Target:isPlayer()) {
+    Turret:soundPlay("Alert",0.5,"NPC_FloorTurret.Alert")
+}
+
+if(changed(Target)&Target:isPlayer()) {
+    Turret:soundPlay("change",0.5,"NPC_Turret.Deploy")
+}
+
+

@@ -1,0 +1,159 @@
+--@name Fake grenade
+--@author Markiz
+--@shared
+
+
+local IsOnlyAttackerVisible = false
+local IsOnlyPlayers = true 
+
+local ColorSpeed = 50
+local BalloonForce = 100
+
+local LockDelay = 0.5
+
+local RandomBalloon = 0.1 -- interval 0-1
+
+
+if SERVER then
+    local _grenade, _holo
+    local _balloons = {}
+    local _lockTime = 0
+    
+     _grenade = prop.create(chip():getPos() + Vector(0,0,10), chip():getAngles(), "models/items/grenadeammo.mdl", false)
+    _grenade:setMass(35)
+    --_grenade:setFlexWeight(1, 50000)
+            
+    _holo = holograms.create(_grenade:localToWorld(Vector(0,0,4)), _grenade:getAngles(), "models/holograms/cube.mdl", Vector(0.2))
+    _holo:setParent(_grenade)
+    
+    _holo:setNoDraw(true)
+    _holo:setTrails(1, 0, 0.4, "trails/smoke", Color(255,0,0, 200), nil, true)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.writeEntity(_grenade)
+        net.send(ply)
+    end)
+    
+    function fakeSoundPlay()
+        _grenade:emitSound("Grenade.Blip", 75, 10, 1, 0)
+    end
+    
+    fakeSoundPlay()
+    
+    timer.simple(1, function()
+        timer.create("fake_loop", 0.35, 0, function()
+            fakeSoundPlay()
+        end)
+    end)
+    
+    --hook.add("think", "balloon", function()
+    timer.create("balloon", 0.1, 0, function()
+        for i, balloon in ipairs(_balloons) do
+            if !isValid(balloon) then
+                table.removeByValue(_balloons, balloon)
+            else
+                local j = (timer.systime() + i*100)*ColorSpeed  % 360
+                balloon:setColor(Color(j,1,1):hsvToRGB())
+            end
+                
+        end
+    end)
+    
+    
+    function createBalloon()
+        pcall(function()
+            local balloon = prop.createSent(_grenade:getPos() + Vector(0,0,5), Angle(0,0,0), "gmod_balloon", false, {
+                Model = "models/maxofs2d/balloon_classic.mdl",
+                r = 255,
+                g = 255,
+                b = 255,
+                force = BalloonForce,
+            })
+            table.insert(_balloons, 1, balloon)
+            local j = timer.systime()*2  % 360
+            
+            constraint.rope(1, 
+                _grenade,
+                balloon,
+                nil,
+                nil,
+                Vector(0,0,4), -- Vector v1
+                Vector(), -- Vector v2
+                50, -- length
+                0, -- addlength
+                0, -- force_lim
+                1, -- width
+                "cable/rope", -- material
+                false, -- rigid
+                Color(255,255,255))
+        end)
+    end
+    
+    function sendMessage(netPlayer, position)
+        --if netPlayer == target then return end  
+        net.start("EntityTakeDamage")
+        --net.writeEntity(target)
+        --net.writeVector(position)
+        net.send(netPlayer)
+    end
+    
+    
+    function jokeHalder(netPlayer, position)
+        local _tt = timer.systime()
+        if _tt < _lockTime then return end
+        _lockTime = _tt + LockDelay
+        
+        if math.random(0,1) < RandomBalloon then
+            createBalloon()
+        else
+            sendMessage(netPlayer, position)
+        end
+    end
+    
+    
+    hook.add('EntityTakeDamage', '', function(target, attacker, inflictor, amount, type, position, force)
+        if false
+            or IsOnlyPlayers and attacker:getClass() ~= 'player'
+            or target ~= _grenade 
+            then return end
+        
+        if IsOnlyAttackerVisible then
+            jokeHalder(attacker, target, position)
+        else
+            jokeHalder(nil, position)
+            --for i, ply in ipairs(find.allPlayers()) do
+            --    sendMessage(ply, target, position)
+            --end
+        end
+    end)
+
+    return
+end
+
+
+
+local _grenade
+local _effectData = effect:create()
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get grenade!") end
+        _grenade = ent
+    end)
+end)
+
+
+function BaloonSoundPlay()
+    _effectData:setOrigin(_grenade:getPos())
+    _effectData:play("balloon_pop")
+end
+
+net.receive("EntityTakeDamage", function (len)
+    --local target = net.readEntity()
+    --local pos = net.readVector()
+    if isValid(_grenade) then
+        BaloonSoundPlay()
+    end
+end)
