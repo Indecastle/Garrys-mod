@@ -1,0 +1,181 @@
+--@name DMG_DISSOLVE 2 Obunga
+--@author Markiz
+--@shared
+
+
+
+
+local Radius = 1000
+
+local Force = 10
+local ForceUp = 250
+
+local killer, physEnt;
+
+
+local img = "obunga"
+local size = 300
+
+local URLS = {
+    rikka_1 = "https://i.imgur.com/xdOEuic.png",
+    rikka_2 = "https://i.imgur.com/qSiOCZH.jpg",
+    rikka_ch = "https://i.imgur.com/9UtATPQ.gif",
+    rikka_s = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg",
+    rikka_c = "https://i.imgur.com/5139yCi.jpg",
+    rikka_f = "https://anime-planet.com/images/characters/rikka-takanashi-43640.jpg",
+    horny = "https://media.discordapp.net/attachments/542043404629180417/849195384470503444/paLNxVWlfEM.png",
+    malina_booba = "https://media.discordapp.net/attachments/854459216839049267/854459668261109790/O2NFX9U5dT8.jpg",
+    malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
+    
+    obunga = "https://i.imgur.com/wEBb6mG.png",
+    custom = nil
+}
+
+
+if SERVER then
+    
+    local players = find.allPlayers()
+    
+    local Base = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
+    Base:setNoDraw(true)
+
+    function gethead(ent)
+        if ent:lookupBone("ValveBiped.Bip01_Head1") then
+            local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+            return pos
+        end
+        return ent:localToWorld(ent:obbCenter())
+    end
+    
+    function isValidFindPlayer(ent)
+        local nvars = ent:getNWVarTable()
+        return ent ~= nil and ent:isValid() and ent:isValidPhys()
+            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and (nvars == nil or !nvars["_Kyle_Buildmode"])
+                or ent:isNPC()) 
+    end
+    
+    function isValidPlayer(ent)
+        return ent ~= nil and ent:isValid() and ent:isValidPhys()
+    end
+    
+    local closestPlayer;
+    local up;
+    
+    
+    timer.create("createIfDestroyed", 0.5, 0, function()
+        if killer == nil or !killer:isValid() then
+            --killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_c17/doll01.mdl", false)
+            killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/XQM/Rails/gumball_1.mdl", false)
+            killer:setColor(Color(0,0,0,0))
+            killer:setPhysMaterial("gmod_silent")
+            killer:setUnbreakable(true)
+            physEnt = killer:getPhysicsObject()
+            physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
+            physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
+            --physEnt:enableGravity(false)
+            up = Vector(0,0,killer:getMass()*ForceUp)
+            
+            Base:setPos(killer:getPos())
+            Base:setParent(killer)
+        end
+    end)
+    
+    
+    timer.create("findPlayer", 0.2, 0, function()
+        if killer ~= nil and killer:isValid() then
+            local validPlayers = find.allPlayers(function(e)
+                return e:getPos():getDistance(killer:getPos()) < Radius 
+                        and isValidFindPlayer(e)
+            end)
+            
+            validPlayers = find.sortByClosest(validPlayers, killer:getPos())
+            closestPlayer = #validPlayers ~= nil and validPlayers[1] or nil
+        else
+            closestPlayer = nil
+        end
+    end)
+    
+    
+    timer.create("jump", 2, 0, function()
+        if killer ~= nil and killer:isValid() and killer:isValidPhys()  and isValidPlayer(closestPlayer) then
+            killer:applyForceCenter(up)
+        end
+    end)
+    
+    
+    hook.add("think", "fun", function()
+        if killer ~= nil and killer:isValid() and isValidPlayer(closestPlayer) then
+            local dir = (gethead(closestPlayer) - killer:getPos()):getNormalized()
+            dir = dir:setZ(0):getNormalized()
+            physEnt:applyForceCenter(dir * killer:getMass() * Force)
+        end
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.writeEntity(Base)
+        net.send(ply)
+    end)
+    
+    return
+end
+
+local Base = nil
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get Hologram!") end
+        Base = ent
+    end)
+end)
+
+
+
+local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
+
+
+hook.add("think", "", function()
+    --local d = -eyeVector()
+    local d = (player():getEyePos() - screen:getPos()):getNormalized()
+    local eyeAngle = d:getAngle() + Angle(90,0,0)
+    eyeAngle = eyeAngle:setP(90)
+    screen:setAngles(eyeAngle)
+    
+       
+    if isValid(Base) then
+        screen:setPos(Base:getPos())
+    end
+end) 
+
+
+
+URL = URLS[img]
+
+if not hasPermission("material.urlcreate", URL) then
+    cantload()
+    return
+end
+
+local mat = material.create("UnlitGeneric")
+
+mat:setInt("$flags", 256)
+
+mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+    if m == nil then return end
+
+    local ratio = w / h
+
+    local sh = size
+    local sw = sh * ratio
+    screen:setSize(Vector(sh, sw, 1))
+    
+    local x,y,w,h;
+    x = m:getWidth() / 4 
+    y = 0 
+    w = m:getWidth() / 2 
+    h = m:getHeight() / 2
+
+    l(x, y, w, h)
+    
+    screen:setMaterial("!" .. mat:getName())
+end)

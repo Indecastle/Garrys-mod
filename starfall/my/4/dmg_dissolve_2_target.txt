@@ -1,0 +1,91 @@
+--@name DMG_DISSOLVE 2 target
+--@author Markiz
+--@server
+
+
+local Target = find.playersByName("Markiz")[1]
+
+
+local Radius = 1000
+
+local Force = 5
+local ForceUp = 250
+
+local killer, physEnt;
+--ent = prop.create(chip():getPos(), Angle(), "models/cheeze/wires/nano_compare.mdl", false)
+--ent:setNocollideAll(true)
+--ent:setFrozen(false)
+
+--ent:setColor(Color(0,0,0,0))
+
+
+
+local i = -1;
+
+
+function gethead(ent)
+    if ent:lookupBone("ValveBiped.Bip01_Head1") then
+        local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+        return pos
+    end
+    return ent:localToWorld(ent:obbCenter())
+end
+
+function isValidFindPlayer(ent)
+    local nvars = ent:getNWVarTable()
+    return ent ~= nil and ent:isValid() and ent:isValidPhys()
+        and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and (nvars == nil or !nvars["_Kyle_Buildmode"]) and ent == Target
+            or ent:isNPC()) 
+end
+
+function isValidPlayer(ent)
+    return ent ~= nil and ent:isValid() and ent:isValidPhys()
+end
+
+local closestPlayer;
+local up;
+
+
+timer.create("createIfDestroyed", 0.5, 0, function()
+    if killer == nil or !killer:isValid() then
+        --killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_c17/doll01.mdl", false)
+        killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_junk/watermelon01.mdl", false)
+        killer:setPhysMaterial("gmod_silent")
+        --killer:setUnbreakable(true)
+        physEnt = killer:getPhysicsObject()
+        physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
+        physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
+        --physEnt:enableGravity(false)
+        up = Vector(0,0,killer:getMass()*ForceUp)
+    end
+end)
+
+
+timer.create("findPlayer", 0.2, 0, function()
+    if killer ~= nil and killer:isValid() then
+        local validPlayers = find.inSphere(killer:getPos(), Radius, function(e)
+            return isValidFindPlayer(e)
+        end)
+        
+        validPlayers = find.sortByClosest(validPlayers, killer:getPos())
+        closestPlayer = #validPlayers ~= nil and validPlayers[1] or nil
+    else
+        closestPlayer = nil
+    end
+end)
+
+
+timer.create("jump", 2, 0, function()
+    if killer ~= nil and killer:isValid() and killer:isValidPhys()  and isValidPlayer(closestPlayer) then
+        killer:applyForceCenter(up)
+    end
+end)
+
+
+hook.add("think", "fun", function()
+    if killer ~= nil and killer:isValid() and isValidPlayer(closestPlayer) then
+        local dir = (gethead(closestPlayer) - killer:getPos()):getNormalized()
+        dir = dir:setZ(0):getNormalized()
+        physEnt:applyForceCenter(dir * killer:getMass() * Force)
+    end
+end)
