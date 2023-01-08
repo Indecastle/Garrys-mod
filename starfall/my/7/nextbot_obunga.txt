@@ -7,10 +7,32 @@
 local Radius = 10000
 local Speed = 500
 
-local img = "obunga"
-local size = 300
+local img = "soldierMeme"
+local size = 200
 
 local IsGivingDamage = false
+
+
+----- music ------
+local Volume = 2
+local MusicSpeed = 1
+local URL_Music = "soldier"
+local IsLooping = true
+local MusicRadius = 1000
+----- music ------
+
+------------------------------------------------------------------------------------
+
+local _urls_music = {
+    morgenshtern_1 = "https://u.teknik.io/o2Fly.mp3",
+    pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
+    pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
+    bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
+    soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3",
+    soldier = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
+}
+
+-- =================================================================================
 
 
 local URLS = {
@@ -25,6 +47,7 @@ local URLS = {
     malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
     
     obunga = "https://i.imgur.com/wEBb6mG.png",
+    soldierMeme = "https://i.imgur.com/etDODQs.jpg",
     custom = nil
 }
 
@@ -125,7 +148,7 @@ end)
 local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
 
 
-hook.add("think", "", function()
+hook.add("think", "nextbot_image", function()
     --local d = -eyeVector()
     local d = (player():getEyePos() - screen:getPos()):getNormalized()
     local eyeAngle = d:getAngle() + Angle(90,0,0)
@@ -170,4 +193,29 @@ mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
     l(x, y, w, h)
     
     screen:setMaterial("!" .. mat:getName())
+end)
+
+
+local _sound
+
+bass.loadURL(_urls_music[URL_Music], "3d noblock noplay", function(Sound)
+    _sound = Sound
+    _sound:setLooping(IsLooping)
+    _sound:setPitch(MusicSpeed)
+    
+    _sound:play()
+    
+    hook.add("think", "nextbot_music", function()
+        if IsAllServer then
+            _sound:setVolume(Volume)
+        else
+            if isValid(Killer) then
+                local distance = Killer:getPos():getDistance(player():getPos())
+                _sound:setVolume(math.min(1, ((MusicRadius-distance) / MusicRadius)) * Volume)
+            end
+        end
+
+        _sound:setPos(player():getPos())
+    end)
+        
 end)

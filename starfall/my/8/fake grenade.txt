@@ -11,7 +11,9 @@ local BalloonForce = 100
 
 local LockDelay = 0.5
 
-local RandomBalloon = 0.1 -- interval 0-1
+local RandomBalloon = 1 -- interval 0-1
+local RandomBalloonBreak = 1 -- interval 0-1
+local RandomExplosion = 1 -- interval 0-1
 
 
 if SERVER then
@@ -90,11 +92,10 @@ if SERVER then
         end)
     end
     
-    function sendMessage(netPlayer, position)
+    function sendMessage(netPlayer, position, type)
         --if netPlayer == target then return end  
         net.start("EntityTakeDamage")
-        --net.writeEntity(target)
-        --net.writeVector(position)
+        net.writeString(type)
         net.send(netPlayer)
     end
     
@@ -104,10 +105,16 @@ if SERVER then
         if _tt < _lockTime then return end
         _lockTime = _tt + LockDelay
         
-        if math.random(0,1) < RandomBalloon then
+        local PieceSum = RandomBalloon + RandomBalloonBreak + RandomExplosion
+        local rand = math.random()
+
+        if rand < RandomBalloon / PieceSum then
             createBalloon()
+        elseif rand < (RandomBalloon + RandomBalloonBreak) / PieceSum then
+            sendMessage(netPlayer, position, 'BalloonBreak')
+            
         else
-            sendMessage(netPlayer, position)
+            sendMessage(netPlayer, position, 'Explosion')
         end
     end
     
@@ -145,15 +152,23 @@ net.receive("init", function(len)
 end)
 
 
-function BaloonSoundPlay()
+function BaloonEffectPlay()
     _effectData:setOrigin(_grenade:getPos())
     _effectData:play("balloon_pop")
 end
 
+function ExplosionEffectPlay()
+    _effectData:setOrigin(_grenade:getPos())
+    _effectData:play("explosion")
+end
+
 net.receive("EntityTakeDamage", function (len)
-    --local target = net.readEntity()
-    --local pos = net.readVector()
-    if isValid(_grenade) then
-        BaloonSoundPlay()
+    if !isValid(_grenade) then return end
+    
+    local type = net.readString()
+    if type == 'BalloonBreak' then
+        BaloonEffectPlay()
+    elseif type == 'Explosion' then
+        ExplosionEffectPlay()
     end
 end)

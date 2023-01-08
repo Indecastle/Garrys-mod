@@ -17,12 +17,13 @@ local url2 = "http://radio.licen777.ru/stream"
 local url3 = "https://play.sas-media.ru/play_256"
 local url4 = "http://sv.wargaming.fm:8051/128"
 local url5 = "https://u.teknik.io/o2Fly.mp3"
+local url6 = "http://radio-srv1.11one.ru/record192k.mp3"
 
-local url = url4
+local url = url6
 
 function start() 
     bass.loadURL( url, "3d noblock", function(Sound)
-        Sound:setVolume(0.2)
+        Sound:setVolume(5.2)
         Sound:play()
         hook.add("think","",function()
             Sound:setPos(chip():getPos())

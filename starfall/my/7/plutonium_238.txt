@@ -3,7 +3,7 @@
 --@shared
 
 
-local Radius = 4200
+local Radius = 500
 local Speed = 0.1
 
 local IsGettingSounds = true
@@ -150,7 +150,7 @@ else
         
         local tt2 = timer.curtime()
         
-        local dist = player():getPos():getDistance(E:getPos())
+        local dist = player():getPos():getDistance(Prop:getPos())
         if dist < Radius then
             xx = xx + Speed * ((Radius-dist)/Radius)
             if xx > 1 then
@@ -182,7 +182,7 @@ else
                 hook.add("think", "sound123", function()
                     snd:setPos(Prop:getPos())
 
-                    if player():getPos():getDistance(E:getPos()) < 1000 then
+                    if player():getPos():getDistance(Prop:getPos()) < 1000 then
                         snd:setVolume(0.02)
                     else
                         snd:setVolume(0)

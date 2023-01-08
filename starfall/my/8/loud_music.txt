@@ -106,7 +106,7 @@ bass.loadURL(_urls[URL], "3d noblock noplay", function(Sound)
             _sound:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
         end
 
-        _sound:setPos(eyePos())
+        _sound:setPos(player():getPos())
     end)
         
 end)

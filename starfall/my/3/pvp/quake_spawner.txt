@@ -107,7 +107,9 @@ function QuakeSpawner:run()
         for i, e in ipairs(ents) do
             e:setPos(self:GetPos())
             e:setAngles(self:GetAng())
-            e:setFrozen(true)
+            if e:isValidPhys() then
+                e:setFrozen(true)
+            end
         end
         
         if #ents < self.Limit then
