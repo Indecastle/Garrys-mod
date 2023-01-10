@@ -1,0 +1,1388 @@
+--@name Admin-chip V3.11 (patch)
+--@author maxobur0001
+--@shared
+
+if SERVER then
+    po = false
+    ent = nil
+    print("<color=255,255,255>Admin-chip V3.11 by <color=0,200,255>maxobur0001")
+    print("<color=255,255,255>Press <color=0,200,255>F2<color=255,255,255> to open the menu. All functions in menu.")
+    print("<color=255,255,255>And last: <color=255,0,0>have fun =)")
+    net.receive("kill", function()
+        ply = net.readEntity()
+        if ply:isAlive() then
+            ply:applyDamage(ply:getHealth()+100000, ply, ply)
+            col = team.getColor(ply:getTeam())
+            if ply:getTeamName() == "user" then
+                n = ""    
+            else
+                color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+            end
+            print("<color=255,255,255>You killed a " .. n .. ply:getName() .. "<color=255,255,255>!")
+        else
+            print("<color=255,0,0>" .. ply:getName() .. " is dead!" )
+        end
+    end)
+    net.receive("lkill", function()
+        hook.remove("tick", "lkill")
+        targets = net.readTable()
+        if !table.isEmpty(targets) then
+            hook.add("tick", "lkill", function()
+                for i, v in pairs(targets) do
+                    v:applyDamage(v:getHealth()+100000, v, v)
+                end 
+            end)
+        end
+    end)
+    net.receive("invis", function()
+        vis = net.readString()
+        if vis == "ON" then
+            owner():setModelScale(0.001)
+            owner():setColor(Color(0, 0, 0, 0))
+            print("<color=255,255,255>You invisible now. ")
+        else
+            owner():setModelScale(1) 
+            owner():setColor(Color(0, 0, 0, 255))
+            print("<color=255,255,255>You visible now. ")
+        end
+    end)
+    net.receive("ignite", function()
+        ply = net.readEntity()
+        if ply:isAlive() then
+            ply:ignite(10000000000000000000000)
+            col = team.getColor(ply:getTeam())
+            if ply:getTeamName() == "user" then
+                n = ""    
+            else
+                color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+            end
+            print("<color=255,255,255>You ignited " .. n .. ply:getName() .. "<color=255,255,255>!")
+        else
+            print("<color=255,0,0>" .. ply:getName() .. " is dead!" )
+        end
+    end)
+    net.receive("slap", function()
+        ply = net.readEntity()
+        if ply:isAlive() then
+            vel = 15
+            ang = 0
+            kang = 45
+            
+            d = kang/vel
+            
+            ply:emitSound('player/pl_fallpain1.wav', 75, 100, 100, CHAN_AUTO)
+            ply:applyDamage(10)
+            
+            timer.create('slap', 0, 0, function()
+                ang = ang + vel
+                kang = vel * d
+                if kang > 0 then
+                    l = ang >= kang
+                else
+                    l = ang <= kang
+                end
+                if l then
+                    vel = -vel / d
+                end
+                if kang < 0 then
+                    if kang <= 0.7 then
+                        ply:setEyeAngles(ply:getEyeAngles() + Vector(vel, -vel/2, 0))
+                    else
+                        timer.stop('slap')
+                        timer.remove('slap')
+                    end
+                else
+                    if kang >= 0.7 then
+                        ply:setEyeAngles(ply:getEyeAngles() + Vector(vel, -vel/2, 0))
+                    else
+                        timer.stop('slap')
+                        timer.remove('slap')
+                    end
+                end
+            end)
+            col = team.getColor(ply:getTeam())
+            if ply:getTeamName() == "user" then
+                n = ""    
+            else
+                color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+            end
+            print("<color=255,255,255>You slapped " .. n .. ply:getName() .. "<color=255,255,255>!")
+        else
+            print("<color=255,0,0>" .. ply:getName() .. " is dead!" )
+        end
+    end)
+    net.receive("anent", function()
+        hook.remove('OnEntityCreated', 'anti-entity')
+        entt = net.readTable()
+        if !table.isEmpty(entt) then
+            hook.add('OnEntityCreated', 'anti-entity', function(ent)
+                for i, v in pairs(entt) do
+                    if ent:isValid() then
+                        if ent:getOwner() == v then
+                            ent:remove()  
+                        end
+                    end    
+                end
+            end)
+        end
+    end)
+    net.receive("stripw", function()
+        ply = net.readEntity()
+        if ply:isAlive() then
+            col = team.getColor(ply:getTeam())
+                if ply:getTeamName() == "user" then
+                    n = ""    
+                else
+                    color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                    n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+                end
+                print("<color=255,255,255>You stripped " .. n .. ply:getName() .. "<color=255,255,255>!")
+            for i, v in pairs(ply:getWeapons()) do
+                v:remove()
+            end
+        else
+            print("<color=255,0,0>" .. ply:getName() .. " is dead!" )
+        end
+    end)
+    net.receive("nw", function()
+        hook.remove('tick', 'nw')
+        targs = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('tick', 'nw', function()
+                for i, v in pairs(targs) do
+                    if v:isValid() and !table.isEmpty(v:getWeapons()) then
+                        for l, n in pairs(v:getWeapons()) do
+                            if n:isValid() then
+                                pcall(function() n:remove() end)
+                            end
+                        end
+                    end    
+                end
+            end)
+        end
+    end)
+    net.receive("refl", function()
+        ply = net.readEntity()
+        ply:setEyeAngles(ply:getEyeAngles() + Vector(0, 0, 180))
+        col = team.getColor(ply:getTeam())
+        if ply:getTeamName() == "user" then
+            n = ""    
+        else
+            color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+            n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+        end
+        print("<color=255,255,255>You flip the screen for " .. n .. ply:getName() .. "<color=255,255,255>!")
+    end)
+    net.receive("fr", function()
+        hook.remove('tick', 'fr')
+        targs = net.readTable()
+        poses = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('tick', 'fr', function()
+                for i, v in pairs(targs) do
+                    if v:isValid() then
+                        v:setPos(poses[i])   
+                    end
+                end
+            end)
+        end
+    end)
+    net.receive("antinc", function()
+        hook.remove('tick', 'antinc')
+        targs = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('tick', 'antinc', function()
+                for i, v in pairs(targs) do
+                    if v:isValid() and v:isNoclipped() then
+                        v:applyDamage(v:getHealth()+100000)
+                        v:setPos(v:getPos():setZ(0)) 
+                    end
+                end
+            end)
+        end
+    end)
+    net.receive("sound", function()
+        ply = net.readEntity()
+        ply:emitSound('ambient/alarms/alarm1.wav', 100, 100, 100, CHAN_AUTO)
+        col = team.getColor(ply:getTeam())
+        if ply:getTeamName() == "user" then
+            n = ""    
+        else
+            color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+            n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+        end
+        print("<color=255,255,255>You put sound on " .. n .. ply:getName() .. "<color=255,255,255>!")
+    end)
+    net.receive("antiaim", function()
+        hook.remove('tick', 'antiaim')
+        targs = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('tick', 'antiaim', function()
+                for i, v in pairs(targs) do
+                    if v:isValid() then
+                        if v:getEyeTrace().Entity:isPlayer() then
+                            if v:getEyeTrace().Entity:isValid() then
+                                v:setEyeAngles(v:getEyeAngles()+Vector(0, 180, 0))
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+    net.receive("jump", function()
+        hook.remove('tick', 'jump')
+        targs = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('tick', 'jump', function()
+                for i, v in pairs(targs) do
+                    if v:isValid() then
+                        if v:isOnGround() then
+                            v:setVelocity(Vector(0, 0, owner():getMass() + 170))
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+    net.receive("slow", function()
+        hook.remove('tick', 'slow')
+        targs = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('tick', 'slow', function()
+                for i, v in pairs(targs) do
+                    if v:isValid() then
+                        v:setPos(v:getPos() - v:getVelocity()/50)
+                    end
+                end
+            end)
+        end
+    end)
+    net.receive("randtp", function()
+        ply = net.readEntity()
+        ply:setPos(Vector(math.random(-100000, 100000), math.random(-100000, 100000), math.random(-100000, 100000)))
+        if ply:isAlive() then
+            col = team.getColor(ply:getTeam())
+            if ply:getTeamName() == "user" then
+                n = ""    
+            else
+                color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+            end
+            print("<color=255,255,255>You teleported " .. n .. ply:getName() .. "<color=255,255,255> at random position!")
+        else
+            print("<color=255,0,0>" .. ply:getName() .. " is dead!" )
+        end
+    end)
+    net.receive("randth", function()
+        ply = net.readEntity()
+        ply:setVelocity(Vector(math.random(-10000, 10000), math.random(-10000, 10000), math.random(-10000, 10000)))
+        if ply:isAlive() and !ply:isNoclipped() then
+            col = team.getColor(ply:getTeam())
+            if ply:getTeamName() == "user" then
+                n = ""    
+            else
+                color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+            end
+            print("<color=255,255,255>You threw a " .. n .. ply:getName() .. "<color=255,255,255> at random direction!")
+        elseif ply:isNoclipped() then
+            print("<color=255,0,0>" .. ply:getName() .. " is flying!" )
+        else
+            print("<color=255,0,0>" .. ply:getName() .. " is dead!" )
+        end
+    end)
+    net.receive("toaim", function()
+        ply = net.readEntity()
+        ply:setEyeAngles(ply:getEyeAngles()+Vector(0, 180, 0))
+    end)
+    net.receive("kass", function()
+        ply = net.readEntity()
+        ply:setVelocity(Vector(0, ply:getEyeAngles():getForward().y * 400, 400))
+        if ply:isAlive() and !ply:isNoclipped() then
+            col = team.getColor(ply:getTeam())
+            if ply:getTeamName() == "user" then
+                n = ""    
+            else
+                color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+            end
+            print("<color=255,255,255>You kicked a " .. n .. ply:getName() .. "<color=255,255,255> at the ass!")
+        elseif ply:isNoclipped() then
+            print("<color=255,0,0>" .. ply:getName() .. " is flying!" )
+        else
+            print("<color=255,0,0>" .. ply:getName() .. " is dead!" )
+        end
+    end)
+    net.receive("randkill", function()
+        hook.remove('tick', 'randkill')
+        targs = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('tick', 'randkill', function()
+                for i, v in pairs(targs) do
+                    if math.random(1, 700) == 700 then
+                        v:applyDamage(v:getHealth() + 100000)
+                    end
+                end
+            end)
+        end
+    end)
+    net.receive("tpp", function()
+        tp_p_t = net.readTable()
+        tp_p_t[1]:setPos(tp_p_t[2]:getPos())
+        if tp_p_t[1]:isAlive() and tp_p_t[2]:isAlive() then
+            col1 = team.getColor(tp_p_t[1]:getTeam())
+            col2 = team.getColor(tp_p_t[2]:getTeam())
+            if tp_p_t[1]:getTeamName() == "user" then
+                n1 = ""
+            else
+                color1 = "<color=".. col1.r ..",".. col1.g ..","..col1.b ..","..">"
+                n1 = "<color=200,200,200>|".. color1 .. tp_p_t[1]:getTeamName() .. "<color=200,200,200>|" .. color1 .. " "
+            end
+            if tp_p_t[2]:getTeamName() == "user" then
+                n2 = ""
+            else
+                color2 = "<color=".. col2.r ..",".. col2.g ..","..col2.b ..","..">"
+                n2 = "<color=200,200,200>|".. color2 .. tp_p_t[2]:getTeamName() .. "<color=200,200,200>|" .. color2 .. " "
+            end
+            print("<color=255,255,255>You teleported " .. n1 .. tp_p_t[1]:getName() .. "<color=255,255,255> to " .. n2 .. tp_p_t[2]:getName() .. "<color=255,255,255>!")
+        else
+            print("<color=255,0,0>" .. tp_p_t[1]:getName() .. " or ".. tp_p_t[2]:getName() .." is dead!" )
+        end
+    end)
+    net.receive("aw", function()
+        a = net.readBool()
+        if a then
+            hook.add("KeyPress", '', function(ply, key)
+                if ply == owner() then
+                    if key == 1 and owner():getWeapon("weapon_crowbar") == owner():getActiveWeapon() and owner():getEyeTrace().Entity:isValid() then
+                        owner():getEyeTrace().Entity:applyDamage(owner():getEyeTrace().Entity:getHealth()+100000, owner(), owner():getWeapon("weapon_crowbar"))
+                    end 
+                    if key == 1 and owner():getWeapon("weapon_crossbow") == owner():getActiveWeapon() and prop.canSpawn() then
+                        prop.create( owner():getEyeTrace().HitPos, Angle(), "models/props_phx/cannonball_solid.mdl", 1 ):breakEnt()
+                    end 
+                end 
+                
+                if key == 2048 and owner():getWeapon("weapon_physcannon") == owner():getActiveWeapon() then 
+                    ent = owner():getEyeTrace().Entity 
+                    if po == false then
+                        timer.create('', 0, 0, function()
+                            if ent:isValid() then
+                                dist = owner():getPos():getDistance(owner():getEyeTrace().HitPos)-200
+                                ent:setPos((owner():getEyeTrace().HitPos - owner():getEyeAngles():getForward()*dist)-Vector(0, 0, 40))
+                            end
+                        end)
+                        po = true
+                    else
+                        timer.remove('')
+                        ent = nil
+                        po = false
+                    end
+                end
+                if key == 1 and owner():getWeapon("weapon_physcannon") == owner():getActiveWeapon() then 
+                    if po == false and owner():getEyeTrace().Entity:isValid() then
+                        if owner():getEyeTrace().Entity:getPos():getDistance(owner():getPos()) < 100 then
+                            owner():getEyeTrace().Entity:setVelocity(owner():getEyeAngles():getForward() * 3000)    
+                        end
+                    end
+                    if po == true and ent != nil then
+                        if ent:isValid() then
+                            timer.remove('')
+                            ent:setVelocity(owner():getEyeAngles():getForward() * 3000)
+                            po = false
+                        end
+                    end    
+                end
+            end)
+            
+        else
+            hook.remove("KeyPress", '')
+            timer.remove('')
+        end
+    end)
+    net.receive('antidmg', function()
+        hook.remove('EntityTakeDamage', 'anti-damage')
+        dmg = net.readTable()
+        if !table.isEmpty(dmg) then
+            hook.add('EntityTakeDamage', 'anti-damage', function(target, attacker, inflictor, amount)
+                for i, v in pairs(dmg) do
+                    if target:isValid() then
+                        if attacker == v then
+                            target:setHealth(target:getHealth() + amount)
+                        end
+                    end    
+                end
+            end)
+        end
+    end)
+    net.receive("bh", function()
+        a = net.readBool()
+        if a then
+            hook.add('think', "bhop", function(ply, key)
+                if owner():keyDown(2) then
+                    if owner():isOnGround() then 
+                        owner():setVelocity((owner():getEyeAngles():getForward()*Vector(50, 50, 0))+Vector(0, 0, owner():getMass() + 170))    
+                    else
+
+                    end
+                    
+                end
+            end)
+        else
+            hook.remove('think', "bhop")
+        end
+    end)
+    net.receive('chatkill', function()
+        hook.remove('PlayerSay', 'chatkill')
+        targs = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('PlayerSay', 'chatkill', function(ply, text)
+                for i, v in pairs(targs) do
+                    if ply == v then
+                        v:applyDamage(v:getHealth() + 100000)
+                    end
+                end
+            end)
+        end
+    end)
+    net.receive('aimf', function()
+        hook.remove('tick', 'aimf')
+        targs = net.readTable()
+        poses = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('tick', 'aimf', function()
+                for i, v in pairs(targs) do
+                    if v:isValid() then
+                        v:setEyeAngles(poses[i])   
+                    end
+                end 
+            end)
+        end
+    end)
+    net.receive('bury', function()
+        ply = net.readEntity()
+        if ply:isAlive() then
+            ply:setPos(Vector(ply:getPos().x, ply:getPos().y, find.byClass("info_player_start")[1]:getPos().z - 500))
+            col = team.getColor(ply:getTeam())
+            if ply:getTeamName() == "user" then
+                n = ""    
+            else
+                color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+            end
+            print("<color=255,255,255>You buried the " .. n .. ply:getName() .. "<color=255,255,255> underground!") 
+        else
+            print("<color=255,0,0>" .. ply:getName() .." is dead!" )
+        end
+    end)
+    net.receive('sj', function()
+        hook.remove('KeyPress', 'super-jump')
+        targs = net.readTable()
+        if !table.isEmpty(targs) then
+            hook.add('KeyPress', 'super-jump', function(ply, key)
+                for i, v in pairs(targs) do
+                    if ply == v and key == 2 then
+                        v:setVelocity(Vector(0, 0, 700))
+                    end
+                end
+            end)
+        end
+    end)
+    net.receive('stumb', function()
+        ply = net.readEntity()
+        if ply:isAlive() and !ply:isNoclipped() then
+            ply:setPos(ply:getPos() + Vector(0, 0, 3))
+            ply:setVelocity(Vector(0, 0, -1000))
+            for i, v in pairs(ply:getWeapons()) do
+                ply:dropWeapon(v, nil, Vector(math.random(1, 100), math.random(1, 100), math.random(1, 100)))    
+            end
+            col = team.getColor(ply:getTeam())
+            if ply:getTeamName() == "user" then
+                n = ""    
+            else
+                color = "<color=".. col.r ..",".. col.g ..","..col.b ..","..">"
+                n = "<color=200,200,200>|".. color .. ply:getTeamName() .. "<color=200,200,200>|" .. color .. " "
+            end
+            print("<color=255,255,255>You maked stumb " .. n .. ply:getName() .. "<color=255,255,255>!")
+        elseif !ply:isAlive() then 
+            print("<color=255,0,0>" .. ply:getName() .. " is dead!" )
+        elseif ply:isNoclipped() then 
+            print("<color=255,0,0>" .. ply:getName() .. " is flying!" )
+        end 
+    end)
+    net.receive('msc', function()
+        v = net.readEntity()
+        if net.readBool() then
+            v:setModelScale(3) 
+        else
+            v:setModelScale(1) 
+        end
+    end)
+end
+
+
+
+if CLIENT and player() == owner() then
+    
+    enableHud(owner(), true) 
+    --targets = find.allPlayers()
+    local p = 1
+    local mainp = 1
+    local index = { }
+    
+    pages = math.round(#find.allPlayers()/7 + 0.4) 
+    aboutmp = 5
+    mode = "main"
+    tab = find.allPlayers()
+    menu = false
+    tp_p = false
+    trans = false
+    rore = false
+    esp = "OFF"
+    esc = "OFF"
+    aw = "OFF"
+    bh = "OFF"
+    ent_info = "OFF"
+    --font = render.createFont("Arial",16,400,true,false,false,false,0,false,0)
+    
+    nw_targs = { }
+    lkt = { }
+    anentt = { }
+    fr_targs = { }
+    fr_poses = { }
+    anc_targs = { }
+    aa_targs = { }
+    j_targs = { }
+    sl_targs = { }
+    rk_targs = { }
+    tp_p_t = { }
+    ad_targs = { }
+    ck_targs = { } 
+    af_targs = { }
+    af_poses = { }
+    sp_targs = { }
+    sj_targs = { }
+    msc_targs = { }
+    vis = "OFF"
+    
+    
+    function filt(table_a, ply, netreq)
+        if !table.isEmpty(table_a) and table.hasValue(table_a, ply) then
+            l = table.removeByValue(table_a, ply)
+            net.start(netreq)
+            net.writeTable(table_a)
+            net.send()
+            return l
+        end  
+    end
+    
+    hook.add('PlayerDisconnected', 'filter', function(ply)
+        filt(nw_targs, ply, "nw")
+        filt(lkt, ply, "lkill")
+        filt(anentt, ply, "anent")
+        if !table.isEmpty(fr_targs) and table.hasValue(fr_targs, ply) then
+            a = table.removeByValue(fr_targs, ply)
+            table.remove(fr_poses, a)
+            net.start("fr")
+            net.writeTable(fr_targs)
+            net.writeTable(fr_poses)
+            net.send()
+        end  
+        filt(anc_targs, ply, "antinc")
+        filt(j_targs, ply, "jump")
+        filt(sl_targs, ply, "slow")
+        filt(rk_targs, ply, "randkill")
+        filt(ad_targs, ply, "antidmg")
+        filt(ck_targs, ply, "chatkill")
+        filt(sj_targs, ply, "sj")
+        if !table.isEmpty(af_targs) and table.hasValue(af_targs, ply) then
+            a = table.removeByValue(af_targs, ply)
+            table.remove(af_poses, a)
+            net.start("aimf")
+            net.writeTable(af_targs)
+            net.writeTable(af_poses)
+            net.send()
+        end 
+    end)
+    hook.add('tick', 'send', function()
+        tab = find.allPlayers()
+        if tp_p == true then
+            table.removeByValue(tab, tp_p_t[1])
+        end
+    end)
+    
+    
+    function OneClick(butt, netreq)
+        if find.allPlayers()[(butt - 1) + ((p-1)*7)] != nil and butt - 1 <= index[p] and butt > 1 then
+            net.start(netreq)
+            net.writeEntity(find.allPlayers()[(butt - 1) + ((p-1)*7)])
+            net.send()
+        end
+            if butt == 9 then
+                if p < math.round(#find.allPlayers()/7 + 0.4)  then
+                    p = p + 1
+                end
+            elseif butt == 10 then
+                if p > 1 then
+                    p = p - 1
+                end
+            end
+        if butt == 1 then
+            mode = "main"
+            p = 1
+            return false
+        end    
+    end
+    
+    function PlayerSwitch(butt, switchtab, netreq)
+        if butt == 9 then
+                    if p < math.round(#find.allPlayers()/7 + 0.4) then
+                        p = p + 1
+                    end
+                elseif butt == 10 then
+                    if p > 1 then
+                        p = p - 1
+                    end
+                elseif butt == 1 then
+                    mode = "main"
+                    p = 1
+                    return false
+                end
+                if find.allPlayers()[(butt - 1) + ((p-1)*7)] != nil and butt-1 <= index[p] and butt > 1 then
+                    if table.hasValue(switchtab, find.allPlayers()[(butt - 1) + ((p-1)*7)]) != true then
+                        table.insert(switchtab, find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        net.start(netreq)
+                        net.writeTable(switchtab)
+                        net.send()
+                    else
+                        table.removeByValue(switchtab, find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        net.start(netreq)
+                        net.writeTable(switchtab)
+                        net.send()
+                    end
+                end
+    end
+    
+    function getPlayersByPages(players, page, pages)
+        targets = players
+        for i = 1, pages do
+            if page == pages and #targets%7 != 0 then
+                index[i] = #targets%7
+            else
+                index[i] = 7
+            end     
+        end
+        if table.isEmpty(index) == false then
+            for i = 1, index[page] do
+                d = i + ((page-1)*7)
+                if table.isEmpty(index) == false and targets[d] != nil then
+                    if targets[d]:getTeamName() == "user" then
+                        render.setColor(Color(240, 240, 240))
+                    else
+                        render.setColor(team.getColor(targets[d]:getTeam()))
+                    end
+                    render.drawText(45, (sy/2-95) + 15*(i-1), i .. ". " .. targets[d]:getName(), 0)
+                end
+            end
+        end
+    end
+    
+    
+    function getPlayersSwitchByPages(players, page, pages, switchs)
+        targets = players
+        for i = 1, pages do
+            if page == pages and #targets%7 != 0 then
+                index[i] = #targets%7
+            else
+                index[i] = 7
+            end     
+        end
+        if table.isEmpty(index) == false then
+            for i = 1, index[page] do
+                d = i + ((page-1)*7)
+                if table.isEmpty(index) == false and targets[d] != nil then
+                    if targets[d]:getTeamName() == "user" then
+                        render.setColor(Color(240, 240, 240))
+                    else
+                        render.setColor(team.getColor(targets[d]:getTeam()))
+                    end
+                    if table.hasValue(switchs, targets[d]) then
+                        render.drawText(45, (sy/2-95) + 15*(i-1), i .. ". " .. targets[d]:getName() .. " ( ON )", 0)
+                    else
+                        render.drawText(45, (sy/2-95) + 15*(i-1), i .. ". " .. targets[d]:getName() .. " ( OFF )", 0)
+                    end
+                end
+            end
+        end
+    end
+    
+    
+    hook.add("drawhud", "", function()
+        if menu then
+            sx, sy = render.getGameResolution()
+            render.setColor(Color(0, 0, 0, 200))
+            render.drawRoundedBox(15, 20, sy/2-125, 220, 205)
+            render.setColor(Color(255, 255, 255))
+            if mode == "kill" then
+                render.drawText(30, sy/2-115, "Kill a...", 0)
+                getPlayersByPages(find.allPlayers(), p, pages)
+            elseif mode == "main" then
+                render.drawText(30, sy/2-115, "Admin-chip V3.11 by maxobur0001", 0)
+                if mainp == 1 then
+                    render.drawText(45, sy/2-95, "1. Kill", 0)
+                    render.drawText(45, sy/2-80, "2. Spawn-kill", 0) 
+                    render.drawText(45, sy/2-65, "3. Invisibility " .. "( " .. vis .. " )", 0) 
+                    render.drawText(45, sy/2-50, "4. Ignite", 0) 
+                    render.drawText(45, sy/2-35, "5. Slap", 0) 
+                    render.drawText(45, sy/2-20, "6. Anti-entity", 0) 
+                    render.drawText(45, sy/2-5, "7. Strip", 0) 
+                elseif mainp == 2 then
+                    render.drawText(45, sy/2-95, "1. Anti-weapons", 0)
+                    render.drawText(45, sy/2-80, "2. Screen-flip", 0)
+                    render.drawText(45, sy/2-65, "3. Freeze", 0)
+                    render.drawText(45, sy/2-50, "4. Noclip-kill", 0)
+                    render.drawText(45, sy/2-35, "5. Loud sound", 0)
+                    render.drawText(45, sy/2-20, "6. Anti-aim", 0)
+                    render.drawText(45, sy/2-5, "7. Jumping", 0)
+                elseif mainp == 3 then
+                    render.drawText(45, sy/2-95, "1. Slow-walk", 0)
+                    render.drawText(45, sy/2-80, "2. Random teleport", 0)
+                    render.drawText(45, sy/2-65, "3. Random throw", 0)
+                    render.drawText(45, sy/2-50, "4. Turn out aim", 0)
+                    render.drawText(45, sy/2-35, "5. Kick in the ass", 0)
+                    render.drawText(45, sy/2-20, "6. Random-time kill", 0)
+                    render.drawText(45, sy/2-5, "7. Teleport player to player", 0)
+                elseif mainp == 4 then
+                    render.drawText(45, sy/2-95, "1. Wallhack ESP ( " .. esp .. " )", 0)
+                    render.drawText(45, sy/2-80, "2. Wallhack Chip ( " .. esc .. " )", 0)
+                    render.drawText(45, sy/2-65, "3. Admin-weapons ( " .. aw .. " )", 0)
+                    render.drawText(45, sy/2-50, "4. Anti-damage", 0)
+                    render.drawText(45, sy/2-35, "5. Chat-kill", 0)
+                    render.drawText(45, sy/2-20, "6. BHOP ( " .. bh .. " )", 0)
+                    render.drawText(45, sy/2-5, "7. Aim-freeze", 0)
+                elseif mainp == 5 then
+                    render.drawText(45, sy/2-95, "1. Bury", 0)
+                    render.drawText(45, sy/2-80, "2. Super-jump", 0)
+                    render.drawText(45, sy/2-65, "3. Stumble", 0)
+                    render.drawText(45, sy/2-50, "4. Very-big model", 0)
+                    render.drawText(45, sy/2-35, "5. Aim-entity info ( " .. ent_info .. " )", 0)
+                    render.drawText(45, sy/2-20, "6. Authors", 0)
+                end
+            elseif mode == "lkill" then
+                render.drawText(30, sy/2-115, "Spawn-kill for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), lkt)
+            elseif mode == "ignite" then
+                render.drawText(30, sy/2-115, "Make ... ignite", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "slap" then
+                render.drawText(30, sy/2-115, "Slap a...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "unent" then
+                render.drawText(30, sy/2-115, "Anti-entity for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), anentt)
+            elseif mode == "stripw" then
+                render.drawText(30, sy/2-115, "Strip the...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "noweapons" then
+                render.drawText(30, sy/2-115, "Anti-weapons for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), nw_targs)
+            elseif mode == "refl" then
+                render.drawText(30, sy/2-115, "Flip screen for...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "fr" then
+                render.drawText(30, sy/2-115, "Freeze...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), fr_targs)
+            elseif mode == "antinc" then
+                render.drawText(30, sy/2-115, "Noclip-kill for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), anc_targs)
+            elseif mode == "sound" then
+                render.drawText(30, sy/2-115, "Apply sound to...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "antiaim" then
+                render.drawText(30, sy/2-115, "Anti-aim for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), aa_targs)
+            elseif mode == "jump" then
+                render.drawText(30, sy/2-115, "Loop-jump for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), j_targs)
+            elseif mode == "slow" then
+                render.drawText(30, sy/2-115, "Slow...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), sl_targs)
+            elseif mode == "randtp" then
+                render.drawText(30, sy/2-115, "Teleport to a rand. pos a...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "randth" then
+                render.drawText(30, sy/2-115, "Throw at rand. direction a...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "toaim" then
+                render.drawText(30, sy/2-115, "Turn aim...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "kass" then
+                render.drawText(30, sy/2-115, "Kick in the ass a...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "randkill" then
+                render.drawText(30, sy/2-115, "Random killing for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), rk_targs)
+            elseif mode == "tpp" then
+                if tp_p == false then 
+                    render.drawText(30, sy/2-115, "Teleport...", 0)
+                    getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+                else
+                    render.drawText(30, sy/2-115, "...to...", 0)
+                    getPlayersByPages(tab, p, math.round(#tab/7 + 0.4))
+                end
+            elseif mode == "antidmg" then
+                render.drawText(30, sy/2-115, "Anti-damage for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), ad_targs)
+            elseif mode == "chatkill" then
+                render.drawText(30, sy/2-115, "Chat-kill for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), ck_targs)
+            elseif mode == "aimf" then
+                render.drawText(30, sy/2-115, "Freeze aim for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), af_targs)
+            elseif mode == "bury" then
+                render.drawText(30, sy/2-115, "Bury...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "sj" then
+                render.drawText(30, sy/2-115, "Super-jump for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), sj_targs)
+            elseif mode == "stumb" then
+                render.drawText(30, sy/2-115, "Make stumble...", 0)
+                getPlayersByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4))
+            elseif mode == "modelsc" then
+                render.drawText(30, sy/2-115, "Enlarge player model for...", 0)
+                getPlayersSwitchByPages(find.allPlayers(), p, math.round(#find.allPlayers()/7 + 0.4), msc_targs)
+            elseif mode == "authors" then
+                render.drawText(30, sy/2-115, "Admin-chip V3.11 authors", 0)
+                render.drawText(45, sy/2-95, "Coder: maxobur0001", 0)
+                render.drawText(45, sy/2-75, "Testers: [Z]DAROVA, Ktotoshniy,", 0)
+                render.drawText(30, sy/2-60, "ded, Kostanchik, prostocrifte", 0)
+                render.drawText(45, sy/2-40, "Ideas by: ded, Ratyuha,", 0)
+                render.drawText(30, sy/2-25, "maxobur0001, prostocrifte", 0)
+                render.drawText(45, sy/2-5, "Correct English: Ktotoshniy", 0)
+            end   
+            render.setColor(Color(255, 255, 255))
+            if mode != "authors" then
+                if mode != "main" then
+                    if math.round(#find.allPlayers()/7 + 0.4) > 1 and p != math.round(#find.allPlayers()/7 + 0.4) then
+                        render.drawText(45, (sy/2+20), "8. Next", 0) 
+                    end
+                    if p > 1 then
+                        render.drawText(45, (sy/2+35), "9. Prev", 0)
+                    end
+                    render.drawText(45, (sy/2+50), "0. Back", 0)
+                else
+                    if mainp < 5 then
+                        render.drawText(45, (sy/2+20), "8. Next", 0) 
+                    end
+                    if mainp > 1 then
+                        render.drawText(45, (sy/2+35), "9. Prev", 0)
+                    end
+                    render.drawText(45, (sy/2+50), "0. Exit", 0)
+                end
+            else
+                render.drawText(45, (sy/2+50), "0. Back", 0)
+            end
+        end
+        if esp == "ON" then
+                for i, v in pairs(find.allPlayers()) do
+                    render.setColor(Color(v:getHealth()):hsvToRGB():setA(100))
+                    xy = (v:getPos()+Vector(0, 0, 40)):toScreen()
+                    txy = (v:getPos()+Vector(0, 0, 80)):toScreen()
+                    w = 60000/owner():getPos():getDistance(v:getPos())
+            
+                    render.drawRect(xy.x - w/2, xy.y - w/2, w, w)
+                    render.setColor(team.getColor(v:getTeam()))
+                    render.drawText(txy.x, txy.y, v:getName() .. "\nHealth: " .. v:getHealth() .. "%", 1)
+                end    
+            end
+            if esc == "ON" then
+                for i, v in pairs(find.byClass("gmod_wire_expression2")) do
+                    if v:getOwner():isValid() then
+                        render.setColor(Color(255, 0, 0, 100))
+                        cxy = v:getPos():toScreen()
+                        render.drawFilledCircle(cxy.x, cxy.y, 10000/owner():getPos():getDistance(v:getPos()))
+                        render.setColor(Color(255, 255, 255))
+                        render.drawText(cxy.x, cxy.y, "Name: " .. v:getChipName() .. "\nOwner: " .. v:getOwner():getName(), 1)
+                    end
+                end
+                for i, v in pairs(find.byClass("starfall_processor")) do
+                    if v:getOwner():isValid() then
+                        render.setColor(Color(100, 100, 255, 100))
+                        cxy = v:getPos():toScreen()
+                        render.drawFilledCircle(cxy.x, cxy.y, 10000/owner():getPos():getDistance(v:getPos()))
+                        render.setColor(Color(255, 255, 255))
+                        render.drawText(cxy.x, cxy.y, "Name: " .. v:getChipName() .. "\nOwner: " .. v:getOwner():getName(), 1)
+                    end
+                end       
+            end
+        if ent_info == "ON" then
+            if owner():getEyeTrace().Entity:isValid() then
+                h = owner():getEyeTrace().Entity
+                render.setColor(Color(0, 0, 0, 200))
+                render.drawRoundedBox(10, sx-240, sy/2-125, 220, 205)
+                render.setColor(Color(255, 255, 255))
+                if !h:isPlayer() then
+                    t = (timer.curtime() - h:getCreationTime())
+                    sec = t % (24 * 3600) 
+                    hour = math.round(sec / 3600)
+                    sec = sec % 3600 
+                    min = math.round(sec / 60)
+                    sec = sec % 60
+                    
+                    pos = h:getPos()
+                    render.drawText(sx-235, sy/2-115, "Class: [".. h:getClass() .."]", 0)
+                    render.drawText(sx-235, sy/2-95, "Model: " .. h:getModel(), 0)
+                    render.drawText(sx-235, sy/2-75, "Health: " .. h:getHealth(), 0)
+                    render.drawText(sx-235, sy/2-55, "Position: ", 0)
+                    render.drawText(sx-235, sy/2-35, "X: " .. pos.x, 0)
+                    render.drawText(sx-235, sy/2-15, "Y: " .. pos.y, 0)
+                    render.drawText(sx-235, sy/2+5, "Z: " .. pos.z, 0)
+                    render.drawText(sx-235, sy/2+25, "Creation time: " .. hour .. ":" .. min .. ":" .. math.round(sec, 2), 0)
+                else
+                    render.drawText(sx-235, sy/2-115, "Name: " .. h:getName(), 0)
+                    render.drawText(sx-235, sy/2-95, "Model: " .. h:getModel(), 0)
+                    render.drawText(sx-235, sy/2-80, "Health: " .. h:getHealth(), 0)
+                    render.drawText(sx-235, sy/2-65, "Armor: " .. h:getArmor(), 0)
+                    render.drawText(sx-235, sy/2-50, "Rank: " .. h:getTeamName(), 0)
+                    render.drawText(sx-235, sy/2-35, "Frags: " .. h:getFrags(), 0)
+                    render.drawText(sx-235, sy/2-20, "Deaths: " .. h:getDeaths(), 0)
+                    render.drawText(sx-235, sy/2-5, "Ping: " .. h:getPing(), 0)
+                    
+                end
+            end
+        end
+    end)
+    
+    hook.add("inputreleased", "", function(butt)
+        if butt == 93 then
+            owner():emitSound("buttons/button_synth_positive_01.wav", 100, 100, 100, 0)
+            menu = true    
+        end
+        if menu then
+            if butt < 11 and butt > 1 then
+                owner():emitSound("buttons/button24.wav", 100, 100, 50, 0)
+            elseif butt == 1 then
+                owner():emitSound("buttons/blip1.wav", 100, 50, 50, 0)
+            end
+            if mode == "main" then
+                if butt == 9 then
+                    if mainp < 5 then
+                        mainp = mainp + 1
+                    end   
+                end
+                if butt == 10 and mainp > 1 then
+                    mainp = mainp - 1   
+                end
+                if mainp == 1 then
+                    if butt == 2 then
+                        mode = "kill"
+                        return false
+                    end
+                    if butt == 3 then
+                        mode = "lkill"
+                        return false
+                    end
+                    if butt == 4 then
+                        if vis == "OFF" then
+                            vis = "ON"
+                        else
+                            vis = "OFF"
+                        end
+                        net.start("invis")
+                        net.writeString(vis)
+                        net.send()
+                        return false
+                    end
+                    if butt == 5 then
+                        mode = "ignite"
+                        return false
+                    end
+                    if butt == 6 then
+                        mode = "slap"
+                        return false
+                    end
+                    if butt == 7 then
+                        mode = "unent"
+                        return false
+                    end
+                    if butt == 8 then
+                        mode = "stripw"
+                        return false
+                    end
+                elseif mainp == 2 then
+                    if butt == 2 then
+                        mode = "noweapons"
+                        return false
+                    end
+                    if butt == 3 then
+                        mode = "refl"
+                        return false
+                    end
+                    if butt == 4 then
+                        mode = "fr"
+                        return false
+                    end
+                    if butt == 5 then
+                        mode = "antinc"
+                        return false
+                    end
+                    if butt == 6 then
+                        mode = "sound"
+                        return false
+                    end
+                    if butt == 7 then
+                        mode = "antiaim"
+                        return false
+                    end
+                    if butt == 8 then
+                        mode = "jump"
+                        return false
+                    end
+                elseif mainp == 3 then
+                    if butt == 2 then
+                        mode = "slow"
+                        return false
+                    end
+                    if butt == 3 then
+                        mode = "randtp"
+                        return false
+                    end
+                    if butt == 4 then
+                        mode = "randth"
+                        return false
+                    end
+                    if butt == 5 then
+                        mode = "toaim"
+                        return false
+                    end
+                    if butt == 6 then
+                        mode = "kass"
+                        return false
+                    end
+                    if butt == 7 then
+                        mode = "randkill"
+                        return false
+                    end
+                    if butt == 8 then
+                        mode = "tpp"
+                        return false
+                    end
+                elseif mainp == 4 then
+                    if butt == 2 then
+                        if esp == "OFF" then
+                            esp = "ON"
+                        else
+                            esp = "OFF"
+                        end
+                        return false
+                    end
+                    if butt == 3 then
+                        if esc == "OFF" then
+                            esc = "ON"
+                        else
+                            esc = "OFF"
+                        end
+                        return false
+                    end
+                    if butt == 4 then
+                        if aw == "OFF" then
+                            aw = "ON"
+                            net.start("aw")
+                            net.writeBool(true)
+                            net.send()
+                        else
+                            aw = "OFF"
+                            net.start("aw")
+                            net.writeBool(false)
+                            net.send()
+                        end
+                        return false
+                    end
+                    if butt == 5 then
+                        mode = "antidmg"
+                        return false
+                    end
+                    if butt == 6 then
+                        mode = "chatkill"
+                        return false
+                    end
+                    
+                    if butt == 7 then
+                        if bh == "OFF" then
+                            bh = "ON"
+                            net.start("bh")
+                            net.writeBool(true)
+                            net.send()
+                        else
+                            bh = "OFF"
+                            net.start("bh")
+                            net.writeBool(false)
+                            net.send()
+                        end
+                        return false
+                    end
+                    if butt == 8 then
+                        mode = "aimf"
+                        return false
+                    end
+                elseif mainp == 5 then
+                    if butt == 2 then
+                        mode = "bury"
+                        return false
+                    end
+                    if butt == 3 then
+                        mode = "sj"
+                        return false
+                    end
+                    if butt == 4 then
+                        mode = "stumb"
+                        return false
+                    end
+                    if butt == 5 then
+                        mode = "modelsc"
+                        return false
+                    end
+                    if butt == 6 then
+                        if ent_info == "OFF" then
+                            ent_info = "ON"
+                        else
+                            ent_info = "OFF"
+                        end
+                    end
+                    if butt == 7 then
+                        mode = "authors"
+                        return false
+                    end
+                end
+                if butt == 1 then
+                    menu = false
+                end
+            end
+            if mode == "kill" then
+                OneClick(butt, "kill")
+            end
+            if mode == "lkill" then
+                PlayerSwitch(butt, lkt, "lkill")
+            end
+            if mode == "ignite" then
+                OneClick(butt, "ignite")
+            end
+            if mode == "slap" then
+                OneClick(butt, "slap")
+            end
+            if mode == "unent" then
+                PlayerSwitch(butt, anentt, "anent")
+            end
+            if mode == "stripw" then
+                OneClick(butt, "stripw")
+            end
+            if mode == "noweapons" then
+                PlayerSwitch(butt, nw_targs, "nw")
+            end
+            if mode == "refl" then
+                OneClick(butt, "refl")
+            end
+            if mode == "fr" then
+                if butt == 9 then
+                    if p < math.round(#find.allPlayers()/7 + 0.4) then
+                        p = p + 1
+                    end
+                elseif butt == 10 then
+                    if p > 1 then
+                        p = p - 1
+                    end
+                elseif butt == 1 then
+                    mode = "main"
+                    p = 1
+                    return false
+                end
+                if find.allPlayers()[(butt - 1) + ((p-1)*7)] != nil and butt-1 <= index[p] and butt > 1 then
+                    if table.hasValue(fr_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)]) != true then
+                        table.insert(fr_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        table.insert(fr_poses, find.allPlayers()[(butt - 1) + ((p-1)*7)]:getPos())
+                        net.start("fr")
+                        net.writeTable(fr_targs)
+                        net.writeTable(fr_poses)
+                        net.send()
+                    else
+                        ind = table.removeByValue(fr_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        table.remove(fr_poses, ind)
+                        net.start("fr")
+                        net.writeTable(fr_targs)
+                        net.writeTable(fr_poses)
+                        net.send()
+                    end
+                end
+            end
+            if mode == "antinc" then
+                 PlayerSwitch(butt, anc_targs, "antinc")
+            end
+            if mode == "sound" then
+                OneClick(butt, "sound")
+            end
+            if mode == "antiaim" then
+                PlayerSwitch(butt, aa_targs, "antiaim")
+            end
+            if mode == "jump" then
+                PlayerSwitch(butt, j_targs, "jump")
+            end
+            if mode == "slow" then
+                PlayerSwitch(butt, sl_targs, "slow")
+            end
+            if mode == "randtp" then
+                OneClick(butt, "randtp")
+            end
+            if mode == "randth" then
+                OneClick(butt, "randth")
+            end
+            if mode == "toaim" then
+                OneClick(butt, "toaim")
+            end
+            if mode == "kass" then
+                OneClick(butt, "kass")
+            end
+            if mode == "randkill" then
+                PlayerSwitch(butt, rk_targs, "randkill")
+            end
+            if mode == "tpp" then
+                if tp_p == false then
+                    if find.allPlayers()[(butt - 1) + ((p-1)*7)] != nil and butt - 1 <= index[p] and butt > 1 then
+                        tp_p_t[1] = find.allPlayers()[(butt - 1) + ((p-1)*7)]
+                        p = 1
+                        tp_p = true
+                        return false
+                    end
+                        if butt == 9 then
+                            if p < math.round(#find.allPlayers()/7 + 0.4)  then
+                                p = p + 1
+                            end
+                        elseif butt == 10 then
+                            if p > 1 then
+                                p = p - 1
+                            end
+                        end
+                    if butt == 1 then
+                        mode = "main"
+                        p = 1
+                        return false
+                    end
+                else
+                    table.removeByValue(tab, tp_p_t[1]) 
+                    if tab[(butt - 1) + ((p-1)*7)] != nil and butt - 1 <= index[p] and butt > 1 then
+                        tp_p_t[2] = tab[(butt - 1) + ((p-1)*7)]
+                        net.start("tpp")
+                        net.writeTable(tp_p_t)
+                        net.send()
+                        mode = "main"
+                        tp_p = false
+                        table.empty(tp_p_t)
+                    end
+                        if butt == 9 then
+                            if p < math.round(#tab/7 + 0.4)  then
+                                p = p + 1
+                            end
+                        elseif butt == 10 then
+                            if p > 1 then
+                                p = p - 1
+                            end
+                        end
+                    if butt == 1 then
+                        table.remove(tp_p_t, 1)
+                        p = 1
+                        tp_p = false
+                        return false
+                    end
+                end
+            end
+            if mode == "antidmg" then 
+                PlayerSwitch(butt, ad_targs, "antidmg")
+            end
+            if mode == "chatkill" then
+               PlayerSwitch(butt, ck_targs, "chatkill")
+            end
+            if mode == "aimf" then
+                if butt == 9 then
+                    if p < math.round(#find.allPlayers()/7 + 0.4) then
+                        p = p + 1
+                    end
+                elseif butt == 10 then
+                    if p > 1 then
+                        p = p - 1
+                    end
+                elseif butt == 1 then
+                    mode = "main"
+                    p = 1
+                    return false
+                end
+                if find.allPlayers()[(butt - 1) + ((p-1)*7)] != nil and butt-1 <= index[p] and butt > 1 then
+                    if table.hasValue(af_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)]) != true then
+                        table.insert(af_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        table.insert(af_poses, find.allPlayers()[(butt - 1) + ((p-1)*7)]:getEyeAngles())
+                        net.start("aimf")
+                        net.writeTable(af_targs)
+                        net.writeTable(af_poses)
+                        net.send()
+                    else
+                        ind = table.removeByValue(af_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        table.remove(af_poses, ind)
+                        net.start("aimf")
+                        net.writeTable(af_targs)
+                        net.writeTable(af_poses)
+                        net.send()
+                    end
+                end            
+            end
+            if mode == "bury" then
+                OneClick(butt, "bury")    
+            end
+            if mode == "speed" then
+                PlayerSwitch(butt, sp_targs, "speed")
+            end
+            if mode == "sj" then
+                PlayerSwitch(butt, sj_targs, "sj")
+            end
+            if mode == "stumb" then
+                OneClick(butt, "stumb")    
+            end
+            if mode == "modelsc" then
+                if butt == 9 then
+                    if p < math.round(#find.allPlayers()/7 + 0.4) then
+                        p = p + 1
+                    end
+                elseif butt == 10 then
+                    if p > 1 then
+                        p = p - 1
+                    end
+                elseif butt == 1 then
+                    mode = "main"
+                    p = 1
+                    return false
+                end
+                if find.allPlayers()[(butt - 1) + ((p-1)*7)] != nil and butt-1 <= index[p] and butt > 1 then
+                    if table.hasValue(msc_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)]) != true then
+                        table.insert(msc_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        net.start("msc")
+                        net.writeEntity(find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        net.writeBool(true)
+                        net.send()
+                    else
+                        table.removeByValue(msc_targs, find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        net.start("msc")
+                        net.writeEntity(find.allPlayers()[(butt - 1) + ((p-1)*7)])
+                        net.writeBool(false)
+                        net.send()
+                    end
+                end
+            end
+            if mode == "authors" then
+                if butt == 1 then
+                    mode = "main"
+                    return false    
+                end
+            end
+        end
+    end) 
+end

@@ -1,0 +1,13 @@
+--@name simple format time
+--@author
+--@client
+
+if owner() != player() then return end
+
+
+timer.create("foramt_time", 1, 0, function()
+    
+    local time = os.date('%Y-%B-%d %H:%M:%S')
+    --local time = os.date("today is %A, in %B")
+    printMessage(4, time)
+end)

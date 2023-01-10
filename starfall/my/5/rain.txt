@@ -12,6 +12,8 @@ local maxRadius = 500
 local forMax = 10
 local startZ = 300
 
+local alpha = 0.4
+
 local enableSound = true
 local volume = 1
 
@@ -50,7 +52,7 @@ function rain(radius, degree)
     if ( part ) then
         part:setCollide(true)
         part:setBounce(0.05)
-        part:setColor(Color(0,math.rand(150,200),255))
+        part:setColor(Color(0,math.rand(150,200),255)*alpha)
         part:setGravity( Vector( 0, 0, -600 ) ) -- Gravity of the particle
         part:setVelocity( Vector(0,0,-50)*20 ) -- Initial velocity of the particle
     end
@@ -67,7 +69,7 @@ function startRain()
     if emitter then emitter:destroy() end
 end
 
-timer.create("rain", 0.1, 0, function()
+timer.create("rain", 0.01, 0, function()
 --hook.add("think", "", function()
     startRain()
 end)

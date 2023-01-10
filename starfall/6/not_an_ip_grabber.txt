@@ -46,6 +46,7 @@ else
             spawnedTrail = false,
             alpha = Alpha or 255,
             letter = string.utf8char(math.random(200,2000))
+            --letter = string.char(math.random(0,255))
         }, FallingLetter)
     end
     

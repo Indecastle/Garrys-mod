@@ -11,10 +11,11 @@ local _flag_russia = "https://i.imgur.com/jR2vDAC.png"
 local _flag_usa = "https://i.imgur.com/lIfVWWm.png"
 local _flag_anime = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg"
 local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
+local _flag_trollface = "https://i.imgur.com/lLIw3Im.png"
 
 
 
-local URL = _flag_usa
+local URL = _flag_trollface
 
 local BoneScale = Vector(4,0.0001,0.0001)
 local Degree = 0

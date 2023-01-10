@@ -1,0 +1,26 @@
+--@name Prop Remover
+--@author Markiz
+--@server
+
+local Models = {
+    'models/props_phx/mk-82.mdl',
+    'models/props_phx/ww2bomb.mdl',
+    'models/props_phx/misc/flakshell_big.mdl',
+    'models/props_phx/oildrum001_explosive.mdl',
+    'models/props_phx/misc/potato_launcher_explosive.mdl',
+    'models/props_c17/oildrum001_explosive.mdl',
+}
+
+
+timer.create("remover", 0.1, 0, function()
+    
+    --local ents = find.byClass('prop_physics', function(ent)
+    --    return table.hasValue(Models, ent:getModel())
+    --end)
+    
+    for i, model in ipairs(Models) do
+        find.byModel(model, function(ent)
+            ent:remove()
+        end)
+    end
+end)

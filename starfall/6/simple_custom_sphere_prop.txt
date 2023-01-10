@@ -1,0 +1,70 @@
+--@name Simple Custom Sphere Prop
+--@author Name
+--@server
+
+local Radius = 1000
+local Mass = 1000000
+
+local ColorSpeed = 50
+
+
+local Latitudes = 14
+local Longitudes = 14
+
+
+local convexes = {
+}
+
+
+-- https://gamedev.stackexchange.com/questions/31308/algorithm-for-creating-spheres
+function generateSphere(radius, latitudes, longitudes, callback)
+    local vertices = {}
+    local u = 1
+    local t = 1
+
+    hook.add("think", "", function()
+        local latitude_increment = 360.0 / latitudes;
+        local longitude_increment = 180.0 / longitudes;
+    
+        --while math.max(quotaAverage(), quotaUsed()) < quotaMax() * 0.001 do
+            t = t + longitude_increment
+            if t > 180.0 then 
+                u = u + latitude_increment
+                t = 1
+            end
+            
+            if u > 360.0 then 
+                hook.remove("think", "")
+                callback(vertices) 
+                return 
+            end
+    
+            local rad = radius;
+            local x = (rad * math.sin(t) * math.sin(u))
+            local y = (rad * math.cos(t))
+            local z = (rad * math.sin(t) * math.cos(u))
+    
+            table.insert(vertices, Vector(x, y, z))
+            --print(#vertices)
+        --end
+    end)
+    
+end
+
+generateSphere(Radius/2, Latitudes, Longitudes, function(vertices)
+    print(#vertices)
+    convexes[1] = vertices
+    
+    local ent = prop.createCustom(chip():getPos() + chip():getUp()*(Radius/2+50), Angle(), convexes, true)
+    ent:setMass(Mass)
+    --ent:setColor(Color(255,255,0))
+    --ent:setMaterial("models/props_c17/furniturefabric001a")
+    
+    hook.add("think", "rainbow", function()
+        local j = timer.systime() * ColorSpeed  % 360
+        ent:setColor(Color(j,1,1):hsvToRGB())
+    end)
+end)
+
+
+

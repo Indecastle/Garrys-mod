@@ -1,0 +1,41 @@
+--@name chat rainbow static Hunta
+--@server
+
+
+local ColorSpeed = 5
+
+
+function getUChar(text, index)
+    local a = string.byte(text, index, index)
+    if a == 208 or a == 209 then
+        return string.sub(text, index, index+1), index+2, a*1000 + string.byte(text, index+1, index+1)
+    end
+    return string.sub(text, index, index), index+1, a
+end
+
+function getColorFormat(color)
+    return string.format("<color=%d,%d,%d>", color.r, color.g, color.b)
+end
+
+local i = 0
+
+hook.add("PlayerSay","Say",function(ply,txt)
+    if ply ~= owner() then return txt end
+
+    local uChar, uCharNum;
+    local indexText = 1
+    local Text = ""
+    
+    while indexText <= #txt do
+        i = (i + ColorSpeed) % 360
+        uChar, indexText, uCharNum = getUChar(txt, indexText)
+        local color = Color(i, 1, 1):hsvToRGB()
+        if uChar == " " then
+            Text = Text.."  "
+        else
+            Text = Text..getColorFormat(color)..uChar
+        end
+    end
+ 
+    return Text
+end)

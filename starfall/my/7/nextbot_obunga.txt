@@ -11,29 +11,28 @@ local img = "soldierMeme"
 local size = 200
 
 local IsGivingDamage = false
+local IsForsing = false
+local IsForcingOnlyPlayers = false
+local IsForcingUnfrozeProps = false
+local IsForcingUnConstraintProps = false
 
+local Force = 100
+local HitRadius = 100
+
+local TeleportMinSpeed = 20
+local TeleportOneDelay = 2
+local TeleportEachDelay = 0.2
 
 ----- music ------
 local Volume = 2
 local MusicSpeed = 1
 local URL_Music = "soldier"
 local IsLooping = true
-local MusicRadius = 1000
+local MusicRadius = 500
 ----- music ------
 
+
 ------------------------------------------------------------------------------------
-
-local _urls_music = {
-    morgenshtern_1 = "https://u.teknik.io/o2Fly.mp3",
-    pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
-    pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
-    bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
-    soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3",
-    soldier = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
-}
-
--- =================================================================================
-
 
 local URLS = {
     rikka_1 = "https://i.imgur.com/xdOEuic.png",
@@ -52,11 +51,28 @@ local URLS = {
 }
 
 
+------------------------------------------------------------------------------------
+
+local _urls_music = {
+    morgenshtern_1 = "https://u.teknik.io/o2Fly.mp3",
+    pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
+    pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
+    bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
+    soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3",
+    soldier = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
+}
+
+-- =================================================================================
+
+
 local Killer
 
 
 if SERVER then
     
+    local _oldPos = Vector()
+    local customVelocity = Vector()
+
     local players = find.allPlayers()
 
     local Killer = nextbot.create(chip():getPos(), "models/Lamarr.mdl")
@@ -107,23 +123,83 @@ if SERVER then
     
     timer.create("jump", 2, 0, function()
         if Killer ~= nil and Killer:isValid() and isValidPlayer(closestPlayer) then
-            Killer:jump()
+            --Killer:jump()
         end
     end)
+    
+    local _isFreezed = false
     
     
     timer.create("fun", 0.1, 0, function()
         if Killer ~= nil and Killer:isValid() and isValidPlayer(closestPlayer) then
-            Killer:setGotoPos(closestPlayer:getPos())
+            if isValid(Killer) then
+                local newPos = Killer:getPos()
+                customVelocity = newPos - _oldPos
+                _oldPos = newPos
+            end
             
-            if IsGivingDamage then
-                if Killer:getPos():getDistance(closestPlayer:getPos()) <= 100 then
-                        closestPlayer:applyDamage(100000, Killer, Killer)
+            Killer:setGotoPos(closestPlayer:getPos())
+            local velVec = customVelocity
+            velVec.z = 0
+            local vel = velVec:getDistance(Vector())
+            --print(''.. tostring(_isFreezed) .. ' - ' .. vel)
+            if !_isFreezed and vel < TeleportMinSpeed then
+                _isFreezed = true
+                --print("ON " .. vel)
+                timer.create("check", TeleportOneDelay, 1, function()
+                    --print("check")
+                    timer.create("check2", TeleportEachDelay, 0, function()
+                        if !isValidPlayer(closestPlayer) then return end
+                        
+                        --print("check2 - " .. closestPlayer:getName())
+                        local diff = closestPlayer:getPos() - Killer:getPos()
+                        local dir = (closestPlayer:getPos() - Killer:getPos()):getNormalized()
+                        Killer:setPos(Killer:getPos() + diff / 2)
+                        --_oldPos = Killer:getPos()
+                        --Killer:setVelocity(dir*1000)
+                        
+                    end)
+                end)
+            elseif _isFreezed and vel >= TeleportMinSpeed then
+                --print("OFF " .. vel)
+                _isFreezed = false
+                timer.remove("check")
+                timer.remove("check2")
+            end
+            
+            if IsForcingOnlyPlayers then
+                pp = find.allPlayers(function(p) return Killer:getPos():getDistance(p:getPos()) <= HitRadius end)
+            else
+                pp = find.inSphere(Killer:getPos(), HitRadius, function(ent) 
+                    return !(ent == chip() or ent == nil or !ent:isValid() or !ent:isValidPhys() or (ent:getClass() != 'player' and ent:getOwner() == nil)) end)
+            end
+            
+            for i, p in ipairs(pp) do            
+                if IsForsing then
+                    local dir = (p:getPos() - Killer:getPos()):getNormalized()
+                    
+                    if p:getClass() == 'player' then
+                            --p:setVelocity(Vector(0,0,Speed))
+                        p:setVelocity(dir*Force*10)
+                    else
+                        local phys = p:getPhysicsObject()
+                        phys:addVelocity(dir*Force*10)
+                        
+                        if IsForcingUnfrozeProps then
+                            p:setFrozen(false)
+                        end
+                        if IsForcingUnConstraintProps then
+                            constraint.breakAll(p)
+                        end
+                    end
+                end
+                
+                if IsGivingDamage then
+                    p:applyDamage(100000, Killer, Killer)
                 end
             end
         end
     end)
-    
     
     hook.add("ClientInitialized", "cl_init", function(ply)
         net.start("init")
@@ -146,7 +222,6 @@ end)
 
 
 local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
-
 
 hook.add("think", "nextbot_image", function()
     --local d = -eyeVector()

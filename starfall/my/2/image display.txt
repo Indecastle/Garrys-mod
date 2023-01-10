@@ -14,17 +14,22 @@ local URLS = {
     malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
     
     obunga = "https://i.imgur.com/wEBb6mG.png",
+    sidorovich = "https://i.imgur.com/rHE1lsn.png",
+    sidorovich_brightness_less = "https://i.imgur.com/RjeaHYn.png",
+    sidorovich_brightness_less2 = "https://i.imgur.com/EIEuHDO.png",
+    sidorovich_brightness_less3 = "https://i.imgur.com/e2mWcg5.png",
+    sidorovich_brightness_less4 = "https://i.imgur.com/PXRDwZO.png",
     custom = nil
 }
 
-local img = "obunga"
+local img = "sidorovich_brightness_less3"
 
-local maxh = 120*2
+local maxh = 70
 
 local ParentAngle = false
 local VerticalAngle = true
 local PosUp = true
-local ParentOnMe = true
+local ParentOnMe = false
 
 function isLookingAtChip()
     local dir = owner():getEyeAngles():getForward()
@@ -36,7 +41,7 @@ function isLookingAtChip()
 end
 
 if SERVER then
-    chip():setNoDraw(0)
+    --chip():setNoDraw(0)
 
     hook.add("PlayerSay", "chat", function(ply, txt)
         if ply ~= owner() then return end

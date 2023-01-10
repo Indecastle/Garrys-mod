@@ -14,7 +14,7 @@ end)[1]*/
 --calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
 hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
     local angle = Target:getEyeAngles()
-    local originPos = Target:getEyePos() + ( angle:getForward() * 20 )
+    local originPos = Target:getEyePos() - ( angle:getForward() * 50 )
     --return {origin=camera origin, angles=camera angles, fov=camera fov, znear=znear, zfar=zfar, drawviewer=drawviewer, ortho=ortho table}
     return {
         origin= originPos

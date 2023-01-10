@@ -18,6 +18,9 @@ local IsSetPosOnGround = false
 
 local IsTriggerWorldEntity = true
 
+local IsDeleteProps = false
+local IsDeleteWorldProps = false
+
 
 local IsWorkByTimer = false
 local WorkTimerDelay = 0.5
@@ -187,12 +190,19 @@ function handleForce()
             else
                 --p:applyForceCenter(Vector(0,0,20)*p:getMass()) 
                 --p:applyForceCenter(dir*Speed*p:getMass()) 
-            
-                phys:addVelocity(dir*Force*ttimeDiff*33.272)
                 
-                if IsUnfrozingProps then
-                    p:setFrozen(false)
+                if IsDeleteProps then
+                    if IsDeleteWorldProps or p:getOwner() != nil then
+                        p:remove()
+                    end
+                else
+                     phys:addVelocity(dir*Force*ttimeDiff*33.272)
+                    if IsUnfrozingProps then
+                        p:setFrozen(false)
+                    end
                 end
+            
+                
             end
         end)
         

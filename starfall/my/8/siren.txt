@@ -3,7 +3,7 @@
 --@shared
 
 
-local Speed = 10
+local Speed = 200
 
 
 local E = chip()
@@ -24,6 +24,9 @@ if SERVER then
             On="number",
             RGB="vector",
         })
+        
+    local ttime = 0
+    local ttimeDiff = 0
         
     local _Base = holograms.create(E:localToWorld(Vector(0,0,10)), E:localToWorldAngles(Angle(0)), "models/holograms/cube.mdl", Vector(1))
     _Base:setParent(E)
@@ -95,14 +98,18 @@ if SERVER then
         end
     end)
     
-
+    
     hook.add("think", "Siren", function()
+        local ttime2 = timer.curtime()
+        ttimeDiff = ttime2 - ttime
+        ttime = ttime2
+        
         if wire.ports.Active == 1 then
             --local ttime = timer.systime()
             wire.ports.RGB = Vector(255,0,0)
             --_Base:setPos(E:localToWorld(Vector(0,0,10)))
-            
-            _I1 = (_I1 + Speed) % 360
+            local ttime = timer.curtime()
+            _I1 = (_I1 + ttimeDiff * Speed) % 360
             _Base:setAngles(E:localToWorldAngles(Angle(0, _I1, 0)))
         else
         end

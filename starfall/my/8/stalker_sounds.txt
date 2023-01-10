@@ -1,0 +1,205 @@
+--@name Stalker sounds
+--@author Markiz    
+--@shared
+
+
+local Volume = 3
+local VolumeBackground = 0.5
+local Speed = 1
+
+local NextSoundDelay = 5
+local AgainLoadDelay = 2
+
+local LimitSounds = 19
+--local Radius = 4200
+
+------------------------------------------------------------------------------------
+
+
+--local Target = find.playersByName("Markiz")[1]
+/*AFK = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+--print(Target)
+
+--if Target ~= nil and player() ~= Target then return end
+
+--if player() == Target then return end
+
+------------------------------------------------------------------------------------
+
+local _backgroundSoundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/1062480239546081381/stalker--muzyka-iz-stalkera-u-sidorovicha.mp3"
+
+local _urls = {
+    trader_script1c_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863403991170/trader_script1c_5.mp3",
+    trader_script1c_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863085228165/trader_script1c_3.mp3",
+    trader_script1c_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862774837298/trader_script1c_2.mp3",
+    trader_script1c_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862493827123/trader_script1c_1.mp3",
+    trader_script1b_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476831929925632/trader_script1b_6.mp3",
+    trader_script1b_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833754452008/trader_script1b_5.mp3",
+    trader_script1b_4 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833418903552/trader_script1b_4.mp3",
+    trader_script1b_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833033027725/trader_script1b_3.mp3",
+    trader_script1b_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476832697499769/trader_script1b_2.mp3",
+    trader_script1b_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476832240308315/trader_script1b_1.mp3",
+    trader_script1a_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476790678945822/trader_script1a_6.mp3",
+    trader_script1a_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476792360861917/trader_script1a_5.mp3",
+    trader_script1a_4 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476792046301254/trader_script1a_4.mp3",
+    trader_script1a_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791710765127/trader_script1a_3.mp3",
+    trader_script1a_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791404560485/trader_script1a_2.mp3",
+    trader_script1a_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791018696815/trader_script1a_1.mp3",
+    sidorovich____ = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
+    trader1a = "https://cdn.discordapp.com/attachments/974678227362660395/1062476890083971133/trader1a.mp3",
+    trader1b = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889802936370/trader1b.mp3",
+    trader3b = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889488371832/trader3b.mp3",
+    trader3c = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889207361646/trader3c.mp3",
+    trader_tutorial_rejection_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888909549728/trader_tutorial_rejection_1.mp3",
+    trader_tutorial_rejection_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888628539443/trader_tutorial_rejection_2.mp3",
+    trader_script1c_8 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862141509733/trader_script1c_8.mp3",
+    trader_script1c_7 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476864054112407/trader_script1c_7.mp3",
+    trader_script1c_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863735332924/trader_script1c_6.mp3",
+}
+local _keys = table.getKeys(_urls)
+
+local MinIndex = #_keys <= LimitSounds and 1 or math.random(#_keys-LimitSounds)
+local MaxIndex = math.min(MinIndex+LimitSounds-1, #_keys)
+-- =================================================================================
+
+
+if SERVER then
+    
+    local WW = chip():getWirelink()
+    
+    wire.adjustPorts(
+        {
+            ON="number",
+        },
+        {
+        }
+    )
+    
+    hook.add("input", "", function(input_name, value) 
+        if input_name == 'ON' then
+            net.start("Active")
+            net.writeBool(value != 0 and true or false)
+            net.send()
+        end
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        if !WW:isWired('ON') then return end
+        
+        net.start("Active")
+        net.writeBool(!WW:isWired('ON') or wire.ports.ON != 0)
+        net.send(ply)
+    end)
+    
+    return
+end
+
+---------------
+
+local _isActive = true
+local _sounds = {}
+
+
+net.receive("Active", function(len)
+    _isActive = net.readBool()
+    if #_sounds > 0 then
+        if _isActive then
+            playSound(1)
+        else
+            stopSound()
+        end
+    end
+end)
+
+function loadBackgroundSound(temp)
+    bass.loadURL(_backgroundSoundUrl, "3d noblock", function(Sound)
+        if !isValid(Sound) then
+            if temp > 5 then return end
+            timer.simple(AgainLoadDelay, function()
+                loadBackgroundSound(temp + 1)
+            end)
+            return 
+        end
+        
+        Sound:setLooping(true)
+        Sound:setPitch(1)
+        Sound:setVolume(VolumeBackground) 
+        
+        timer.create("setPosBackgroundSound", 1, 0, function()
+            Sound:play()
+            Sound:setPos(chip():getPos())
+        end)
+    end)
+end
+
+
+function loadUrl(index, temp)
+    --if index > math.min(#_keys, MaxIndex) then return end
+    if temp > 5 then 
+        return 
+    end
+    
+    name = _keys[index]
+    url = _urls[name]
+    
+    bass.loadURL(url, "3d noblock noplay", function(Sound)
+        
+        --print(""..name.." - "..tostring(isValid(Sound)))
+        if !isValid(Sound) then
+            --MaxIndex = MaxIndex + 1
+            timer.simple(AgainLoadDelay, function()
+                loadUrl(index, temp + 1)
+            end)
+            return 
+        end
+        --loadUrl(index + 1)
+        
+        table.insert(_sounds, Sound)
+        
+        Sound:setLooping(false)
+        Sound:setPitch(Speed)
+        Sound:setVolume(Volume) 
+        
+        
+    end)
+    
+end
+
+
+function stopSound()
+    timer.remove("snd")
+end
+
+
+function playSound(seconds)
+    timer.create("snd", seconds, 1, function(len)    
+        if #_sounds == 0 or !_isActive then
+            playSound(1)
+            return
+        end
+        
+        local ii = math.random(1, #_sounds)
+        --print(ii)
+        --print(#_sounds)
+        
+        local snd = _sounds[ii]
+        --print(snd:getLength())
+        snd:setPos(chip():getPos())
+        snd:play()
+        
+        playSound(snd:getLength()/Speed + NextSoundDelay)
+    end)
+end
+
+
+for i=MinIndex, MaxIndex do
+    loadUrl(i, 0)
+end
+
+loadBackgroundSound(1)
+playSound(1)
+

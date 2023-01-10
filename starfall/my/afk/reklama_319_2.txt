@@ -1,0 +1,61 @@
+--@name Reklama 319_2
+--@author Markiz
+--@include libs/3d2dtext.txt
+--@client
+
+dofile("libs/3d2dtext.txt")
+
+local Target = chip()
+Target = find.playersByName("mark")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+//print(Target)
+
+local Data = {
+    {   text={"Vперёд, Za Русский Донбасс!",}, 
+        fontSize=88, 
+        fontBold=600, 
+        margin=80,
+        bold=true,
+        color=Color(0,255,255),
+        //colorMode = 3,
+        rainbowColorSpace = 10,
+        rainbowReverse = true,
+        //colorSpeed = 0.3,
+    },
+}
+
+local Vars = {
+    Target= Target,
+
+    Mode=1,
+    isRotate=false,
+    rotateSpeed=100,
+    swaySpeed=2,
+    swayDegreesMax=0,
+    
+    IsStaticVertical=true,
+    IsDoubleData=true,
+    isHideTarget=false,
+    
+    shadowIterations=2,
+    shadowAlphaReverce=0,
+    shadowOffset=1,
+    
+    alphaGlobal=255,
+    
+    textSize=100*3,
+    DataOffsetZ=35,
+    
+    isParentPos=true,
+    isParentAngle=true,
+}
+
+
+
+
+obj = Text3D2D:new(Data, Vars)
+obj:run()
