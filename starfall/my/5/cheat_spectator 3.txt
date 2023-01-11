@@ -22,12 +22,13 @@ local WH = true
 local IsOnlyOwnerViewEntity = true
 
 
+
+local CumHolo
+
+
 if SERVER then
     local Waiting = false
     local Hud, Seat, ExitPointer
-    
-    local CumHolo = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
-    CumHolo:setNoDraw(true)
     
     wire.adjustPorts(
         {
@@ -38,6 +39,9 @@ if SERVER then
             Seat="entity",
         }
     )
+    
+    CumHolo = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
+    CumHolo:setNoDraw(true)
     
     local li = chip():getLinkedComponents()
     if #li > 0 and li[1]:getClass() == 'starfall_hud' then
@@ -78,6 +82,14 @@ if SERVER then
     chip():setNocollideAll(true)
     --Seat:setColor(Color(0,0,0,0))
     --Seat:setNoDraw(true)
+    
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.writeEntity(CumHolo)
+        net.send(ply)
+    end)
+    
     
     --timer.create("update_ang", 0.1, 0, function()
     hook.add("tick", "update_ang", function()
@@ -170,7 +182,20 @@ local Key_Shift = false;
 local Key_Ctrl = false;
 local FreeCumPos = eyePos();
 
+local _flashlight = light.create(Vector(), 300,5,Color(255,255,255))
+_flashlight:setBrightness(1)
+_flashlight:setSize(20000)
+local IsFlashlighning = false
+
 local OriginCumPos = Vector()
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get Hologram!") end
+        CumHolo = ent
+    end)
+end)
 
 
 function gethead(ent)
@@ -242,6 +267,15 @@ hook.add("tick", "timeDiff", function()
 end)
 
 
+function flashlightHandle()
+    if IsFlashlighning then
+        --local tr = trace.trace(FreeCumPos, FreeCumPos + eyeAngles():getForward()*10000000, nil, MASK.ALL, nil, false)
+        _flashlight:setPos(OriginCumPos)
+        _flashlight:draw()
+    end
+end
+
+
 --calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
 hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
     checkValidPlayer()
@@ -302,6 +336,8 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
     
     OriginCumPos = originResult
     
+    flashlightHandle()
+    
     return {
             origin = originResult
             ,angles = anglesResult
@@ -340,7 +376,8 @@ ArrowUp/ArrowDown - Switching to another player
 M - Switching cheat / free spectate
 N - reset free spectate position to your position and set to your Target
 T - Teleport to free spectate position
-A/W/S/D - move free camera (only for free spectating)
+A/W/S/D - move free camera (only in free spectating)
+F - flashlight (only in free spectating)
 
 
 ]])
@@ -456,6 +493,11 @@ hook.add("inputPressed", "cheat spectator", function(key)
         if key == KEY.SPACE then Key_Space = true end
         if key == KEY.SHIFT then Key_Shift = true end
         if key == KEY.CTRL then Key_Ctrl = true end
+        
+        if key == KEY.F then 
+            IsFlashlighning = !IsFlashlighning 
+            CumHolo:emitSound("items/flashlight1.wav")
+        end
     end
 end)
 

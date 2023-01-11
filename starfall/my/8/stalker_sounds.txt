@@ -11,22 +11,7 @@ local NextSoundDelay = 5
 local AgainLoadDelay = 2
 
 local LimitSounds = 19
---local Radius = 4200
-
-------------------------------------------------------------------------------------
-
-
---local Target = find.playersByName("Markiz")[1]
-/*AFK = find.allPlayers(function(p)
-    if p:getSteamID() == "STEAM_0:0:582893321" then
-        return true
-    end
-end)[1]*/
---print(Target)
-
---if Target ~= nil and player() ~= Target then return end
-
---if player() == Target then return end
+local Radius = 2000
 
 ------------------------------------------------------------------------------------
 
@@ -102,6 +87,8 @@ end
 
 local _isActive = true
 local _sounds = {}
+local _currentSound = nil
+local _currentBackgroundSound = nil
 
 
 net.receive("Active", function(len)
@@ -115,6 +102,15 @@ net.receive("Active", function(len)
     end
 end)
 
+hook.add('think', '', function()
+    local distance = chip():getPos():getDistance(player():getPos())
+    --if distance < Radius then
+    if isValid(_currentSound) and isValid(_currentBackgroundSound) then
+        _currentSound:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
+        _currentBackgroundSound:setVolume(math.min(1, ((Radius-distance) / Radius)) * VolumeBackground)
+    end
+end)
+
 function loadBackgroundSound(temp)
     bass.loadURL(_backgroundSoundUrl, "3d noblock", function(Sound)
         if !isValid(Sound) then
@@ -124,6 +120,8 @@ function loadBackgroundSound(temp)
             end)
             return 
         end
+        
+        _currentBackgroundSound = Sound
         
         Sound:setLooping(true)
         Sound:setPitch(1)
@@ -186,12 +184,12 @@ function playSound(seconds)
         --print(ii)
         --print(#_sounds)
         
-        local snd = _sounds[ii]
+        _currentSound = _sounds[ii]
         --print(snd:getLength())
-        snd:setPos(chip():getPos())
-        snd:play()
+        _currentSound:setPos(chip():getPos())
+        _currentSound:play()
         
-        playSound(snd:getLength()/Speed + NextSoundDelay)
+        playSound(_currentSound:getLength()/Speed + NextSoundDelay)
     end)
 end
 
