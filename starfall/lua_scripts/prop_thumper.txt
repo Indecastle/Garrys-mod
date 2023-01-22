@@ -1,0 +1,69 @@
+
+if CLIENT then return end
+
+--[[
+hook.Add('PlayerUse', 'Markiz_PropThumperUse', function(ply, ent)
+    if not ply:KeyPressed( IN_USE ) or ent:GetClass() ~= 'prop_thumper' then return true end
+    LogToClients(tostring(ply) .. ' - ' .. tostring(ent))
+    local keyValues = ent:GetKeyValues()
+    local data = ent:GetTable()
+    --LogToClients(data)
+    if keyValues.playbackrate == 1 then
+        ent:Fire('Disable')
+    elseif keyValues.playbackrate == 0 then
+        ent:Fire('Enable')
+    end
+
+    return true
+end)
+]]
+
+
+timer.Create("CheckPropThumperUse", 0.5, 0, function()
+
+    for i, ent in ipairs(ents.FindByClass('prop_thumper')) do
+        if ent.Wire then
+            local playbackrate = ent:GetKeyValues().playbackrate
+            if ent:IsWired('Disable') and ent.Wire.Disable == 1 and playbackrate == 1 then
+                ent:Fire('Disable')
+            elseif (not ent:IsWired('Disable') or ent.Wire.Disable == 0) and playbackrate == 0 then
+                ent:Fire('Enable')
+            end
+        end
+    end
+end)
+
+hook.Add('OnEntityCreated', 'Markiz_PropThumperUse', function(ent)
+    if not ent:IsValid() then return end
+    if ent:GetClass() ~= 'prop_thumper' then return end
+
+    ent.Wire = {
+        Disable = nil,
+    }
+
+    function ent:TriggerInput(iname, value)
+        --print(iname .. ' = ' .. tostring(value))
+        local input = self.Inputs[iname]
+        if input and input.Src and input.Src:IsValid() then
+            self.Wire[iname] = value
+	    else
+            self.Wire[iname] = nil
+        end
+    end
+
+    function ent:IsWired(name)
+        local input = self.Inputs
+        if input and input[name] and input[name].Path ~= nil then return true
+        else return false end
+    end
+
+    WireLib.CreateInputs(ent, { "Disable" })
+    --Wire_AdjustInputs(ent, { "Disable" })
+end)
+
+
+
+--hook.Remove('PlayerUse', 'Markiz_PropThumperUse')
+--hook.Remove('OnEntityCreated', 'Markiz_PropThumperUse')
+
+--LogToClients(table.ToString(hook.GetTable().PlayerUse, nil, true))

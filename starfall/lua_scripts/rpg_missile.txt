@@ -1,0 +1,51 @@
+local Owner = player.GetBySteamID('STEAM_0:1:54066003') -- Markiz
+
+
+local ValidExplodeRockets = {}
+
+
+local function MakeRocketDoDamage( ent )
+	if ent:GetClass() ~= "rpg_missile" then
+		return
+	end
+
+	for k, v in ipairs( ValidExplodeRockets ) do
+		if not IsValid( v ) then
+			table.remove( ValidExplodeRockets, k )
+		elseif ent == v then
+			table.remove( ValidExplodeRockets, k )
+			util.BlastDamage( ent, ent.EntityOwner, ent:GetPos(), ent.Damage * 2, ent.Damage )
+		end
+	end
+
+	if #ValidExplodeRockets == 0 then
+		hook.Remove("EntityRemoved", "ExplodeRocket2" )
+	end
+end
+
+
+
+
+timer.Create('rpg_missile', 0.5, 0, function()
+    local ent = ents.Create( "rpg_missile" )
+
+    if ( IsValid( ent ) ) then
+        --ent:SetKeyValue('modelscale', 10)
+        --ent:SetKeyValue('fadescale', 10)
+
+        local Forward = Owner:EyeAngles():Forward()
+        ent:SetPos( Owner:GetShootPos() + Forward * 100 )
+        ent:SetAngles( Owner:EyeAngles() )
+        ent:Spawn()
+        --ent:SetVelocity( Forward * 1000 )
+        ent:SetOwner( Owner )
+
+        ent.EntityOwner = Owner
+        ent.Damage = math.Clamp(50, 1, 5000)
+
+        --LogToClients(ent:GetKeyValues())
+        table.insert( ValidExplodeRockets, ent )
+	    hook.Add("EntityRemoved", "ExplodeRocket2", MakeRocketDoDamage )
+    end
+end)
+--timer.Remove('rpg_missile')

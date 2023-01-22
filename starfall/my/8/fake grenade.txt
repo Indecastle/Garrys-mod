@@ -16,6 +16,7 @@ local RandomBalloonBreak = 1 -- interval 0-1
 local RandomExplosion = 1 -- interval 0-1
 
 
+-- https://github.com/Planimeter/hl2sb-src/blob/8ffdae584f8e4837b7a1bd90286d199d934e4b7d/src/game/server/hl2/grenade_frag.cpp
 if SERVER then
     local _grenade, _holo
     local _balloons = {}
@@ -29,7 +30,7 @@ if SERVER then
     _holo:setParent(_grenade)
     
     _holo:setNoDraw(true)
-    _holo:setTrails(1, 0, 0.4, "trails/smoke", Color(255,0,0, 200), nil, true)
+    _holo:setTrails(1, 0.1, 0.5, "trails/smoke", Color(255,0,0, 255), nil, true)
     
     hook.add("ClientInitialized", "cl_init", function(ply)
         net.start("init")

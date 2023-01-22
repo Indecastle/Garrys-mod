@@ -1,0 +1,89 @@
+local Owner = player.GetBySteamID('STEAM_0:1:54066003') -- Markiz
+local NET_LUA_KEY_PRESSED = "keypress_use_hi2"
+
+local function CreateDoor(trace, ang, class, model, hardware, autoclose, closetime)
+    local entit = ents.Create(class)
+    --PrintTable(entit:GetKeyValues())
+    if not entit then
+        Msg(tostring(class) .. " is not a valid class for wired door.\n")
+        return NULL
+    end
+    entit:SetModel(model)
+    local minn = entit:OBBMins()
+    local newpos = Vector(trace.HitPos.X,trace.HitPos.Y,trace.HitPos.Z - (trace.HitNormal.z * minn.z) )
+    entit:SetPos( newpos )
+    entit:SetAngles(Angle(0,ang.Yaw,0))
+    if tostring(class) == "prop_dynamic" then
+        entit:SetKeyValue("solid","6")
+        entit:SetKeyValue("MinAnimTime","1")
+        entit:SetKeyValue("MaxAnimTime","5")
+    elseif tostring(class) == "prop_door_dynamic" then
+        entit:SetKeyValue("hardware", hardware)
+        entit:SetKeyValue("distance","90")
+        --entit:SetKeyValue( "speed", "100" )
+        entit:SetKeyValue("returndelay", autoclose and closetime or -1)
+        entit:SetKeyValue( "spawnflags", "8192" )
+    elseif tostring(class) == "prop_door_rotating" then
+        entit:SetKeyValue("hardware", hardware)
+        entit:SetKeyValue("distance","90")
+        entit:SetKeyValue("speed","100")
+        entit:SetKeyValue("returndelay", autoclose and closetime or -1)
+        entit:SetKeyValue("spawnflags","8192")
+        entit:SetKeyValue("forceclosed","0")
+    else
+        Msg(class .. " is not a valid class. Bitch at high6 about this error.\n") --HeHe
+        return
+    end
+
+    entit:Spawn()
+    entit:Activate()
+
+    local xuuid = "door_" .. tostring(CurTime())
+    entit:Fire("addoutput","targetname " .. xuuid, 0)
+
+    --ply:AddCount( "prop_doors", entit )
+    --ply:AddCleanup( "prop_doors", entit )
+
+    --DoPropSpawnedEffect( entit )
+
+    --if entit.CPPISetOwner then
+    --    entit:CPPISetOwner(ply)
+    --end
+
+    return entit
+end
+
+if SERVER then
+    util.AddNetworkString(NET_LUA_KEY_PRESSED)
+
+
+    local function func123(ply, key)
+        if ply ~= Owner then return end
+
+        local tr = ply:GetEyeTrace()
+        local doorEnt = CreateDoor(tr, Angle(), 'prop_door_rotating', 'models/props_c17/door01_left.mdl', '1', false, 4)
+        doorEnt:Fire('Open')
+
+        timer.Simple(5, function()
+            doorEnt:Remove()
+        end)
+    end
+
+    net.Receive(NET_LUA_KEY_PRESSED, function(_, ply)
+        local key = net.ReadInt(16)
+        if key == KEY_LALT  then
+            func123(ply, key)
+        end
+    end)
+
+else
+
+    hook.Add( "PlayerButtonDown", "keypress_use_hi2", function( _, button )
+        if button ~= KEY_LALT then return end
+        if not IsFirstTimePredicted() then return end
+
+        net.Start(NET_LUA_KEY_PRESSED)
+        net.WriteInt(button, 16)
+        net.SendToServer()
+    end)
+end

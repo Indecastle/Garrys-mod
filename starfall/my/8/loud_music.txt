@@ -33,6 +33,9 @@ local _urls = {
     pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
     pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
     bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
+    soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3",
+    soldierMeme = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
+    sidorovich_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
 }
 
 -- =================================================================================

@@ -3,14 +3,14 @@
 --@author Markiz
 --@shared
 
-local Cmd = "say !build"
+local Cmd = 'say "hacked"'
 
-local IsSpam = true
+local IsSpam = false
 local SpamDelay = 0.1
 
 
 local Target = owner()
-Target = find.playersByName("poop")[1]
+Target = find.playersByName("vice")[1]
 --Target = find.allPlayers(function(p)
 --    if p:getSteamID() == "STEAM_0:1:541873840" then
 --        return true

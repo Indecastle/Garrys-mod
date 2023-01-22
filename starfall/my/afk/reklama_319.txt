@@ -6,7 +6,7 @@
 dofile("libs/3d2dtext.txt")
 
 local Target = chip()
-Target = find.playersByName("mark")[1]
+--Target = find.playersByName("drin")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -17,7 +17,7 @@ end)[1]*/
 local Data = {
     {   text={"Слава Руси!"}, 
         //font = "Courier New",
-        fontSize=100, 
+        fontSize=200, 
         fontBold=600, 
         bold=true,
         color=Color(255,100,0),
@@ -28,9 +28,9 @@ local Data = {
         //colorSpeed = 1.3,
     },
     {   text={"Слава её героям!",}, 
-        fontSize=70, 
+        fontSize=140, 
         fontBold=600, 
-        margin=80,
+        margin=160,
         bold=true,
         color=Color(0,255,150),
         //colorMode = 3,
@@ -43,24 +43,24 @@ local Data = {
 local Vars = {
     Target= Target,
 
-    Mode=2,
+    Mode=3,
     isRotate=false,
     rotateSpeed=100,
     swaySpeed=2,
     swayDegreesMax=0,
     
-    IsStaticVertical=true,
+    IsStaticVertical=false,
     IsDoubleData=true,
     isHideTarget=false,
     
-    shadowIterations=2,
+    shadowIterations=5,
     shadowAlphaReverce=0,
     shadowOffset=1,
     
     alphaGlobal=255,
     
-    textSize=100*3,
-    DataOffsetZ=35,
+    textSize=132,
+    DataOffsetZ=30,
     
     isParentPos=true,
     isParentAngle=true,

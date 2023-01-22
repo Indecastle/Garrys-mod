@@ -1,0 +1,583 @@
+########################################################################################################################################
+#Wire instruction:
+#
+# wire: Active(e2)         -> Active(SG)
+# wire: Open(e2)           -> Open(SG)
+# wire: Inbound(e2)        -> Inbound(SG)
+# wire: Iris(e2)           -> Activated(Iris)
+# wire: DialingAddress(e2) -> Dialing Address(SG)
+# wire: EGP(e2)            -> link[wirelink](EGP)
+# wire: Toggle(Iris)       -> IrisToggle(e2)
+# wire: Close(SG)          -> Close(e2)
+# wire: hub(e2)            -> ZPM HUB % (Hub)
+# wire: Stargate(e2)       -> Create[wirelink] (SG)
+# wire: IrisCode           -> Received Code (Iris computer)
+#
+########################################################################################################################################
+
+@name Stargate dialing screen by BL4CKH4WK (forlorn)
+@inputs Active Open Inbound Chevron Iris IrisCode Hub DialingAddress:string Stargate:wirelink EGP:wirelink
+@outputs IrisToggle Close
+@persist User:entity Cursor:vector2 Use B AddressList:array Refresh
+interval(100)
+runOnChat(1)
+
+    Version = "v1.0"
+
+if(~EGP & ->EGP){
+reset()
+}
+if(first() | changed(EGP)){
+        
+    EGP:egpClear()
+    
+    #Define the function.
+    function number wirelink:button(Cursor:vector2,ID:number){
+        local BPos = This:egpPos(ID)
+        local BSize = This:egpSize(ID)/2
+        local Pressed = inrange(Cursor,BPos-BSize,BPos+BSize)
+    return Pressed}
+
+
+if(first()){      
+print("Welcome to BL4CKH4WK's Stargate Dialing Screen + Stargate Control "+Version+"!
+Info: The EGP has touch buttons !
+Type '!commands' for a list of commands.
+Type '!dial' for a list of all dial commands.")
+                                                                                                                              
+print(_HUD_PRINTCENTER,"Stargate Dialing Screen "+Version+" by BL4CKH4WK")
+setName("Stargate Dialing Screen "+Version+" by BL4CKH4WK")}
+
+###Background
+EGP:egpBox(69,vec2(250,250),vec2(600,600))
+EGP:egpColor(69,vec(0,0,30))
+
+EGP:egpBoxOutline(70,vec2(250,250),vec2(600,100))
+EGP:egpColor(70,vec(0,0,255))
+
+EGP:egpBoxOutline(71,vec2(250,100),vec2(600,100))
+EGP:egpColor(71,vec(0,0,255))
+
+EGP:egpBoxOutline(72,vec2(250,400),vec2(600,100))
+EGP:egpColor(72,vec(0,0,255))
+
+    
+    
+### Stargate
+EGP:egpCircle(1,vec2(170,230),vec2(130,130))
+EGP:egpColor(1,vec(47,51,57))
+
+EGP:egpCircle(49,vec2(170,230),vec2(117,117))
+EGP:egpColor(49,vec(67,71,77))
+
+EGP:egpCircle(50,vec2(170,230),vec2(107.5,107.5))
+EGP:egpColor(50,vec(47,51,57))
+
+EGP:egpCircle(2,vec2(170,230),vec2(100,100))
+EGP:egpColor(2,vec(0,0,0))
+
+EGP:egpText(51,"made by BL4CKH4WK",vec2(340,490))
+
+########################################################################################################################################
+
+###Chevron Box
+EGP:egpRoundedBox(3,vec2(410,240),vec2(155,270))
+EGP:egpRoundedBox(4,vec2(410,240),vec2(145,260))
+EGP:egpColor(4,vec(0,0,0))
+EGP:egpColor(3,vec(0,0,255))
+
+#Chevron Box Numbers
+EGP:egpText(5,"1",vec2(350,120))
+EGP:egpText(6,"2",vec2(350,145))
+EGP:egpText(7,"3",vec2(350,170))
+EGP:egpText(8,"4",vec2(350,195))
+EGP:egpText(9,"5",vec2(350,220))
+EGP:egpText(10,"6",vec2(350,245))
+EGP:egpText(11,"7",vec2(350,270))
+EGP:egpText(12,"8",vec2(350,315))
+EGP:egpText(13,"9",vec2(350,340))
+
+
+###Chevron Box
+EGP:egpRoundedBox(14,vec2(410,130),vec2(70,20))
+EGP:egpRoundedBox(15,vec2(410,155),vec2(70,20))
+EGP:egpRoundedBox(16,vec2(410,180),vec2(70,20))
+EGP:egpRoundedBox(17,vec2(410,205),vec2(70,20))
+EGP:egpRoundedBox(18,vec2(410,230),vec2(70,20))
+EGP:egpRoundedBox(19,vec2(410,255),vec2(70,20))
+EGP:egpRoundedBox(20,vec2(410,280),vec2(70,20))
+EGP:egpRoundedBox(21,vec2(410,325),vec2(70,20))
+EGP:egpRoundedBox(22,vec2(410,350),vec2(70,20))
+
+#Chevron Box color
+EGP:egpColor(14,vec(0,0,255))
+EGP:egpColor(15,vec(0,0,255))
+EGP:egpColor(16,vec(0,0,255))
+EGP:egpColor(17,vec(0,0,255))
+EGP:egpColor(18,vec(0,0,255))
+EGP:egpColor(19,vec(0,0,255))
+EGP:egpColor(20,vec(0,0,255))
+EGP:egpColor(21,vec(0,0,255))
+EGP:egpColor(22,vec(0,0,255))
+
+#Chevron Color Boxes
+EGP:egpRoundedBox(40,vec2(410,130),vec2(64,17))
+EGP:egpRoundedBox(41,vec2(410,155),vec2(64,17))
+EGP:egpRoundedBox(42,vec2(410,180),vec2(64,17))
+EGP:egpRoundedBox(43,vec2(410,205),vec2(64,17))
+EGP:egpRoundedBox(44,vec2(410,230),vec2(64,17))
+EGP:egpRoundedBox(45,vec2(410,255),vec2(64,17))
+EGP:egpRoundedBox(46,vec2(410,280),vec2(64,17))
+EGP:egpRoundedBox(47,vec2(410,325),vec2(64,17))
+EGP:egpRoundedBox(48,vec2(410,350),vec2(64,17))
+
+EGP:egpColor(40,vec(255,0,0))
+EGP:egpColor(41,vec(255,0,0))
+EGP:egpColor(42,vec(255,0,0))
+EGP:egpColor(43,vec(255,0,0))
+EGP:egpColor(44,vec(255,0,0))
+EGP:egpColor(45,vec(255,0,0))
+EGP:egpColor(46,vec(255,0,0))
+EGP:egpColor(47,vec(255,0,0))
+EGP:egpColor(48,vec(255,0,0))
+
+########################################################################################################################################
+
+###box 1
+EGP:egpRoundedBox(32,vec2(400,450),vec2(130,50))
+EGP:egpColor(32,vec(0,0,255))
+EGP:egpRoundedBox(33,vec2(400,450),vec2(120,40))
+EGP:egpText(34,"Iris",vec2(385,440))
+EGP:egpColor(33,vec(0,0,0))
+
+###box 2
+EGP:egpRoundedBox(35,vec2(250,450),vec2(130,50))
+EGP:egpColor(35,vec(0,0,255))
+
+EGP:egpRoundedBox(36,vec2(250,450),vec2(120,40))
+EGP:egpText(39,"Close",vec2(230,440))
+EGP:egpColor(36,vec(0,0,0))
+
+###box 3
+EGP:egpRoundedBox(37,vec2(100,450),vec2(130,50))
+EGP:egpColor(37,vec(0,0,255))
+
+EGP:egpRoundedBox(38,vec2(100,450),vec2(120,40))
+EGP:egpColor(38,vec(0,0,0))
+
+}
+
+#Chevron
+if(Chevron > 0) {EGP:egpColor(40,vec(0,250,0))}
+if(Chevron > 1) {EGP:egpColor(41,vec(0,250,0))}
+if(Chevron > 2) {EGP:egpColor(42,vec(0,250,0))}
+if(Chevron > 3) {EGP:egpColor(43,vec(0,250,0))}
+if(Chevron > 4) {EGP:egpColor(44,vec(0,250,0))}
+if(Chevron > 5) {EGP:egpColor(45,vec(0,250,0))}
+if(Chevron > 6) {EGP:egpColor(46,vec(0,250,0))}
+if(Chevron > 7) {EGP:egpColor(47,vec(0,250,0))}
+if(Chevron > 8) {EGP:egpColor(48,vec(0,250,0))}
+
+if(Chevron < 1){
+EGP:egpColor(40,vec(250,0,0))
+EGP:egpColor(41,vec(250,0,0))
+EGP:egpColor(42,vec(250,0,0))
+EGP:egpColor(43,vec(250,0,0))
+EGP:egpColor(44,vec(250,0,0))
+EGP:egpColor(45,vec(250,0,0))
+EGP:egpColor(46,vec(250,0,0))
+EGP:egpColor(47,vec(250,0,0))
+EGP:egpColor(48,vec(250,0,0))
+}
+
+########################################################################################################################################
+
+###Stargate and Iris
+
+if(Active ==0 & Iris ==0){
+    EGP:egpCircle(52,vec2(170,230),vec2(5,5))
+    EGP:egpColor(52,vec(255,0,0))}
+    
+if(Open ==1 & Iris ==0){
+    EGP:egpRemove(2)
+    EGP:egpRemove(58)
+    EGP:egpCircle(53,vec2(170,230),vec2(100,100))
+    EGP:egpColor(53,vec(0,0,255))}
+
+    
+if(Open ==1 & Iris==1){
+    EGP:egpRemove(2) 
+    EGP:egpRemove(52)
+    EGP:egpRemove(53)
+    EGP:egpRemove(58)
+    EGP:egpCircle(54,vec2(170,230),vec2(100,100))
+    EGP:egpColor(54,vec(0,100,255))}
+    
+if(Open ==0 & Iris ==1){
+    EGP:egpRemove(2)
+    EGP:egpRemove(52)
+    EGP:egpRemove(53)
+    EGP:egpRemove(54)
+    EGP:egpRemove(58)
+    EGP:egpRemove(82)
+    EGP:egpCircle(55,vec2(170,230),vec2(100,100))
+    EGP:egpColor(55,vec(0,100,255))}
+    
+if(Active ==0 & Open ==0 & Iris==1){
+    EGP:egpRemove(2)
+    EGP:egpRemove(52)
+    EGP:egpRemove(53)
+    EGP:egpRemove(54)
+    EGP:egpRemove(55)
+    EGP:egpRemove(58)
+    EGP:egpRemove(82)
+    EGP:egpCircle(56,vec2(170,230),vec2(100,100))
+    EGP:egpColor(56,vec(0,100,255))}
+    
+if(Active ==0 & Open ==0 & Iris==0){
+    EGP:egpRemove(2)
+    EGP:egpRemove(52)
+    EGP:egpRemove(53)
+    EGP:egpRemove(54)
+    EGP:egpRemove(55)
+    EGP:egpRemove(56)
+    EGP:egpCircle(57,vec2(170,230),vec2(5,5))
+    EGP:egpColor(57,vec(255,0,0))   
+    EGP:egpCircle(58,vec2(170,230),vec2(100,100))
+    EGP:egpColor(58,vec(0,0,0))}   
+    
+if(Open ==0 & Iris ==0){
+    EGP:egpCircle(82,vec2(170,230),vec2(5,5))
+    EGP:egpColor(82,vec(255,0,0))}      
+
+########################################################################################################################################
+
+### Left text box
+
+if(Active ==0){
+    EGP:egpRemove(60)
+    EGP:egpText(59,"IDLE",vec2(80,440))
+    EGP:egpCircle(67,vec2(170,230),vec2(5,5))
+    EGP:egpColor(67,vec(255,0,0))}
+
+    
+if(Open ==1){
+    EGP:egpRemove(57)
+    EGP:egpRemove(59)
+    EGP:egpRemove(64)
+    EGP:egpRemove(65)
+    EGP:egpRemove(67)
+    EGP:egpText(60,"Open",vec2(80,440))}
+
+if(Inbound ==1){
+    EGP:egpRemove(57)
+    EGP:egpRemove(59)
+    EGP:egpRemove(60)
+    EGP:egpRemove(67)
+    EGP:egpText(64,"Inbound",vec2(70,440))}
+    
+if(Active ==0 & Open ==0 & Inbound ==0){
+    EGP:egpRemove(59)
+    EGP:egpRemove(60)
+    EGP:egpRemove(64)
+    EGP:egpText(65,"IDLE",vec2(80,440))
+    EGP:egpCircle(66,vec2(170,230),vec2(5,5))
+    EGP:egpColor(66,vec(255,0,0))}
+
+
+###Address
+
+EGP:egpRoundedBox(61,vec2(250,50),vec2(430,60))
+EGP:egpColor(61,vec(0,0,255))
+EGP:egpRoundedBox(62,vec2(250,50),vec2(420,50))
+EGP:egpColor(62,vec(0,0,0))
+EGP:egpText(63,DialingAddress,vec2(180,35))
+EGP:egpSize(63,30)
+
+
+###Chevron Stargate
+#Chevron7
+EGP:egpTriangle(73,vec2(185,100),vec2(171,118),vec2(157,100))
+EGP:egpColor(73,vec(0,100,255))
+#chev1
+EGP:egpTriangle(74,vec2(254,129),vec2(230,135),vec2(234,116))
+EGP:egpColor(74,vec(0,100,255))
+#chev2
+EGP:egpTriangle(75,vec2(300,209),vec2(279,200),vec2(294,183))
+EGP:egpColor(75,vec(0,100,255))
+#chev3
+EGP:egpTriangle(76,vec2(288,289),vec2(276,266),vec2(298,263))
+EGP:egpColor(76,vec(0,100,255))
+#chev8
+EGP:egpTriangle(77,vec2(215,354),vec2(220,332),vec2(241,341))
+EGP:egpColor(77,vec(0,100,255))
+
+#chev9
+EGP:egpTriangle(78,vec2(102,341),vec2(122,332),vec2(127,354))
+EGP:egpColor(78,vec(0,100,255))
+#chev4
+EGP:egpTriangle(79,vec2(44,263),vec2(65,266),vec2(54,289))
+EGP:egpColor(79,vec(0,100,255))
+#chev5
+EGP:egpTriangle(80,vec2(49,183),vec2(62,200),vec2(42,209))
+EGP:egpColor(80,vec(0,100,255))
+#chev6
+EGP:egpTriangle(81,vec2(108,116),vec2(110,135),vec2(88,129))
+EGP:egpColor(81,vec(0,100,255))
+
+#Ok Box
+EGP:egpText(83,"OK",vec2(450,120))
+EGP:egpText(84,"OK",vec2(450,145))
+EGP:egpText(85,"OK",vec2(450,170))
+EGP:egpText(86,"OK",vec2(450,195))
+EGP:egpText(87,"OK",vec2(450,220))
+EGP:egpText(88,"OK",vec2(450,245))
+EGP:egpText(89,"OK",vec2(450,270))
+EGP:egpText(90,"OK",vec2(450,315))
+EGP:egpText(91,"OK",vec2(450,340))
+
+if(Chevron > 0) {EGP:egpColor(83,vec(0,250,0))}
+if(Chevron > 1) {EGP:egpColor(84,vec(0,250,0))}
+if(Chevron > 2) {EGP:egpColor(85,vec(0,250,0))}
+if(Chevron > 3) {EGP:egpColor(86,vec(0,250,0))}
+if(Chevron > 4) {EGP:egpColor(87,vec(0,250,0))}
+if(Chevron > 5) {EGP:egpColor(88,vec(0,250,0))}
+if(Chevron > 6) {EGP:egpColor(89,vec(0,250,0))}
+if(Chevron > 7) {EGP:egpColor(90,vec(0,250,0))}
+if(Chevron > 8) {EGP:egpColor(91,vec(0,250,0))}
+
+if(Chevron < 1){
+EGP:egpColor(83,vec(250,0,0))
+EGP:egpColor(84,vec(250,0,0))
+EGP:egpColor(85,vec(250,0,0))
+EGP:egpColor(86,vec(250,0,0))
+EGP:egpColor(87,vec(250,0,0))
+EGP:egpColor(88,vec(250,0,0))
+EGP:egpColor(89,vec(250,0,0))
+EGP:egpColor(90,vec(250,0,0))
+EGP:egpColor(91,vec(250,0,0))
+}
+
+
+###Buttons
+User = EGP["User",entity]
+Cursor = EGP:egpCursor(User)
+Use = User:keyUse()
+
+if(changed(Use) & Use){
+
+if(EGP:button(Cursor,33)){ IrisToggle = !IrisToggle }
+if(EGP:button(Cursor,36)){ Close = !Close }}
+if(changed(EGP:button(Cursor,61) & Open ==1) & EGP:button(Cursor,61) & Open ==1){print("Address: "+DialingAddress)}
+
+### by BL4CKH4WK
+
+##############################################################################################################################################################
+#Stargate Control v3.0
+
+Stargate:stargateSetLocal(0)
+Stargate:stargateSetPrivate(0)
+Stargate:stargateSetBlocked(0)
+
+### Hub energy ( % ) ###
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!hub") {print("Hub energy: "+Hub+"%")}}
+if(changed(Hub) & Hub == 0) {hint("No energy. Please spawn some new ZPMs" ,10)}
+
+### chat commands ###
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!commands") {print("Commands:
+    !iris (toggle iris)
+    !list (list all Stargate addresses)
+    !close (close Stargate)
+    !dial (list all dial commands)
+    !other (how to dial an other Stargate)") } }
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!dial") {print("Dail commands:    
+    !spawn (dial spawn)
+    !station (dial station)
+    !earth (dial earth)
+    !desert (dial desert planet)
+    !ice (dial ice planet)
+    !lava (dial lava planet)
+    !space1 (dial Space Gate 1)
+    !space2 (dial Space Gate 2)") } }
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!iris"){ IrisToggle = !IrisToggle } }
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!close") {Stargate:stargateClose() } }
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!other") {print("if you want to dial a Stargate which is not
+listed ( for examble Stargate 'ABCDEF#' ) 
+type '! ABCDEF#'")} }
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!") {Stargate:stargateDial(LastSaid[2,string],2)}}
+
+setName("Stargate Control "+Version+" by BL4CKH4WK")
+
+if(changed(Open)& Open ) {hint("Warning: Stargate active!" ,10)}
+if(changed(Open)& Open ) {print("Address: "+DialingAddress)}
+
+### Alarm ###
+
+if(changed(Open & Inbound)  & Open & Inbound) {soundPlay(1,2000,"/alarm/sgc_alarm.wav")}
+if(Inbound == 0){soundStop(1)}else{}
+
+### Iris code ###
+
+if(IrisCode) {print("Received Iris code: "+IrisCode)}
+
+### Address list ###
+
+if (chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!list") {
+    AddressList = Stargate:stargateAddressList()
+
+
+    for (I=1,AddressList:count()) {
+
+        N = 2
+        Blocked = 0
+        Array = AddressList[I,string]:explode(" ")
+        Address = Array[1,string]
+        if (Address=="1") { 
+            Blocked = 1
+            Address = Array[2,string] 
+            N = 3
+        }
+     
+        Name = "" 
+        for (I=N,Array:count()) {
+            if (I!=N) { Name = Name + " " } 
+            Name = Name + Array[I,string]
+        }
+
+        # Printing
+        if (Blocked==1) {
+            print("BLOCKED! Address - " + Address + " Name - " + Name)
+        } else {
+            print("Address - " + Address + " Name - " + Name)
+        }
+    }
+  }
+}
+
+##############################################################################################################################################################
+
+##### Stargate Universe #####
+
+### Stargate Group U@# ###
+
+
+if("U@#" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!spawn") {Stargate:stargateDial("SPAWN0C@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("SPACEBM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTH0M@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!ice") {Stargate:stargateDial("ICEPLNU#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PN#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space1") {Stargate:stargateDial("SPACE1X@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space2") {Stargate:stargateDial("SPACE0X@#",2)}}
+}
+
+### Stargate Group SGI ###
+
+
+if("SGI" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!spawn") {Stargate:stargateDial("SPAWN0C@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("SPACEBM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTH0M@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!ice") {Stargate:stargateDial("ICEPLNU#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PN#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space1") {Stargate:stargateDial("SPACE1X@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space2") {Stargate:stargateDial("SPACE0X@#",2)}}
+}
+
+### Stargate Group DST  ###
+
+
+if("DST" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!spawn") {Stargate:stargateDial("SPAWN0C@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("SPACEBM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTH0M@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!ice") {Stargate:stargateDial("ICEPLNU#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PN#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space1") {Stargate:stargateDial("SPACE1X@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space2") {Stargate:stargateDial("SPACE0X@#",2)}}
+}
+
+
+##############################################################################################################################################################
+
+##### Normal Stargate Groups #####
+
+### Stargate Group P# ###
+
+if("P@" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!spawn") {Stargate:stargateDial("SPAWN0C",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("SPACEBM",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTH0M",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPM#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!ice") {Stargate:stargateDial("ICEPLNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space1") {Stargate:stargateDial("SPACE1X",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space2") {Stargate:stargateDial("SPACE0X",2)}}
+}
+
+### Stargate Group M# ###
+
+
+if("M@" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!spawn") {Stargate:stargateDial("SPAWN0C",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("SPACEB#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTH0#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!ice") {Stargate:stargateDial("ICEPLNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space1") {Stargate:stargateDial("SPACE1X",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space2") {Stargate:stargateDial("SPACE0X",2)}}
+}
+ 
+### Stargate Group I@ ###
+
+
+if("I@" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!spawn") {Stargate:stargateDial("SPAWN0C",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("SPACEBM",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTH0M",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPM#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!ice") {Stargate:stargateDial("ICEPLNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space1") {Stargate:stargateDial("SPACE1X",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space2") {Stargate:stargateDial("SPACE0X",2)}}
+}
+
+
+### Stargate Group OT ###
+
+
+if("OT" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!spawn") {Stargate:stargateDial("SPAWN0C",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("SPACEBM",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTH0M",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPM#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!ice") {Stargate:stargateDial("ICEPLNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space1") {Stargate:stargateDial("SPACE1X",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space2") {Stargate:stargateDial("SPACE0X",2)}}
+}
+
+### Stargate Group O@ ###
+
+
+if("O@" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!spawn") {Stargate:stargateDial("SPAWN0C",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("SPACEBM",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTH0M",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPM#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!ice") {Stargate:stargateDial("ICEPLNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space1") {Stargate:stargateDial("SPACE1X",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!space2") {Stargate:stargateDial("SPACE0X",2)}}
+}
+
+### by BL4CKH4WK ###

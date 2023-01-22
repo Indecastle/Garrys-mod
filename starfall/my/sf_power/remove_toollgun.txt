@@ -6,8 +6,9 @@
 local IsBlackList = true
 
 local players = {
-    'STEAM_0:1:54066003', -- Markiz,
-    'STEAM_0:1:100356779', -- Force2005,
+    --'STEAM_0:1:54066003', -- Markiz,
+    --'STEAM_0:1:100356779', -- Force2005,
+    'STEAM_0:0:715078552',
 }
 
 

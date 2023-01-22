@@ -8,11 +8,35 @@ local Models = {
     'models/props_phx/misc/flakshell_big.mdl',
     'models/props_phx/oildrum001_explosive.mdl',
     'models/props_phx/misc/potato_launcher_explosive.mdl',
+    'models/props_phx/amraam.mdl',
+    'models/props_phx/torpedo.mdl',
     'models/props_c17/oildrum001_explosive.mdl',
 }
 
 
-timer.create("remover", 0.1, 0, function()
+local Npc = {
+    'npc_strider',
+    'npc_combinegunship',
+    'npc_combinedropship',
+    'npc_helicopter',
+    'npc_antlionguard',
+}
+
+
+local Classes = {
+    'gmod_dynamite',
+    'ent_jack_clusterbomb',
+    'ent_jack_clusterminebomb',
+    'ent_jack_gmod_ezbigbomb',
+    'ent_jack_gmod_ezclusterbomb',
+    'ent_jack_gmod_ezincendiarybomb',
+    'ent_jack_gmod_ezmoab',
+    'ent_jack_gmod_ezsmallbomb',
+    'ent_jack_gmod_ezbomb',
+}
+
+
+timer.create("remover", 0.2, 0, function()
     
     --local ents = find.byClass('prop_physics', function(ent)
     --    return table.hasValue(Models, ent:getModel())
@@ -20,6 +44,18 @@ timer.create("remover", 0.1, 0, function()
     
     for i, model in ipairs(Models) do
         find.byModel(model, function(ent)
+            ent:remove()
+        end)
+    end
+    
+    find.byClass('npc_*', function(ent)
+        if table.hasValue(Npc, ent:getClass()) then
+            ent:remove()
+        end
+    end)
+    
+    for i, class in ipairs(Classes) do
+        find.byClass(class, function(ent)
             ent:remove()
         end)
     end

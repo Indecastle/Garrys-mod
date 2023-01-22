@@ -15,6 +15,10 @@ local oldIsPressed = nil
 function func()
     local tr = O:getEyeTrace()          
     target = tr.Entity 
+    --target:setUnbreakable(true)
+    target:setMaxHealth(10000000000000000)
+    target:setHealth(10000000000000000000)
+    print(target)
     //targetP = target:getPhysicsObject()
     
     //local kek = target.Password 
@@ -72,7 +76,7 @@ end)
 ]]
 
 
-if O == OO then
+
     if SERVER then
         
         hook.add("ClientInitialized", "cl_init", function(ply)
@@ -94,7 +98,7 @@ if O == OO then
         end)
         
     end
-end
+
 
 
 

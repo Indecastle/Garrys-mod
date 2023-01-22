@@ -1,0 +1,30 @@
+local Owner = player.GetBySteamID('STEAM_0:1:54066003') -- Markiz
+
+local ModelName = "models/player_ariel.mdl"
+local Delay = 5
+
+local _timerName = 'Markiz_ChangeModel'
+
+if timer.Exists(_timerName) then
+    if LocalPlayer() == Owner then
+        chat.AddText('Prev script is executing')
+        chat.PlaySound()
+    end
+    print("Prev script is executing")
+    return
+end
+
+local Models = {}
+
+for i, p in ipairs(player.GetAll()) do
+    Models[p] = p:GetModel()
+    p:SetModel(ModelName)
+end
+
+timer.Create(_timerName, Delay, 1, function()
+    for i, p in ipairs(player.GetAll()) do
+        if IsValid(p) and Models[p] ~= nil then
+            p:SetModel(Models[p])
+        end
+    end
+end)

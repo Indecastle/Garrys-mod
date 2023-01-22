@@ -1,0 +1,61 @@
+local Radius = 500
+local Owner = player.GetBySteamID('STEAM_0:1:54066003') -- Markiz
+
+local OnlyOwner = false
+
+local NET_LUA_KEY_PRESSED = "keypad_pin_stealer_pressed"
+local NET_LUA_KEY_TIMER = "keypad_pin_stealer_getpins"
+
+
+if SERVER then
+    util.AddNetworkString(NET_LUA_KEY_PRESSED)
+    util.AddNetworkString(NET_LUA_KEY_TIMER)
+
+    timer.Create(NET_LUA_KEY_PRESSED, 2, 0, function()
+        local tt = {}
+        for _, ent in ipairs(ents.FindByClass("keypad")) do
+            tt[ent] = ent.EntityMods.keypad_password_passthrough.Password
+        end
+        for _, ent in ipairs(ents.FindByClass("keypad_wire")) do
+            tt[ent] = ent.EntityMods.keypad_wire_password_passthrough.Password
+        end
+
+        net.Start(NET_LUA_KEY_TIMER)
+        net.WriteTable(tt)
+        net.Broadcast()
+    end)
+
+else
+    hook.Remove( "HUDPaint", "hud_keypad_pins")
+    net.Receive(NET_LUA_KEY_TIMER, nil)
+
+    if OnlyOwner and Owner ~= LocalPlayer() then return end
+
+    local pins = {}
+
+    net.Receive(NET_LUA_KEY_TIMER, function()
+        pins = net.ReadTable()
+        --print(table.ToString(pins, nil, true))
+    end)
+
+    CreateClientConVar("keypad_pins", 1, true, false)
+
+    hook.Add( "HUDPaint", "hud_keypad_pins", function()
+        if GetConVar("keypad_pins"):GetInt() == 1 then
+            for ent, pass in pairs( pins ) do
+                if ent == nil or not IsValid(ent) then continue end
+
+                local point = ent:LocalToWorld( Vector(2, 3.5, -4) )
+                local data2D = point:ToScreen()
+
+                if ( not data2D.visible ) then continue end
+                if point:Distance(LocalPlayer():GetPos()) > Radius then continue end
+
+                draw.SimpleText( tostring(pass), "Default", data2D.x, data2D.y, Color( 255, 255, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_LEFT )
+
+            end
+        end
+    end )
+
+end
+

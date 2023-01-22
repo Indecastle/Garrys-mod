@@ -1,0 +1,33 @@
+local Owner = player.GetBySteamID('STEAM_0:1:54066003') -- Markiz
+local NET_LUA_KEY_PRESSED = "keypress_use_hi2"
+
+if SERVER then
+    util.AddNetworkString(NET_LUA_KEY_PRESSED)
+
+    local function func123(ply, key)
+        if ply ~= Owner then return end
+
+        local tr = Owner:GetEyeTrace()
+        local target = tr.Entity
+        LogToClients(target)
+        LogToClients(target:GetTable())
+    end
+
+    net.Receive(NET_LUA_KEY_PRESSED, function(_, ply)
+        local key = net.ReadInt(16)
+        if key == KEY_LALT  then
+            func123(ply, key)
+        end
+    end)
+
+else
+
+    hook.Add( "PlayerButtonDown", "keypress_use_hi2", function( _, button )
+        if button ~= KEY_LALT then return end
+        --if not IsFirstTimePredicted() then return end
+
+        net.Start(NET_LUA_KEY_PRESSED)
+        net.WriteInt(button, 16)
+        net.SendToServer()
+    end)
+end

@@ -2,7 +2,7 @@
 --@name Pristavka
 --@author
 --@shared
-// --@include libs/my_methods.txt
+// @include libs/my_methods.txt
 
 // dofile("libs/my_methods.txt")
 

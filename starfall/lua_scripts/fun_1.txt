@@ -1,0 +1,384 @@
+
+if CLIENT then error("This is CLIENT !!!") return end
+
+local function Make_Markiz_Ball(Ply, Pos, Direction, Speed, StartDistance, Times, Delay, Size, MinSize, Heals, Color, DecreaseValue, LifeTime)
+    local IsTimerHandling = Times ~= nil and Delay ~= nil
+
+    if not StartDistance then StartDistance = 100 end
+    if not Direction then Direction = (Ply and Ply:EyeAngles():Forward() or Vector()) end
+    if not Times then Times = 10 end
+    if not Delay then Delay = 0.5 end
+    if not MinSize then MinSize = 20 end
+    if not Size then Size = math.random(MinSize, math.Clamp(60, MinSize, 128)) end
+    if not Color then Color = nil end
+    if not DecreaseValue then DecreaseValue = 0.8 end
+
+    if not Speed then Speed = 200 end
+    if not LifeTime then LifeTime = nil end
+
+    local createBall = function()
+        local ent = ents.Create( "sent_ball" )
+
+        if ( IsValid( ent ) ) then
+            if Pos ~= nil then
+                ent:SetPos(Pos)
+            else
+                ent:SetPos( Ply:GetShootPos() + Direction * StartDistance )
+            end
+
+            ent:SetBallSize( Size )
+            ent.Heal = Heals
+
+            ent.Use = function(self, activator, caller )
+                if ( activator:IsPlayer() and activator:KeyPressed( IN_USE )) then
+                    local health = activator:Health()
+                    activator:SetHealth( health + self.Heal )
+                    if activator:Health() <= 0 then activator:Kill() end
+                    activator:SendLua("achievements.EatBall()")
+                    self.Heal = self.Heal * DecreaseValue
+
+                    self:SetBallSize(self:GetBallSize() * DecreaseValue)
+                    if self:GetBallSize() < MinSize then
+                        self:Remove()
+                    end
+                end
+            end
+
+            ent:Spawn()
+            ent:Activate()
+            ent:SetBallColor(Color and Color/255 or VectorRand())
+
+            local physObj = ent:GetPhysicsObject()
+            physObj:SetVelocity( Direction * Speed )
+
+            --LogToClients(ent:GetSaveTable())
+            --table.insert( ValidBullets, ent )
+            --hook.Add("EntityTakeDamage", "crossbow_bolt_damage", MakeCrossbowDoDamage )
+
+            if LifeTime ~= nil then
+                timer.Simple(LifeTime, function()
+                    ent:Remove()
+                end)
+            end
+        end
+    end
+
+    if IsTimerHandling then
+        timer.Create('sent_ball', Delay, Times, createBall)
+    else
+        createBall()
+    end
+end
+
+
+hook.Add('OnEntityCreated', 'Markiz_OnCreated1', function(ent)
+    if not IsValid(ent) then return end
+
+    local type = ent:GetClass()
+
+    if type == 'npc_grenade_frag' then
+        ent:SetModelScale(5)
+        --ent:SetKeyValue('modelscale', 3)
+        ent:SetMaterial('models/debug/debugwhite')
+        ent:SetColor(ColorRand())
+        ent:Fire("SetTimer", 5)
+        local mins, maxs = ent:GetCollisionBounds()
+        --ent:SetCollisionBounds( mins*10, maxs*10 )
+        --ent:CollisionRulesChanged()
+        --local physObj = ent:GetPhysicsObject()
+        --physObj:RecheckCollisionFilter()
+
+        ent:AddCallback('PhysicsCollide', function (self, data, phys )
+            if ( data.Speed > 100 ) then self:EmitSound( Sound( "Flashbang.Bounce" ) ) end
+        end)
+    elseif type == 'npc_satchel' then
+        ent:SetModelScale(2)
+        ent:SetMaterial('models/debug/debugwhite')
+        ent:SetColor(ColorRand())
+        ent:Fire("SetTimer", 2)
+    elseif type == 'crossbow_bolt' then
+        ent:SetModelScale(5)
+        ent:SetVelocity(Vector(0, 0, 10))
+        --ent:SetKeyValue('basevelocity', Vector(0, 0, 1))
+        --ent:SetKeyValue('velocity', Vector(0, 0, 1))
+
+        --local physObj = ent:GetPhysicsObject()
+        --physObj:SetVelocity( ent:GetVelocity():GetNormalized()*10 )
+        ent:Spawn()
+        ent:Activate()
+        --LogToClients(ent:GetKeyValues())
+    elseif type == 'rpg_missile' then
+        ent:SetModelScale(10)
+        ent:SetMaterial('models/debug/debugwhite')
+        ent:SetColor(ColorRand())
+    elseif type == 'prop_combine_ball' then
+    end
+
+    --LogToClients(ent)
+end)
+
+
+hook.Add('EntityRemoved', 'Markiz_OnRemoved1', function(ent)
+    if not IsValid(ent) then return end
+
+    local type = ent:GetClass()
+
+    if type == 'npc_grenade_bugbait' then
+        Make_Markiz_Ball(nil, ent:GetPos() + Vector(0,0,75), Vector(0,0,1), 200, 50, 1, nil, 150, 20, 100, nil, 0.8, 10)
+    elseif type == 'env_sporeexplosion' then
+    end
+end)
+
+
+--hook.Add( "KeyPress", "Markiz_OnAttack1", function( ply, key )
+--    if key == IN_ATTACK and ply:GetActiveWeapon():GetClass() == 'weapon_crowbar' then
+--        --Make_Markiz_Ball(Ply, Pos, Direction, Speed, StartDistance, Times, Delay, Size, MinSize, Heals, Color, DecreaseValue, LifeTime)
+--        Make_Markiz_Ball(ply, nil, nil, 500, 50, 1, 0.1, 2, 2, 100, nil, 0.8, 2)
+--    end
+--end )
+
+
+local ActivePressedKey = {}
+
+
+local function CreateCrossbow(ply)
+    local ent = ents.Create( "crossbow_bolt" )
+    if ( IsValid( ent ) ) then
+        ent:Fire("SetDamage", 20)
+        local Forward = ply:EyeAngles():Forward()
+        ent:SetPos( ply:GetShootPos() + Forward * 50 )
+        ent:SetAngles( ply:EyeAngles() )
+        ent:SetOwner( ply )
+        ent:Spawn()
+        ent:SetVelocity( Forward * 1500 )
+    end
+end
+
+-------------------------------------------
+local ValidExplodeRockets = {}
+
+local function MakeRocketDoDamage( ent )
+    if ent:GetClass() ~= "rpg_missile" then
+        return
+    end
+
+    for k, v in ipairs( ValidExplodeRockets ) do
+        if not IsValid( v ) then
+            table.remove( ValidExplodeRockets, k )
+        elseif ent == v then
+            table.remove( ValidExplodeRockets, k )
+            util.BlastDamage( ent, ent.EntityOwner, ent:GetPos(), ent.Radius, ent.Damage )
+        end
+    end
+
+    if #ValidExplodeRockets == 0 then
+        hook.Remove("EntityRemoved", "Markiz__ExplodeRocket1" )
+    end
+end
+-------------------------------------------
+
+
+local function CreateRpg(ply)
+    local ent = ents.Create( "rpg_missile" )
+    if ( IsValid( ent ) ) then
+        local Forward = ply:EyeAngles():Forward()
+        ent:SetPos( ply:GetShootPos() + Forward * 50 )
+        ent:SetAngles( ply:EyeAngles() )
+        ent:Spawn()
+
+        ent:SetOwner( ply )
+
+        ent.EntityOwner = ply
+        ent.Damage = math.Clamp(50, 1, 5000)
+        ent.Radius = 200
+        ent:SetKeyValue('friction', '1')
+        --ent:SetSaveValue('m_MoveCollide', '0')
+        --ent:SetSaveValue('m_MoveType', '4')
+        ent:SetSaveValue('nextthink', '-1')
+        --timer.Create("Dsdad", 0.1, 20, function()
+        --    local saveData = MyGetSaveTable(ent)
+        --    LogToClients(saveData)
+        --end)
+
+        table.insert( ValidExplodeRockets, ent )
+        hook.Add("EntityRemoved", "Markiz__ExplodeRocket1", MakeRocketDoDamage )
+    end
+
+end
+
+
+local function CreateBugbait(ply)
+    local ent = ents.Create( "npc_grenade_bugbait" )
+    if ( IsValid( ent ) ) then
+        local Direction = ply:EyeAngles():Forward()
+        ent:SetModelScale(5)
+        ent:SetPos( ply:GetShootPos() + Direction * 100 )
+        ent:SetAngles( ply:EyeAngles() )
+        ent:SetOwner( ply )
+        ent:Spawn()
+        ent:SetVelocity( Direction * 2000 )
+    end
+end
+
+
+local function CreateDoor(trace, ang, class, model, hardware, autoclose, closetime)
+    local entit = ents.Create(class)
+    --PrintTable(entit:GetKeyValues())
+    if not entit then
+        Msg(tostring(class) .. " is not a valid class for wired door.\n")
+        return NULL
+    end
+    entit:SetModel(model)
+    local minn = entit:OBBMins()
+    local newpos = Vector(trace.HitPos.X,trace.HitPos.Y,trace.HitPos.Z - (trace.HitNormal.z * minn.z) )
+    entit:SetPos( newpos )
+    entit:SetAngles(Angle(0,ang.Yaw,0))
+    if tostring(class) == "prop_dynamic" then
+        entit:SetKeyValue("solid","6")
+        entit:SetKeyValue("MinAnimTime","1")
+        entit:SetKeyValue("MaxAnimTime","5")
+    elseif tostring(class) == "prop_door_dynamic" then
+        entit:SetKeyValue("hardware", hardware)
+        entit:SetKeyValue("distance","90")
+        --entit:SetKeyValue( "speed", "100" )
+        entit:SetKeyValue("returndelay", autoclose and closetime or -1)
+        entit:SetKeyValue( "spawnflags", "8192" )
+    elseif tostring(class) == "prop_door_rotating" then
+        entit:SetKeyValue("hardware", hardware)
+        entit:SetKeyValue("distance","90")
+        entit:SetKeyValue("speed","200")
+        entit:SetKeyValue("returndelay", autoclose and closetime or -1)
+        entit:SetKeyValue("spawnflags","8192")
+        entit:SetKeyValue("forceclosed","0")
+    else
+        Msg(class .. " is not a valid class. Bitch at high6 about this error.\n") --HeHe
+        return
+    end
+
+    entit:Spawn()
+    entit:Activate()
+
+    local xuuid = "door_" .. tostring(CurTime())
+    entit:Fire("addoutput","targetname " .. xuuid, 0)
+
+    --ply:AddCount( "prop_doors", entit )
+    --ply:AddCleanup( "prop_doors", entit )
+
+    --DoPropSpawnedEffect( entit )
+
+    --if entit.CPPISetOwner then
+    --    entit:CPPISetOwner(ply)
+    --end
+
+    return entit
+end
+
+
+local function CreateMyDoor(ply)
+    local tr = ply:GetEyeTrace()
+    local doorEnt = CreateDoor(tr, Angle(), 'prop_door_rotating', 'models/props_c17/door01_left.mdl', (math.random() < 0.5) and '1' or '2', true, 4)
+    doorEnt:Fire('Open')
+
+    timer.Simple(10, function()
+        doorEnt:Remove()
+    end)
+end
+
+
+local function JackyOpSquadSpawnEvent(ent)
+    local Delay=.4
+    if(string.find(ent:GetClass(),"antlion")) then Delay=.8 end -- antlions burrow
+    ent:DrawShadow(false)
+    local effectdata=EffectData()
+    effectdata:SetEntity(ent)
+    --util.Effect("propspawn",effectdata)
+    timer.Simple(Delay,function()
+        if(IsValid(ent))then
+            ent:DrawShadow(true)
+        end
+    end)
+end
+
+
+local function CreateAntlion(ply, pos)
+    local SquadName="JackyAntlionOpSquad"
+    local npc = ents.Create("npc_antlion")
+    npc:SetPos(pos)
+    npc:SetNWString( "Owner", ply )
+    npc:SetKeyValue("spawnflags", "516");
+    npc:SetKeyValue("startburrowed", "1");
+    npc:SetHealth( 75 )
+    npc:Spawn()
+    npc:Activate()
+    npc:SetKeyValue("SquadName",SquadName)
+    npc.JackyDamageGroup=SquadName
+    npc:Fire("unburrow","",0)
+    JackyOpSquadSpawnEvent(npc)
+    ply:AddCount( "npc_antlion", npc )
+    ply:AddCleanup( "npc_antlion", npc )
+    
+    undo.Create("Troll Antlion")
+	undo.AddEntity(npc)
+	undo.SetPlayer(ply)
+	undo.Finish()
+
+    if npc.CPPISetOwner then
+        npc:CPPISetOwner(ply)
+    end
+end
+
+
+local function CreateMyAntlion(ply)
+    local tr = ply:GetEyeTrace()
+    CreateAntlion(ply, tr.HitPos)
+end
+
+
+local function CreateSmallBall(ply)
+    Make_Markiz_Ball(ply, nil, nil, 1000, 50, 1, nil, 10, 10, 100, nil, 0.8, 2)
+end
+
+
+local function TryCreate(ply, weaponType, delay, callback)
+    if ply:GetActiveWeapon():GetClass() == weaponType then
+        callback(ply)
+        if delay == -1 then return end
+        timer.Create('tt'..ply:SteamID(), delay, 0, function()
+            callback(ply)
+        end)
+    end
+end
+
+
+
+hook.Add( "PlayerButtonDown", "Markiz_KeyDown", function(ply, button)
+    if not IsFirstTimePredicted() then return end
+    local activeWeapon = ply:GetActiveWeapon():GetClass()
+    if not ActivePressedKey[ply] and button == MOUSE_RIGHT then
+        ActivePressedKey[ply] = true
+
+        TryCreate(ply, 'weapon_crowbar', 0.1, CreateCrossbow)
+        TryCreate(ply, 'weapon_rpg', 0.3, CreateRpg)
+        TryCreate(ply, 'weapon_bugbait', 0.3, CreateBugbait)
+        TryCreate(ply, 'weapon_stunstick', -1, CreateMyAntlion)
+    end
+
+    if not ActivePressedKey[ply] and button == MOUSE_LEFT then
+        ActivePressedKey[ply] = true
+
+        TryCreate(ply, 'weapon_crowbar', 0.1, CreateSmallBall)
+        TryCreate(ply, 'weapon_stunstick', -1, CreateMyDoor)
+    end
+end)
+
+hook.Add( "PlayerButtonUp", "Markiz_KeyUp", function(ply, button )
+    if not IsFirstTimePredicted() then return end
+    if button == MOUSE_LEFT or button == MOUSE_RIGHT then
+        ActivePressedKey[ply] = nil
+        timer.Remove('tt'..ply:SteamID())
+    end
+end)
+
+--hook.Remove('OnEntityCreated', 'Markiz_OnCreated1')
+--hook.Remove('KeyPress', 'Markiz_OnAttack1')
+--hook.Remove('EntityRemoved', 'Markiz_OnRemoved1')

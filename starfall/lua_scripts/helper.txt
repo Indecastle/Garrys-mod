@@ -1,0 +1,67 @@
+local NET_LUA_LOG_TO_CLIENT = "NET_LUA_LOG_TO_CLIENT123"
+local NET_LUA_LOG_TO_SERVER_CLIENT = "NET_LUA_LOG_TO_SERVER_CLIENT123"
+
+function player.GetByName(name)
+    for i, p in ipairs(player.GetAll()) do
+        if p:Nick():lower():find(name:lower()) != nil then
+            return p
+        end
+    end
+end
+
+function MyGetArgs(func)
+    local args = {}
+    for i = 1, debug.getinfo(func).nparams, 1 do
+        table.insert(args, debug.getlocal(func, i));
+    end
+    return args;
+end
+
+if SERVER then
+
+    util.AddNetworkString(NET_LUA_LOG_TO_CLIENT)
+    util.AddNetworkString(NET_LUA_LOG_TO_SERVER_CLIENT)
+
+    function LogToClients(obj)
+        text = tostring(obj)
+        net.Start(NET_LUA_LOG_TO_CLIENT)
+        net.WriteString(text)
+        net.Broadcast()
+        --net.Send(ply)
+    end
+
+    net.Receive(NET_LUA_LOG_TO_SERVER_CLIENT, function(_, ply)
+        local text = net.ReadString()
+        local target = net.ReadEntity()
+
+        if not IsValid(target) then return end
+
+        local result = '['..ply:Nick()..'] - '..text
+
+        net.Start(NET_LUA_LOG_TO_CLIENT)
+        net.WriteString(result)
+        net.Send(target)
+    end)
+
+else
+
+    net.Receive(NET_LUA_LOG_TO_CLIENT, function(_)
+        local text = net.ReadString()
+        print(text)
+    end)
+
+    net.Receive(NET_LUA_LOG_TO_SERVER_CLIENT, function(_)
+        local text = net.ReadString()
+        print(text)
+    end)
+
+    function LogToClient(obj, target)
+        local text = tostring(obj)
+        net.Start(NET_LUA_LOG_TO_SERVER_CLIENT)
+        net.WriteString(text)
+        net.WriteEntity(target)
+        net.SendToServer()
+        --net.Send(ply)
+    end
+
+end

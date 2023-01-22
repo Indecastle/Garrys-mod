@@ -1,0 +1,208 @@
+@name Stargate Control v3.0 by BL4CKH4WK
+@inputs Hub Open Inbound DialingAddress:string IrisCode Stargate:wirelink
+@outputs Iris
+@persist AddressList:array Refresh
+runOnChat(1)
+ 
+Version = "v3.0"  
+
+if(first()){      
+print("Welcome to BL4CKH4WK's Stargate Control "+Version+"!
+Type '!commands' for a list of commands.
+Type '!dial' for a list of all dial commands.")
+                                                                                                                              
+print(_HUD_PRINTCENTER,"Stargate Control "+Version+" by BL4CKH4WK")}
+
+if(duped()) {selfDestructAll(), hint("Do not duplicate this e2!",10) ,print("You can download it at http://www.garrysmod.org/downloads/")}
+
+Stargate:stargateSetLocal(0)
+Stargate:stargateSetPrivate(0)
+Stargate:stargateSetBlocked(0)
+
+### Hub energy ( % ) ###
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!hub") {print("Hub energy: "+Hub+"%")}}
+if(changed(Hub) & Hub == 0) {hint("No energy. Please spawn some new ZPMs" ,10)}
+
+### chat commands ###
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!commands") {print("Commands:
+    !iris (toggle iris)
+    !list (list all Stargate addresses)
+    !close (close Stargate)
+    !dial (list all dial commands)
+    !other (how to dial an other Stargate)") } }
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!dial") {print("Dial commands:    
+    !pegasus (dial pegasus)
+    !station (dial station)
+    !earth (dial earth)
+    !desert (dial desert planet)
+    !lava (dial lava planet)
+    !forest (dial forest)") } }
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!iris"){ Iris = !Iris } }
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!close") {Stargate:stargateClose() } }
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!other") {print("if you want to dial a Stargate which is not
+listed ( for examble Stargate 'ABCDEF#' ) 
+type '! ABCDEF#'")} }
+
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!") {Stargate:stargateDial(LastSaid[2,string],2)}}
+
+if(~Open & Open & Inbound ){botSay( "["+Stargate:stargateName()+"] Unauthorised offworld activation! iris is closed! please state your business!" )}
+if(changed(Open==1 & Inbound==1 & Iris==1)& Open==1 & Inbound==1 & Iris==0 ) {botSay("Iris open!")}
+
+setName("Stargate Control "+Version+" by BL4CKH4WK")
+
+if(changed(Open)& Open ) {hint("Warning: Stargate active!" ,10)}
+if(changed(Open)& Open ) {print("Address: "+DialingAddress)}
+
+### Alarm ###
+
+if(changed(Open & Inbound)  & Open & Inbound) {soundPlay(1,2000,"/alarm/sgc_alarm.wav")}
+if(Inbound == 0){soundStop(1)}else{}
+
+### Iris code ###
+
+if(IrisCode) {print("Received Iris code: "+IrisCode)}
+
+### Address list ###
+
+if (chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!list") {
+    AddressList = Stargate:stargateAddressList()
+
+    
+    for (I=1,AddressList:count()) {
+
+        N = 2
+        Blocked = 0
+        Array = AddressList[I,string]:explode(" ")
+        Address = Array[1,string]
+        if (Address=="1") { 
+            Blocked = 1
+            Address = Array[2,string] 
+            N = 3
+        }
+     
+        Name = "" 
+        for (I=N,Array:count()) {
+            if (I!=N) { Name = Name + " " } 
+            Name = Name + Array[I,string]
+        }
+
+        # Printing
+        if (Blocked==1) {
+            print("BLOCKED! Address - " + Address + " Name - " + Name)
+        } else {
+            print("Address - " + Address + " Name - " + Name)
+        }
+    }
+  }
+}
+
+##############################################################################################################################################################
+
+##### Stargate Universe #####
+
+### Stargate Group U@# ###
+
+
+if("U@#" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!pegasus") {Stargate:stargateDial("SHAKURP@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("STAIONP@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTHPM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPU#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!forest") {Stargate:stargateDial("HIGAR1U#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU#",2)}}
+}
+
+### Stargate Group SGI ###
+
+
+if("SGI" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!pegasus") {Stargate:stargateDial("SHAKURP@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("STAIONP@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTHPM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPU#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!forest") {Stargate:stargateDial("HIGAR1U#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU#",2)}}
+}
+
+### Stargate Group DST  ###
+
+
+if("DST" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!pegasus") {Stargate:stargateDial("SHAKURP@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("STAIONP@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTHPM@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPU#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!forest") {Stargate:stargateDial("HIGAR1U#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU#",2)}}
+}
+
+
+##############################################################################################################################################################
+
+##### Normal Stargate Groups #####
+
+### Stargate Group P# ###
+
+if("P@" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!pegasus") {Stargate:stargateDial("SHAKUR#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("STAION#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTHPM#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!forest") {Stargate:stargateDial("HIGAR1U@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+}
+
+### Stargate Group M# ###
+
+
+if("M@" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!pegasus") {Stargate:stargateDial("SHAKURP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("STAIONP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTHP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!forest") {Stargate:stargateDial("HIGAR1U@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+}
+ 
+### Stargate Group I@ ###
+
+
+if("I@" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!pegasus") {Stargate:stargateDial("SHAKURP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("STAIONP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTHPM#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!forest") {Stargate:stargateDial("HIGAR1U@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+}
+
+
+### Stargate Group OT ###
+
+
+if("OT" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!pegasus") {Stargate:stargateDial("SHAKURP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("STAIONP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTHPM#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!forest") {Stargate:stargateDial("HIGAR1U@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+}
+
+### Stargate Group O@ ###
+
+
+if("O@" == Stargate:stargateGroup()){
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!pegasus") {Stargate:stargateDial("SHAKURP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!station") {Stargate:stargateDial("STAIONP#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!earth")  {Stargate:stargateDial("EARTHPM#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!desert") {Stargate:stargateDial("DESRTPU@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!forest") {Stargate:stargateDial("HIGAR1U@#",2)}}
+if(chatClk(owner())) { LastSaid = owner():lastSaid():lower():explode(" ") if(LastSaid[1,string] == "!lava") {Stargate:stargateDial("LAV0PNU@#",2)}}
+}
+
+### by BL4CKH4WK ###

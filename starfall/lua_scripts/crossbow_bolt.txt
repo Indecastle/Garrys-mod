@@ -1,0 +1,35 @@
+local Owner = player.GetBySteamID('STEAM_0:1:54066003') -- Markiz
+
+local Damage = 500
+
+
+timer.Create('crossbow', 0.5, 0, function()
+    local ent = ents.Create( "crossbow_bolt" )
+
+    if ( IsValid( ent ) ) then
+        --ent:SetKeyValue('modelscale', 10)
+        --ent:SetKeyValue('fadescale', 10)
+        --ent:SetKeyValue('gravity', 0.1)
+
+        local damageInfo = DamageInfo()
+        damageInfo:SetDamage( 10 )
+        --damageInfo:SetAttacker( Owner )
+        damageInfo:SetDamageType(DMG_BULLET)
+        ent:TakeDamageInfo(damageInfo)
+        ent:Fire( "SetDamage", Damage )
+
+        local Forward = Owner:EyeAngles():Forward()
+        ent:SetPos( Owner:GetShootPos() + Forward * 50 )
+        ent:SetAngles( Owner:EyeAngles() )
+        ent:Spawn()
+        ent:SetVelocity( Forward * 1000 )
+        ent:SetOwner( Owner )
+
+        --ent:SetKeyValue('gravity', 2)
+        
+        LogToClients(ent:GetKeyValues())
+        --table.insert( ValidBullets, ent )
+	    --hook.Add("EntityTakeDamage", "crossbow_bolt_damage", MakeCrossbowDoDamage )
+    end
+end)
+timer.Remove('crossbow')

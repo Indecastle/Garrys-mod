@@ -24,11 +24,11 @@ local TeleportOneDelay = 2
 local TeleportEachDelay = 0.2
 
 ----- music ------
-local Volume = 2
+local Volume = 5
 local MusicSpeed = 1
-local URL_Music = "soldier"
+local URL_Music = "soldierMeme"
 local IsLooping = true
-local MusicRadius = 500
+local MusicRadius = 1000
 ----- music ------
 
 
@@ -46,7 +46,9 @@ local URLS = {
     malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
     
     obunga = "https://i.imgur.com/wEBb6mG.png",
+    kitten = "https://i.imgur.com/qlhVKyZ.png",
     soldierMeme = "https://i.imgur.com/etDODQs.jpg",
+    sidorovich_1 = "https://i.imgur.com/e2mWcg5.png",
     custom = nil
 }
 
@@ -59,7 +61,8 @@ local _urls_music = {
     pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
     bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
     soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3",
-    soldier = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
+    soldierMeme = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
+    sidorovich_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
 }
 
 -- =================================================================================

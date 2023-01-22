@@ -1,0 +1,23 @@
+
+
+hook.Add('SetupWorldFog', 'Markiz_Fog', function()
+    render.FogMode( 1 )
+	render.FogStart( 5 )
+	render.FogEnd( 5  )
+	render.FogMaxDensity( 0.98 )
+    render.FogColor(0, 0, 0)
+	return true
+end)
+
+
+hook.Add('SetupSkyboxFog', 'Markiz_Fog', function()
+    render.FogMode( 1 )
+	render.FogStart( 5 )
+	render.FogEnd( 5  )
+	render.FogMaxDensity( 0.98 )
+    render.FogColor(0, 0, 0)
+	return true
+end)
+
+--hook.Remove('SetupWorldFog', 'Markiz_Fog')
+--hook.Remove('SetupSkyboxFog', 'Markiz_Fog')

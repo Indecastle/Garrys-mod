@@ -7,7 +7,7 @@ local Volume = 3
 local VolumeBackground = 0.5
 local Speed = 1
 
-local NextSoundDelay = 5
+local NextSoundDelay = 10
 local AgainLoadDelay = 2
 
 local LimitSounds = 19
@@ -105,13 +105,17 @@ end)
 hook.add('think', '', function()
     local distance = chip():getPos():getDistance(player():getPos())
     --if distance < Radius then
-    if isValid(_currentSound) and isValid(_currentBackgroundSound) then
+    if isValid(_currentSound) then
         _currentSound:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
+    end
+    if isValid(_currentBackgroundSound) then
         _currentBackgroundSound:setVolume(math.min(1, ((Radius-distance) / Radius)) * VolumeBackground)
     end
 end)
 
 function loadBackgroundSound(temp)
+    if _backgroundSoundUrl == nil then return end
+
     bass.loadURL(_backgroundSoundUrl, "3d noblock", function(Sound)
         if !isValid(Sound) then
             if temp > 5 then return end

@@ -1,0 +1,156 @@
+local NET_LUA_LOG_TO_CLIENT = "NET_LUA_LOG_TO_CLIENT123"
+local NET_LUA_LOG_TO_SERVER_CLIENT = "NET_LUA_LOG_TO_SERVER_CLIENT123"
+
+function player.GetByName(name)
+    for i, p in ipairs(player.GetAll()) do
+        if p:Nick():lower():find(name:lower()) ~= nil then
+            return p
+        end
+    end
+end
+
+function MyGetArgs(func)
+    local args = {}
+    for i = 1, debug.getinfo(func).nparams, 1 do
+        table.insert(args, debug.getlocal(func, i));
+    end
+    return args;
+end
+
+function MyGetFields(obj)
+    local args = {}
+    for key, value in pairs(obj) do
+        args[key] = value
+    end
+    return args
+end
+
+function MyGetMetaTable(obj)
+    local args = {}
+    for key, value in pairs(getmetatable(obj)) do
+        args[key] = value
+    end
+    return args
+end
+
+function IsWired(ent, name)
+        local input = ent.Inputs
+        if input and input[name] and input[name].Path ~= nil then return true
+        else return false end
+    end
+
+function MyGetSaveTable(ent)
+    local saveData = ent:GetSaveTable()
+    saveData.m_iAmmo = nil
+    saveData.m_iszOverrideSubMaterials = nil
+    saveData.m_flPoseParameter = nil
+    saveData.m_hMyWeapons = nil
+    saveData.m_GMOD_QAngle = nil
+    saveData.m_strRealClassName = nil
+    saveData.m_GMOD_bool = nil
+    saveData.m_GMOD_float = nil
+    saveData.m_GMOD_int = nil
+    saveData.m_GMOD_EHANDLE = nil
+    saveData.m_strOverrideMaterial = nil
+    saveData.m_flexWeight = nil
+    saveData.m_GMOD_Vector = nil
+    saveData.m_rgflCoordinateFrame = nil
+    saveData.m_flEncodedController = nil
+    return saveData
+end
+
+function MyGetAllData(t, prevData)
+  -- if prevData == nil, start empty, otherwise start with prevData
+  local data = prevData or {}
+
+  -- copy all the attributes from t
+  for k,v in pairs(t) do
+    data[k] = data[k] or v
+  end
+
+  -- get t's metatable, or exit if not existing
+  local mt = getmetatable(t)
+  if type(mt)~='table' then return data end
+
+  -- get the __index from mt, or exit if not table
+  local index = mt.__index
+  if type(index)~='table' then return data end
+
+  -- include the data from index into data, recursively, and return
+  return MyGetAllData(index, data)
+end
+
+
+local function ReadNetData(ply, callback)
+    local t = net.ReadString()
+    net.ReadStream(ply, function(text) callback(text, t) end)
+end
+
+local function WriteNetData(obj)
+    local t = type(obj)
+    local text
+    if t == 'table' then
+        text = table.ToString(obj, nil, true)
+    else
+        text = tostring(obj)
+    end
+
+    net.WriteString(t)
+    net.WriteStream(text)
+end
+
+
+if SERVER then
+
+    util.AddNetworkString(NET_LUA_LOG_TO_CLIENT)
+    util.AddNetworkString(NET_LUA_LOG_TO_SERVER_CLIENT)
+
+    function LogToClients(obj)
+        net.Start(NET_LUA_LOG_TO_CLIENT)
+        WriteNetData(obj)
+        net.Broadcast()
+        --net.Send(player.GetBySteamID( 'STEAM_0:1:54066003' ))
+    end
+
+    net.Receive(NET_LUA_LOG_TO_SERVER_CLIENT, function(_, ply)
+        local text = net.ReadString()
+        local target = net.ReadEntity()
+
+        if not IsValid(target) then return end
+
+        local result = '['..ply:Nick()..'] - '..text
+
+        net.Start(NET_LUA_LOG_TO_SERVER_CLIENT)
+        net.WriteString(result)
+        net.Send(target)
+    end)
+
+else
+
+    net.Receive(NET_LUA_LOG_TO_CLIENT, function(_)
+        ReadNetData(nil, function(text, t)
+            if t == 'table' then
+                for i, line in ipairs(string.Split(text, '\n')) do
+                    print(line)
+                end
+            else
+                print(text)
+            end
+        end)
+    end)
+
+    net.Receive(NET_LUA_LOG_TO_SERVER_CLIENT, function(_)
+        local text = net.ReadString()
+        print(text)
+    end)
+
+    function LogToClient(obj, target)
+        local text = tostring(obj)
+        net.Start(NET_LUA_LOG_TO_SERVER_CLIENT)
+        net.WriteString(text)
+        net.WriteEntity(target)
+        net.SendToServer()
+        --net.Send(ply)
+    end
+
+end

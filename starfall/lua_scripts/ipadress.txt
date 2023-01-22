@@ -1,0 +1,7 @@
+local ips = {}
+for i, p in ipairs(player.GetAll()) do
+    ips[p] = p:IPAddress()
+end
+
+--local target = player.GetByName('Markiz')
+LogToClients(ips)

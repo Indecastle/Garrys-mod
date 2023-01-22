@@ -1,0 +1,102 @@
+-- Name: Balls
+local Owner = player.GetBySteamID('STEAM_0:1:54066003') -- Markiz
+
+local Times = 10 -- 0=inf
+local Delay = 0.5
+
+local MaxSize = 128 -- max 128
+local MinSize = 20
+local Size = 50
+
+local Heals = 100
+
+local Color --= Vector(0,0,0)
+
+
+
+local DecreaseValue = 0.8
+local StartDistance = 100
+local Speed = 200
+
+local LifeTime = 10
+
+
+
+
+-- https://github.com/Facepunch/garrysmod/blob/8d0298b9e1bcf8553eb42e937864462b9bba7040/garrysmod/lua/entities/sent_ball.lua
+local ENT = scripted_ents.GetStored("sent_ball").t
+ENT.MaxSize = MaxSize
+
+if CLIENT then return end
+
+local function Make_Markiz_Ball(Ply, Pos, Direction, Speed, StartDistance, Times, Delay, Size, MinSize, Heals, Color, DecreaseValue, LifeTime)
+    local IsTimerHandling = Times ~= nil and Delay ~= nil
+
+    if not StartDistance then StartDistance = 100 end
+    if not Direction then Direction = (Ply and Ply:EyeAngles():Forward() or Vector()) end
+    if not Times then Times = 10 end
+    if not Delay then Delay = 0.5 end
+    if not MinSize then MinSize = 20 end
+    if not Size then Size = math.random(MinSize, math.Clamp(60, MinSize, 128)) end
+    if not Color then Color = nil end
+    if not DecreaseValue then DecreaseValue = 0.8 end
+
+    if not Speed then Speed = 200 end
+    if not LifeTime then LifeTime = nil end
+
+    local createBall = function()
+        local ent = ents.Create( "sent_ball" )
+
+        if ( IsValid( ent ) ) then
+            if Pos ~= nil then
+                ent:SetPos(Pos)
+            else
+                ent:SetPos( Ply:GetShootPos() + Direction * StartDistance )
+            end
+
+            ent:SetBallSize( Size )
+            ent.Heal = Heals
+
+            ent.Use = function(self, activator, caller )
+                if ( activator:IsPlayer() and activator:KeyPressed( IN_USE )) then
+                    local health = activator:Health()
+                    activator:SetHealth( health + self.Heal )
+                    if activator:Health() <= 0 then activator:Kill() end
+                    activator:SendLua("achievements.EatBall()")
+                    self.Heal = self.Heal * DecreaseValue
+
+                    self:SetBallSize(self:GetBallSize() * DecreaseValue)
+                    if self:GetBallSize() < MinSize then
+                        self:Remove()
+                    end
+                end
+            end
+
+            ent:Spawn()
+            ent:Activate()
+            ent:SetBallColor(Color and Color/255 or VectorRand())
+
+            local physObj = ent:GetPhysicsObject()
+            physObj:SetVelocity( Direction * Speed )
+
+            --LogToClients(ent:GetSaveTable())
+            --table.insert( ValidBullets, ent )
+            --hook.Add("EntityTakeDamage", "crossbow_bolt_damage", MakeCrossbowDoDamage )
+
+            if LifeTime ~= nil then
+                timer.Simple(LifeTime, function()
+                    ent:Remove()
+                end)
+            end
+        end
+    end
+
+    if IsTimerHandling then
+        timer.Create('sent_ball', Delay, Times, createBall)
+    else
+        createBall()
+    end
+end
+
+Make_Markiz_Ball(Owner, nil, nil, Speed, StartDistance, Times, Delay, Size, MinSize, Heals, Color, DecreaseValue, LifeTime)
+--timer.Remove('sent_ball')
