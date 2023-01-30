@@ -3,13 +3,13 @@
 --@shared
 
 
-local Volume = 10
+local Volume = 2
 local Speed = 1
-local URL = "pornhub_intro"
+local URL = "mc_mom_came_remix"
 local IsLooping = false
 
 local IsAllServer = false
-local Radius = 4200
+local Radius = 500
 
 ------------------------------------------------------------------------------------
 
@@ -36,6 +36,8 @@ local _urls = {
     soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3",
     soldierMeme = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
     sidorovich_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
+    mc_mom_came_remix = "https://cdn.discordapp.com/attachments/974678227362660395/1069328923114098819/oj-mama-prishla-miss-the-rage_456240694.mp3",
+    mc_mom_came = "https://cdn.discordapp.com/attachments/974678227362660395/1069328923491581952/oy-mama-prishla.mp3",
 }
 
 -- =================================================================================

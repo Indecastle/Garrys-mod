@@ -1,0 +1,229 @@
+--@name Turret cam controller
+--@author Markiz
+--@shared
+
+
+local HitPosMode = false -- TODO
+
+local OffsetAngle = Angle(0, 0, 0)
+local OffsetAngleDot = Angle(0, 0, 0)
+
+local IsReversedDotRadius = false
+local MinRadius = 5
+local MaxRadius = 20
+local MaxDistanceForRadius = 5000
+local DotColor = Color(255,255,255, 200)
+
+local DebugDotLine = false
+
+
+
+------------------------------------------------------------------
+
+
+local _hud, _vehicle, _turret, _ignoreEntsForDot
+local _isActive = false
+local _parentView = false
+
+local _eyeOffsetAngle = OffsetAngle-- + Angle(0,180,0)
+
+if SERVER then
+    
+    function identifyVehicle()
+        local li = chip():getLinkedComponents()
+        if #li > 0 and li[1]:getClass() == 'starfall_hud' then
+            _hud = li[1]
+        else
+            throw("Not linked HUD")
+        end
+        
+        local li2 = _hud:getLinkedComponents()
+        if #li2 > 0 and li2[1]:isVehicle() then
+            _vehicle = li2[1]
+        else
+            throw("Not linked Vehicle")
+        end
+    end
+
+    identifyVehicle()
+
+    local WW = chip():getWirelink()
+
+    wire.adjustPorts(
+        {
+            ON="number",
+            IsParentView="number",
+            Turret="entity",
+            IgnoreEntsForDot="array",
+        },
+        {
+            IsFire="number"
+        }
+    )
+    
+    function sendData(ply)
+        net.start("init")
+        net.writeEntity(_vehicle)
+        net.writeEntity(isValid(_turret) and _turret or entity(0))
+        net.writeBool(_isActive)
+        net.writeBool(_parentView)
+        net.writeTable(_ignoreEntsForDot or {})
+        net.send(ply or nil)
+    end
+
+    hook.add("input", "", function(input_name, value) 
+        if input_name == 'ON' then
+            _isActive = value != 0
+        elseif input_name == 'IsParentView' then
+            _parentView = value != 0
+        elseif input_name == 'Turret' then
+            _turret = value
+        elseif input_name == 'IgnoreEntsForDot' then
+            _ignoreEntsForDot = value
+            if isValid(_vehicle) then table.add(_ignoreEntsForDot, {_vehicle}) end
+            if isValid(_turret) then table.add(_ignoreEntsForDot, {_turret}) end
+            table.add(_ignoreEntsForDot, {chip()})
+        end
+        _isActive = !WW:isWired('ON') or _isActive
+        _parentView = WW:isWired('IsParentView') and _parentView
+        sendData()
+    end)
+
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        sendData(ply)
+    end)
+
+    hook.add("think", "turret_view", function()
+        wire.ports.IsFire = _isActive and isValid(_vehicle) and isValid(_vehicle:getDriver()) and _vehicle:getDriver():keyDown(IN_KEY.ATTACK) and 1 or 0
+        if not isValid(_turret) then return end
+        if _isActive and isValid(_vehicle) and isValid(_vehicle:getDriver()) then
+            local driver = _vehicle:getDriver()
+            local ang = driver:getEyeAngles()
+            
+            local localAng = _vehicle:worldToLocalAngles(ang)
+            
+            if _parentView then
+                _, ang = localToWorld(Vector(), localAng + Angle(0,-90,0), Vector(), chip():getAngles())
+                
+                --local ang00 = ang0:getQuaternion()
+                
+                if HitPosMode then
+                    --local driverEyePos = chip():getPos()
+                    --local tr = trace.trace(driverEyePos, driverEyePos + ang0:getForward()*10000000, _ignoreEntsForDot, MASK.ALL, nil, false)
+                    --ang = (tr.HitPos - _turret:getPos()):getAngle()
+                    --local ang01 = (tr.HitPos - _turret:getPos()):getQuaternionFromAxis(ang00:getRotationAngle())
+                    --_, ang = localToWorld(Vector(), localAng + Angle(0,-90,0), Vector(), ang01:getEulerAngle())
+                end
+            else
+                if HitPosMode then
+                    --local driverEyePos = driver:getEyePos()
+                    --local tr = trace.trace(driverEyePos, driverEyePos + ang:getForward()*10000000, _ignoreEntsForDot, MASK.ALL, nil, false)
+                    --ang = (tr.HitPos - _turret:getPos()):getAngle()
+                end
+            end
+            
+            _, ang = localToWorld(Vector(), _eyeOffsetAngle, Vector(), ang)
+            
+            
+            
+            _turret:setAngles(ang)
+        else
+            local _, ang = localToWorld(Vector(), OffsetAngle, Vector(), chip():getAngles())
+            _turret:setAngles(ang)
+        end
+    end)
+
+
+    return
+end
+
+
+local O = owner()
+local OO = player()
+local GameW, GameH
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get Entity(Vehicle) !!!") end
+        _vehicle = ent
+    end)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get Entity(Turret) !!!") end
+        _turret = ent
+    end)
+    _isActive = net.readBool()
+    _parentView = net.readBool()
+    _ignoreEntsForDot = net.readTable() or {}
+end)
+
+
+function getDotRadius(dist)
+    local x = math.clamp(dist, 0, MaxDistanceForRadius) / MaxDistanceForRadius
+    local y = IsReversedDotRadius and 1-x or x
+    return MinRadius + y * (MaxRadius - MinRadius)
+end
+
+
+hook.add("drawhud","",function()    
+    if GameW == nil then
+        GameW, GameH = render.getGameResolution()
+    end
+    
+    local tr = OO:getEyeTrace()
+    local target = tr.Entity
+    
+    if isValid(target) and target:getClass() == 'player' then
+        render.setColor(Color(200,0,0, 200))
+    else
+        render.setColor(Color(0,200,200, 200))
+    end
+    
+    render.drawRoundedBox(100, GameW/2-10-2, GameH/2-0.7, 23, 2)
+    render.drawRoundedBox(100, GameW/2-1.5, GameH/2-10+1, 2, 19)
+    
+    if _isActive and isValid(_turret) and isValid(_vehicle) and _vehicle == player():getVehicle() then
+        local ang = _turret:localToWorldAngles(OffsetAngleDot)
+        local tr = trace.trace(_turret:getPos(), _turret:getPos() + ang:getForward()*10000000, _ignoreEntsForDot, MASK.ALL, nil, false)
+        local hitPos = tr.HitPos
+        local dist = hitPos:getDistance(_turret:getPos())
+        local vec2 = hitPos:toScreen()
+        render.setColor(DotColor)
+        local radius = getDotRadius(dist)
+        render.drawCircle(vec2.x, vec2.y, radius)
+        --render.drawRect(vec2.x-5, vec2.y-5, 10, 10)
+        render.drawRoundedBox(0, vec2.x-1, vec2.y-1, 2, 2)
+        if DebugDotLine then
+            render.setColor(Color(0,255,255, 100))
+            render.drawLine(GameW/2, GameH/2, vec2.x, vec2.y)
+            local vec20 = _turret:getPos():toScreen()
+            render.setColor(Color(255,255,0, 100))
+            render.drawLine(vec20.x, vec20.y, vec2.x, vec2.y)
+        end
+        --printTable(_ignoreEntsForDot)
+    end
+end)
+
+
+function getThirdPersonPos(turret)
+    local pos = chip():getPos()
+    return pos
+end
+
+
+hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    if not _isActive or not _parentView or not isValid(_vehicle) or not _vehicle == player():getVehicle() then return end
+
+    local originPos = getThirdPersonPos(_turret)
+    
+    local _, ang = localToWorld(Vector(), eyeAngles() + Angle(0,-90,0), Vector(), chip():getAngles())
+    
+    return {
+        origin= originPos
+        ,angles= ang
+        ,fov=fov
+        ,znear=znear + 2
+        ,zfar=zfar,
+        drawviewer=true}
+end)
+

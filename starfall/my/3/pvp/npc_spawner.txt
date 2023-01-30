@@ -129,8 +129,7 @@ function NpcSpawner:IsPosInWorld(pos)
 end
 
 
-function NpcSpawner:VerifyOnFloor(pos)
-    local tr = trace.trace(pos, pos + Vector(0,0,-1)*(self.CanSpawnBottomDistance+0.1), nil, MASK.ALL, nil, false)
+function NpcSpawner:VerifyOnFloor(pos, tr)
     local dist = pos:getDistance(tr.HitPos)
     /*if dist > self.CanSpawnBottomDistance then
         return false
@@ -140,8 +139,7 @@ function NpcSpawner:VerifyOnFloor(pos)
 end
 
 
-function NpcSpawner:GetPosOnFloor(pos)
-    local tr = trace.trace(pos, pos + Vector(0,0,-1)*(self.CanSpawnBottomDistance+0.1), nil, MASK.ALL, nil, false)
+function NpcSpawner:GetPosOnFloor(tr)
     return tr.HitPos + self.OffsetZ
 end
 
@@ -149,16 +147,17 @@ end
 function NpcSpawner:GetPos()
     while true do
         local pos = self.E:getPos() + self.OffsetZ + self:GetRandVector()
+        local tr = trace.trace(pos, pos + Vector(0,0,-1)*(self.CanSpawnBottomDistance+0.1), nil, MASK.ALL, nil, false)
         if self.SpawnOnFloorAlways then
-            if !self:VerifyOnFloor(pos) then
+            if !self:VerifyOnFloor(pos, tr) then
                 continue
             end
-            pos = self:GetPosOnFloor(pos)
-            if self:IsPosInWorld(pos) then
+            pos = self:GetPosOnFloor(tr)
+            if self:IsPosInWorld(pos + self.OffsetZ) then
                 return pos
             end
         else
-            if self:IsPosInWorld(pos) and self:VerifyOnFloor(pos) then
+            if self:IsPosInWorld(pos) and self:VerifyOnFloor(pos, tr) then
                 return pos
             end
         end

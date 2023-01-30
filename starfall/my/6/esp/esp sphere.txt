@@ -3,7 +3,7 @@
 --@client
 
 local Target = owner()
-Target = find.playersByName("andre")[1]
+Target = find.playersByName("markiz")[1]
 --print(Target)
 
 
@@ -11,21 +11,49 @@ if player() ~= Target then return end
 
 
 local IsOnlyPlayers = true 
-local Radius = 10000
+local Radius = 100000
+local Delay = 0.5
 
 
-local hitedEnts = find.inSphere(chip():getPos(), Radius, function(ent)
-    return ent ~= player()
-        and (not IsOnlyPlayers or ent:getClass() == 'player')
-        and (IsOnlyPlayers or ent:getClass() == 'player' or ent:getClass() == 'prop_physics')
+local hitedEnts = nil
+local OO = player()
+
+local activeEnts = {}
+
+function isValidEnt(ent)
+    return isValid(ent) and not ent:isDormant() and (not ent:isPlayer() or ent:isAlive())
+end
+
+timer.create("findEnts", Delay, 0, function()
+    if IsOnlyPlayers then
+        hitedEnts = find.allPlayers(function(ply) return ply:getPos():getDistance(OO:getPos()) < Radius end)
+    else
+        hitedEnts = find.inSphere(chip():getPos(), Radius, function(ent)
+            return ent ~= player()
+                and (not IsOnlyPlayers or ent:getClass() == 'player')
+                and (IsOnlyPlayers or ent:getClass() == 'player' or ent:getClass() == 'prop_physics')
+        end)
+    end
+
+    for i, ent in ipairs(hitedEnts) do
+        if i == 199 then print("The holograms limit has been reached. (200)") break end
+        if activeEnts[ent] == nil and isValidEnt(ent) then
+            local holo = holograms.create(chip():getPos(), Angle(), ent:getModel(), Vector(1))
+            holo:setMaterial("debug/debugportals")
+            holo:setColor(Color(255,255,0, 150))
+            holo:setParent( ent )
+            holo:addEffects( 1 )
+            activeEnts[ent] = holo
+        end
+    end
 end)
 
-for i=1, #hitedEnts do
-    if i == 199 then print("The holograms limit has been reached. (200)") break end
-    ent = hitedEnts[i]
-    local holo = holograms.create(chip():getPos(), Angle(), ent:getModel(), Vector(1))
-    holo:setMaterial("debug/debugportals")
-    holo:setColor(Color(255,255,0, 150))
-    holo:setParent( ent )
-    holo:addEffects( 1 )
-end
+
+hook.add("think", "", function()
+    for ent, holo in pairs(activeEnts) do
+        if not isValidEnt(ent) then
+            holo:remove()
+            activeEnts[ent] = nil
+        end
+    end
+end)

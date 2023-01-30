@@ -84,6 +84,7 @@ if SERVER then
     Killer:setMoveSpeed(Speed)
     Killer:setAcceleration(Speed)
     Killer:setDeceleration(0)
+    Killer:setStepHeight(50)
     
     
     function gethead(ent)

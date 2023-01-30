@@ -1,0 +1,106 @@
+@name Explosive Crossbow V2
+@persist Class:string ExplodeMdl:string O:entity RangerLen
+@persist Bolts:array ExplodeQ:array ExcludedBolts:array Speed BoltSound:string RangerHullSizeMult
+@persist PurgeInterval
+
+if (duped()) { reset() }
+if (first()) {
+    
+    Class = "crossbow_bolt"
+    BoltSound = "plats/ttrain_brake1.wav"
+    ExcludedBolts = array()
+    Bolts = array()
+    Speed = 3500
+    
+    ExplodeMdl = "models/props_phx/amraam.mdl"
+    O = owner()
+    
+    RangerHullSizeMult = 3
+    PurgeInterval = 15000
+    RangerLen = 160
+    
+    function array findBolts() {
+        findExcludePlayerProps("*")
+        findExcludeEntities(ExcludedBolts)
+        findIncludePlayerProps(O)
+        findByClass(Class)
+        return findToArray()        
+    }
+    
+    function number isExcluded(Ent:entity) {
+        foreach (K, V:entity = ExcludedBolts) {
+            if (V == Ent) {
+                return 1    
+            }
+        }
+        return 0
+    }
+    
+    
+    function void entity:greenTrail() {
+        This:setTrails(122,122,12,"trails/laser",vec(0,255,0),255,0,0)     
+    }
+    
+    
+    timer("purgeExcluded", PurgeInterval)
+    runOnTick(1)
+}
+
+if (findCanQuery()) {
+    BoltCount = Bolts:count()
+    Bolts = findBolts()
+    if (Bolts:count() > BoltCount) {
+        foreach (K, Bolt:entity = Bolts) {
+            Bolt:soundPlay(K, 0, BoltSound)
+            Bolt:greenTrail()
+            stoptimer("purgeExcluded")
+            timer("purgeExcluded", PurgeInterval)
+        }
+    }
+}
+
+if (Bolts:count() > 0) {
+    
+    rangerFilter(Bolts)
+    
+    foreach (K, Bolt:entity = Bolts) {
+        if (!isExcluded(Bolt)) {
+            
+            rangerFilter(Bolt)
+            rangerFilter(O)
+            soundPitch(K, 100)  
+            
+            local Ranger = rangerOffsetHull(RangerLen, Bolt:pos(), Bolt:forward(), -Bolt:boxSize()*RangerHullSizeMult, Bolt:boxSize()*RangerHullSizeMult)
+            
+            if (Ranger:hit()) {
+                
+                if (propCanSpawn()) {
+                    local Explosion = propSpawn(ExplodeMdl, Ranger:pos(), 1)
+                    Explosion:propBreak()
+                } else {
+                    ExplodeQ:pushVector(Ranger:pos())    
+                }
+                
+                ExcludedBolts:pushEntity(Bolt)
+                soundStop(K, 1)
+            }
+        }
+    }
+}
+
+while (ExplodeQ:count() > 0 & perf(50) & propCanCreate()) {
+
+    local ExplodePos = ExplodeQ:popVector()
+    local Explosion = propSpawn(ExplodeMdl, ExplodePos, 1)
+
+    Explosion:propBreak()   
+
+}
+
+if (clk("purgeExcluded")) {
+    foreach (K, V:entity = Bolts) {
+        V:propDelete()   
+    }
+    ExcludedBolts = array()
+    timer("purgeExcluded", PurgeInterval)    
+}

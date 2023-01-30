@@ -221,7 +221,7 @@ local function CreateBugbait(ply)
 end
 
 
-local function CreateDoor(trace, ang, class, model, hardware, autoclose, closetime)
+local function CreateDoor(ply, trace, ang, class, model, hardware, autoclose, closetime)
     local entit = ents.Create(class)
     --PrintTable(entit:GetKeyValues())
     if not entit then
@@ -260,6 +260,15 @@ local function CreateDoor(trace, ang, class, model, hardware, autoclose, closeti
 
     local xuuid = "door_" .. tostring(CurTime())
     entit:Fire("addoutput","targetname " .. xuuid, 0)
+    
+    entit:SetOwner(ply)
+    ply:AddCount( "props", entit )
+    ply:AddCleanup( "props", entit )
+    
+    undo.Create("Troll Antlion")
+    undo.AddEntity(entit)
+    undo.SetPlayer(ply)
+    undo.Finish()
 
     --ply:AddCount( "prop_doors", entit )
     --ply:AddCleanup( "prop_doors", entit )
@@ -276,7 +285,7 @@ end
 
 local function CreateMyDoor(ply)
     local tr = ply:GetEyeTrace()
-    local doorEnt = CreateDoor(tr, Angle(), 'prop_door_rotating', 'models/props_c17/door01_left.mdl', (math.random() < 0.5) and '1' or '2', true, 4)
+    local doorEnt = CreateDoor(ply, tr, Angle(), 'prop_door_rotating', 'models/props_c17/door01_left.mdl', (math.random() < 0.5) and '1' or '2', true, 4)
     doorEnt:Fire('Open')
 
     timer.Simple(10, function()
@@ -301,6 +310,9 @@ end
 
 
 local function CreateAntlion(ply, pos)
+    --LogToClients(ply:GetCount("npcs"))
+    if URS and URS.Check(ply, 'npc', "npc_antlion") == false or not ply:CheckLimit("npcs") then return end
+    
     local SquadName="JackyAntlionOpSquad"
     local npc = ents.Create("npc_antlion")
     npc:SetPos(pos)
@@ -314,13 +326,14 @@ local function CreateAntlion(ply, pos)
     npc.JackyDamageGroup=SquadName
     npc:Fire("unburrow","",0)
     JackyOpSquadSpawnEvent(npc)
-    ply:AddCount( "npc_antlion", npc )
-    ply:AddCleanup( "npc_antlion", npc )
+    npc:SetOwner(ply)
+    ply:AddCount( "npcs", npc )
+    ply:AddCleanup( "npcs", npc )
     
     undo.Create("Troll Antlion")
-	undo.AddEntity(npc)
-	undo.SetPlayer(ply)
-	undo.Finish()
+    undo.AddEntity(npc)
+    undo.SetPlayer(ply)
+    undo.Finish()
 
     if npc.CPPISetOwner then
         npc:CPPISetOwner(ply)
