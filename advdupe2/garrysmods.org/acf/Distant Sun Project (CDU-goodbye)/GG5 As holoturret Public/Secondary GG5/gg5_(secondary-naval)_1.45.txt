@@ -1,0 +1,109 @@
+@name GG5 (Secondary/Naval) 1.45
+@inputs FireGun [Gun]:entity [Active R]:number AimPos:vector [HAxis,VAxis,VAxis2]:entity
+@outputs Fire [Ops]:number [AimPos]:vector LimitFiringArc SnapBack
+@outputs [Self]:entity
+@outputs [Filter]:array
+@persist [Inertia GunAng]:angle FLIR
+@persist [MaxElevation MaxDepression MinYaw MaxYaw MinTargettingYaw MaxTargettingYaw RotateSpeed Unlock Interval]:number
+@trigger Active R
+
+#ChunderDownUndeR
+
+#read master version of this E2 for setup, help and instructions
+
+#--This is HGG5 without cam for scondary turrets
+#--Acvtive is toggle as per regular gg5. to change this to when value(input R) is pressed (1) read comment around lines 72
+#--Aimming pos is a vector. to change this to a Cam aim point. move AimPos:vector in line 2 from @inputs to @persist and add Ra:ranger and add "AimPos=Ra:pos()" at line 80-81
+
+#Link: https://drive.google.com/open?id=1EjdW-k03OoPL5mBISVsAEJvtsnUXEE3Y 
+
+
+if(first()|dupefinished()){
+    Self=entity()   
+    GunAng = Self:toLocal(Gun:angles())
+   # Orient=Self:toWorld(ang(0,GunAng:yaw(),0))
+
+holoCreate(3,HAxis:pos(),vec(0.3),Self:toWorld(ang(0,GunAng:yaw(),0)))
+holoAlpha(3,0)
+
+holoCreate(2,VAxis:pos(),vec(0.3),Gun:angles():setRoll(0))  
+holoAlpha(2,0)
+
+VAxis:parentTo(holoEntity(2))
+HAxis:parentTo(holoEntity(3))
+holoParent(3,Self)
+holoParent(2,3)
+if(VAxis2){
+holoCreate(4,VAxis2:pos(),vec(0.3),Gun:angles():setRoll(0))  
+holoAlpha(4,0)   
+holoParent(4,2)
+VAxis2:parentTo(holoEntity(4))
+Gun:parentTo(holoEntity(4))
+}
+else{Gun:parentTo(holoEntity(2))}
+runOnLast(Gun:isFrozen())
+}
+if ( changed(Active) ) {
+    
+    Interval = 100 #Higher the number the more the optimized
+    
+    MaxElevation = 29 #---How High you can aim up (in degrees)---#
+    MaxDepression = 25 #---How Low you can aim down (in degrees)---#
+    LimitFiringArc = 1 #Sets gun yaw to 360 but the gun wont fire if exceeding the min max yaw limitation
+    SnapBack = 1 #Turret will rotate back to its default angle when aimming in its deadzone
+    MinYaw = 45 #---360 for unlimited swing. dont go above 180. limited arc. if you need more than 180 on one side offset the E2 itself's yaw by how much needed. 
+    MaxYaw = 45 #---360 for unlimited swing. dont go above 180. limited arc. if you need more than 180 on one side offset the E2 itself's yaw by how much needed.
+    RotateSpeed = 85 #---Turret Rotation Speed in Degrees per Second---#
+  #  Self = entity() #---Ignore this shit, doesn't need to be touched---#
+#  -DO NOT TOUCH ANYTHING ELSE UNDER THIS.
+#--------------------------------------------------------------------------------------------------------------#
+        # Automatic settings
+    
+    RotateSpeed/=20
+  #  GunAng = Self:toLocal(Gun:angles())
+    Inertia = shiftL(ang(Gun:inertia())):setRoll(0)
+    Unlock = 0
+    MinTargettingYaw=MinYaw    
+    MaxTargettingYaw=MaxYaw
+    if(LimitFiringArc){
+    MinYaw=MaxYaw=360    
+    }        
+}
+elseif ( inputClk() ) {
+    if( changed(R) & R ) {
+        if ( Unlock ) { Unlock = 0 }
+        else { Unlock = 1 , interval(Interval) }
+        
+    }     
+}
+
+if ( Unlock & clk() ) {
+    if(!SnapBack|inrange(-Self:heading(AimPos):yaw(),-MinYaw,MaxYaw)){
+    GunDir=(AimPos-Gun:massCenter()):normalized()      
+   # GunDir = Gun:heading(AimPos)
+    GunAng = angnorm(clamp(GunAng - clamp(heading(vec(), GunAng, Self:toLocalAxis(GunDir)), -RotateSpeed, RotateSpeed), ang(-MaxElevation,-MinYaw, 0), ang(MaxDepression, MaxYaw, 0)))
+    }
+    else{
+    GunAng = angnorm(GunAng - clamp(heading(vec(), GunAng, Self:forward()) , -RotateSpeed, RotateSpeed)   )  
+    }  
+    GunYaw = Self:toWorld(ang(0,clamp(GunAng:yaw(),-MinYaw,MaxYaw),0))
+    holoAng(3,GunYaw)
+    GunPitch = ang(clamp(GunAng:pitch(),-MaxElevation,MaxDepression),0,0)
+    if(VAxis2){
+    holoAng(2,holoEntity(3):toWorld(GunPitch:setPitch(max(GunPitch:pitch(),0))))
+    holoAng(4,holoEntity(2):toWorld(GunPitch:setPitch(min(GunPitch:pitch(),0))))
+    
+    }else{ 
+       holoAng(2,holoEntity(3):toWorld(GunPitch))}
+
+    interval(Interval)
+    Ops=ops()
+    Fire=FireGun&inrange(Gun:heading(AimPos),-ang(1),ang(1))&inrange(Self:heading(AimPos):yaw(),-MinTargettingYaw,MaxTargettingYaw)
+ 
+}
+if(last()){
+Gun:parentTo(Self)    
+VAxis:parentTo(Self)  
+VAxis2:parentTo(Self)  
+HAxis:parentTo(Self)  
+}

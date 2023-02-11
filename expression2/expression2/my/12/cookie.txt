@@ -40,8 +40,8 @@ if(first()){
     holoMaterial(6,"models/props_canal/canal_bridge_railing_01b")
     holoParent(6, E)
     
-    holoCreate(7,E:toWorld(vec(0,0,0)), vec(1), E:toWorld(ang()), vec(255), "models/props_unique/firepit_campground.mdl")
-    holoParent(7, E)
+    #holoCreate(7,E:toWorld(vec(0,0,0)), vec(1), E:toWorld(ang()), vec(255), "models/props_unique/firepit_campground.mdl")
+    #holoParent(7, E)
     
     
     Base = holoCreate(8,E:toWorld(vec(0,35,46)), vec(0.7), ang(0,0,90), vec(255), "models/props_c17/signpole001.mdl")
@@ -93,6 +93,7 @@ I = (I + SpeedRol) % 360
 
 holoAng(8, E:toWorld(ang(I*10,0,90)))
 findIncludeClass("prop")
+findIncludeClass("npc")
 findInBox(E:toWorld(vec(5,35,43)),E:toWorld(vec(10,-35,49)))
 F=findToArray()
 

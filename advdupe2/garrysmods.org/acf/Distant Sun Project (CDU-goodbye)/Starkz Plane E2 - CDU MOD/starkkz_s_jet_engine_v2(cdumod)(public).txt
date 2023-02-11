@@ -1,0 +1,551 @@
+@name Starkkz's Jet Engine V2(CDUmod)
+@inputs Base:entity [Cam,Pod,EGP]:wirelink Active PrevWeapon Shift Gear Ammo
+@persist MaxThrust TurnLimit:angle SpeedLimit RollSpeed YawRollAdd StabRollSpeed Altitude ThrustUnits CamMode Trim CamPos:vector Dist Zoom W S A D ThrottleSpeed MaxFuel FuelConsuption Fuel FuelSystem
+@persist [Sound1,Sound2]:string PitchMul HUDweapon:string InvervalMul TaxiSteer AirFriction SpeedFriction Angle:angle Array:array AimStyle Mass Die VTOL VTOLSpeed FDir VDir VThrustMul H Direction:vector DragMul DamageSystem CollisionSpeed InitialPitch MaxMph DragSystem AirBrake Shutdown Temp Cooldown Duration WEPOn WEPSystem WEPPower Lift StallMul Interval HUD HUDUpdate HUDColor:vector Seat:entity Res:vector2
+@outputs AngleDifference:angle Speed KPH MPH Thrust Throttle FuelPercent WEP [RGB]:vector Clutch ThrottlePercent VTOLon #Debug
+
+#-----Stark's Jet chipV2(CDU mod)-----Stark/ChunderDownUndeR-----v 1.5.3 realese!----publicv 
+
+#--------------------[Controls]-------------
+#NOTE: this is controls for this chip system only
+
+#Shift -                toggle first person/thrid person
+#W/S -                  Throttle Up Down respectively
+#D/A -                  Roll Right Left respectively
+#Mouse 2 -              Freecam , Look around
+#M. up(Prev Weapon) -   Toggle zoom
+#H  -                   Toggle VTOL
+
+#--------------------[Troubleshooting & Hints]-------------
+
+#IMPORTANT!: Stall/Drag physicals built around one aircraft. In line 89 replace 'Mass' with '3900' if the stall setting doesnt work on your craft
+#Chip runs at ~1100 ops but sometimes 1700. im baffled why it does this.(interval 15)
+#Turn limit is for YAW and PITCH agility only. Roll maneouvreability is done by 'ROLLSPEED'
+#If you plane Roll too much, fast or high, on mouse turning ONLY lower or turn off (0) the YawRollAdd setting
+#If your still having roll issues with mouse only negate the YawRollAdd settings, as its used to either exagerate or lower yaw rolling
+#Same deal for if you roll level stabalize (Done automatically by the plane and the chip) to quickly or violently turn off or negate StabRollSpeed as its meant to either exagerate or lower the Auto leveling power done by the plane. The plane's landing gear weight usually  stabalizes the plane aswell so its good to negate this settings value if its being to violent
+#if your rolling too much IN GENERAL lower the roll speed setting. proably dont negate this though
+#i have comments other small variables you can change in the code below
+#To refuel this plane, reset the chip
+#UNLIKE the original chip the cam settings on the cam controller need LOCAL coordinates unchecked!.
+# StabRollSpeed YawRollAdd Are fine physics tuning roll settings. Its best to keep them at low decimal places. 0 to disable them
+#As said in line 20, It has been built around a single testbed so the controls/variables might not work with planes of different mass/size
+#Saying that quick testing of differnt chip masses in the test plane seemed to factor mass accuratetly
+#NOTE: 'YAWROLLADD' doesnt seem to factor Base mass although all other roll settings seem to. So that setting will have to be upped
+#Lowing the ops (upping interval) well mean upping some of the variables too (eg: thrust, roll settings)
+#The Chip trys to compensate physics and settings with a changed interval so the settings are universal regardless of interval
+#Hovever saying that. Trim, WEP heat and Cooldown timers and the engine die effects have not been compensated so they need changing on changing inverval
+#In case you were wondering the test plane's base mass was 3904. & Interval was 15
+#if your having any further proplems or trouble understanding contact ChunderDownUndeR via Steam to be called a retard
+
+if (first() | dupefinished()){
+    
+    #-----Setup-----
+    
+    Interval = 25 #The operate rate in time in 1/10th millieseconds the chip updates(clks). A higher number will causes less lag but may drop performance.
+    
+        #General Physics settings
+    AimStyle = 1 #boolean: 0 for classic cam ang aim style, basically the same but this new one more preciesly aims the plane at the centre of the screen but my not work or potentiall spas on certain idiot's builds
+    MaxThrust = fromUnit("m", 56000) # 50kN Thrust
+    TurnLimit = ang(12, 15, 12) # Pitch ,Yaw, Roll.
+    SpeedLimit = 2700
+    TaxiSteer = 140 # How sharp it turns on the groun under alt of 2m and less than 20mph
+    ThrottleSpeed = 0.003 #Dont touch the first three zeros unless you want me to come and steal your sheckles
+    RollSpeed = 10 # Power of the primary wing control surfaces to create a airevion roll Used by the following Roll options;
+    Trim = 1.5 # Pitch trim, Only helps to aim the plane at the centre of the screen
+    StabRollSpeed = 0.3 # This version of the chip has a auto-leveling roll. NOTE: this is decimal. 0 to turn off this feature
+    YawRollAdd = 0.3 # this settings nees a revamp and may not currently work
+    SpeedFriction = 1000 # Different to airfriction and doesnt use dragsystem. the reistance to go faster to a higher speed. similar to dragmul and alot more simple. Default = 1000 = 100%
+    DragSystem = 1 # Boolean, enable improved altered Drag and stall physics on the chip. Applies to following settings; !EXPERIMENTAL!
+    AirFriction = 100 #This determines how much drag at low speed and low throttle there is resisting forward force. only applies to drag settings
+    AirBrake = 0 # This feature uses the Drag system and multiplies the drag force by this number to act as Airbrakes or reverse thusters
+    Lift = 10 # How much lift the aircraft creates to resist the stalling.
+    DragMul = 0.8 # Easier way of tuning Drag, alternative variable of Airfriction
+    StallMul = 1 # Easier way of tuning Stalling, alternative variable of Airfriction & Lift
+    
+        #CDU VTOL system
+    VTOL = 0 # experimental
+    VThrustMul = 2.4 # I swear to god im not in the mood
+    VTOLSpeed = 0.01 # Same as throttle for direction thrust speed make it quick because inbetween time raises ops
+        
+        #CDU HUD Settings
+    HUD = 2 # Inbuilt HUD. 0 Disable, 1 for basic and 2 for Full HUD
+    HUDColor  = vec(130,220,130) # The Color of the HUD
+    HUDUpdate = 250 # Like interval for the hud. this the rate it operates on 1/10th millieseconds.
+    HUDweapon = "" #Displays a Weapon string eg:'CNN','MG' and its ammo on HUD Leave blank for no display
+    
+        #CDU WEP Settings
+    WEPSystem = 0
+    WEPPower = 0.15 # Percentage of throttle power added when WEP is working
+    Duration = 350 # How many ticks the WEP lasts for
+    Cooldown = 0.5 # The cooldown rate when WEP isnt used (value as 1.0 for Heatup)
+    
+        #Versus's Damage system
+    DamageSystem = 1 # Taken directly off Versus's heli chip i claim no credit NOTE: Because im lazy this needs 'FUELSYSTEM' on
+    CollisionSpeed = 250 #This is how fast the plane has to be flying prior to a collision to hurt the motor
+    
+        #CDU Fuel Settings
+    FuelSystem = 1 # Boolean, enable fuel consuption system but Adds 50 extra ops
+    MaxFuel = 2350 # Gallons of fuel
+    FuelConsuption = 0.4 # Gallons every tick
+    
+        #Cam settings
+    CamPos = vec(0,0,180)
+    Dist = 640
+    
+        #Audio
+    Sound1 = "acf_engines/turbine_medium.wav"   # The noise the E2 creates.
+    Sound2 = "acf_engines/turbine.wav"          # Another noise the E2 creates.
+    PitchMul = 150 # Pitch added with full throttle Only with sound1
+    InitialPitch = 100 # Inital pitch
+    
+    rangerHitEntities(0)
+    rangerPersist(1)
+    
+    if (Active){
+        
+        Base:soundPlay(1, 0, Sound1)
+        timer("ActivateEngine", soundDuration(Sound1) * 1000)
+    }
+    
+    #-----Setup finish-----    
+    Mass = Base:mass()    
+    Direction = Base:forward()
+    FDir = 1
+    
+    InvervalMul = 25/15
+    if(HUD){holoCreate(1),holoAlpha(1,0)}
+    
+    Fuel=MaxFuel
+    FuelPercent=100
+}elseif (clk("UpdateEngine")){
+    if (W | S | FuelPercent==0){
+        Throttle = clamp(Throttle + (W - S) * (ThrottleSpeed*InvervalMul), 0, 1)*!(FuelSystem&(FuelPercent==0))
+        soundPitch(1, InitialPitch + Throttle * PitchMul)
+        ThrottlePercent = round(Throttle*100)
+    }        
+        W=Pod["W",normal]
+        S=Pod["S",normal]
+        A=Pod["A",normal]
+        D=Pod["D",normal]
+        Hold = Pod["Mouse2",normal]
+        H = Seat:driver():keyPressed("H")
+     #   Debug = ops()
+        
+        Direction = Base:toWorldAxis(vec(FDir,0,VDir))  
+        Heading = Cam["CamAng",angle]
+        Angle = Base:angles()
+    
+        local Velocity = Base:vel()
+    Speed = Velocity:length()
+    KPH = Speed * 3600 / 39370.0787
+    MPH = Speed * 3600 / 63360
+    if(DragSystem){
+    Drag = min((1.2*Base:velL():x()^2)*AirFriction/Mass,11000-(FDir*Thrust/3.5)+max(Angle:pitch()*900,-2000))*DragMul }# Change the numereric values to get a good drag deeling if the settings included dont work. From left to right; Angle downward fall drag(stops downward falling at enoumous speed), Thrust to drag divider, max initial drag
+    
+    local ThrustUnits = MaxThrust * Throttle, Thrust = toUnit("m", ThrustUnits)*!(FuelSystem&(FuelPercent==0))
+    local Force = min((1+VDir*VThrustMul)*ThrustUnits / 100, ((SpeedLimit/(1-WEPOn*WEPPower)) - Speed) * Mass) #The thrust won't push the plane over it's maximum inertia
+    Base:applyForce((Direction * (Force + min(-Drag*(1+AirBrake*(Clutch>1)),0)) + (Base:forward() *(1-VDir/50)* (Speed - 1) - Velocity) * Mass * 0.3 * Speed/SpeedFriction)*InvervalMul)
+    
+    if(MPH>20|Altitude>2){
+    if(!Hold){
+    if(AimStyle){
+    AngleDifference = clamp(-Base:heading(Cam["Trace",ranger]:pos()), -TurnLimit, TurnLimit)}
+    else{  AngleDifference = clamp(-Base:heading(Base:pos() + Cam["CamAng",angle]:forward() * 1000), -TurnLimit, TurnLimit)}}
+    else{AngleDifference = ang(0,0,0)}}
+    else{AngleDifference = ang(0,TaxiSteer*(A-D),0)}
+    Base:applyAngForce(((AngleDifference +ang(-Trim,0,0)) * max(Speed/500,VTOLon) - Base:angVel()) * shiftL(ang(Base:inertia()) * 90/pi()))
+
+
+    TiltRoll = clamp(AngleDifference:yaw()/TurnLimit:yaw(),-1,1)*YawRollAdd#/(Speed*40)
+    
+    Roll = clamp((Angle:roll())*-0.009,-StabRollSpeed,StabRollSpeed)*!(D-A) # The number value is how multiplied the angle is to the roll stabalizer power
+    Base:applyTorque(vec(clamp((D-A+Roll-TiltRoll)*max(Speed,VTOLon*300)*40*RollSpeed,-RollSpeed*100000,RollSpeed*100000),0,0)*(Mass/3900))
+    
+    #Stall
+    if(DragSystem){
+    Drop = clamp((1100-max(Speed,750))*0.004,0,2+max(Angle:pitch(),-(KPH>55)))*Mass/Lift  #Variables: Stall kick in after speed,<- divider, then min and max stall force
+    Base:applyForce((vec(0,0,-StallMul/(2+(!VTOLon&Altitude<2)))*Drop*(AirFriction/3))*InvervalMul)}
+          
+    if(FuelSystem){
+        Fuel-=((FuelConsuption*(1+Throttle)*0.1)*InvervalMul)
+        FuelPercent=max(round((Fuel/MaxFuel)*100),0)
+        
+        if((FuelPercent==0&InitialPitch>0)){InitialPitch-=0.2,soundPitch(2,InitialPitch)}}
+        
+    if(WEPSystem){
+    if(WEPOn){Temp++}
+    if(Temp){
+    if((Temp>Duration)&WEPOn){Shutdown = 1,timer("Shutdown",15000)}
+    if(!Shutdown&!WEPOn){Temp=max(Temp-Cooldown,0)}}
+    
+    WEPOn = (!Shutdown&WEPSystem&W&Throttle>0.99)*!Shutdown
+    }
+    
+    if(VTOL){
+     if(VTOLon&FDir){
+     VDir= clamp(VDir+VTOLSpeed,0,1)
+    FDir= clamp(FDir-VTOLSpeed,0,1)    
+  #  print("F")
+    }
+        elseif(!VTOLon&VDir){
+     VDir= clamp(VDir-VTOLSpeed,0,1) 
+    FDir= clamp(FDir+VTOLSpeed,0,1)     
+   #     print("V") 
+    }      
+    }
+       
+        holoPos(1,rangerOffset(9999999999,Base:pos()+Base:forward()*1000,Base:forward()):position())
+      #  Prop:applyTorque(vec(65000*!Die+(20000*Throttle),0,0))
+    
+    
+    timer("UpdateEngine", Interval)
+}elseif (clk("ActivateEngine")){
+    Base:soundPlay(2, 0, Sound2)
+    soundVolume(2, 0.5)
+    timer("UpdateEngine", 100)
+    timer("UpdateHUD",100)
+    
+    
+    
+}elseif (~Active){
+    
+    Seat = Pod["Entity",entity]
+    Cam["Activated",normal]=Active
+    Cam["Distance",normal]=Dist
+    Cam["Position",vector]=Base:toWorld(CamPos)
+    Cam["Parent",entity]=Base
+    CamMode = 0
+    
+    Throttle = 0
+    Thrust = 0
+    ThrustUnits = 0
+
+    stoptimer("UpdateEngine")
+    if (Active){     
+        Base:soundPlay(1, 0, Sound1)
+        soundPitch(1, InitialPitch + Throttle * PitchMul)
+        timer("ActivateEngine", soundDuration(Sound1) * 1000)
+        
+        #EGP & HUD
+        if(HUD){
+        Res = egpScrSize(Seat:driver())/2  
+         #   holoPos(1,vec(0))
+        
+        EGP:egpText(1,"MPH:  --",Res+vec2(-550,30))
+        EGP:egpText(2,"ALT:  --",Res+vec2(-550,55)) 
+        EGP:egpText(3,"THRT: --",Res+vec2(-550,80)) 
+        EGP:egpText(4,"FUEL: --",Res+vec2(-550,105))
+        EGP:egpText(76,"GEAR: DWN",Res+vec2(-550,155))
+        if(VTOL){
+        EGP:egpText(83,"VTOL: FWD",Res+vec2(-550,180))   
+        }
+        
+        if(HUDweapon){
+         EGP:egpText(82,HUDweapon + ": --",Res+vec2(-550,180))   
+        }   
+         
+        #Forward pointer  
+        EGP:egp3DTracker(5,vec(0))
+        EGP:egpParent(5,holoEntity(1))
+        
+        EGP:egpPolyOutline(6,vec2(6,6),vec2(0,0),vec2(-6,6),vec2(0,0))
+        EGP:egpParent(6,5)
+        
+        #Artifical horizon
+        EGP:egpCircle(100,Res,vec2(1))
+        EGP:egpLine(7,Res+vec2(8,8),Res+vec2(0,0))
+        EGP:egpLine(10,Res+vec2(-8,8),Res+vec2(0,0))
+        EGP:egpLine(8, vec2(110,0), vec2(40,0)),        EGP:egpParent(8,100)
+        EGP:egpLine(9, vec2(-110,0), vec2(-40,0)),          EGP:egpParent(9,100)
+        EGP:egpSize(7,2)
+        EGP:egpSize(10,2)
+        EGP:egpSize(8,2)
+        EGP:egpSize(9,2)
+        
+        if(HUD==2){
+        
+        MaxMph = (SpeedLimit+300) * 3600 / 63360
+    
+        #Some nice horizontal lines + numbers
+        EGP:egpBox(11,Res+vec2(220,4),vec2(90,2))
+        EGP:egpBox(12,Res+vec2(-220,4),vec2(90,2))  
+        EGP:egpBox(13,Res+vec2(-200,80),vec2(40,2))      
+        EGP:egpBox(14,Res+vec2(200,80),vec2(40,2))  
+        EGP:egpBox(15,Res+vec2(200,160),vec2(40,2))
+        EGP:egpBox(16,Res+vec2(-200,160),vec2(40,2))  
+        EGP:egpBox(17,Res+vec2(-200,-80),vec2(40,2))      
+        EGP:egpBox(18,Res+vec2(200,-80),vec2(40,2))  
+        EGP:egpBox(19,Res+vec2(200,-160),vec2(40,2))
+        EGP:egpBox(20,Res+vec2(-200,-160),vec2(40,2))  
+        
+        EGP:egpText(21,"0",Res+vec2(-170,-4))
+        EGP:egpText(22,"0",Res+vec2(160,-4))
+        EGP:egpText(23,"5",Res+vec2(160,-90))  
+        EGP:egpText(24,"5",Res+vec2(-170,-90))  
+        EGP:egpText(25,"10",Res+vec2(155,-170))  
+        EGP:egpText(26,"10",Res+vec2(-175,-170))   
+        EGP:egpText(27,"-5",Res+vec2(155,70))  
+        EGP:egpText(28,"-5",Res+vec2(-175,70))  
+        EGP:egpText(29,"-10",Res+vec2(150,150))  
+        EGP:egpText(30,"-10",Res+vec2(-175,150)) 
+        
+        #Speedometer
+        
+        EGP:egpBox(31,Res+vec2(-350,0),vec2(2,250))           
+        EGP:egpBox(32,Res+vec2(-380,110),vec2(35,2))
+        EGP:egpBox(33,Res+vec2(-380,55),vec2(35,2)) 
+        EGP:egpBox(34,Res+vec2(-380,0),vec2(35,2)) 
+        EGP:egpBox(35,Res+vec2(-380,-55),vec2(35,2)) 
+        EGP:egpBox(36,Res+vec2(-380,-110),vec2(35,2))         
+        EGP:egpBox(37,Res+vec2(-380,82.5),vec2(20,2)) 
+        EGP:egpBox(38,Res+vec2(-380,-82.5),vec2(20,2))  
+        EGP:egpBox(39,Res+vec2(-380,27.5),vec2(20,2))  
+        EGP:egpBox(40,Res+vec2(-380,-27.5),vec2(20,2)) 
+        EGP:egpText(41,"SPD",Res+vec2(-366,-150))    
+        EGP:egpText(42,"0",Res+vec2(-435,100))  
+        EGP:egpText(43,toString(round(MaxMph*0.5)),Res+vec2(-435,-10))  
+        EGP:egpText(44,toString(round((MaxMph*0.75))),Res+vec2(-435,-65))  
+        EGP:egpText(45,toString(round((MaxMph*0.25))),Res+vec2(-435,45)) 
+        EGP:egpText(46,toString(round(MaxMph)),Res+vec2(-435,-120))  
+        EGP:egpBoxOutline(47,Res+vec2(-400,110),vec2(96,25)) 
+        
+        #Altometer
+        EGP:egpBox(62,Res+vec2(350,0),vec2(2,250))           
+        EGP:egpBox(63,Res+vec2(380,110),vec2(35,2))
+        EGP:egpBox(64,Res+vec2(380,55),vec2(35,2)) 
+        EGP:egpBox(48,Res+vec2(380,0),vec2(35,2)) 
+        EGP:egpBox(49,Res+vec2(380,-55),vec2(35,2)) 
+        EGP:egpBox(50,Res+vec2(380,-110),vec2(35,2))         
+        EGP:egpBox(51,Res+vec2(380,82.5),vec2(20,2)) 
+        EGP:egpBox(52,Res+vec2(380,-82.5),vec2(20,2))  
+        EGP:egpBox(53,Res+vec2(380,27.5),vec2(20,2))  
+        EGP:egpBox(54,Res+vec2(380,-27.5),vec2(20,2)) 
+        EGP:egpText(55,"ALT/VSPD",Res+vec2(315,-150))    
+        EGP:egpText(56,"0",Res+vec2(410,100))  
+        EGP:egpText(57,"250",Res+vec2(410,-10))  
+        EGP:egpText(58,"375",Res+vec2(410,-65))  
+        EGP:egpText(59,"125",Res+vec2(410,45)) 
+        EGP:egpText(60,"500",Res+vec2(410,-120))  
+        EGP:egpBoxOutline(61,Res+vec2(400,110),vec2(96,25))
+        EGP:egpTriangle(65,Res+vec2(350,6),Res+vec2(350,-6),Res+vec2(360,0))
+        
+        #Fuel
+        EGP:egpBox(66,Res+vec2(350,-220),vec2(150,2))
+        EGP:egpBox(67,Res+vec2(425,-225),vec2(2,10))
+        EGP:egpBox(68,Res+vec2(275,-225),vec2(2,10)) 
+        EGP:egpBox(69,Res+vec2(422,-224),vec2(4,8))  
+        
+        #Warning
+        EGP:egpText(70,"Stall",Res+vec2(30,20))     
+        EGP:egpText(71,"Fuel",Res+vec2(30,40)) 
+        
+        #Throttle
+        EGP:egpBox(72,Res+vec2(-350,-220),vec2(150,2))
+        EGP:egpBox(73,Res+vec2(-425,-225),vec2(2,10))
+        EGP:egpBox(74,Res+vec2(-275,-225),vec2(2,10)) 
+        EGP:egpBox(75,Res+vec2(-422,-224),vec2(4,8))  
+        
+        
+        if(WEPSystem) {
+        EGP:egpBox(80,Res+vec2(128,-122),vec2(4,4))
+        EGP:egpBox(77,Res+vec2(130,-150),vec2(2,60))
+        EGP:egpBox(78,Res+vec2(126,-180),vec2(8,2))
+        EGP:egpBox(79,Res+vec2(126,-120),vec2(8,2)) 
+        EGP:egpLine(81,Res+vec2(128,-165),Res+vec2(124,-165))  
+        }
+          
+        #Coloring
+
+        EGP:egpColor(10,HUDColor)
+        EGP:egpColor(11,HUDColor)
+        EGP:egpColor(12,HUDColor)
+        EGP:egpColor(13,HUDColor)
+        EGP:egpColor(14,HUDColor)
+        EGP:egpColor(15,HUDColor)
+        EGP:egpColor(16,HUDColor)
+        EGP:egpColor(17,HUDColor)
+        EGP:egpColor(18,HUDColor)
+        EGP:egpColor(19,HUDColor)
+        EGP:egpColor(20,HUDColor)
+        EGP:egpColor(21,HUDColor)
+        EGP:egpColor(22,HUDColor)
+        EGP:egpColor(23,HUDColor)
+        EGP:egpColor(24,HUDColor)
+        EGP:egpColor(25,HUDColor)
+        EGP:egpColor(26,HUDColor)
+        EGP:egpColor(27,HUDColor)
+        EGP:egpColor(28,HUDColor)
+        EGP:egpColor(29,HUDColor)
+        EGP:egpColor(30,HUDColor)
+        EGP:egpColor(31,HUDColor)
+        EGP:egpColor(32,HUDColor)
+        EGP:egpColor(33,HUDColor)
+        EGP:egpColor(34,HUDColor)
+        EGP:egpColor(35,HUDColor)
+        EGP:egpColor(36,HUDColor)
+        EGP:egpColor(37,HUDColor)
+        EGP:egpColor(38,HUDColor)
+        EGP:egpColor(39,HUDColor)
+        EGP:egpColor(40,HUDColor)
+        EGP:egpColor(41,HUDColor)
+        EGP:egpColor(42,HUDColor)
+        EGP:egpColor(43,HUDColor)
+        EGP:egpColor(44,HUDColor)
+        EGP:egpColor(45,HUDColor)
+        EGP:egpColor(46,HUDColor)
+        EGP:egpColor(47,HUDColor)
+        EGP:egpColor(48,HUDColor)
+        EGP:egpColor(49,HUDColor)
+        EGP:egpColor(50,HUDColor)
+        EGP:egpColor(51,HUDColor)
+        EGP:egpColor(52,HUDColor)
+        EGP:egpColor(53,HUDColor)
+        EGP:egpColor(54,HUDColor)
+        EGP:egpColor(55,HUDColor)
+        EGP:egpColor(56,HUDColor)
+        EGP:egpColor(57,HUDColor)
+        EGP:egpColor(58,HUDColor)
+        EGP:egpColor(59,HUDColor)
+        EGP:egpColor(60,HUDColor)
+        EGP:egpColor(61,HUDColor)
+        EGP:egpColor(62,HUDColor)
+        EGP:egpColor(63,HUDColor)
+        EGP:egpColor(64,HUDColor)
+        EGP:egpColor(65,HUDColor)
+        EGP:egpColor(66,HUDColor)
+        EGP:egpColor(67,HUDColor)
+        EGP:egpColor(68,HUDColor)
+        EGP:egpColor(69,HUDColor)
+        EGP:egpColor(70,HUDColor)
+        EGP:egpColor(71,HUDColor)
+        EGP:egpColor(72,HUDColor)
+        EGP:egpColor(73,HUDColor)
+        EGP:egpColor(74,HUDColor)
+        EGP:egpColor(75,HUDColor)
+        EGP:egpColor(76,HUDColor)
+        EGP:egpColor(77,HUDColor)
+        EGP:egpColor(78,HUDColor)
+        EGP:egpColor(79,HUDColor)
+        EGP:egpColor(80,HUDColor)
+        EGP:egpColor(81,HUDColor)
+        }        
+        EGP:egpColor(1,HUDColor)
+        EGP:egpColor(2,HUDColor)
+        EGP:egpColor(3,HUDColor)
+        EGP:egpColor(4,HUDColor)
+        EGP:egpColor(76,HUDColor)
+        EGP:egpColor(82,HUDColor)
+        EGP:egpColor(83,HUDColor)
+  #      EGP:egpColor(6,HUDColor)
+        EGP:egpColor(7,HUDColor)
+        EGP:egpColor(8,HUDColor)
+        EGP:egpColor(9,HUDColor)
+        }
+        
+        
+    }else{
+        EGP:egpClear()
+        soundStop(1)
+        soundStop(2)
+        stoptimer("ActivateEngine")
+        ThrottlePercent = 0
+    }
+    
+}
+WEP = Throttle > 0.95
+if(changed(WEP)){RGB=vec(137,100,36)*WEP}
+
+Clutch=((S&!Throttle)|!Active)*300
+
+if(WEPOn){
+    Throttle = 1+WEPPower
+    
+}
+
+#HUD
+if(clk("UpdateHUD")&HUD&Active){
+    Altitude=round(toUnit("m",rangerOffset(999999,Base:pos(),vec(0,0,-1)):distance()))
+    EGP:egpSetText(1,"MPH: " + toString(round(MPH)))
+    EGP:egpSetText(2,"ALT: " + toString(Altitude))
+    if(Altitude<2&Clutch){EGP:egpSetText(3,"THRT: BRK")}
+    elseif(Clutch&AirBrake){EGP:egpSetText(3,"AIRBRAKE")}
+    elseif(WEPOn){EGP:egpSetText(3,"THRT: WEP")}
+    else{EGP:egpSetText(3,"THRT: " + toString(ThrottlePercent)+"%")}
+    EGP:egpSetText(4,"FUEL: " + toString(FuelPercent)+"%")
+    if(HUDweapon){EGP:egpSetText(82,HUDweapon+": "+toString(Ammo))}
+    EGP:egpAngle(100,-Angle:roll())
+    
+    if(HUD==2){
+    EGP:egpPos(47,Res+vec2(-400,110-(MPH/(MaxMph))*220))
+    EGP:egpPos(61,Res+vec2(400,110-(Altitude/500)*220))
+    EGP:egpTriangle(65,Res+vec2(350,6-Base:vel():z()/20),Res+vec2(350,-6-Base:vel():z()/20),Res+vec2(360,-Base:vel():z()/20))    
+    EGP:egpPos(69,Res+vec2(278+FuelPercent*1.44,-224))
+    EGP:egpPos(75,Res+vec2(-422+ThrottlePercent*1.44,-224))
+    if(FuelPercent<5){EGP:egpColor(71,vec(255,0,0))}
+    elseif(FuelPercent<15){EGP:egpAlpha(71,255)}
+    else{EGP:egpAlpha(71,0)}
+    
+    if(MPH<30&Altitude>2&!VTOLon){EGP:egpColor(70,vec(255,0,0))}
+    elseif(MPH<50&Altitude>2&!VTOLon){EGP:egpAlpha(70,255),EGP:egpColor(70,HUDColor)}
+    else{EGP:egpAlpha(70,0)}
+    
+    if(WEPSystem){
+    EGP:egpPos(80,Res+vec2(128,-122-(ThrottlePercent*0.42)-((Temp/(Duration/350))/26))  )
+    if(Temp){ EGP:egpColor(81,vec(255,0,0))}else{EGP:egpColor(81,HUDColor)}
+    if(Shutdown){ EGP:egpColor(80,vec(255,0,0))}else{EGP:egpColor(80,HUDColor)}      
+    }
+    if(VTOL){
+    if(FDir==1){
+    EGP:egpSetText(83,"VTOL: FWD"),EGP:egpColor(83,HUDColor)  }
+    elseif(VDir==1){
+    EGP:egpSetText(83,"VTOL: VRT"),EGP:egpColor(83,HUDColor)  }  
+    else{EGP:egpColor(83,vec(255))}}
+    
+    if(Die){EGP:egpSetText(71,"MALFUNTION")}
+    }
+timer("UpdateHUD",HUDUpdate) 
+}
+
+    if(clk("Shutdown")){Shutdown = 0}
+
+if(changed(PrevWeapon)&PrevWeapon){Zoom = !Zoom ,Cam["FOV",normal] = 90-(60*Zoom) }
+
+#    if(changed(Pod["Light",normal])&Pod["Light",normal]){Start=!Start}
+
+if(changed(Shift)&Shift){CamMode=!CamMode
+if(CamMode){    Cam["Position",vector]=Seat:toWorld(vec(0,1,36)),    Cam["Distance",normal]=0}
+else{    Cam["Position",vector]=Base:toWorld(CamPos),    Cam["Distance",normal]=Dist}
+}
+
+if(changed(Gear)){
+ if(Gear==1){        EGP:egpColor(76,HUDColor),EGP:egpSetText(76,"GEAR: UP")}
+ elseif(Gear==-1){        EGP:egpColor(76,HUDColor),EGP:egpSetText(76,"GEAR: DWN")}
+ else{      EGP:egpColor(76,vec(255))}     
+}
+
+if(changed(H)&H){VTOLon=!VTOLon}
+
+if(DamageSystem > 0)
+{
+Array:insertNumber(1,min(Speed,SpeedLimit))
+if(Array:count()>7)
+{Array:pop()}
+#if(change(VTOLon)){Array:clear()}
+
+ChangedSpeed = Speed - Array[7,number]
+Crash = (ChangedSpeed< -(CollisionSpeed))
+
+if(changed(Crash) & Crash)
+{Base:soundPlay(3,1,"/npc/attack_helicopter/aheli_crash_alert2.wav"),Die = 1, Fuel = 0,EGP:egpAlpha(71,255)}}
+#mess with cam controller, angle is for cam controller
+# Max Props| Majika: with Starkk's chip you need Local Coodinates and Client side movement to be on
+
+#ChunderDownUndeR is a chimp:
+#Fix list
+#Damn weight auto balance, replace with a auto gyro and roll control code-canceled
+#Stalling and realism of lift weight drag
+#F to start-canceled
+#Auto Roll balance feature
+#HUD inbuilt
+

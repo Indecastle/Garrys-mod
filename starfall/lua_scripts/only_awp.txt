@@ -1,0 +1,41 @@
+local steamId = '76561198068397735' -- Markiz
+local Owner = player.GetBySteamID64( steamId )
+
+local WeaponType = 'weapon_cs16_awp'
+
+
+
+timer.Create("onlyAWP", 0.2, 0, function()
+    
+    for i, p in ipairs(player.GetAll()) do
+    	if not IsValid(p) or not p:Alive() then continue end
+    	
+        local haveAWP = false
+        --if p != Owner then continue end
+        
+        for i, w in ipairs(p:GetWeapons()) do
+            if w:GetClass() == WeaponType then
+                haveAWP = true
+            else
+                w:Remove()
+            end
+        end
+        
+        
+        
+        
+        if not haveAWP then
+        	print(1)
+            p:Give( WeaponType )
+			local weapon = p:GetWeapon( WeaponType )
+			weapon:SetClip1( 1000 )
+			weapon:SetClip2( 1000 )
+			p:SetAmmo( 1000, weapon:GetPrimaryAmmoType() )
+			p:SetAmmo( 1000, weapon:GetSecondaryAmmoType() )
+			p:SelectWeapon( WeaponType )
+        end
+    end
+    
+end)
+
+--timer.Remove("onlyAWP")

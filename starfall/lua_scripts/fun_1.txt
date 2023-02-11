@@ -96,6 +96,8 @@ hook.Add('OnEntityCreated', 'Markiz_OnCreated1', function(ent)
         ent:SetMaterial('models/debug/debugwhite')
         ent:SetColor(ColorRand())
         ent:Fire("SetTimer", 2)
+
+    elseif type == 'prop_combine_ball' then
     elseif type == 'crossbow_bolt' then
         ent:SetModelScale(5)
         ent:SetVelocity(Vector(0, 0, 10))
@@ -222,6 +224,8 @@ end
 
 
 local function CreateDoor(ply, trace, ang, class, model, hardware, autoclose, closetime)
+	if URS and URS.Check(ply, 'props', class) == false or not ply:CheckLimit("props") then return end
+	
     local entit = ents.Create(class)
     --PrintTable(entit:GetKeyValues())
     if not entit then
@@ -352,6 +356,40 @@ local function CreateSmallBall(ply)
 end
 
 
+local function CreateCombineBall(ply)
+    ply:EmitSound( "Weapon_CombineGuard.Special1" )
+    
+    timer.Simple( 0.75, function()
+        local comBall = ents.Create( "prop_combine_ball" )
+        if IsValid( comBall ) then 
+            ply:EmitSound( "Weapon_IRifle.Single" )
+            
+            local Forward = ply:EyeAngles():Forward()
+            local ForwardAng = Forward:Angle()
+		    local launchAng = ( ply:GetShootPos() + Forward * 50 )
+		    local launchVel = ( Forward*200 )
+            
+            comBall:SetSaveValue( "m_flRadius", 50 )
+            comBall:SetPos( ply:EyePos() + Forward * 32 + ForwardAng:Up() * 32 )
+            comBall:SetOwner( ply )
+            comBall:Spawn()
+            comBall:SetSaveValue( "m_nState", 2 )
+            comBall:SetSaveValue( "m_flSpeed", launchVel:Length() )
+            comBall:Fire( "Explode", nil, 5 )
+            
+            local phys = comBall:GetPhysicsObject()
+            if IsValid( phys ) then
+                phys:SetVelocity( launchVel )
+                phys:AddGameFlag( FVPHYSICS_WAS_THROWN )
+                
+                phys:SetMass( 10 )
+                phys:SetInertia( Vector( 500, 500, 500 ) )
+            end
+        end
+    end)
+end
+
+
 local function TryCreate(ply, weaponType, delay, callback)
     if ply:GetActiveWeapon():GetClass() == weaponType then
         callback(ply)
@@ -374,6 +412,7 @@ hook.Add( "PlayerButtonDown", "Markiz_KeyDown", function(ply, button)
         TryCreate(ply, 'weapon_rpg', 0.3, CreateRpg)
         TryCreate(ply, 'weapon_bugbait', 0.3, CreateBugbait)
         TryCreate(ply, 'weapon_stunstick', -1, CreateMyAntlion)
+        TryCreate(ply, 'weapon_fists', -1, CreateCombineBall)
     end
 
     if not ActivePressedKey[ply] and button == MOUSE_LEFT then

@@ -1,0 +1,421 @@
+@name ACF Wargame Rulebook
+@model models/props_lab/binderblue.mdl
+@persist LocalVersion MasterVersion
+
+if(first()){LocalVersion = 1.11} # dont touch
+
+#Rulebook v1.1 - ChunderDownUndeR
+
+#Link to download the Dupe and E2s to CDU ACF Wargame!:
+#https://drive.google.com/open?id=1NdLpuMV1qQAx7x1_xmRWNplj0ue5lrdn
+
+#Instruction and rulebook to better familiarize you to the CDU-ACF Wargame E2
+
+#--------------------------------------------------------------------------------------------------------------------
+#Contents of this guide
+#-------------------------------------------------------------------------------------------------------------------- 
+
+#Lines : 
+#12 - contents
+#33 - overview
+#49 - General Game Options
+#120 - Capture Point options
+#133 - Team settup options
+#157 - Getting started
+#174 - Capture Points 
+#209 - Scoring and scoring (GameMode: KOTH, Destruction)
+#226 - EGP Team HUD
+#257 - Team Coms keys
+#261 - Game cirteria (winning losing draw)
+#278 - Resting the Game
+#294 - respawning
+#333 - Owner Chat commands
+#351 - tips to improve gameplay
+#326 - Q&A (WIP)
+
+#--------------------------------------------------------------------------------------------------------------------
+#Overview
+#--------------------------------------------------------------------------------------------------------------------
+"Hello. Im CDU. The Project to create a wargame E2 started as a when people kept asking me to make 'captureable points' and 'Team HUDs'
+
+With the Alpha version as of this moment im typing has over 900 lines of coding. the E2 provides a simple but fun
+Multi-player team combat. Even without ACF or other mods or PVP it can be used!
+Most of the gameplaye is inspired by other wargames like Warthunder and WGRD. which will be elaborated on below.
+
+The scope of this wargame in ACF is that it creates a new meta option for acf combat, using the entirety of gmod maps, mobility,
+stealth and cunning of an individual and his vehicle where weight can be diverse and teamplay is vital to winning.
+Contrary to the 'meta' Flat-ground point blank slug fests the majority of clantards defend so dearly.
+
+The 'Wargame' is omni-purpose E2 with different gamemodes and game options to customize the gameplay to a certain niche or liking
+"
+
+#--------------------------------------------------------------------------------------------------------------------
+#General Game options
+#--------------------------------------------------------------------------------------------------------------------
+"Game Options are provided in the E2 code up top, to customize how the game works to your liking"
+
+#--Gamemode
+
+#-Mode Types:
+#0 - No mode type (Elimination to win)
+#1 - Destruction - WG RD - read the rules E2
+#2 - KOTH - WT - read the rules E2
+#3 - Domination - CDU - Read the rules E2
+
+#--No mode
+#No extra winning criteria to the game. 
+#Check the setting 'Elimination=1' to have a standard acf fight. Overwise the game has no winning or losing criteria
+
+#--1-Destruction
+#Destruction gameode similar to Wargame: RedDragon
+#Score is given souly to the destruction of the enemy team. A player kill can be detemined by following settings in the E2.
+#A vehivle kill can be determined by its weight in Kg or a given point in following settings
+#Objective points are purely for refil points.
+
+#--2-KOTH
+#Destruction with Points granting a score income similar to Warthunder
+#Points are given to player and vehicles kills and each point owned by the team.
+
+#--3-Domination
+#Simply the team to first capture all bases wins
+
+
+#--ScoreLimit
+#The team to first exceed the given score limit wins the game
+
+#--TimeLimit (in minutes)
+#The time limit of the game. if a team has half the required score limit and 150% or more of the other teams score they win
+#otherwise a draw is executed to both teams
+#Set to 0 to have unlimited time. the timer will count upwards in that case.
+
+#--KillPoint
+#team's Points awarded towards killing a player (infantry) on the enemy team 
+#If the person killed has been in a vehicle it counts as a vehicle kill and the weight or set points for giving
+#Set to 0 for no points to be rearded for killing an enemy person
+
+#--PointsInWeight
+#If set to anything over than 0, the total mass of a vehivle is the score given to the opposite team.
+#NOTE: Unless you have access to prop protection of entire both teams (Or admin privlages) it is best to set this to 0 as it wont work
+#Points for vehicle kills are rewarded once there owner of the vehicle has sat in the seat has died  
+#Vehicle kill is added to Killpoint instead of overiding
+
+#--VehicleKillPoint
+#if PointsInWeight = 0, The set score given to the team who has killed an enemy player that has used in a vehicle that he owns
+#Regardless of its weight of vehicle.
+#Points for vehicle kills are rewarded once there owner of the vehicle has sat in the seat has died  
+#Vehicle kill is added to Killpoint instead of overiding
+
+#--Point value
+#The score each point grants the team a second
+#Exclusive to GameMode-2 KOTH
+
+#--Point contesting
+#If this setting is set to anything other than 0, The Game score is the score of team 1 - the score of team 2
+#If set to 0 both teams score is independant from eachother
+#Simply this means if checked the score is at a tug-of-war with eachother
+#An example of how this effects gameplay is a team with more score than the over but less points currently captured could
+#still win the game since their score is still going up with this option set to 0
+#if it was set to 1: only the team with thats currently winning in number of points captured gains score.
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Capture Point options
+#-------------------------------------------------------------------------------------------------------------------- 
+
+
+#--CapRadius
+#the radius of which the base can be captured by a player.
+#The visual circle of the capture radius cant be modified so its best to keep the option set to 6
+#Unless you want really big cap points
+
+#Capture time
+#Time in seconds that it takes (One person-uninterupted) the base to be captured from neutral 0 to 100%
+#The time taken to cap an enemy base to friendly fully is double the time (-100 to 100)
+#This time is cooefficent with number of players capping
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Team Setup options
+#-------------------------------------------------------------------------------------------------------------------- 
+
+#--Team Name
+#Names of each time represetned on the board
+
+#--Team Color
+#The color that rperesents Team
+
+#--TeamPointNameSet 
+#Purely decorative option which determins the name of the points displayed on the HUD
+#The name given to the objective points on the map displaced by HUD as following reference goes:
+#0 - Generic Alphabet - Warthunder - read the rules E2
+#1 - NATO Alphabet - WG RD - read the rules E2
+#2 - REDFOR Alphabet - WG RD - read the rules E2
+
+#Example:
+#0 - A Point,B Point,C Point,D Point
+#1 - Alpha,Bravo,Charlie,Delta
+#2 - Anna,Boris,Chariton,Demitri
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Getting started
+#-------------------------------------------------------------------------------------------------------------------- 
+
+#Placing the console
+#Make sure its out of the way
+
+#--Plan out the map
+#Organize team spawn points (if possible). Spawn the objective point dupes at strategically placed places
+#Reset the E2 each time you add objective points so the E2 finds and returns them all
+
+#--Organizing teams
+#Organize whos on whos side
+#If desired, change the team settings in the E2
+#for a player to be added to a team, he must work infont of the teams ranger and link the EGP HUD on his team side
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Capture Points
+#-------------------------------------------------------------------------------------------------------------------- 
+"Capture Points are the knife and fork of this game, giving a secondary or primary goal for the teams to accomplish
+And making a tanks speed, and a players cunning vital to the games outcome unlike the meta of acf fightings"
+
+
+#--What do Objective Points do?
+#In gamemodes 3 and 2, Objective points are viatl to winning the game. As they grant score to the team to winning the game
+#Points can otherwise refuel and restock ammo to a tank when they are captured
+
+#--Points display visually and on HUD..
+#Goes as the following:
+#Static White - Neutral / uncaptured
+#Static (Teams color) - Currently captured and controled by said team
+#Flashing White/Team color - Currently undergoing cpature by said team
+#Flashing both team colors - Being contested by both teams.
+
+#--Capturing and contesting points
+#Capturing trigger when a player is in range of the base of cpature radius (in meters)
+#Capturing time is multiuplied by number of players capturing
+#when a player leaves an uncaptured zone the capture slowly resets to 0 
+#it takes 30 seconds for a base to reset from 99 back to 0 when the base is not captured
+#When both teams are capturing a uncaptured base that means the point is being contested
+#Meaning the base is not being captured and will slowly reset to 0
+#when a player enters an enemy capture point he will slowly reset the capture to 0 before making it his teams (read-capturetime setting)
+#if both a enemy and friendly player is in a already captured base will remain the teams until only the enemy is in the zone
+#refills and refuelling services wont if both a enemy and friendly player is in a already captured base
+#basically warthunder
+
+#--Can i make my own point (decoration)?
+#Yes, using the E2 provided in the wargame download folder. remember to give your point a refil ammo and fuel and wire
+#those actives (and refil duty) to the E2s 'active' output
+
+
+#--------------------------------------------------------------------------------------------------------------------                                                                                                           Hello! You have found my secret message. Here is a link secret dupe: https://drive.google.com/open?id=1KFZEERgyDbhI5ioUokVPGOEENpcOgWtC                                                             Chunder loves you ;)
+#Points and scoring (KOTH/Destruction)                                                                                                                                                                                           if there is no link here then i havent done it yet. Contact chunder and say 'I have read your rulebook and found your message' I will give you the dupe personally
+#-------------------------------------------------------------------------------------------------------------------- 
+"Relative to gamemodes 1 and 2. point is how to the win the game"
+
+#You got to kill the opponent to gain points for killing there vehicles
+
+#Killing a infantry person will grant the team a set amount of points
+#Killing a player that has been in a vehicle will grant you set amount of points plus another set amount of points for 
+#destorying their vehicle
+#A player that has had his vehicle destroyed and has not been yet killed should keep fighting using ACF Sweps or handheld 
+#and not repsawn another tank until he has perished
+#suicide is allowed to respawn
+
+#As mentioned. capture points count towards a teams score in KOTH.
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Provided EGP TEAM HUD
+#-------------------------------------------------------------------------------------------------------------------- 
+#Do not be a cheater and link your oppositions egp. only yours
+#each time has an egp they link to get a HUD display which includes
+
+#--Timer (lefthad side)
+#Displays Time eclapsed (if counting up) or time remaining (if counting down)
+
+#--Team Scores (lefthad side)
+#Shows the objective goals or score or each time
+#if PointContesting is set to 1, the team that is currently has the advantage shows up in its team color
+
+#--Capture points
+#3d display of where capture points are. read 'Points display visually and on HUD..'
+
+#--TeamMates
+#3d display in green of your teammates positon
+
+#--Teammates Map pining
+#simple way of preset communicating to teammates using 3d trackers. read: 'Team communication Commands'
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Team communication commands
+#-------------------------------------------------------------------------------------------------------------------- 
+#I couldnt make teamside chat so this is the ebst iv got
+
+#using Markers on map key controls:
+
+#1 - Spotted enemy - use this when you see an emey to alert your team (3d box that flashes red and white at your aim pos)
+#2 - Ping an area - Use this to bring attention to an area as follow me/ alert here, ect (3d box static white at your aim pos)
+#3 - Require help - When under fire or need assistance inform you teamates( 3d box that flashes green and white at your pos)
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Winning/lose/draw (outcome critieras)
+#-------------------------------------------------------------------------------------------------------------------- 
+
+#--A win for a team when the following is triggered:
+
+#The score is met (if Gamemode is 1 or 2)
+#All existing objective points are captured (if Gamemode 3)
+#the opposite team is eliminated (if elimination)
+
+#--When the timer expires:
+#One of two things happen:
+#IF the score of a team is greater than half the required score to win and 1.5 times that of the opposite team, it wins the game
+#this includes no. of point captured at the end of the game if gamemode=3
+#otherwise both teams draw
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Reseting the game
+#-------------------------------------------------------------------------------------------------------------------- 
+#Two ways to reset the game: hard and soft resets
+
+
+#Hard reset is just reseting or updating the E2 with editor
+#Soft reset is the same but will keep the players currently on the teams (doesnt work with elimination) and game settings
+#Both types of resets will reset the timer and capture points to neutral
+
+#Hey guess what! Your nearly at the end of this wall of text. you deserve a reward for your time dedicated to understanting
+#the game rules. so go to start of line 191 then press back arrow once til your on the next line above
+
+#To soft reset the game. the owner of the E2 can type '!reset' or there is a inout uin the E2 if triggered will also soft reset
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Respawing
+#-------------------------------------------------------------------------------------------------------------------- 
+#Respawning can de decided by the majority or the players upon an agreed set or rules. there is no set in stone rule for
+#respawning besides elimination setting
+
+#--Some suggestions on where and how players respawn:
+#friendly captured points - if none then you lose
+#randomly on the map
+#elimination (just the game setting)
+#tempory elimination until one set of team dies (dont tick elimination setting for this one)
+#a dedicated respawn area on the map where the other team is prohibeted from entering (eg:safezones)
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Owner Chat commands
+#--------------------------------------------------------------------------------------------------------------------
+#Chat commands have been added in v1.11 and up to better improve gameplay and setup
+
+#Commands start with a / - not a ! eg: '/Kick ChunderDownUndeR'
+
+#List of commands that the owner of the wargame can use
+
+#/Lock - Toggles Lock for player joining via the ranger walkthrough
+#/Unlock - Just defaultly unlocks the action done above.
+#/Kick 'player name' - Kicks a player from the game
+#/add1 'player name' - remotely adds a player without them needing to walk through ranger onto team1 if they arnt already on a team
+#/add2 'player name' - remotely adds a player without them needing to walk through ranger onto team2 if they arnt already on a team
+#NOTE: player still needs to link to EGP and this cant be done remotely
+#/reset - resets the score and cap points without losing the players or reseting the E2
+#/GameMode 'number' - Changes the primary gamemode
+#/'Game setting variable name' 'input' - overrides a game setting command
+#eg: '/TimeLimit 10', '/Elimination 0'
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Tips and tricks to improve gameplay
+#-------------------------------------------------------------------------------------------------------------------- 
+
+#Remember to cloack yourself or other people spectating so they dont give away positions by flying around and looking
+#Specates can link to both EGPs
+#Use a good map that this game given the number of points, size and weight of tanks is elligble on
+#Dont use laggy tanks if you do, you got to limit the number of players using tanks, infantry is allowed
+#This game is strictly for acf. it is also good for PVP and other fights
+#Yes! you can use hleicopters and non ground unit in this game if the majority is ok with it once again mind the lag
+#If you dont have access to a good map, spawn props to spice up the map and fight area
+#This game can mimic the games of Warthunder, wargame red dragon and world of tanks (gamemode=3,2 points,elimination)
+#Announce the game settings to everyone so they understand what game they are playing
+#infantry is allowed, custom handheld rules is up to you
+#Infantry can also use the ACF Sweps like the 60mm anti tank GL
+#Infantry can use transport! Cool!
+
+
+#--------------------------------------------------------------------------------------------------------------------
+#Q&A
+#-------------------------------------------------------------------------------------------------------------------- 
+#WIP
+
+#-Q:I wish to report a bug or glitch with this game
+#-A:Contact ChunderDownUndeR immediately
+
+
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+
+
+runOnHTTP(1)
+
+if(first()|dupefinished()){
+    local URL = "https://raw.githubusercontent.com/solomondog50/CDU-Wargame/master/version.txt"
+    if(httpCanRequest()){
+        httpRequest(URL)
+    }else{timer("retry",10000)}
+}
+
+if(httpClk()){
+    if(httpSuccess()){
+        if(httpRequestUrl()=="https://raw.githubusercontent.com/solomondog50/CDU-Wargame/master/version.txt"){
+            local Data = httpData():explode("|")[2,string]
+            MasterVersion = Data:toNumber()
+            
+            if(MasterVersion>LocalVersion){
+                printColor(vec(255,140,0),"Your Rulebook is outdated (Your version: "+LocalVersion+" | Github Version: "+MasterVersion+")")
+                printColor(vec(200),"Downloading new version")
+                
+                timer("download",5000)
+            }
+            else{
+                printColor(vec(255),"Rulebook up to date")
+            }
+        }
+        else{
+            local Data = httpData()
+            local File = Data
+            local FileName = "rulebook-"+MasterVersion
+            local FilePath = ">e2shared/CDU/"
+            
+            fileWrite(FilePath+FileName+".txt",File)
+            printColor(vec(200),"File saved: "+FilePath+FileName+".txt")
+            printColor(vec(200),"Uploading latest version to chip")
+            entity():remoteSetCode(Data)
+            
+        }
+    }
+}
+
+if(clk("retry")){
+    local URL = "https://raw.githubusercontent.com/solomondog50/CDU-Wargame/master/version.txt"
+    if(httpCanRequest()){
+        httpRequest(URL)
+    }else{
+        printColor(vec(100),"Version check failed")
+    }
+}
+if(clk("download")){
+    local URL = "https://raw.githubusercontent.com/solomondog50/CDU-Wargame/master/expression2/rulebook.txt"
+    if(httpCanRequest()){
+        httpRequest(URL)
+    }else{
+        printColor(vec(100),"Download failed")
+    }        
+}
+
+
+

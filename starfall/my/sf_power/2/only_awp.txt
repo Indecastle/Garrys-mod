@@ -1,0 +1,26 @@
+--@name Only AWP
+--@author Markiz
+--@server
+
+
+local WeaponType = 'weapon_cs16_awp'
+
+
+
+timer.create("onlyAWP", 0.1, 0, function()
+    
+    for i, p in ipairs(find.allPlayers()) do
+        local haveAWP = false
+        for i, w in ipairs(p:getWeapons()) do
+            if w:getClass() == WeaponType then
+                haveAWP = true
+            else
+                w:remove()
+            end
+        end
+        if not haveAWP then
+            prop.createSent(p:getPos(), p:getAngles(), WeaponType, true)
+        end
+    end
+    
+end)

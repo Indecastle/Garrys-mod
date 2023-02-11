@@ -1,0 +1,40 @@
+@name VTU 10 Field Manual (Lazy edition)
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+#VTU-10 By ChunderDownUndeR.
+#Field manual
+#Public tank. distripute, repaint or reverse engineer but ffs give credit for the tank itself.
+
+"The VTU-10 and VTU-20 Tracked IFV tanks are used in the need of light, amphibious or airborne opperations. An versitlie ifv 
+which can go through water and be air dropped. Variants of this tank include several rocket tank destoyers, new turrets or upgraded
+protection, a 105mm tank destroyer, APCs and even SPAA and SPG variants.
+
+The VTU-10 is newer to the VTU-20, having almost half its weight but keeping the same arnaments and basic features and similarities."
+
+#Controls
+#Space - 20mm (Secondary wep)
+#Mouse scroll up- toggle zoom
+#Q- change view
+#Rmouse hold gun inplace/ lock prop (For bad lag. dont do this otherwise for cheating.)
+
+#---Pros
+#compartmentised ammo storage. this is your main form of protection. Containing most of the ammo explosions means you can survive some ammo hits to your tank.
+#Very fast, manuerreable tank great agility, acceleration and top speed. sorry im tired and bored and i just woke up.
+#can go through water.
+#protected from small calibres, up to 20mm
+#Powerful gun array: a autocannon and a APHE cannon.
+#Great handling
+
+#---Cons
+#Not a wedge tank. dont fight wedge tanks
+#13tons. i hate you acf. i wanted it 10t
+#frontal armor can only take several shots before becoming off
+#no stabalizers. hard to shoot on the move too.
+#overall innacuurate or unpredictable gun.
+# No ammo in turret.
+#Only APHE for 75mm and 20mm AP
+#75mm+ gun will wreck havok to the tanks internals
+# Engine is easy knocked out if penned

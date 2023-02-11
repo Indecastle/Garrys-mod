@@ -1,0 +1,152 @@
+@name GG5 As holoturret with dual-axis aspect (CDU Holoturret v1.4.4)
+@inputs [Gun]:entity [Active R PrevWeapon NextWeapon]:number Base:entity [Cam]:wirelink [HAxis,VAxis,VAxis2]:entity Light
+@persist [Position]:vector CamDistance FOV
+@outputs [Ops]:number [AimPos]:vector
+@outputs [Self]:entity
+@outputs [Filter]:array
+@persist [Inertia GunAng]:angle FLIR
+@persist [MaxElevation MaxDepression MinYaw MaxYaw RotateSpeed Unlock Interval]:number
+@trigger Active PrevWeapon NextWeapon R
+
+#ChunderDownUndeR
+
+#v1.1 Changes-wirelink to streamline setup, Mup,Mdown to prev/next weapon to instant wire to pod
+#v1.2 Added Dual axis option (Wiring Vaxis2 will creat a seperate rotation joint for positive gun elevation)
+#v1.3 No longer retarded,Changed code to allow a sideways, or upside down gun which was otherwise unable to make turret work properly
+#v1.3.2 More helpful tips
+#v1.4 Stopped even more retard (Stops the glitch which deletes the entire turret or gun and its children on resets)
+#^Special tanks to Solomon
+
+#-----Setup-----
+#R-Toggles turret lock/unlock
+#PrevWeapon/NextWeapon-Zoom increment
+#Haxis and Vaxis is the reference entity for center of rotation and oscillation respectively. More info:
+
+#To put it simple this is where your guns rotate on pitch and yaw axis (eg:turret ring can be haxis)
+#having your Haxis destroyed infight will not destroy the turret / parenting. but will if you reset the chip
+#Vaxis2 is an optinal input which will create a second joint of pitch for dual axis. Vaxis becomes point of depression and Vaxis2 becomes point of elevation with gun pitch
+
+#Light is also optional. it just toggles the FLIR effect on cam
+
+#NOTE:Dual axis guns cant have the E2 updated on an unfrozen/used dupe without displacing the gun
+
+#VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#KEEP THE GUN FROZEN ON YOUR WIP. 
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#-----Other useful tips-----
+
+#Certain servers will un-partent all the parts paretned to Haxis and Vaxis that isnt linked in the E2 when reseting the E2 (aka detail props). it will still work.
+#For this reason just bear in mind that you should re-dupe to test WIPS and update E2s if your server does this
+
+#-Cam Settings
+#The first 5 check boxes should be UNCHECKED accept for 'Client side movment' which should be CHECKED
+
+#Q-My tank keeps trying to aim at itself when the Cam line of sight hits itself.
+#A-Using toolgun 'Wire'. link the Cams Filter:array inout the this E2's Filter:array Output. this wasnt included in the wirelink because oftern it isnt an issue on thrid person tank and to save code/lag
+
+#Q-this E2 does not work
+#A-Contact me ASAP
+
+#Q-Gun/Turret got removed upon reseting the E2
+#A-This is problematic issue that cant be fixed. to avoid this KEEP THE GUN FROZEN on the WIP and duplicate your wip to test, tinker it
+
+#Q-Where to i get the latest updates of this E2
+#A-On my Google Drive you can find all version of the E2 From V1.3 and up
+#Link: https://drive.google.com/open?id=1EjdW-k03OoPL5mBISVsAEJvtsnUXEE3Y 
+
+
+if(first()|dupefinished()){
+    Self=entity()   
+    GunAng = Self:toLocal(Gun:angles())
+   # Orient=Self:toWorld(ang(0,GunAng:yaw(),0))
+
+holoCreate(3,HAxis:pos(),vec(0.3),Self:toWorld(ang(0,GunAng:yaw(),0)))
+holoAlpha(3,0)
+
+holoCreate(2,VAxis:pos(),vec(0.3),Gun:angles():setRoll(0))  
+holoAlpha(2,0)
+
+VAxis:parentTo(holoEntity(2))
+HAxis:parentTo(holoEntity(3))
+holoParent(3,Self)
+holoParent(2,3)
+if(VAxis2){
+holoCreate(4,VAxis2:pos(),vec(0.3),Gun:angles():setRoll(0))  
+holoAlpha(4,0)   
+holoParent(4,2)
+VAxis2:parentTo(holoEntity(4))
+Gun:parentTo(holoEntity(4))
+}
+else{Gun:parentTo(holoEntity(2))}
+runOnLast(Gun:isFrozen())
+}
+if ( changed(Active) ) {
+    
+    Interval = 100 #Higher the number the more the optimized
+    
+    MaxElevation = 29 #---How High you can aim up (in degrees)---#
+    MaxDepression = 25 #---How Low you can aim down (in degrees)---#
+    MinYaw = 360 #---Keep This at 360. If making a tank destroyer or bow gun, make it 20 and 20---#
+    MaxYaw = 360 #---Keep This at 360. If making a tank destroyer or bow gun, make it 20 and 20---#
+    Position = vec(0, 0, 125) #---Where your camera will be floating---#
+    CamDistance = 300 #---Camera Radius around the Camera Position---#
+    RotateSpeed = 85 #---Turret Rotation Speed in Degrees per Second---#
+  #  Self = entity() #---Ignore this shit, doesn't need to be touched---#
+#  -DO NOT TOUCH ANYTHING ELSE UNDER THIS.
+#--------------------------------------------------------------------------------------------------------------#
+        # Automatic settings
+    Filter = entity():getConstraints() # Ranger filter
+    Filter:pushEntity(Gun)
+    
+    RotateSpeed/=20
+  #  GunAng = Self:toLocal(Gun:angles())
+    Inertia = shiftL(ang(Gun:inertia())):setRoll(0)
+    Unlock = 0
+    FOV = 90
+    Cam["Filter",array]=Filter
+    Cam["Position",vector]=Base:toWorld(Position)
+    Cam["Parent",entity]=Base
+    Cam["Activated",normal]=Active
+    #Ra = Cam["Trace",ranger]
+    Cam["Distance",normal] = CamDistance 
+    
+}
+elseif ( inputClk() ) {
+    if( PrevWeapon ) { FOV = max(FOV/2, 5) }
+    elseif ( NextWeapon ) { FOV = min(FOV*2, 90)}
+    elseif( changed(R) & R ) {
+        if ( Unlock ) { Unlock = 0 }
+        else { Unlock = 1 , interval(Interval) }
+        
+    }     
+}
+
+if(changed(FOV)){Cam["FOV",normal]=FOV}
+if(changed(Light)&Light){FLIR=!FLIR,Cam["FLIR",normal]=FLIR }
+
+if ( Unlock & clk() ) {
+    
+    AimPos=Cam["Trace",ranger]:pos()
+    GunDir=(AimPos-Gun:massCenter()):normalized()      
+   # GunDir = Gun:heading(AimPos)
+    GunAng = angnorm(clamp(GunAng - clamp(heading(vec(), GunAng, Self:toLocalAxis(GunDir)), -RotateSpeed, RotateSpeed), ang(-MaxElevation,-MinYaw, 0), ang(MaxDepression, MaxYaw, 0)))
+    
+    GunYaw = Self:toWorld(ang(0,clamp(GunAng:yaw(),-MinYaw,MaxYaw),0))
+    holoAng(3,GunYaw)
+    GunPitch = ang(clamp(GunAng:pitch(),-MaxElevation,MaxDepression),0,0)
+    if(VAxis2){
+    holoAng(2,holoEntity(3):toWorld(GunPitch:setPitch(max(GunPitch:pitch(),0))))
+    holoAng(4,holoEntity(2):toWorld(GunPitch:setPitch(min(GunPitch:pitch(),0))))
+    
+    }else{ 
+       holoAng(2,holoEntity(3):toWorld(GunPitch))}
+
+    interval(Interval)
+    Ops=ops()
+}
+if(last()){
+Gun:parentTo(Self)    
+VAxis:parentTo(Self)  
+VAxis2:parentTo(Self)  
+HAxis:parentTo(Self)  
+}

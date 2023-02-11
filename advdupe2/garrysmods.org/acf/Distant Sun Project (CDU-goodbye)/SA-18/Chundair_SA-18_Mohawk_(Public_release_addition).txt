@@ -1,0 +1,81 @@
+@name Chundair SA-18 Mohawk (Public release addition)
+@model
+
+
+#---SA-18 Mohawk (Early) Maunal By ChunderDownUndeR
+#NOTE: this is not a copy of karbines manual, i had the idea of a E2 book and model before discovering he beat me to it
+#NOTE: AS ALWAYS GIVE CREDIT THIS IS NOT SOMETHING YOU MADE. Do not try and use the main helicopter E2. find the original release yourself on facepunch (by versus) or get from a mate. this one is custom settings so it will not work for any thing of yours
+#---Overview
+"1970s SA-18 Light transport lift and multirole gunship Helicopter, Co-axial rotor. The commercial model is the H-18 Mohawk"
+
+"Made by ChunderDownUnder 30/11/18."
+
+#---Contents
+#-overview
+#-Contents
+#-Pros/Cons
+#-Info
+#---Pro/Con
+"
+-Pros:
+made without visclip
+Array of weapons loadouts, you only get the A1 variant though:(
+4 x 14.5mm ray of death to unarmored vehicles
+FFAR has HEAT warheads can deal hurt to tanks.
+7 passangers
+Ammo hopefully safe to smallarms fire
+Can tow and hoist objects (Sorry i got rid of this feature on the public version opps :))
+
+-Cons:
+no convergence on the Mgs. hard to aim horizontally with only the effect of two hitting the target
+FFARs are innacurate aswell
+No armor. ITS A HELI FOR GOODNESS SAKE STOP KILLING THE FUN BY PUTTING 140mm+ CHEESE ON YOUR AIRCRAFTS they arnt heavy tanks
+slow, sluggish
+
+"
+
+#---Info
+"
+IRL/(LORE)
+
+Name: Chundair SA-18 Mohawk/ H-18 Mohawk
+Creator: ChunderDownUndeR
+Date of creation: 2018 / (1972)
+Faction: CDU/OLI
+
+Engine: 2x turboshaft gas turbine
+Tonnage: 11t
+
+Arnament variations:
+
+SA-18A1
+4x 14.5mm R1D Machineguns or 4x 12.9mm 64D. 
+42mm FFAR HEAT or 8x S-10 Missile
+
+SA-18A2
+2x 20mm A-18K gattling guns or 4x 12.9mm 64D. 
+42mm FFAR HEAT or 8x S-10 Missile
+4x S-10 Missile or 4x SS-11 ATGM
+
+SA-18B1
+2x 100kg WZ-10 Bomb
+
+SA-18C1
+
+6x MM-22 ATGMs or S-82-2 AAM
+8x S-10 Missiles
+
+
+
+Armor
+20-mm40mm low-tub confiquration
+8mm fuselage
+25mm bulletproof glass
+
+
+E2s 
+
+Versus's helicopter- dont tanke this one for your creation. find the original. i set it up so you shouldnt be able to take it
+Integrated heli E2-bespoke
+CDU omni roundels
+"

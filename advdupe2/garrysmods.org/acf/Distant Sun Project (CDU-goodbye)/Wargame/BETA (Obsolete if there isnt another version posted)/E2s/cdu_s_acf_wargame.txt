@@ -1,0 +1,1005 @@
+@name CDU's ACF Wargame
+@inputs [EGP1 EGP2]:wirelink
+@inputs [TeamRa1,TeamRa2]:entity Reset
+@outputs String:string PointContesting TimeLimit ScoreLimit Elimination 
+@outputs PName11:string PName12:string PName13:string PName14:string PName21:string PName22:string PName23:string PName24:string
+@outputs [TeamFlagColor1,TeamFlagColor2]:vector Score Score1 Score2 TimeEclapsed
+@outputs [Player1,Player2,Player3,Player4,Player5,Player6,Player7,Player8]:entity Team1:array Team2:array I T1 T2 Players:array
+@persist Alarm1 Alarm2 Alarm3 Alarm4 Alarm5 Alarm6 Alarm7 Alarm8 S1 S2 S3 S4 S5 S6 S7 S8 Refresh1 Refresh2 Refresh3 Refresh4 Refresh5 Refresh6 Refresh7 Refresh8
+@persist ObjectivePoints:array GameMode Elimination Team1PointNameSet Team2PointNameSet PointContesting Timelimit PlyCount1 PlyCount2
+@persist CapRadius CaptureTime FlagColorStrobe TIC1 TIC2 ScoreLimit PointValue [TeamName1 TeamName2]:string GameOver PointsInWeight KillPoint VehicleKillPoint 
+@persist [Weight1,Weight2,Weight3,Weight4,Weight5,Weight6,Weight7,Weight8] [V1,V2,V3,V4,V5,V6,V7,V8]:entity PointCount PointsControlled1 PointsControlled2
+@persist Dead1 Dead2 Dead3 Dead4 Dead5 Dead6 Dead7 Dead8 Refresh
+@trigger 
+
+#Coming next update:
+#Usuful Chat commands for owner to override teams and game settings in realtime
+
+##ACF omni-Team/Gamemode   #Version: BETA  
+#ChunderDownUndeR / Sol-o-mon
+#Read the rulebook E2 to better undestanding the game setup options for a more customized game
+#Note: there might be errors in the game as its not perfect
+#Note: For best gameplay experience, admin perms is required, or to have prop protection granted on all contestants\
+#make score for player count decrease
+
+
+if(first()|changed(Refresh)){
+    
+function array array:filterArray(Filter:string){ # retard function i added to fix shit - solomon
+	local NewArray = array() #Solomons lines in E2: 10 maybe 20 now
+                            #Chunder lines in E2: 900
+	for(I=1,This:count()){
+		if(This[I,entity]:getName()==Filter){
+			NewArray:pushEntity(This[I,entity])
+		}
+	}
+	
+	return NewArray
+}
+    
+    #---Game Settings---
+
+GameMode = 2 #specified below
+#Mode Types:
+#0 - No mode type (Elimination to win)
+#1 - Destruction - WG RD - read the rules E2
+#2 - KOTH - WT - read the rules E2
+#3 - Domination - CDU - Read the rules E2
+
+ScoreLimit = 100000 #The score required to win. set to 0 to disable
+
+Timelimit = 0 #The gametime in minutes set to 0 to disable
+
+KillPoint = 1000 #How many points a points a kill grants to the score.
+
+PointsInWeight = 1 # Is points on a vehicle kill determined by its weight - Great for multi-weight fighting BUT REQUIRES PROP OVERRIDE OF ALL PLAYERS
+
+VehicleKillPoint = 10000 #If PointsInWeight = 0 how many points a vehicle kill grants. this for every vehicle regardless of weight this is added to player kill score 'KillPoint'
+
+PointValue = 200 #For KOTH Gamemode - How much points the objective capture points grant a second
+
+PointContesting = 1 #For KOTH Gamemode - Is scoring system seperate or relavite - Read the rules E2
+
+Elimination = 0  #You die your out of the game. For quick battles.
+
+    #---Objective point setup---
+
+CapRadius = fromUnit("m",6) #distance of objective points to trigger capturing
+
+CaptureTime = 20 #seconds to fully capture a point
+
+    #---Team Setup---
+    
+TeamName1 = "Team Furry" #TeamFurry by default    
+TeamName2 = "Team Weeb" #TeamWeaboo by default    
+#Team Name 
+
+TeamFlagColor1 = vec(0,0,255) #Team Furry
+TeamFlagColor2 = vec(255,0,0) #Team Weeb
+#The colors displaced by objective points when captured
+
+Team1PointNameSet = 0 #Team Furry
+Team2PointNameSet = 0 #Team Weeb
+
+#The name given to the objective points on the map displaced by HUD as following reference goes:
+#0 - Generic Alphabet - Warthunder - read the rules E2
+#1 - NATO Alphabet - WG RD - read the rules E2
+#2 - REDFOR Alphabet - WG RD - read the rules E2
+
+
+#---Dont touch below---
+
+if(first()){
+
+PName11="Player 1 /"+TeamName1    
+PName12="Player 2 /" +TeamName1   
+PName13="Player 3 /" +TeamName1   
+PName14="Player 4 /"  +TeamName1  
+PName21="Player 1 /"  +TeamName2  
+PName22="Player 2 /"   +TeamName2 
+PName23="Player 3 /"   +TeamName2 
+PName24="Player 4 /"   +TeamName2 
+
+EGP1:egpClear()  
+EGP2:egpClear()
+
+PlyCount1=PlyCount2=1
+
+for(I=1,4){
+holoCreate(I)
+holoAlpha(I,0)
+EGP1:egp3DTracker(20+I,vec(0))
+EGP1:egpParent(20+I,holoEntity(I))
+EGP1:egpBoxOutline(30+I,vec2(0),vec2(40))
+EGP1:egpParent(30+I,20+I)
+EGP1:egpAlpha(30+I,0)  
+}
+for(I=1,4){
+holoCreate(4+I)
+holoAlpha(4+I,0)
+EGP2:egp3DTracker(24+I,vec(0))
+EGP2:egpParent(24+I,holoEntity(4+I))
+EGP2:egpBoxOutline(34+I,vec2(0),vec2(40))
+EGP2:egpParent(34+I,24+I)
+EGP2:egpAlpha(34+I,0)  
+}
+EGP1:egpText(9,TeamName1+": -",vec2(30,400))
+EGP1:egpText(10,TeamName2+": -",vec2(30,420))
+EGP2:egpText(19,TeamName1+": -",vec2(30,400))
+EGP2:egpText(20,TeamName2+": -",vec2(30,420))
+EGP1:egpText(30,"Time: -",vec2(30,460))
+EGP2:egpText(100,"Time: -",vec2(30,460))
+
+findByClass("gmod_wire_expression2")
+
+ObjectivePoints = findToArray():filterArray("Objective Point")
+PointCount = ObjectivePoints:count()
+
+#for(I=1,PointCount){if(ObjectivePoints[I,entity]:getName()!="Objective Point"){ObjectivePoints:removeEntity(I)}}
+
+}
+timer("SetPoints",3000)
+
+CaptureTime=(60/CaptureTime)/60
+Timelimit=Timelimit*60
+if(GameMode==1){String="GameMode: Destruction - Earn points for each kill your team gains"}
+elseif(GameMode==2){String="GameMode: King Of The Hill - Hold points and kill enemy team to gain points"}
+elseif(GameMode==3){String="GameMode: Domination - The team to cap all of the points win the game"}
+else{String="GameMode: Non"}
+
+#findClearWhiteList()
+runOnChat(1)
+}
+
+if(changed(TeamRa1)&TeamRa1&TeamRa1:isPlayer()){
+    if(!(TeamRa1==Player1)){
+    if(!(TeamRa1==Player2)){
+    if(!(TeamRa1==Player3)){
+    if(!(TeamRa1==Player4)){ 
+    if(!(TeamRa1==Player5)){
+    if(!(TeamRa1==Player6)){
+    if(!(TeamRa1==Player7)){
+    if(!(TeamRa1==Player8)){  
+        if(!Player1:isValid()){Player1=TeamRa1,PName11=Player1:name()}       
+        elseif(!Player2:isValid()){Player2=TeamRa1,PName12=Player2:name()}   
+        elseif(!Player3:isValid()){Player3=TeamRa1,PName13=Player3:name()}  
+        elseif(!Player4:isValid()){Player4=TeamRa1,PName14=Player4:name()}   
+        Team1=array(Player1,Player2,Player3,Player4) 
+        PlyCount1 = max(Team1:count(),1)
+        Players=  Team1:add(Team2)
+                runOnKeys(Players,1)  
+}}}}}}}}
+}
+if(changed(TeamRa2)&TeamRa2&TeamRa2:isPlayer()){
+    if(!(TeamRa2==Player5)){
+    if(!(TeamRa2==Player6)){
+    if(!(TeamRa2==Player7)){
+    if(!(TeamRa2==Player8)){ 
+    if(!(TeamRa2==Player1)){
+    if(!(TeamRa2==Player2)){
+    if(!(TeamRa2==Player3)){
+    if(!(TeamRa2==Player4)){ 
+        if(!Player5:isValid()){Player5=TeamRa2,PName21=Player5:name()}       
+        elseif(!Player6:isValid()){Player6=TeamRa2,PName22=Player6:name()}   
+        elseif(!Player7:isValid()){Player7=TeamRa2,PName23=Player7:name()}  
+        elseif(!Player8:isValid()){Player8=TeamRa2,PName24=Player8:name()} 
+                Team2=array(Player5,Player6,Player7,Player8)  
+                PlyCount2 = max(Team2:count(),1)
+        Players=  Team1:add(Team2)
+                runOnKeys(Players,1)     
+}}}}}}}}
+}
+
+
+if(changed(Player1)&Player1){  
+    Dead1=1
+    I=1      
+EGP1:egp3DTracker(I,vec(0))
+EGP1:egpParent(I,Player1)
+EGP1:egpBoxOutline(10+I,vec2(0),vec2(40))
+EGP1:egpParent(10+I,I)
+EGP1:egpText(100+I,PName11,vec2(-40,-60))
+EGP1:egpParent(100+I,I)
+EGP1:egpColor(10+I,vec(100,200,120))
+EGP1:egpColor(100+I,vec(100,200,120))
+}
+if(changed(Player2)&Player2){  
+        Dead2=1
+    I=2      
+EGP1:egp3DTracker(I,vec(0))
+EGP1:egpParent(I,Player2)
+EGP1:egpBoxOutline(10+I,vec2(0),vec2(40))
+EGP1:egpParent(10+I,I)
+EGP1:egpText(100+I,PName12,vec2(-40,-60))
+EGP1:egpParent(100+I,I)
+EGP1:egpColor(10+I,vec(100,200,120))
+EGP1:egpColor(100+I,vec(100,200,120))
+}
+if(changed(Player3)&Player3){  
+            Dead3=1
+    I=3      
+EGP1:egp3DTracker(I,vec(0))
+EGP1:egpParent(I,Player3)
+EGP1:egpBoxOutline(10+I,vec2(0),vec2(40))
+EGP1:egpParent(10+I,I)
+EGP1:egpText(100+I,PName13,vec2(-40,-60))
+EGP1:egpParent(100+I,I)
+EGP1:egpColor(10+I,vec(100,200,120))
+EGP1:egpColor(100+I,vec(100,200,120))
+}
+if(changed(Player4)&Player4){  
+                Dead4=1
+    I=4      
+EGP1:egp3DTracker(I,vec(0))
+EGP1:egpParent(I,Player4)
+EGP1:egpBoxOutline(10+I,vec2(0),vec2(40))
+EGP1:egpParent(10+I,I)
+EGP1:egpText(100+I,PName14,vec2(-40,-60))
+EGP1:egpParent(100+I,I)
+EGP1:egpColor(10+I,vec(100,200,120))
+EGP1:egpColor(100+I,vec(100,200,120))
+}
+if(changed(Player5)&Player5){  
+                Dead5=1
+    I=5      
+EGP2:egp3DTracker(I,vec(0))
+EGP2:egpParent(I,Player5)
+EGP2:egpBoxOutline(10+I,vec2(0),vec2(40))
+EGP2:egpParent(10+I,I)
+EGP2:egpText(100+I,PName21,vec2(-40,-60))
+EGP2:egpParent(100+I,I)
+EGP2:egpColor(10+I,vec(100,200,120))
+EGP2:egpColor(100+I,vec(100,200,120))
+}
+if(changed(Player6)&Player6){  
+                Dead6=1
+    I=6      
+EGP2:egp3DTracker(I,vec(0))
+EGP2:egpParent(I,Player6)
+EGP2:egpBoxOutline(10+I,vec2(0),vec2(40))
+EGP2:egpParent(10+I,I)
+EGP2:egpText(100+I,PName22,vec2(-40,-60))
+EGP2:egpParent(100+I,I)
+EGP2:egpColor(10+I,vec(100,200,120))
+EGP2:egpColor(100+I,vec(100,200,120))
+}
+if(changed(Player7)&Player7){  
+                Dead7=1
+    I=7      
+EGP2:egp3DTracker(I,vec(0))
+EGP2:egpParent(I,Player7)
+EGP2:egpBoxOutline(10+I,vec2(0),vec2(40))
+EGP2:egpParent(10+I,I)
+EGP2:egpText(100+I,PName23,vec2(-40,-60))
+EGP2:egpParent(100+I,I)
+EGP2:egpColor(10+I,vec(100,200,120))
+EGP2:egpColor(100+I,vec(100,200,120))
+}
+if(changed(Player8)&Player8){  
+                Dead8=1
+    I=8      
+EGP2:egp3DTracker(I,vec(0))
+EGP2:egpParent(I,Player8)
+EGP2:egpBoxOutline(10+I,vec2(0),vec2(40))
+EGP2:egpParent(10+I,I)
+EGP2:egpText(100+I,PName24,vec2(-40,-60))
+EGP2:egpParent(100+I,I)
+EGP2:egpColor(10+I,vec(100,200,120))
+EGP2:egpColor(100+I,vec(100,200,120))
+}
+
+interval(300)
+
+if(!Player1:isAlive()&Player1:isValid()){if(Elimination){Player1=noentity(),EGP1:egpRemove(11),EGP1:egpRemove(101),PlyCount1--},if(!Dead1){Score2+=Weight1,Dead1=1}}
+if(Player1:isAlive()&Dead1){Dead1=0,V1=noentity(),Weight1=KillPoint}
+if(!Player2:isAlive()&Player2:isValid()){if(Elimination){Player2=noentity(),EGP1:egpRemove(12),EGP1:egpRemove(102),PlyCount1--},if(!Dead2){Score2+=Weight2,Dead2=1}}
+if(Player2:isAlive()&Dead2){Dead2=0,V2=noentity(),Weight2=KillPoint}
+if(!Player3:isAlive()&Player3:isValid()){if(Elimination){Player3=noentity(),EGP1:egpRemove(13),EGP1:egpRemove(103),PlyCount1--},if(!Dead3){Score2+=Weight3,Dead3=1}}
+if(Player3:isAlive()&Dead3){Dead3=0,V3=noentity(),Weight3=KillPoint}
+if(!Player4:isAlive()&Player4:isValid()){if(Elimination){Player4=noentity(),EGP1:egpRemove(14),EGP1:egpRemove(104),PlyCount1--},if(!Dead4){Score2+=Weight4,Dead4=1}}
+if(Player4:isAlive()&Dead4){Dead4=0,V4=noentity(),Weight4=KillPoint}
+if(!Player5:isAlive()&Player5:isValid()){if(Elimination){Player5=noentity(),EGP2:egpRemove(15),EGP2:egpRemove(105),PlyCount2--},if(!Dead5){Score1+=Weight5,Dead5=1}}
+if(Player5:isAlive()&Dead5){Dead5=0,V5=noentity(),Weight5=KillPoint}
+if(!Player6:isAlive()&Player6:isValid()){if(Elimination){Player6=noentity(),EGP2:egpRemove(16),EGP2:egpRemove(106),PlyCount2--},if(!Dead6){Score1+=Weight6,Dead6=1}}
+if(Player6:isAlive()&Dead6){Dead6=0,V6=noentity(),Weight6=KillPoint}
+if(!Player7:isAlive()&Player7:isValid()){if(Elimination){Player7=noentity(),EGP2:egpRemove(17),EGP2:egpRemove(107),PlyCount2--},if(!Dead7){Score1+=Weight7,Dead7=1}}
+if(Player7:isAlive()&Dead7){Dead7=0,V7=noentity(),Weight7=KillPoint}
+if(!Player8:isAlive()&Player8:isValid()){if(Elimination){Player8=noentity(),EGP2:egpRemove(18),EGP2:egpRemove(108),PlyCount2--},if(!Dead8){Score1+=Weight8,Dead8=1}}
+if(Player8:isAlive()&Dead8){Dead8=0,V8=noentity(),Weight8=KillPoint}
+
+#for(I=1,Players:count()){
+
+#}
+
+#if(keyClk()){
+    
+    findByClass("gmod_wire_cameracontroller")
+
+if((Player1:keyPressed("1")|Player1:keyPressed("2")|Player1:keyPressed("3"))&!Refresh1){
+Refresh1=1
+I=1
+Player=Player1
+if(Player:keyPressed("1")|Player:keyPressed("2")){
+holoPos(I,findClosest(Player:pos()):wirelink()["On",number] ? findClosest(Player:pos()):wirelink()["Trace",ranger]:pos() : Player1:aimPos())}
+else{holoPos(I,Player:pos())}
+timer("Alarm1",10000)
+if(Player:keyPressed("1")|Player:keyPressed("3")){
+timer("strobe1",300)}
+timer("Refresh1",1000)
+if(Player:keyPressed("1")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(200,100,100),Player:name()+": Has spotted the opposition!")},Alarm1=1}
+elseif(Player:keyPressed("2")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(255),Player:name()+": Has pinged an area")},Alarm1=0,EGP1:egpColor(30+I,vec(100,200,120))}
+elseif(Player:keyPressed("3")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(100,200,120),Player:name()+": Requires Help!")},Alarm1=2}
+
+EGP1:egpAlpha(30+I,255) 
+}
+if((Player2:keyPressed("1")|Player2:keyPressed("2")|Player2:keyPressed("3"))&!Refresh2){
+Refresh2=1
+I=2
+Player=Player2
+if(Player:keyPressed("1")|Player:keyPressed("2")){
+findByClass("gmod_wire_cameracontroller"),holoPos(I,findClosest(Player:pos()):wirelink()["On",number] ? findClosest(Player:pos()):wirelink()["Trace",ranger]:pos() : Player:aimPos())}
+else{holoPos(I,Player:pos())}
+timer("Alarm"+I,10000)
+if(Player:keyPressed("1")|Player:keyPressed("3")){
+timer("strobe"+I,300)}
+timer("Refresh"+I,1000)
+if(Player:keyPressed("1")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(200,100,100),Player:name()+": Has spotted the opposition!")},Alarm2=1}
+elseif(Player:keyPressed("2")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(255),Player:name()+": Has pinged an area")},Alarm2=0,EGP1:egpColor(30+I,vec(255))}
+elseif(Player:keyPressed("3")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(100,200,120),Player:name()+": Requires Help!")},Alarm2=2}
+
+EGP1:egpAlpha(30+I,255) 
+}
+if((Player3:keyPressed("1")|Player3:keyPressed("2")|Player3:keyPressed("3"))&!Refresh3){
+Refresh3=1
+I=3
+Player=Player3
+if(Player:keyPressed("1")|Player:keyPressed("2")){
+findByClass("gmod_wire_cameracontroller"),holoPos(I,findClosest(Player:pos()):wirelink()["On",number] ? findClosest(Player:pos()):wirelink()["Trace",ranger]:pos() : Player:aimPos())}
+else{holoPos(I,Player:pos())}
+timer("Alarm"+I,10000)
+if(Player:keyPressed("1")|Player:keyPressed("3")){
+timer("strobe"+I,300)}
+timer("Refresh"+I,1000)
+if(Player:keyPressed("1")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(200,100,100),Player:name()+": Has spotted the opposition!")},Alarm3=1}
+elseif(Player:keyPressed("2")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(255),Player:name()+": Has pinged an area")},Alarm3=0,EGP1:egpColor(30+I,vec(255))}
+elseif(Player:keyPressed("3")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(100,200,120),Player:name()+": Requires Help!")},Alarm3=2}
+
+EGP1:egpAlpha(30+I,255) 
+}
+if(clk("strobe3")&Alarm3){
+S3=!S3    
+if(Alarm3==1){
+EGP1:egpColor(33,vec(200,100,100)*S3+vec(!S3*255))}
+else{
+EGP1:egpColor(33,vec(100,200,120)*S3+vec(!S3*255))}
+timer("strobe3",300)}
+if(clk("Refresh3")){Refresh3=0}
+
+if(clk("Alarm3")){Alarm3=0
+EGP1:egpAlpha(33,0)    
+}
+
+if((Player4:keyPressed("1")|Player4:keyPressed("2")|Player4:keyPressed("3"))&!Refresh4){
+Refresh4=1
+I=4
+Player=Player4
+if(Player:keyPressed("1")|Player:keyPressed("2")){
+findByClass("gmod_wire_cameracontroller"),holoPos(I,findClosest(Player:pos()):wirelink()["On",number] ? findClosest(Player:pos()):wirelink()["Trace",ranger]:pos() : Player:aimPos())}
+else{holoPos(I,Player:pos())}
+timer("Alarm"+I,10000)
+if(Player:keyPressed("1")|Player:keyPressed("3")){
+timer("strobe"+I,300)}
+timer("Refresh"+I,1000)
+if(Player:keyPressed("1")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(200,100,100),Player:name()+": Has spotted the opposition!")},Alarm4=1}
+elseif(Player:keyPressed("2")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(255),Player:name()+": Has pinged an area")},Alarm4=0,EGP1:egpColor(30+I,vec(255))}
+elseif(Player:keyPressed("3")){for(I=1,Team1:count()){Team1[I,entity]:vehicle():printColorDriver(vec(100,200,120),Player:name()+": Requires Help!")},Alarm4=2}
+
+EGP1:egpAlpha(30+I,255) 
+}
+if(clk("strobe4")&Alarm4){
+S4=!S4    
+if(Alarm4==1){
+EGP1:egpColor(34,vec(200,100,100)*S4+vec(!S4*255))}
+else{
+EGP1:egpColor(34,vec(100,200,120)*S4+vec(!S4*255))}
+timer("strobe4",300)}
+if(clk("Refresh4")){Refresh4=0}
+
+if(clk("Alarm4")){Alarm1=0
+EGP1:egpAlpha(34,0)    
+}
+if((Player5:keyPressed("1")|Player5:keyPressed("2")|Player5:keyPressed("3"))&!Refresh5){
+Refresh5=1
+I=5
+Player=Player5
+if(Player:keyPressed("1")|Player:keyPressed("2")){
+findByClass("gmod_wire_cameracontroller"),holoPos(I,findClosest(Player:pos()):wirelink()["On",number] ? findClosest(Player:pos()):wirelink()["Trace",ranger]:pos() : Player:aimPos())}
+else{holoPos(I,Player:pos())}
+timer("Alarm"+I,10000)
+if(Player:keyPressed("1")|Player:keyPressed("3")){
+timer("strobe"+I,300)}
+timer("Refresh"+I,1000)
+if(Player:keyPressed("1")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(200,100,100),Player:name()+": Has spotted the opposition!")},Alarm5=1}
+elseif(Player:keyPressed("2")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(255),Player:name()+": Has pinged an area")},Alarm5=0,EGP2:egpColor(30+I,vec(255))}
+elseif(Player:keyPressed("3")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(100,200,120),Player:name()+": Requires Help!")},Alarm5=2}
+
+EGP2:egpAlpha(30+I,255) 
+}
+if(clk("strobe5")&Alarm5){
+S5=!S5    
+if(Alarm5==1){
+EGP2:egpColor(35,vec(200,100,100)*S5+vec(!S5*255))}
+else{
+EGP2:egpColor(35,vec(100,200,120)*S5+vec(!S5*255))}
+timer("strobe5",300)}
+if(clk("Refresh5")){Refresh5=0}
+
+if(clk("Alarm5")){Alarm1=0
+EGP2:egpAlpha(35,0)    
+}
+if((Player6:keyPressed("1")|Player6:keyPressed("2")|Player6:keyPressed("3"))&!Refresh6){
+Refresh6=1
+I=6
+Player=Player6
+if(Player:keyPressed("1")|Player:keyPressed("2")){
+findByClass("gmod_wire_cameracontroller"),holoPos(I,findClosest(Player:pos()):wirelink()["On",number] ? findClosest(Player:pos()):wirelink()["Trace",ranger]:pos() : Player:aimPos())}
+else{holoPos(I,Player:pos())}
+timer("Alarm"+I,10000)
+if(Player:keyPressed("1")|Player:keyPressed("3")){
+timer("strobe"+I,300)}
+timer("Refresh"+I,1000)
+if(Player:keyPressed("1")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(200,100,100),Player:name()+": Has spotted the opposition!")},Alarm6=1}
+elseif(Player:keyPressed("2")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(266),Player:name()+": Has pinged an area")},Alarm6=0,EGP2:egpColor(30+I,vec(266))}
+elseif(Player:keyPressed("3")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(100,200,120),Player:name()+": Requires Help!")},Alarm6=2}
+
+EGP2:egpAlpha(30+I,255) 
+}
+if(clk("strobe6")&Alarm6){
+S6=!S6    
+if(Alarm6==1){
+EGP2:egpColor(36,vec(200,100,100)*S6+vec(!S6*255))}
+else{
+EGP2:egpColor(36,vec(100,200,120)*S6+vec(!S6*255))}
+timer("strobe6",300)}
+if(clk("Refresh6")){Refresh6=0}
+
+if(clk("Alarm6")){Alarm1=0
+EGP2:egpAlpha(36,0)    
+}
+if((Player7:keyPressed("1")|Player7:keyPressed("2")|Player7:keyPressed("3"))&!Refresh7){
+Refresh7=1
+I=7
+Player=Player7
+if(Player:keyPressed("1")|Player:keyPressed("2")){
+findByClass("gmod_wire_cameracontroller"),holoPos(I,findClosest(Player:pos()):wirelink()["On",number] ? findClosest(Player:pos()):wirelink()["Trace",ranger]:pos() : Player:aimPos())}
+else{holoPos(I,Player:pos())}
+timer("Alarm"+I,10000)
+if(Player:keyPressed("1")|Player:keyPressed("3")){
+timer("strobe"+I,300)}
+timer("Refresh"+I,1000)
+if(Player:keyPressed("1")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(200,100,100),Player:name()+": Has spotted the opposition!")},Alarm7=1}
+elseif(Player:keyPressed("2")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(277),Player:name()+": Has pinged an area")},Alarm7=0,EGP2:egpColor(30+I,vec(277))}
+elseif(Player:keyPressed("3")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(100,200,120),Player:name()+": Requires Help!")},Alarm7=2}
+
+EGP2:egpAlpha(30+I,255) 
+}
+if(clk("strobe7")&Alarm7){
+S7=!S7    
+if(Alarm7==1){
+EGP2:egpColor(37,vec(200,100,100)*S7+vec(!S7*255))}
+else{
+EGP2:egpColor(37,vec(100,200,120)*S7+vec(!S7*255))}
+timer("strobe7",300)}
+if(clk("Refresh7")){Refresh7=0}
+
+if(clk("Alarm7")){Alarm1=0
+EGP2:egpAlpha(37,0)    
+}
+if((Player8:keyPressed("1")|Player8:keyPressed("2")|Player8:keyPressed("3"))&!Refresh8){
+Refresh8=1
+I=8
+Player=Player8
+if(Player:keyPressed("1")|Player:keyPressed("2")){
+findByClass("gmod_wire_cameracontroller"),holoPos(I,findClosest(Player:pos()):wirelink()["On",number] ? findClosest(Player:pos()):wirelink()["Trace",ranger]:pos() : Player:aimPos())}
+else{holoPos(I,Player:pos())}
+timer("Alarm"+I,10000)
+if(Player:keyPressed("1")|Player:keyPressed("3")){
+timer("strobe"+I,300)}
+timer("Refresh"+I,1000)
+if(Player:keyPressed("1")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(200,100,100),Player:name()+": Has spotted the opposition!")},Alarm8=1}
+elseif(Player:keyPressed("2")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(288),Player:name()+": Has pinged an area")},Alarm8=0,EGP2:egpColor(30+I,vec(288))}
+elseif(Player:keyPressed("3")){for(I=1,Team2:count()){Team2[I,entity]:vehicle():printColorDriver(vec(100,200,120),Player:name()+": Requires Help!")},Alarm8=2}
+
+EGP2:egpAlpha(30+I,255) 
+}
+if(clk("strobe8")&Alarm8){
+S8=!S8    
+if(Alarm8==1){
+EGP2:egpColor(38,vec(200,100,100)*S8+vec(!S8*255))}
+else{
+EGP2:egpColor(38,vec(100,200,120)*S8+vec(!S8*255))}
+timer("strobe8",300)}
+if(clk("Refresh8")){Refresh8=0}
+
+if(clk("Alarm8")){Alarm1=0
+EGP2:egpAlpha(38,0)    
+}
+if(clk("strobe1")&Alarm1){
+S1=!S1   
+if(Alarm1==1){
+EGP1:egpColor(31,vec(200,100,100)*S1+vec(!S1*255))}
+else{
+EGP1:egpColor(31,vec(100,200,120)*S1+vec(!S1*255))}
+timer("strobe1",300)}
+if(clk("Refresh1")){Refresh1=0}
+
+if(clk("Alarm1")){Alarm1=0
+EGP1:egpAlpha(31,0)    
+}
+
+if(clk("strobe2")&Alarm2){
+S2=!S2    
+if(Alarm2==1){
+EGP1:egpColor(32,vec(200,100,100)*S2+vec(!S2*255))}
+else{
+EGP1:egpColor(32,vec(100,200,120)*S2+vec(!S2*255))}
+timer("strobe2",300)}
+if(clk("Refresh2")){Refresh2=0}
+
+if(clk("Alarm2")){Alarm2=0
+EGP1:egpAlpha(32,0)    
+}
+
+if(clk("strobe3")&Alarm3){
+S3=!S3    
+if(Alarm3==1){
+EGP1:egpColor(33,vec(200,100,100)*S3+vec(!S3*255))}
+else{
+EGP1:egpColor(33,vec(100,200,120)*S3+vec(!S3*255))}
+timer("strobe3",300)}
+if(clk("Refresh3")){Refresh3=0}
+
+if(clk("Alarm3")){Alarm3=0
+EGP1:egpAlpha(33,0)    
+}
+
+if(clk("SetPoints")){
+for(P=1,PointCount){
+#print(egpMaxObjects())
+EGP1:egp3DTracker(110+P,vec(0))
+EGP1:egpParent(110+P,ObjectivePoints[P,entity])
+EGP1:egpBoxOutline(140+P,vec2(0),vec2(40))
+EGP1:egpParent(140+P,110+P)
+EGP1:egpText(180+P,"",vec2(-30,-60))
+EGP1:egpParent(180+P,110+P)
+
+EGP2:egp3DTracker(210+P,vec(0))
+EGP2:egpParent(210+P,ObjectivePoints[P,entity])
+EGP2:egpBoxOutline(240+P,vec2(0),vec2(40))
+EGP2:egpParent(240+P,210+P)
+EGP2:egpText(280+P,"",vec2(-30,-60))
+EGP2:egpParent(280+P,210+P)
+Wire=ObjectivePoints[P,entity]:wirelink()
+Wire["Capture",normal]=69
+
+if(Team1PointNameSet==2){
+    if(P==1){EGP1:egpSetText(180+P,"Anna") }
+elseif(P==2){EGP1:egpSetText(180+P,"Boris") } 
+elseif(P==3){EGP1:egpSetText(180+P,"Chariton") } 
+elseif(P==4){EGP1:egpSetText(180+P,"Demitri") } 
+elseif(P==8){EGP1:egpSetText(180+P,"Ivan") } 
+elseif(P==6){EGP1:egpSetText(180+P,"Elena") } 
+elseif(P==7){EGP1:egpSetText(180+P,"Fedor") } 
+elseif(P==5){EGP1:egpSetText(180+P,"Gregory") } 
+else{EGP1:egpSetText(180+P,"Sector")}
+}
+elseif(Team1PointNameSet==1){
+    if(P==1){EGP1:egpSetText(180+P,"Alpha") }
+elseif(P==2){EGP1:egpSetText(180+P,"Bravo") } 
+elseif(P==3){EGP1:egpSetText(180+P,"Charlie") } 
+elseif(P==4){EGP1:egpSetText(180+P,"Delta") } 
+elseif(P==5){EGP1:egpSetText(180+P,"Echo") } 
+elseif(P==6){EGP1:egpSetText(180+P,"Foxtrot") } 
+elseif(P==7){EGP1:egpSetText(180+P,"Golf") } 
+elseif(P==8){EGP1:egpSetText(180+P,"Hotel") } 
+else{EGP1:egpSetText(180+P,"Sector")}
+}
+else{
+if(P==1){EGP1:egpSetText(180+P,"A Point") }
+elseif(P==2){EGP1:egpSetText(180+P,"B Point") } 
+elseif(P==3){EGP1:egpSetText(180+P,"C Point") } 
+elseif(P==4){EGP1:egpSetText(180+P,"D Point") } 
+elseif(P==5){EGP1:egpSetText(180+P,"E Point") } 
+elseif(P==6){EGP1:egpSetText(180+P,"F Point") } 
+elseif(P==7){EGP1:egpSetText(180+P,"G Point") } 
+elseif(P==8){EGP1:egpSetText(180+P,"H Point") } 
+else{EGP1:egpSetText(180+P,"Sector")}
+}
+if(Team2PointNameSet==2){
+    if(P==1){EGP2:egpSetText(280+P,"Anna") }
+elseif(P==2){EGP2:egpSetText(280+P,"Boris") } 
+elseif(P==3){EGP2:egpSetText(280+P,"Chariton") } 
+elseif(P==4){EGP2:egpSetText(280+P,"Demitri") } 
+elseif(P==8){EGP2:egpSetText(280+P,"Ivan") } 
+elseif(P==6){EGP2:egpSetText(280+P,"Elena") } 
+elseif(P==7){EGP2:egpSetText(280+P,"Fedor") } 
+elseif(P==5){EGP2:egpSetText(280+P,"Gregory") } 
+else{EGP2:egpSetText(280+P,"Sector")}
+}
+elseif(Team2PointNameSet==1){
+    if(P==1){EGP2:egpSetText(280+P,"Alpha") }
+elseif(P==2){EGP2:egpSetText(280+P,"Bravo") } 
+elseif(P==3){EGP2:egpSetText(280+P,"Charlie") } 
+elseif(P==4){EGP2:egpSetText(280+P,"Delta") } 
+elseif(P==5){EGP2:egpSetText(280+P,"Echo") } 
+elseif(P==6){EGP2:egpSetText(280+P,"Foxtrot") } 
+elseif(P==7){EGP2:egpSetText(280+P,"Golf") } 
+elseif(P==8){EGP2:egpSetText(280+P,"Hotel") } 
+else{EGP2:egpSetText(280+P,"Sector")}
+}
+else{
+if(P==1){EGP2:egpSetText(280+P,"A Point") }
+elseif(P==2){EGP2:egpSetText(280+P,"B Point") } 
+elseif(P==3){EGP2:egpSetText(280+P,"C Point") } 
+elseif(P==4){EGP2:egpSetText(280+P,"D Point") } 
+elseif(P==5){EGP2:egpSetText(280+P,"E Point") } 
+elseif(P==6){EGP2:egpSetText(280+P,"F Point") } 
+elseif(P==7){EGP2:egpSetText(280+P,"G Point") } 
+elseif(P==8){EGP2:egpSetText(280+P,"H Point") } 
+else{EGP2:egpSetText(280+P,"Sector")}
+}
+
+
+}    
+timer("Update",1000)
+Score1=Score2 = 0
+TimeEclapsed = 0
+GameOver=0
+}
+
+if(clk("Update")){
+    
+  PointsControlled1=PointsControlled2=0 
+FlagColorStrobe=!FlagColorStrobe
+    
+for(P=1,PointCount){
+TIC1=TIC2=0  
+Point=ObjectivePoints[P,entity]:wirelink()
+Point["Refil",normal]=0  
+for(T1=1,Team1:count()){
+if(Team1[T1,entity]:pos():distance(Point:entity():pos())<CapRadius){
+TIC1++
+}
+}
+for(T2=1,Team2:count()){
+if(Team2[T2,entity]:pos():distance(Point:entity():pos())<CapRadius){
+TIC2++
+}
+}
+
+if(!(Point["Status",normal]==1)|!(Point["Status",normal]==-1)){
+if(TIC1&FlagColorStrobe){
+Col=TeamFlagColor1
+}
+elseif(!TIC2){Col=vec(255)}
+
+if(TIC2&!FlagColorStrobe){
+Col=TeamFlagColor2
+}
+elseif(!TIC1){Col=vec(255)}
+
+if(!TIC2&!TIC1){Col=vec(255)}
+
+if(TIC2&TIC1){TIC1=0,TIC2=0}}
+if(Point["Status",normal]==1){
+Point["Refil",normal]=TIC1
+TIC1=!TIC2 
+Col=TeamFlagColor1
+PointsControlled1++
+}
+if(Point["Status",normal]==-1){
+Point["Refil",normal]=TIC2
+TIC2=!TIC1 
+Col=TeamFlagColor2
+PointsControlled2++
+}
+
+Point["Capture",number]=(TIC1-TIC2)*CaptureTime  
+Point["Color",vector]=Col
+EGP1:egpColor(140+P,Col)
+EGP1:egpColor(180+P,Col)
+EGP2:egpColor(240+P,Col)
+EGP2:egpColor(280+P,Col)
+}
+
+if(!(Player1:vehicle()==V1)&Player1:vehicle()){V1=Player1:vehicle()
+    if(V1){
+    if(PointsInWeight){
+findIncludePlayerProps(Player1)
+findByClass("acf_engine")
+Engine=findToArray():entity(1):wirelink()
+Weight1=Engine["Mass",normal]
+if(!Weight1){Weight1=VehicleKillPoint,print("Unable to find mass of Player1, Assuming mass of : "+ VehicleKillPoint+" ,This will be fixed in a later update. (This is because the player has not given you prop perm and/or has no engine)")}
+}
+}else{Weight1=VehicleKillPoint}
+Weight1 = Weight1+KillPoint  
+}
+if(!(Player2:vehicle()==V2)&Player2:vehicle()){V2=Player2:vehicle()
+    if(V2){
+    if(PointsInWeight){
+findIncludePlayerProps(Player2)
+findByClass("acf_engine")
+Engine=findToArray():entity(1):wirelink()
+Weight2=Engine["Mass",normal]
+if(!Weight2){Weight2=VehicleKillPoint,print("Unable to find mass of Player2, Assuming mass of : "+ VehicleKillPoint+" ,This will be fixed in a later update. (This is because the player has not given you prop perm and/or has no engine)")}
+}
+}else{Weight2=VehicleKillPoint}
+Weight2 = Weight2+KillPoint  
+}
+if(!(Player3:vehicle()==V3)&Player3:vehicle()){V3=Player3:vehicle()
+    if(V3){
+    if(PointsInWeight){
+findIncludePlayerProps(Player3)
+findByClass("acf_engine")
+Engine=findToArray():entity(1):wirelink()
+Weight3=Engine["Mass",normal]
+if(!Weight3){Weight3=VehicleKillPoint,print("Unable to find mass of Player3, Assuming mass of : "+ VehicleKillPoint+" ,This will be fixed in a later update. (This is because the player has not given you prop perm and/or has no engine)")}
+}
+}else{Weight3=VehicleKillPoint}
+Weight3 = Weight3+KillPoint  
+}
+if(!(Player4:vehicle()==V4)&Player4:vehicle()){V4=Player4:vehicle()
+    if(V4){
+    if(PointsInWeight){
+findIncludePlayerProps(Player4)
+findByClass("acf_engine")
+Engine=findToArray():entity(1):wirelink()
+Weight4=Engine["Mass",normal]
+if(!Weight4){Weight4=VehicleKillPoint,print("Unable to find mass of Player4, Assuming mass of : "+ VehicleKillPoint+" ,This will be fixed in a later update. (This is because the player has not given you prop perm and/or has no engine)")}
+}
+}else{Weight4=VehicleKillPoint}
+Weight4 = Weight4+KillPoint  
+}
+if(!(Player5:vehicle()==V5)&Player5:vehicle()){V5=Player5:vehicle()
+    if(V5){
+    if(PointsInWeight){
+findIncludePlayerProps(Player5)
+findByClass("acf_engine")
+Engine=findToArray():entity(1):wirelink()
+Weight5=Engine["Mass",normal]
+if(!Weight5){Weight5=VehicleKillPoint,print("Unable to find mass of Player5, Assuming mass of : "+ VehicleKillPoint+" ,This will be fixed in a later update. (This is because the player has not given you prop perm and/or has no engine)")}
+}
+}else{Weight5=VehicleKillPoint}
+Weight5 = Weight5+KillPoint  
+}
+if(!(Player6:vehicle()==V6)&Player6:vehicle()){V6=Player6:vehicle()
+    if(V6){
+    if(PointsInWeight){
+findIncludePlayerProps(Player6)
+findByClass("acf_engine")
+Engine=findToArray():entity(1):wirelink()
+Weight6=Engine["Mass",normal]
+if(!Weight6){Weight6=VehicleKillPoint,print("Unable to find mass of Player6, Assuming mass of : "+ VehicleKillPoint+" ,This will be fixed in a later update. (This is because the player has not given you prop perm and/or has no engine)")}
+}
+}else{Weight6=VehicleKillPoint}
+Weight6 = Weight6+KillPoint  
+}
+if(!(Player7:vehicle()==V7)&Player7:vehicle()){V7=Player7:vehicle()
+    if(V7){
+    if(PointsInWeight){
+findIncludePlayerProps(Player7)
+findByClass("acf_engine")
+Engine=findToArray():entity(1):wirelink()
+Weight7=Engine["Mass",normal]
+if(!Weight7){Weight7=VehicleKillPoint,print("Unable to find mass of Player7, Assuming mass of : "+ VehicleKillPoint+" ,This will be fixed in a later update. (This is because the player has not given you prop perm and/or has no engine)")}
+}
+}else{Weight7=VehicleKillPoint}
+Weight7 = Weight7+KillPoint  
+}
+if(!(Player8:vehicle()==V8)&Player8:vehicle()){V8=Player8:vehicle()
+    if(V8){
+    if(PointsInWeight){
+findIncludePlayerProps(Player8)
+findByClass("acf_engine")
+Engine=findToArray():entity(1):wirelink()
+Weight8=Engine["Mass",normal]
+if(!Weight8){Weight8=VehicleKillPoint,print("Unable to find mass of Player8, Assuming mass of : "+ VehicleKillPoint+" ,This will be fixed in a later update. (This is because the player has not given you prop perm and/or has no engine)")}
+}
+}else{Weight8=VehicleKillPoint}
+Weight8 = Weight8+KillPoint  
+}
+
+    
+
+if(!GameOver){
+
+if(!GameMode){
+EGP1:egpSetText(9,TeamName1+": "+PlyCount1)
+EGP1:egpSetText(10,TeamName2+": "+PlyCount2)
+EGP2:egpSetText(19,TeamName1+": "+PlyCount1)
+EGP2:egpSetText(20,TeamName2+": "+PlyCount2)
+}
+elseif((GameMode==2)|(GameMode==1)){
+
+if(GameMode==2){
+Score1+=PointsControlled1*PointValue
+Score2+=PointsControlled2*PointValue
+}
+if(PointContesting)  {
+
+Score=Score1-Score2 
+
+if(PointsControlled1>PointsControlled2){EGP1:egpColor(9,TeamFlagColor1),EGP2:egpColor(19,TeamFlagColor1)}else{EGP1:egpColor(9,vec(255)),EGP2:egpColor(19,vec(255))}
+if(PointsControlled2>PointsControlled1){EGP1:egpColor(10,TeamFlagColor2),EGP2:egpColor(20,TeamFlagColor2)}else{EGP1:egpColor(10,vec(255)),EGP2:egpColor(20,vec(255))}
+
+
+EGP1:egpSetText(9,TeamName1+": "+Score+"/ "+ScoreLimit)
+EGP1:egpSetText(10,TeamName2+": "+toString(-Score)+"/ "+ScoreLimit)
+EGP2:egpSetText(19,TeamName1+": "+Score+"/ "+ScoreLimit)
+EGP2:egpSetText(20,TeamName2+": "+toString(-Score)+"/ "+ScoreLimit)       
+
+if(Score>ScoreLimit){
+ GameOver=1   
+EGP1:egpSetText(9,TeamName1+": Victory")
+EGP1:egpSetText(10,TeamName2+": Defeat")
+EGP2:egpSetText(19,TeamName1+": Victory")
+EGP2:egpSetText(20,TeamName2+": Defeat") 
+for(P=1,Players:count()){Players[P,entity]:vehicle():printDriver(TeamName1+" Wins the game!")}     
+}
+elseif(-Score>ScoreLimit){
+ GameOver=1
+EGP1:egpSetText(9,TeamName1+": Defeat")
+EGP1:egpSetText(10,TeamName2+": Victory")
+EGP2:egpSetText(19,TeamName1+": Defeat")
+EGP2:egpSetText(20,TeamName2+": Victory") 
+for(P=1,Players:count()){Players[P,entity]:vehicle():printDriver(TeamName2+" Wins the game!")} 
+}}
+else{
+
+EGP1:egpSetText(9,TeamName1+": "+Score1+"/ "+ScoreLimit)
+EGP1:egpSetText(10,TeamName2+": "+Score2+"/ "+ScoreLimit)
+EGP2:egpSetText(19,TeamName1+": "+Score1+"/ "+ScoreLimit)
+EGP2:egpSetText(20,TeamName2+": "+Score2+"/ "+ScoreLimit)       
+
+if(Score1>ScoreLimit){
+ GameOver=1
+EGP1:egpSetText(9,TeamName1+": Victory")
+EGP1:egpSetText(10,TeamName2+": Defeat")
+EGP2:egpSetText(19,TeamName1+": Victory")
+EGP2:egpSetText(20,TeamName2+": Defeat")
+for(P=1,Players:count()){Players[P,entity]:vehicle():printDriver(TeamName1+" Wins the game!")}      
+}
+elseif(Score2>ScoreLimit){
+ GameOver=1
+EGP1:egpSetText(9,TeamName1+": Defeat")
+EGP1:egpSetText(10,TeamName2+": Victory")
+EGP2:egpSetText(19,TeamName1+": Defeat")
+EGP2:egpSetText(20,TeamName2+": Victory")   
+for(P=1,Players:count()){Players[P,entity]:vehicle():printDriver(TeamName2+" Wins the game!")} 
+}
+}
+}
+elseif(GameMode==3){
+
+EGP1:egpSetText(9,TeamName1+": "+PointsControlled1+"/ "+PointCount)
+EGP1:egpSetText(10,TeamName2+": "+PointsControlled2+"/ "+PointCount)
+EGP2:egpSetText(19,TeamName1+": "+PointsControlled1+"/ "+PointCount)
+EGP2:egpSetText(20,TeamName2+": "+PointsControlled2+"/ "+PointCount)       
+
+if(PointsControlled1==PointCount){
+ GameOver=1
+EGP1:egpSetText(9,TeamName1+": Victory")
+EGP1:egpSetText(10,TeamName2+": Defeat")
+EGP2:egpSetText(19,TeamName1+": Victory")
+EGP2:egpSetText(20,TeamName2+": Defeat") 
+for(P=1,Players:count()){Players[P,entity]:vehicle():printDriver(TeamName1+" Wins the game!")}     
+}
+elseif(PointsControlled2==PointCount){
+ GameOver=1
+EGP1:egpSetText(9,TeamName1+": Defeat")
+EGP1:egpSetText(10,TeamName2+": Victory")
+EGP2:egpSetText(19,TeamName1+": Defeat")
+EGP2:egpSetText(20,TeamName2+": Victory")   
+for(P=1,Players:count()){Players[P,entity]:vehicle():printDriver(TeamName2+" Wins the game!")} 
+}
+}
+
+TimeEclapsed++
+
+if(Timelimit){
+Time=Timelimit-TimeEclapsed
+}else{
+Time=TimeEclapsed
+}
+Minutes = (floor(Time/60)):toString()
+Seconds = (Time-floor(Time/60)*60):toString()
+if(Minutes:length()==1){Minutes = "0"+Minutes}
+if(Seconds:length()==1){Seconds = "0"+Seconds}
+
+Timer = Minutes+":"+Seconds
+
+EGP1:egpSetText(30,"Time: " +Timer)
+EGP2:egpSetText(100,"Time: " +Timer)
+
+}
+if(Timelimit&(TimeEclapsed>Timelimit)){
+    TimeEclapsed=0
+    if((GameMode==1)|(GameMode==2)){
+    if(Score1>(Score2*1.5)&(Score1>(ScoreLimit/2))){
+EGP1:egpSetText(9,TeamName1+": Victory")
+EGP1:egpSetText(10,TeamName2+": Defeat")
+EGP2:egpSetText(19,TeamName1+": Victory")
+EGP2:egpSetText(20,TeamName2+": Defeat")  
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver(TeamName1+" Wins the game!")}           
+    }
+    elseif(Score2>(Score1*1.5)&(Score2>(ScoreLimit/2))){
+EGP1:egpSetText(9,TeamName1+": Defeat")
+EGP1:egpSetText(10,TeamName2+": Victory")
+EGP2:egpSetText(19,TeamName1+": Defeat")
+EGP2:egpSetText(20,TeamName2+": Victory") 
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver(TeamName2+" Wins the game!")}            
+    }else{
+EGP1:egpSetText(9,TeamName1+": Draw")
+EGP1:egpSetText(10,TeamName2+": Draw")
+EGP2:egpSetText(19,TeamName1+": Draw")
+EGP2:egpSetText(20,TeamName2+": Draw")   
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver("Draw! Goal has not been met for either sides")}   
+}
+        
+    }
+    elseif(GameMode==3){
+    if(PointsControlled1>PointsControlled2){
+EGP1:egpSetText(9,TeamName1+": Victory")
+EGP1:egpSetText(10,TeamName2+": Defeat")
+EGP2:egpSetText(19,TeamName1+": Victory")
+EGP2:egpSetText(20,TeamName2+": Defeat")   
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver(TeamName1+" Wins the game!")}          
+    }
+    elseif(PointsControlled2>PointsControlled1){
+EGP1:egpSetText(9,TeamName1+": Defeat")
+EGP1:egpSetText(10,TeamName2+": Victory")
+EGP2:egpSetText(19,TeamName1+": Defeat")
+EGP2:egpSetText(20,TeamName2+": Victory")   
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver(TeamName2+" Wins the game!")}          
+    }else{
+EGP1:egpSetText(9,TeamName1+": Draw")
+EGP1:egpSetText(10,TeamName2+": Draw")
+EGP2:egpSetText(19,TeamName1+": Draw")
+EGP2:egpSetText(20,TeamName2+": Draw")    
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver("Draw! Time has expired")}  
+}}
+    else{
+EGP1:egpSetText(9,TeamName1+": Draw")
+EGP1:egpSetText(10,TeamName2+": Draw")
+EGP2:egpSetText(19,TeamName1+": Draw")
+EGP2:egpSetText(20,TeamName2+": Draw")  
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver("Draw! Time has expired")} 
+}
+    
+ GameOver=1  
+}
+timer("Update",1000)    
+}
+if(changed(PlyCount1)&!PlyCount1){
+ GameOver=1
+EGP1:egpSetText(9,TeamName1+": Defeat")
+EGP1:egpSetText(10,TeamName2+": Victory")
+EGP2:egpSetText(19,TeamName1+": Defeat")
+EGP2:egpSetText(20,TeamName2+": Victory")
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver(TeamName2+" Wins the game!")}  
+}
+if(changed(PlyCount2)&!PlyCount2){
+ GameOver=1
+EGP1:egpSetText(9,TeamName1+": Victory")
+EGP1:egpSetText(10,TeamName2+": Defeat")
+EGP2:egpSetText(19,TeamName1+": Victory")
+EGP2:egpSetText(20,TeamName2+": Defeat")
+for(Q=1,Players:count()){Players[Q,entity]:vehicle():printDriver(TeamName1+" Wins the game!")}   
+}
+
+if(dupefinished()){reset()}
+if(~Reset&Reset){Refresh++}
+
+if(chatClk(owner())){
+if(owner():lastSaid()=="!reset") {Refresh++}   
+}

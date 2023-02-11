@@ -1,0 +1,114 @@
+@name Chundair SA-37 Endrun Manual (Public release addition)
+@model models/props_lab/binderredlabel.mdl
+
+
+#---SA-18 Mohawk (Early) Maunal By ChunderDownUndeR
+#NOTE: this is not a copy of karbines manual, i had the idea of a E2 book and model before discovering he beat me to it
+#NOTE: AS ALWAYS GIVE CREDIT THIS IS NOT SOMETHING YOU MADE. Do not try and use the main helicopter E2. find the original release yourself on facepunch (by versus) or get from a mate. this one is custom settings so it will not work for any thing of yours
+
+
+#---Overview
+"A training and attack jet-powered aircraft of vietnam era. The Endrun attack aircraft closely mimics the design of the Cessna A-37 Dragonfly"
+
+"Made by ChunderDownUnder 19/3/19."
+
+#---Contents
+#-overview
+#-Contents
+#Notes
+#-Pros/Cons
+#-Info
+
+#---Pro/Con
+"
+-Pros:
+-ITS A PUBLIC JET AIRCRAFT BE HAPPY NO MATTER WHAT THERE ARE FEW PUBLIC ACF JETS
+-Starks CDUMod E2 powered, an extensive improvemnt on the default E2. maintaining balence of optimizaion and realisim
+-powerful 25mm Autocannon primary arnament
+-Easy to fly
+-Huge ammo count for 25mm
+-many racks that be retrofitted if you choice to make your own loadout
+-great climbrate
+-protected ammo if it explodes the damage should be contained
+-no visclip
+
+-Cons:
+-Hard handling, unsteady accuracy when doing attack runs defeats the powerful gun pro.
+-No Airbrake, hard to slow down at low speeds
+-FFAR has low accuracy and wide apart on wings
+-public edition E2. i removed some of the features of this e2 (Yw ;))
+-no vislcip
+-cant do high angle attacks due to handling
+-terrible roll control
+"
+
+#---Notes
+"
+-Dont use any E2 on this aircraft for your own purpose. read more about this at the bottom of the txt
+-You can get more dupes on my steam group 'Chunder's ACF Dupe Group'
+-holomodel any is not neccessary but reccomended
+-color or retrofit the aircraft but dont reverse enginner or i will stop making public helis/aircraft
+-fk im tired
+-it is like 10ts and has realistic low armor. you have been warned
+-the public edition of the starks E2 has been reduced, iv taken away the setup so it cant be altered for your own purpose
+and some of the features like crash damage have been removed
+"
+
+#---Info
+"
+IRL/(LORE)
+
+Name: Chundair SA-37 Endrun
+Creator: ChunderDownUndeR
+Date of creation: 2019 / (mid 1950s)
+Faction: CDU/OLI
+
+Engine: 2x turbojet engines
+Tonnage: idk yet
+
+Arnament variations:
+
+-Endrun (I)
+4x 20mm cnn. 
+
+Rack x2
+130mm Rocket (HEAT) S-130 x4
+100kg Bomb WZ-10
+70mm Rocket (HEAT) FFAR-70 x7
+
+Rack x8
+100kg Bomb WZ-10
+70mm Rocket (HEAT) FFAR-70 x7
+600 Gal Fuel tank
+
+-Endrun (II)
+1xcnn. 
+
+Rack x2
+130mm Rocket (HEAT) S-130 x4
+100kg Bomb WZ-10
+70mm Rocket (HEAT) FFAR-70 x7
+S-92 AA Anti Air rocket
+S-92 AA Anti Air rocket x2
+
+Rack x8
+100kg Bomb WZ-10
+70mm Rocket (HEAT) FFAR-70 x7
+600 Gal Fuel tank
+
+
+Armor
+20-mm low-tub confiquration
+25-40mm ammo caontainment
+
+
+E2s 
+NOTE: Please do not reverse enginner the E2s or claim anything as your own. i setup the E2s so they are deliberately hard to 
+customize the settings. if you want to use the E2 your going to have to talk to me about it.
+DO NOT USE THE STARK E2 IN YOUR AIRCRAFT THIS IS MY CUSTOM E2 I WORKED VERY HARD ON if you want to use starks jet e2 you can
+find it on his yt channel. stealing the E2 for your own purpose destroys my incentive to release public dupes
+
+Stakrs Jet Engine (CDUMOD)- dont tanke this one for your creation. find the original. i set it up so you shouldnt be able to take it
+Integrated plane E2-bespoke
+CDU omni roundels
+"

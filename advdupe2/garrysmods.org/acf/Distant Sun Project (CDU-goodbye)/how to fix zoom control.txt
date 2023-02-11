@@ -1,0 +1,9 @@
+You cant:(
+
+Unless you can change your mouse scroll speed setting in a your driver or dircetly for garrys mod.
+
+Due to a recent wiremod update the zoom (prev / next weapon inputs on a pod controller) will only work for windows 10.
+
+It wont be fixed unless you ask wiremod (or whatever party is responsible) to via their github or discord.
+
+Zoom does still work but it the controls just feel s

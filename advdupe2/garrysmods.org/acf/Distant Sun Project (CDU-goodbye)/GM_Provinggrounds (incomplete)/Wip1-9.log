@@ -1,0 +1,1462 @@
+
+
+
+materialPath: C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials
+Loading C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.vmf
+ConVarRef mat_reduceparticles doesn't point to an existing ConVar
+Patching WVT material: maps/wip1-9/nature/blendgrassgravel001b_wvt_patch
+Patching WVT material: maps/wip1-9/nature/blenddirtgrass008a_wvt_patch
+Patching WVT material: maps/wip1-9/dev/dev_blendmeasure_wvt_patch
+fixing up env_cubemap materials on brush sides...
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10
+FindPortalSide: Couldn't find a good match for which brush to assign to a portal near (11180.2 12982.9 -14788.0)
+Leaf 0 contents: 
+Leaf 1 contents: CONTENTS_WINDOW CONTENTS_TRANSLUCENT 
+viscontents (node 0 contents ^ node 1 contents): CONTENTS_WINDOW 
+This means that none of the brushes in leaf 0 or 1 that touches the portal has CONTENTS_WINDOW 
+Check for a huge brush enclosing the coordinates above that has contents CONTENTS_WINDOW 
+Candidate brush IDs: Brush 32915: 
+
+Processing areas...done (0)
+Building Faces...done (0)
+FixTjuncs...
+PruneNodes...
+WriteBSP...
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+done (1)
+writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.prt...Building visibility clusters...
+done (0)
+Creating default LDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_06*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Creating default HDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_06*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Finding displacement neighbors...
+Found a displacement edge abutting multiple other edges.
+Finding lightmap sample positions...
+Displacement Alpha : 0...1...2...3...4...5...6...7...8...9...10
+Building Physics collision data...
+WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.
+done (1) (27353414 bytes)
+Error! prop_static using model "models/props_wasteland/controlroom_desk001b.mdl", which must be used on a dynamic entity (i.e. prop_physics). Deleted.
+Error loading studio model STATIC "models/props_wasteland/controlroom_desk001b.mdl"!
+Error loading studio model STATIC ""!
+Error loading studio model STATIC "models/cliffs/rockcluster01.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large02_veg.mdl"!
+Error! To use model "models/props_foliage/rock_forest04.mdl"
+      with prop_static, it must be compiled with $staticprop!
+Error loading studio model STATIC "models/props_foliage/rock_forest04.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge02_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_small01_veg.mdl"!
+Placing detail props : 0...1...2...3...4...5...6...7...8...9...10
+Compacting texture/material tables...
+Reduced 14119 texinfos to 2822
+Reduced 126 texdatas to 107 (5298 bytes to 4315)
+Writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.bsp
+10 seconds elapsed
+
+
+
+materialPath: C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials
+Loading C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.vmf
+ConVarRef mat_reduceparticles doesn't point to an existing ConVar
+Patching WVT material: maps/wip1-9/nature/blendgrassgravel001b_wvt_patch
+Patching WVT material: maps/wip1-9/nature/blenddirtgrass008a_wvt_patch
+Patching WVT material: maps/wip1-9/dev/dev_blendmeasure_wvt_patch
+fixing up env_cubemap materials on brush sides...
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10
+FindPortalSide: Couldn't find a good match for which brush to assign to a portal near (11180.2 12982.9 -14788.0)
+Leaf 0 contents: 
+Leaf 1 contents: CONTENTS_WINDOW CONTENTS_TRANSLUCENT 
+viscontents (node 0 contents ^ node 1 contents): CONTENTS_WINDOW 
+This means that none of the brushes in leaf 0 or 1 that touches the portal has CONTENTS_WINDOW 
+Check for a huge brush enclosing the coordinates above that has contents CONTENTS_WINDOW 
+Candidate brush IDs: Brush 32915: 
+
+Processing areas...done (0)
+Building Faces...done (0)
+FixTjuncs...
+PruneNodes...
+WriteBSP...
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+done (1)
+writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.prt...Building visibility clusters...
+done (0)
+Creating default LDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_06*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Creating default HDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_06*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Finding displacement neighbors...
+Found a displacement edge abutting multiple other edges.
+Finding lightmap sample positions...
+Displacement Alpha : 0...1...2...3...4...5...6...7...8...9...10
+Building Physics collision data...
+WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.
+done (1) (27353414 bytes)
+Error! prop_static using model "models/props_wasteland/controlroom_desk001b.mdl", which must be used on a dynamic entity (i.e. prop_physics). Deleted.
+Error loading studio model STATIC "models/props_wasteland/controlroom_desk001b.mdl"!
+Error loading studio model STATIC ""!
+Error loading studio model STATIC "models/cliffs/rockcluster01.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large02_veg.mdl"!
+Error! To use model "models/props_foliage/rock_forest04.mdl"
+      with prop_static, it must be compiled with $staticprop!
+Error loading studio model STATIC "models/props_foliage/rock_forest04.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge02_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_small01_veg.mdl"!
+Placing detail props : 0...1...2...3...4...5...6...7...8...9...10
+Compacting texture/material tables...
+Reduced 14119 texinfos to 2822
+Reduced 126 texdatas to 107 (5298 bytes to 4315)
+Writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.bsp
+11 seconds elapsed
+
+
+
+4 threads
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.prt
+ 277 portalclusters
+ 614 numportals
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10Optimized: 67 visible clusters (0.15%)
+Total clusters visible: 44358
+Average clusters visible: 160
+Building PAS...
+Average clusters audible: 268
+visdatasize:20729  compressed from 22160
+writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+1 second elapsed
+
+
+
+[Reading texlights from 'lights.rad']
+[45 texlights parsed from 'lights.rad']
+
+Loading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+PREP OK
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+11082 faces
+2 degenerate faces
+41284076 square feet [5944906752.00 square inches]
+2236 Displacements
+9380947 Square Feet [1350856320.00 Square Inches]
+11080 patches before subdivision
+347578 patches after subdivision
+282 direct lights
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10transfers 66537913, max 3371
+transfer lists: 507.6 megs
+0...1...2...3...4...5...6...7...8...9...10	Bounce #1 added RGB(2797206, 2766993, 2661089)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #2 added RGB(887931, 880135, 858189)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #3 added RGB(296187, 294315, 290697)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #4 added RGB(105039, 104272, 102821)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #5 added RGB(36632, 36471, 36260)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #6 added RGB(13099, 13019, 12917)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #7 added RGB(4626, 4607, 4589)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #8 added RGB(1655, 1646, 1637)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #9 added RGB(587, 585, 583)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #10 added RGB(210, 209, 208)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #11 added RGB(75, 74, 74)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #12 added RGB(27, 27, 26)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #13 added RGB(10, 9, 9)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #14 added RGB(3, 3, 3)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #15 added RGB(1, 1, 1)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #16 added RGB(0, 0, 0)
+Build Patch/Sample Hash Table(s).....Done<0.3171 sec>
+0...1...2...3...4...5...6...7...8...9...10FinalLightFace Done
+Computing detail prop lighting : 0...1...2...3...4...5...6...7...8...9...10
+0 of 0 (0% of) surface lights went in leaf ambient cubes.
+0...1...2...3...4...5...6...7...8...9...10Writing leaf ambient...done
+Ready to Finish
+
+Object names       Objects/Maxobjs  Memory / Maxmem  Fullness 
+------------       ---------------  ---------------  -------- 
+models                  21/1024         1008/49152    ( 2.1%) 
+brushes                836/16384       10032/196608   ( 5.1%) 
+brushsides            8625/65536       69000/524288   (13.2%) 
+planes               19744/65536      394880/1310720  (30.1%) 
+vertexes             19248/65536      230976/786432   (29.4%) 
+nodes                 9037/65536      289184/2097152  (13.8%) 
+texinfos              2822/12288      203184/884736   (23.0%) 
+texdata                107/2048         3424/65536    ( 5.2%) 
+dispinfos             2236/0          393536/0        ( 0.0%) 
+disp_verts          147884/0         2957680/0        ( 0.0%) 
+disp_tris           238784/0          477568/0        ( 0.0%) 
+disp_lmsamples     8157347/0         8157347/0        ( 0.0%) 
+faces                11082/65536      620592/3670016  (16.9%) 
+hdr faces                0/65536           0/3670016  ( 0.0%) 
+origfaces             4284/65536      239904/3670016  ( 6.5%) 
+leaves                9059/65536      289888/2097152  (13.8%) 
+leaffaces            10128/65536       20256/131072   (15.5%) 
+leafbrushes           6499/65536       12998/131072   ( 9.9%) 
+areas                    3/1024           24/8192     ( 0.3%) 
+surfedges            65700/512000     262800/2048000  (12.8%) 
+edges                39428/256000     157712/1024000  (15.4%) 
+LDR worldlights        282/8192        24816/720896   ( 3.4%) 
+HDR worldlights          0/8192            0/720896   ( 0.0%) 
+leafwaterdata            6/32768          72/393216   ( 0.0%) 
+waterstrips            741/32768        7410/327680   ( 2.3%) 
+waterverts               0/65536           0/786432   ( 0.0%) 
+waterindices         10341/65536       20682/131072   (15.8%) 
+cubemapsamples         155/1024         2480/16384    (15.1%) 
+overlays                 4/512          1408/180224   ( 0.8%) 
+LDR lightdata         [variable]    17686300/0        ( 0.0%) 
+HDR lightdata         [variable]           0/0        ( 0.0%) 
+visdata               [variable]       20729/16777216 ( 0.1%) 
+entdata               [variable]      137061/393216   (34.9%) 
+LDR ambient table     9059/65536       36236/262144   (13.8%) 
+HDR ambient table     9059/65536       36236/262144   (13.8%) 
+LDR leaf ambient     44455/65536     1244740/1835008  (67.8%) 
+HDR leaf ambient      9059/65536      253652/1835008  (13.8%) 
+occluders                0/0               0/0        ( 0.0%) 
+occluder polygons        0/0               0/0        ( 0.0%) 
+occluder vert ind        0/0               0/0        ( 0.0%) 
+detail props          [variable]           1/11766112 ( 0.0%) 
+dtl prp lght          [variable]           1/4        (25.0%) 
+HDR dtl prp lght      [variable]           1/4        (25.0%) 
+static props          [variable]           1/114202   ( 0.0%) 
+pakfile               [variable]    16503857/0        ( 0.0%) 
+physics               [variable]    27353414/4194304  (652.2%) VERY FULL!
+physics terrain       [variable]           0/1048576  ( 0.0%) 
+
+Level flags = 0
+
+Total triangle count: 26485
+Writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+9 minutes, 19 seconds elapsed
+
+
+
+materialPath: C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials
+Loading C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.vmf
+ConVarRef mat_reduceparticles doesn't point to an existing ConVar
+Patching WVT material: maps/wip1-9/nature/blendgrassgravel001b_wvt_patch
+Patching WVT material: maps/wip1-9/nature/blenddirtgrass008a_wvt_patch
+Patching WVT material: maps/wip1-9/dev/dev_blendmeasure_wvt_patch
+fixing up env_cubemap materials on brush sides...
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10
+FindPortalSide: Couldn't find a good match for which brush to assign to a portal near (11180.2 12982.9 -14788.0)
+Leaf 0 contents: 
+Leaf 1 contents: CONTENTS_WINDOW CONTENTS_TRANSLUCENT 
+viscontents (node 0 contents ^ node 1 contents): CONTENTS_WINDOW 
+This means that none of the brushes in leaf 0 or 1 that touches the portal has CONTENTS_WINDOW 
+Check for a huge brush enclosing the coordinates above that has contents CONTENTS_WINDOW 
+Candidate brush IDs: Brush 32915: 
+
+Processing areas...done (0)
+Building Faces...done (0)
+FixTjuncs...
+PruneNodes...
+WriteBSP...
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+done (1)
+writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.prt...Building visibility clusters...
+done (0)
+Creating default LDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_wasteland02*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Creating default HDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_wasteland02*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Finding displacement neighbors...
+Found a displacement edge abutting multiple other edges.
+Finding lightmap sample positions...
+Displacement Alpha : 0...1...2...3...4...5...6...7...8...9...10
+Building Physics collision data...
+WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.
+done (1) (27353414 bytes)
+Error! prop_static using model "models/props_wasteland/controlroom_desk001b.mdl", which must be used on a dynamic entity (i.e. prop_physics). Deleted.
+Error loading studio model STATIC "models/props_wasteland/controlroom_desk001b.mdl"!
+Error loading studio model STATIC ""!
+Error loading studio model STATIC "models/cliffs/rockcluster01.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large02_veg.mdl"!
+Error! To use model "models/props_foliage/rock_forest04.mdl"
+      with prop_static, it must be compiled with $staticprop!
+Error loading studio model STATIC "models/props_foliage/rock_forest04.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge02_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_small01_veg.mdl"!
+Placing detail props : 0...1...2...3...4...5...6...7...8...9...10
+Compacting texture/material tables...
+Reduced 14119 texinfos to 2822
+Reduced 126 texdatas to 107 (5298 bytes to 4315)
+Writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.bsp
+10 seconds elapsed
+
+
+
+4 threads
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.prt
+ 277 portalclusters
+ 614 numportals
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10Optimized: 67 visible clusters (0.15%)
+Total clusters visible: 44358
+Average clusters visible: 160
+Building PAS...
+Average clusters audible: 268
+visdatasize:20729  compressed from 22160
+writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+1 second elapsed
+
+
+
+[Reading texlights from 'lights.rad']
+[45 texlights parsed from 'lights.rad']
+
+Loading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+PREP OK
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+11082 faces
+2 degenerate faces
+41284076 square feet [5944906752.00 square inches]
+2236 Displacements
+9380947 Square Feet [1350856320.00 Square Inches]
+11080 patches before subdivision
+347578 patches after subdivision
+288 direct lights
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10transfers 66537913, max 3371
+transfer lists: 507.6 megs
+0...1...2...3...4...5...6...7...8...9...10	Bounce #1 added RGB(2888116, 2854974, 2740051)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #2 added RGB(904954, 895997, 870888)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #3 added RGB(299385, 297194, 292763)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #4 added RGB(105631, 104786, 103150)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #5 added RGB(36742, 36563, 36313)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #6 added RGB(13119, 13036, 12925)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #7 added RGB(4630, 4610, 4591)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #8 added RGB(1656, 1646, 1637)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #9 added RGB(588, 585, 583)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #10 added RGB(210, 209, 208)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #11 added RGB(75, 74, 74)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #12 added RGB(27, 27, 26)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #13 added RGB(10, 9, 9)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #14 added RGB(3, 3, 3)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #15 added RGB(1, 1, 1)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #16 added RGB(0, 0, 0)
+Build Patch/Sample Hash Table(s).....Done<0.3224 sec>
+0...1...2...3...4...5...6...7...8...9...10FinalLightFace Done
+Computing detail prop lighting : 0...1...2...3...4...5...6...7...8...9...10
+0 of 0 (0% of) surface lights went in leaf ambient cubes.
+0...1...2...3...4...5...6...7...8...9...10Writing leaf ambient...done
+Ready to Finish
+
+Object names       Objects/Maxobjs  Memory / Maxmem  Fullness 
+------------       ---------------  ---------------  -------- 
+models                  21/1024         1008/49152    ( 2.1%) 
+brushes                836/16384       10032/196608   ( 5.1%) 
+brushsides            8625/65536       69000/524288   (13.2%) 
+planes               19744/65536      394880/1310720  (30.1%) 
+vertexes             19248/65536      230976/786432   (29.4%) 
+nodes                 9037/65536      289184/2097152  (13.8%) 
+texinfos              2822/12288      203184/884736   (23.0%) 
+texdata                107/2048         3424/65536    ( 5.2%) 
+dispinfos             2236/0          393536/0        ( 0.0%) 
+disp_verts          147884/0         2957680/0        ( 0.0%) 
+disp_tris           238784/0          477568/0        ( 0.0%) 
+disp_lmsamples     8157347/0         8157347/0        ( 0.0%) 
+faces                11082/65536      620592/3670016  (16.9%) 
+hdr faces                0/65536           0/3670016  ( 0.0%) 
+origfaces             4284/65536      239904/3670016  ( 6.5%) 
+leaves                9059/65536      289888/2097152  (13.8%) 
+leaffaces            10128/65536       20256/131072   (15.5%) 
+leafbrushes           6499/65536       12998/131072   ( 9.9%) 
+areas                    3/1024           24/8192     ( 0.3%) 
+surfedges            65700/512000     262800/2048000  (12.8%) 
+edges                39428/256000     157712/1024000  (15.4%) 
+LDR worldlights        288/8192        25344/720896   ( 3.5%) 
+HDR worldlights          0/8192            0/720896   ( 0.0%) 
+leafwaterdata            6/32768          72/393216   ( 0.0%) 
+waterstrips            741/32768        7410/327680   ( 2.3%) 
+waterverts               0/65536           0/786432   ( 0.0%) 
+waterindices         10341/65536       20682/131072   (15.8%) 
+cubemapsamples         155/1024         2480/16384    (15.1%) 
+overlays                 4/512          1408/180224   ( 0.8%) 
+LDR lightdata         [variable]    17686300/0        ( 0.0%) 
+HDR lightdata         [variable]           0/0        ( 0.0%) 
+visdata               [variable]       20729/16777216 ( 0.1%) 
+entdata               [variable]      139332/393216   (35.4%) 
+LDR ambient table     9059/65536       36236/262144   (13.8%) 
+HDR ambient table     9059/65536       36236/262144   (13.8%) 
+LDR leaf ambient     44452/65536     1244656/1835008  (67.8%) 
+HDR leaf ambient      9059/65536      253652/1835008  (13.8%) 
+occluders                0/0               0/0        ( 0.0%) 
+occluder polygons        0/0               0/0        ( 0.0%) 
+occluder vert ind        0/0               0/0        ( 0.0%) 
+detail props          [variable]           1/11766112 ( 0.0%) 
+dtl prp lght          [variable]           1/4        (25.0%) 
+HDR dtl prp lght      [variable]           1/4        (25.0%) 
+static props          [variable]           1/114202   ( 0.0%) 
+pakfile               [variable]    13552181/0        ( 0.0%) 
+physics               [variable]    27353414/4194304  (652.2%) VERY FULL!
+physics terrain       [variable]           0/1048576  ( 0.0%) 
+
+Level flags = 0
+
+Total triangle count: 26485
+Writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+9 minutes, 27 seconds elapsed
+
+
+
+materialPath: C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials
+Loading C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.vmf
+ConVarRef mat_reduceparticles doesn't point to an existing ConVar
+Patching WVT material: maps/wip1-9/nature/blendgrassgravel001b_wvt_patch
+Patching WVT material: maps/wip1-9/nature/blenddirtgrass008a_wvt_patch
+Patching WVT material: maps/wip1-9/dev/dev_blendmeasure_wvt_patch
+fixing up env_cubemap materials on brush sides...
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10
+FindPortalSide: Couldn't find a good match for which brush to assign to a portal near (11180.2 12982.9 -14788.0)
+Leaf 0 contents: 
+Leaf 1 contents: CONTENTS_WINDOW CONTENTS_TRANSLUCENT 
+viscontents (node 0 contents ^ node 1 contents): CONTENTS_WINDOW 
+This means that none of the brushes in leaf 0 or 1 that touches the portal has CONTENTS_WINDOW 
+Check for a huge brush enclosing the coordinates above that has contents CONTENTS_WINDOW 
+Candidate brush IDs: Brush 32915: 
+
+Processing areas...done (0)
+Building Faces...done (0)
+FixTjuncs...
+PruneNodes...
+WriteBSP...
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+done (1)
+writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.prt...Building visibility clusters...
+done (0)
+Creating default LDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Creating default HDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Finding displacement neighbors...
+Found a displacement edge abutting multiple other edges.
+Finding lightmap sample positions...
+Displacement Alpha : 0...1...2...3...4...5...6...7...8...9...10
+Building Physics collision data...
+WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.
+done (1) (27353414 bytes)
+Error! prop_static using model "models/props_wasteland/controlroom_desk001b.mdl", which must be used on a dynamic entity (i.e. prop_physics). Deleted.
+Error loading studio model STATIC "models/props_wasteland/controlroom_desk001b.mdl"!
+Error loading studio model STATIC ""!
+Error loading studio model STATIC "models/cliffs/rockcluster01.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large02_veg.mdl"!
+Error! To use model "models/props_foliage/rock_forest04.mdl"
+      with prop_static, it must be compiled with $staticprop!
+Error loading studio model STATIC "models/props_foliage/rock_forest04.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge02_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_small01_veg.mdl"!
+Placing detail props : 0...1...2...3...4...5...6...7...8...9...10
+Compacting texture/material tables...
+Reduced 14123 texinfos to 2823
+Reduced 126 texdatas to 107 (5298 bytes to 4315)
+Writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.bsp
+10 seconds elapsed
+
+
+
+4 threads
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.prt
+ 277 portalclusters
+ 614 numportals
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10Optimized: 67 visible clusters (0.15%)
+Total clusters visible: 44358
+Average clusters visible: 160
+Building PAS...
+Average clusters audible: 268
+visdatasize:20729  compressed from 22160
+writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+1 second elapsed
+
+
+
+[Reading texlights from 'lights.rad']
+[45 texlights parsed from 'lights.rad']
+
+Loading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+PREP OK
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+11082 faces
+2 degenerate faces
+41284104 square feet [5944910848.00 square inches]
+2236 Displacements
+9380947 Square Feet [1350856320.00 Square Inches]
+11080 patches before subdivision
+347578 patches after subdivision
+288 direct lights
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10transfers 66523436, max 3371
+transfer lists: 507.5 megs
+0...1...2...3...4...5...6...7...8...9...10	Bounce #1 added RGB(2890610, 2857154, 2742013)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #2 added RGB(905759, 896746, 871481)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #3 added RGB(299498, 297290, 292831)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #4 added RGB(105659, 104810, 103165)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #5 added RGB(36746, 36566, 36315)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #6 added RGB(13120, 13036, 12925)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #7 added RGB(4630, 4610, 4591)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #8 added RGB(1656, 1646, 1637)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #9 added RGB(588, 585, 583)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #10 added RGB(210, 209, 208)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #11 added RGB(75, 74, 74)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #12 added RGB(27, 27, 26)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #13 added RGB(10, 9, 9)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #14 added RGB(3, 3, 3)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #15 added RGB(1, 1, 1)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #16 added RGB(0, 0, 0)
+Build Patch/Sample Hash Table(s).....Done<0.3209 sec>
+0...1...2...3...4...5...6...7...8...9...10FinalLightFace Done
+Computing detail prop lighting : 0...1...2...3...4...5...6...7...8...9...10
+0 of 0 (0% of) surface lights went in leaf ambient cubes.
+0...1...2...3...4...5...6...7...8...9...10Writing leaf ambient...done
+Ready to Finish
+
+Object names       Objects/Maxobjs  Memory / Maxmem  Fullness 
+------------       ---------------  ---------------  -------- 
+models                  21/1024         1008/49152    ( 2.1%) 
+brushes                836/16384       10032/196608   ( 5.1%) 
+brushsides            8660/65536       69280/524288   (13.2%) 
+planes               19804/65536      396080/1310720  (30.2%) 
+vertexes             19248/65536      230976/786432   (29.4%) 
+nodes                 9037/65536      289184/2097152  (13.8%) 
+texinfos              2823/12288      203256/884736   (23.0%) 
+texdata                107/2048         3424/65536    ( 5.2%) 
+dispinfos             2236/0          393536/0        ( 0.0%) 
+disp_verts          147884/0         2957680/0        ( 0.0%) 
+disp_tris           238784/0          477568/0        ( 0.0%) 
+disp_lmsamples     8157347/0         8157347/0        ( 0.0%) 
+faces                11082/65536      620592/3670016  (16.9%) 
+hdr faces                0/65536           0/3670016  ( 0.0%) 
+origfaces             4284/65536      239904/3670016  ( 6.5%) 
+leaves                9059/65536      289888/2097152  (13.8%) 
+leaffaces            10128/65536       20256/131072   (15.5%) 
+leafbrushes           6499/65536       12998/131072   ( 9.9%) 
+areas                    3/1024           24/8192     ( 0.3%) 
+surfedges            65700/512000     262800/2048000  (12.8%) 
+edges                39428/256000     157712/1024000  (15.4%) 
+LDR worldlights        288/8192        25344/720896   ( 3.5%) 
+HDR worldlights          0/8192            0/720896   ( 0.0%) 
+leafwaterdata            6/32768          72/393216   ( 0.0%) 
+waterstrips            741/32768        7410/327680   ( 2.3%) 
+waterverts               0/65536           0/786432   ( 0.0%) 
+waterindices         10341/65536       20682/131072   (15.8%) 
+cubemapsamples         155/1024         2480/16384    (15.1%) 
+overlays                 4/512          1408/180224   ( 0.8%) 
+LDR lightdata         [variable]    17693044/0        ( 0.0%) 
+HDR lightdata         [variable]           0/0        ( 0.0%) 
+visdata               [variable]       20729/16777216 ( 0.1%) 
+entdata               [variable]      140856/393216   (35.8%) 
+LDR ambient table     9059/65536       36236/262144   (13.8%) 
+HDR ambient table     9059/65536       36236/262144   (13.8%) 
+LDR leaf ambient     44452/65536     1244656/1835008  (67.8%) 
+HDR leaf ambient      9059/65536      253652/1835008  (13.8%) 
+occluders                0/0               0/0        ( 0.0%) 
+occluder polygons        0/0               0/0        ( 0.0%) 
+occluder vert ind        0/0               0/0        ( 0.0%) 
+detail props          [variable]           1/11766112 ( 0.0%) 
+dtl prp lght          [variable]           1/4        (25.0%) 
+HDR dtl prp lght      [variable]           1/4        (25.0%) 
+static props          [variable]           1/114202   ( 0.0%) 
+pakfile               [variable]    16503857/0        ( 0.0%) 
+physics               [variable]    27353414/4194304  (652.2%) VERY FULL!
+physics terrain       [variable]           0/1048576  ( 0.0%) 
+
+Level flags = 0
+
+Total triangle count: 26485
+Writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+9 minutes, 49 seconds elapsed
+
+
+
+materialPath: C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials
+Loading C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.vmf
+ConVarRef mat_reduceparticles doesn't point to an existing ConVar
+Patching WVT material: maps/wip1-9/nature/blendgrassgravel001b_wvt_patch
+Patching WVT material: maps/wip1-9/nature/blenddirtgrass008a_wvt_patch
+Patching WVT material: maps/wip1-9/dev/dev_blendmeasure_wvt_patch
+fixing up env_cubemap materials on brush sides...
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10
+FindPortalSide: Couldn't find a good match for which brush to assign to a portal near (11180.2 12982.9 -14788.0)
+Leaf 0 contents: 
+Leaf 1 contents: CONTENTS_WINDOW CONTENTS_TRANSLUCENT 
+viscontents (node 0 contents ^ node 1 contents): CONTENTS_WINDOW 
+This means that none of the brushes in leaf 0 or 1 that touches the portal has CONTENTS_WINDOW 
+Check for a huge brush enclosing the coordinates above that has contents CONTENTS_WINDOW 
+Candidate brush IDs: Brush 32915: 
+
+Processing areas...done (0)
+Building Faces...done (0)
+FixTjuncs...
+PruneNodes...
+WriteBSP...
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+done (1)
+writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.prt...Building visibility clusters...
+done (1)
+Creating default LDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Creating default HDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Finding displacement neighbors...
+Found a displacement edge abutting multiple other edges.
+Finding lightmap sample positions...
+Displacement Alpha : 0...1...2...3...4...5...6...7...8...9...10
+Building Physics collision data...
+WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.
+done (2) (27363543 bytes)
+Error! prop_static using model "models/props_wasteland/controlroom_desk001b.mdl", which must be used on a dynamic entity (i.e. prop_physics). Deleted.
+Error loading studio model STATIC "models/props_wasteland/controlroom_desk001b.mdl"!
+Error loading studio model STATIC ""!
+Error loading studio model STATIC "models/cliffs/rockcluster01.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large02_veg.mdl"!
+Error! To use model "models/props_foliage/rock_forest04.mdl"
+      with prop_static, it must be compiled with $staticprop!
+Error loading studio model STATIC "models/props_foliage/rock_forest04.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge02_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_small01_veg.mdl"!
+Placing detail props : 0...1...2...3...4...5...6...7...8...9...10
+Compacting texture/material tables...
+Reduced 14135 texinfos to 2834
+Reduced 131 texdatas to 112 (5551 bytes to 4568)
+Writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.bsp
+12 seconds elapsed
+
+
+
+4 threads
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.prt
+ 277 portalclusters
+ 645 numportals
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10Optimized: 67 visible clusters (0.15%)
+Total clusters visible: 43266
+Average clusters visible: 156
+Building PAS...
+Average clusters audible: 269
+visdatasize:20739  compressed from 22160
+writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+1 second elapsed
+
+
+
+[Reading texlights from 'lights.rad']
+[45 texlights parsed from 'lights.rad']
+
+Loading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+PREP OK
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+11133 faces
+2 degenerate faces
+41282576 square feet [5944690688.00 square inches]
+2236 Displacements
+9380947 Square Feet [1350856320.00 Square Inches]
+11131 patches before subdivision
+348359 patches after subdivision
+276 direct lights
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10transfers 67317495, max 3371
+transfer lists: 513.6 megs
+0...1...2...3...4...5...6...7...8...9...10	Bounce #1 added RGB(2906578, 2873130, 2757775)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #2 added RGB(913451, 904434, 878985)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #3 added RGB(301458, 299240, 294721)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #4 added RGB(106422, 105566, 103905)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #5 added RGB(36976, 36794, 36539)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #6 added RGB(13206, 13122, 13009)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #7 added RGB(4658, 4638, 4618)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #8 added RGB(1666, 1656, 1647)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #9 added RGB(591, 588, 586)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #10 added RGB(211, 210, 209)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #11 added RGB(75, 75, 75)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #12 added RGB(27, 27, 27)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #13 added RGB(10, 10, 9)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #14 added RGB(3, 3, 3)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #15 added RGB(1, 1, 1)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #16 added RGB(0, 0, 0)
+Build Patch/Sample Hash Table(s).....Done<0.3210 sec>
+0...1...2...3...4...5...6...7...8...9...10FinalLightFace Done
+Computing detail prop lighting : 0...1...2...3...4...5...6...7...8...9...10
+0 of 0 (0% of) surface lights went in leaf ambient cubes.
+0...1...2...3...4...5...6...7...8...9...10Writing leaf ambient...done
+Ready to Finish
+
+Object names       Objects/Maxobjs  Memory / Maxmem  Fullness 
+------------       ---------------  ---------------  -------- 
+models                  20/1024          960/49152    ( 2.0%) 
+brushes                865/16384       10380/196608   ( 5.3%) 
+brushsides            8834/65536       70672/524288   (13.5%) 
+planes               19804/65536      396080/1310720  (30.2%) 
+vertexes             19366/65536      232392/786432   (29.6%) 
+nodes                 9033/65536      289056/2097152  (13.8%) 
+texinfos              2834/12288      204048/884736   (23.1%) 
+texdata                112/2048         3584/65536    ( 5.5%) 
+dispinfos             2236/0          393536/0        ( 0.0%) 
+disp_verts          147884/0         2957680/0        ( 0.0%) 
+disp_tris           238784/0          477568/0        ( 0.0%) 
+disp_lmsamples     8157347/0         8157347/0        ( 0.0%) 
+faces                11133/65536      623448/3670016  (17.0%) 
+hdr faces                0/65536           0/3670016  ( 0.0%) 
+origfaces             4332/65536      242592/3670016  ( 6.6%) 
+leaves                9054/65536      289728/2097152  (13.8%) 
+leaffaces            10134/65536       20268/131072   (15.5%) 
+leafbrushes           6535/65536       13070/131072   (10.0%) 
+areas                    3/1024           24/8192     ( 0.3%) 
+surfedges            66118/512000     264472/2048000  (12.9%) 
+edges                39698/256000     158792/1024000  (15.5%) 
+LDR worldlights        276/8192        24288/720896   ( 3.4%) 
+HDR worldlights          0/8192            0/720896   ( 0.0%) 
+leafwaterdata            6/32768          72/393216   ( 0.0%) 
+waterstrips            736/32768        7360/327680   ( 2.2%) 
+waterverts               0/65536           0/786432   ( 0.0%) 
+waterindices         10281/65536       20562/131072   (15.7%) 
+cubemapsamples         155/1024         2480/16384    (15.1%) 
+overlays                 4/512          1408/180224   ( 0.8%) 
+LDR lightdata         [variable]    17705980/0        ( 0.0%) 
+HDR lightdata         [variable]           0/0        ( 0.0%) 
+visdata               [variable]       20739/16777216 ( 0.1%) 
+entdata               [variable]      135981/393216   (34.6%) 
+LDR ambient table     9054/65536       36216/262144   (13.8%) 
+HDR ambient table     9054/65536       36216/262144   (13.8%) 
+LDR leaf ambient     44643/65536     1250004/1835008  (68.1%) 
+HDR leaf ambient      9054/65536      253512/1835008  (13.8%) 
+occluders                0/0               0/0        ( 0.0%) 
+occluder polygons        0/0               0/0        ( 0.0%) 
+occluder vert ind        0/0               0/0        ( 0.0%) 
+detail props          [variable]           1/11766112 ( 0.0%) 
+dtl prp lght          [variable]           1/4        (25.0%) 
+HDR dtl prp lght      [variable]           1/4        (25.0%) 
+static props          [variable]           1/114202   ( 0.0%) 
+pakfile               [variable]    16505531/0        ( 0.0%) 
+physics               [variable]    27363543/4194304  (652.4%) VERY FULL!
+physics terrain       [variable]           0/1048576  ( 0.0%) 
+
+Level flags = 0
+
+Total triangle count: 26609
+Writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+9 minutes, 57 seconds elapsed
+
+
+
+materialPath: C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials
+Loading C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.vmf
+ConVarRef mat_reduceparticles doesn't point to an existing ConVar
+Patching WVT material: maps/wip1-9/nature/blendgrassgravel001b_wvt_patch
+Patching WVT material: maps/wip1-9/nature/blenddirtgrass008a_wvt_patch
+Patching WVT material: maps/wip1-9/dev/dev_blendmeasure_wvt_patch
+fixing up env_cubemap materials on brush sides...
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10
+FindPortalSide: Couldn't find a good match for which brush to assign to a portal near (11180.2 12982.9 -14788.0)
+Leaf 0 contents: 
+Leaf 1 contents: CONTENTS_WINDOW CONTENTS_TRANSLUCENT 
+viscontents (node 0 contents ^ node 1 contents): CONTENTS_WINDOW 
+This means that none of the brushes in leaf 0 or 1 that touches the portal has CONTENTS_WINDOW 
+Check for a huge brush enclosing the coordinates above that has contents CONTENTS_WINDOW 
+Candidate brush IDs: Brush 32915: 
+
+Processing areas...done (0)
+Building Faces...done (0)
+FixTjuncs...
+PruneNodes...
+WriteBSP...
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+done (1)
+writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.prt...Building visibility clusters...
+done (0)
+Creating default LDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Creating default HDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Finding displacement neighbors...
+Found a displacement edge abutting multiple other edges.
+Finding lightmap sample positions...
+Displacement Alpha : 0...1...2...3...4...5...6...7...8...9...10
+Building Physics collision data...
+WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.
+done (1) (27368998 bytes)
+Error! prop_static using model "models/props_wasteland/controlroom_desk001b.mdl", which must be used on a dynamic entity (i.e. prop_physics). Deleted.
+Error loading studio model STATIC "models/props_wasteland/controlroom_desk001b.mdl"!
+Error loading studio model STATIC ""!
+Error loading studio model STATIC "models/cliffs/rockcluster01.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large02_veg.mdl"!
+Error! To use model "models/props_foliage/rock_forest04.mdl"
+      with prop_static, it must be compiled with $staticprop!
+Error loading studio model STATIC "models/props_foliage/rock_forest04.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge02_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_small01_veg.mdl"!
+Placing detail props : 0...1...2...3...4...5...6...7...8...9...10
+Compacting texture/material tables...
+Reduced 14148 texinfos to 2836
+Reduced 132 texdatas to 112 (5578 bytes to 4568)
+Writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.bsp
+10 seconds elapsed
+
+
+
+4 threads
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.prt
+ 277 portalclusters
+ 645 numportals
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10Optimized: 67 visible clusters (0.15%)
+Total clusters visible: 43266
+Average clusters visible: 156
+Building PAS...
+Average clusters audible: 269
+visdatasize:20739  compressed from 22160
+writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+1 second elapsed
+
+
+
+[Reading texlights from 'lights.rad']
+[45 texlights parsed from 'lights.rad']
+
+Loading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+PREP OK
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+11154 faces
+2 degenerate faces
+41283272 square feet [5944791040.00 square inches]
+2237 Displacements
+9381384 Square Feet [1350919296.00 Square Inches]
+11152 patches before subdivision
+348956 patches after subdivision
+276 direct lights
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10transfers 67457392, max 3371
+transfer lists: 514.7 megs
+0...1...2...3...4...5...6...7...8...9...10	Bounce #1 added RGB(2974242, 2878957, 2709680)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #2 added RGB(927248, 908778, 875541)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #3 added RGB(302705, 299608, 294550)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #4 added RGB(107070, 105815, 103927)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #5 added RGB(37060, 36843, 36572)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #6 added RGB(13252, 13144, 13022)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #7 added RGB(4666, 4644, 4624)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #8 added RGB(1670, 1659, 1649)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #9 added RGB(592, 589, 587)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #10 added RGB(212, 210, 209)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #11 added RGB(75, 75, 75)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #12 added RGB(27, 27, 27)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #13 added RGB(10, 10, 9)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #14 added RGB(3, 3, 3)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #15 added RGB(1, 1, 1)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #16 added RGB(0, 0, 0)
+Build Patch/Sample Hash Table(s).....Done<0.2844 sec>
+0...1...2...3...4...5...6...7...8...9...10FinalLightFace Done
+Computing detail prop lighting : 0...1...2...3...4...5...6...7...8...9...10
+0 of 0 (0% of) surface lights went in leaf ambient cubes.
+0...1...2...3...4...5...6...7...8...9...10Writing leaf ambient...done
+Ready to Finish
+
+Object names       Objects/Maxobjs  Memory / Maxmem  Fullness 
+------------       ---------------  ---------------  -------- 
+models                  21/1024         1008/49152    ( 2.1%) 
+brushes                869/16384       10428/196608   ( 5.3%) 
+brushsides            8853/65536       70824/524288   (13.5%) 
+planes               19804/65536      396080/1310720  (30.2%) 
+vertexes             19402/65536      232824/786432   (29.6%) 
+nodes                 9045/65536      289440/2097152  (13.8%) 
+texinfos              2836/12288      204192/884736   (23.1%) 
+texdata                112/2048         3584/65536    ( 5.5%) 
+dispinfos             2237/0          393712/0        ( 0.0%) 
+disp_verts          147909/0         2958180/0        ( 0.0%) 
+disp_tris           238816/0          477632/0        ( 0.0%) 
+disp_lmsamples     8157467/0         8157467/0        ( 0.0%) 
+faces                11154/65536      624624/3670016  (17.0%) 
+hdr faces                0/65536           0/3670016  ( 0.0%) 
+origfaces             4333/65536      242648/3670016  ( 6.6%) 
+leaves                9067/65536      290144/2097152  (13.8%) 
+leaffaces            10190/65536       20380/131072   (15.5%) 
+leafbrushes           6539/65536       13078/131072   (10.0%) 
+areas                    3/1024           24/8192     ( 0.3%) 
+surfedges            66214/512000     264856/2048000  (12.9%) 
+edges                39774/256000     159096/1024000  (15.5%) 
+LDR worldlights        276/8192        24288/720896   ( 3.4%) 
+HDR worldlights          0/8192            0/720896   ( 0.0%) 
+leafwaterdata            6/32768          72/393216   ( 0.0%) 
+waterstrips            739/32768        7390/327680   ( 2.3%) 
+waterverts               0/65536           0/786432   ( 0.0%) 
+waterindices         10302/65536       20604/131072   (15.7%) 
+cubemapsamples         155/1024         2480/16384    (15.1%) 
+overlays                 4/512          1408/180224   ( 0.8%) 
+LDR lightdata         [variable]    17711568/0        ( 0.0%) 
+HDR lightdata         [variable]           0/0        ( 0.0%) 
+visdata               [variable]       20739/16777216 ( 0.1%) 
+entdata               [variable]      136513/393216   (34.7%) 
+LDR ambient table     9067/65536       36268/262144   (13.8%) 
+HDR ambient table     9067/65536       36268/262144   (13.8%) 
+LDR leaf ambient     45571/65536     1275988/1835008  (69.5%) 
+HDR leaf ambient      9067/65536      253876/1835008  (13.8%) 
+occluders                0/0               0/0        ( 0.0%) 
+occluder polygons        0/0               0/0        ( 0.0%) 
+occluder vert ind        0/0               0/0        ( 0.0%) 
+detail props          [variable]           1/11766112 ( 0.0%) 
+dtl prp lght          [variable]           1/4        (25.0%) 
+HDR dtl prp lght      [variable]           1/4        (25.0%) 
+static props          [variable]           1/114202   ( 0.0%) 
+pakfile               [variable]    16505531/0        ( 0.0%) 
+physics               [variable]    27368998/4194304  (652.5%) VERY FULL!
+physics terrain       [variable]           0/1048576  ( 0.0%) 
+
+Level flags = 0
+
+Total triangle count: 26659
+Writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+9 minutes, 12 seconds elapsed
+
+
+
+materialPath: C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials
+Loading C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.vmf
+ConVarRef mat_reduceparticles doesn't point to an existing ConVar
+Patching WVT material: maps/wip1-9/nature/blendgrassgravel001b_wvt_patch
+Patching WVT material: maps/wip1-9/nature/blenddirtgrass008a_wvt_patch
+Patching WVT material: maps/wip1-9/dev/dev_blendmeasure_wvt_patch
+fixing up env_cubemap materials on brush sides...
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10
+FindPortalSide: Couldn't find a good match for which brush to assign to a portal near (11180.2 12982.9 -14788.0)
+Leaf 0 contents: 
+Leaf 1 contents: CONTENTS_WINDOW CONTENTS_TRANSLUCENT 
+viscontents (node 0 contents ^ node 1 contents): CONTENTS_WINDOW 
+This means that none of the brushes in leaf 0 or 1 that touches the portal has CONTENTS_WINDOW 
+Check for a huge brush enclosing the coordinates above that has contents CONTENTS_WINDOW 
+Candidate brush IDs: Brush 32915: 
+
+Processing areas...done (0)
+Building Faces...done (0)
+FixTjuncs...
+PruneNodes...
+WriteBSP...
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+done (1)
+writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.prt...Building visibility clusters...
+done (0)
+Creating default LDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Creating default HDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Finding displacement neighbors...
+Found a displacement edge abutting multiple other edges.
+Finding lightmap sample positions...
+Displacement Alpha : 0...1...2...3...4...5...6...7...8...9...10
+Building Physics collision data...
+WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.
+done (1) (27367302 bytes)
+Error! prop_static using model "models/props_wasteland/controlroom_desk001b.mdl", which must be used on a dynamic entity (i.e. prop_physics). Deleted.
+Error loading studio model STATIC "models/props_wasteland/controlroom_desk001b.mdl"!
+Error loading studio model STATIC ""!
+Error loading studio model STATIC "models/cliffs/rockcluster01.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large02_veg.mdl"!
+Error! To use model "models/props_foliage/rock_forest04.mdl"
+      with prop_static, it must be compiled with $staticprop!
+Error loading studio model STATIC "models/props_foliage/rock_forest04.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge02_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_small01_veg.mdl"!
+Placing detail props : 0...1...2...3...4...5...6...7...8...9...10
+Compacting texture/material tables...
+Reduced 14140 texinfos to 2837
+Reduced 131 texdatas to 112 (5551 bytes to 4568)
+Writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.bsp
+10 seconds elapsed
+
+
+
+4 threads
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.prt
+ 277 portalclusters
+ 647 numportals
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10Optimized: 67 visible clusters (0.16%)
+Total clusters visible: 43190
+Average clusters visible: 155
+Building PAS...
+Average clusters audible: 269
+visdatasize:20738  compressed from 22160
+writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+1 second elapsed
+
+
+
+[Reading texlights from 'lights.rad']
+[45 texlights parsed from 'lights.rad']
+
+Loading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+PREP OK
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+11154 faces
+2 degenerate faces
+41283472 square feet [5944819712.00 square inches]
+2237 Displacements
+9381384 Square Feet [1350919296.00 Square Inches]
+11152 patches before subdivision
+348608 patches after subdivision
+276 direct lights
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10transfers 67465416, max 3371
+transfer lists: 514.7 megs
+0...1...2...3...4...5...6...7...8...9...10	Bounce #1 added RGB(2968731, 2874408, 2706170)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #2 added RGB(925374, 907085, 874256)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #3 added RGB(302570, 299496, 294477)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #4 added RGB(107011, 105765, 103894)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #5 added RGB(37056, 36840, 36571)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #6 added RGB(13250, 13142, 13021)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #7 added RGB(4666, 4644, 4624)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #8 added RGB(1670, 1659, 1649)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #9 added RGB(592, 589, 587)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #10 added RGB(212, 210, 209)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #11 added RGB(75, 75, 75)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #12 added RGB(27, 27, 27)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #13 added RGB(10, 10, 9)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #14 added RGB(3, 3, 3)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #15 added RGB(1, 1, 1)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #16 added RGB(0, 0, 0)
+Build Patch/Sample Hash Table(s).....Done<0.3180 sec>
+0...1...2...3...4...5...6...7...8...9...10FinalLightFace Done
+Computing detail prop lighting : 0...1...2...3...4...5...6...7...8...9...10
+0 of 0 (0% of) surface lights went in leaf ambient cubes.
+0...1...2...3...4...5...6...7...8...9...10Writing leaf ambient...done
+Ready to Finish
+
+Object names       Objects/Maxobjs  Memory / Maxmem  Fullness 
+------------       ---------------  ---------------  -------- 
+models                  21/4096         1008/196608   ( 0.5%) 
+brushes                864/16384       10368/196608   ( 5.3%) 
+brushsides            8788/65536       70304/524288   (13.4%) 
+planes               19770/65536      395400/1310720  (30.2%) 
+vertexes             19384/65536      232608/786432   (29.6%) 
+nodes                 9034/65536      289088/2097152  (13.8%) 
+texinfos              2837/12288      204264/884736   (23.1%) 
+texdata                112/2048         3584/65536    ( 5.5%) 
+dispinfos             2237/0          393712/0        ( 0.0%) 
+disp_verts          147909/0         2958180/0        ( 0.0%) 
+disp_tris           238816/0          477632/0        ( 0.0%) 
+disp_lmsamples     8157467/0         8157467/0        ( 0.0%) 
+faces                11154/65536      624624/3670016  (17.0%) 
+hdr faces                0/65536           0/3670016  ( 0.0%) 
+origfaces             4338/65536      242928/3670016  ( 6.6%) 
+leaves                9056/65536      289792/2097152  (13.8%) 
+leaffaces            10145/65536       20290/131072   (15.5%) 
+leafbrushes           6537/65536       13074/131072   (10.0%) 
+areas                    3/1024           24/8192     ( 0.3%) 
+surfedges            66222/512000     264888/2048000  (12.9%) 
+edges                39746/256000     158984/1024000  (15.5%) 
+LDR worldlights        276/8192        24288/720896   ( 3.4%) 
+HDR worldlights          0/8192            0/720896   ( 0.0%) 
+leafwaterdata            6/32768          72/393216   ( 0.0%) 
+waterstrips            733/32768        7330/327680   ( 2.2%) 
+waterverts               0/65536           0/786432   ( 0.0%) 
+waterindices         10224/65536       20448/131072   (15.6%) 
+cubemapsamples         155/1024         2480/16384    (15.1%) 
+overlays                 4/512          1408/180224   ( 0.8%) 
+LDR lightdata         [variable]    17710028/0        ( 0.0%) 
+HDR lightdata         [variable]           0/0        ( 0.0%) 
+visdata               [variable]       20738/16777216 ( 0.1%) 
+entdata               [variable]      137181/393216   (34.9%) 
+LDR ambient table     9056/65536       36224/262144   (13.8%) 
+HDR ambient table     9056/65536       36224/262144   (13.8%) 
+LDR leaf ambient     45474/65536     1273272/1835008  (69.4%) 
+HDR leaf ambient      9056/65536      253568/1835008  (13.8%) 
+occluders                0/0               0/0        ( 0.0%) 
+occluder polygons        0/0               0/0        ( 0.0%) 
+occluder vert ind        0/0               0/0        ( 0.0%) 
+detail props          [variable]           1/11481672 ( 0.0%) 
+dtl prp lght          [variable]           1/4        (25.0%) 
+HDR dtl prp lght      [variable]           1/4        (25.0%) 
+static props          [variable]           1/114202   ( 0.0%) 
+pakfile               [variable]    16505531/0        ( 0.0%) 
+physics               [variable]    27367302/4194304  (652.5%) VERY FULL!
+physics terrain       [variable]           0/1048576  ( 0.0%) 
+
+Level flags = 0
+
+Total triangle count: 26647
+Writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+9 minutes, 23 seconds elapsed
+
+
+
+materialPath: C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials
+Loading C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.vmf
+ConVarRef mat_reduceparticles doesn't point to an existing ConVar
+Patching WVT material: maps/wip1-9/nature/blendgrassgravel001b_wvt_patch
+Patching WVT material: maps/wip1-9/nature/blenddirtgrass008a_wvt_patch
+Patching WVT material: maps/wip1-9/dev/dev_blendmeasure_wvt_patch
+fixing up env_cubemap materials on brush sides...
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10
+FindPortalSide: Couldn't find a good match for which brush to assign to a portal near (11180.2 12982.9 -14788.0)
+Leaf 0 contents: 
+Leaf 1 contents: CONTENTS_WINDOW CONTENTS_TRANSLUCENT 
+viscontents (node 0 contents ^ node 1 contents): CONTENTS_WINDOW 
+This means that none of the brushes in leaf 0 or 1 that touches the portal has CONTENTS_WINDOW 
+Check for a huge brush enclosing the coordinates above that has contents CONTENTS_WINDOW 
+Candidate brush IDs: Brush 32915: 
+
+Processing areas...done (0)
+Building Faces...done (0)
+FixTjuncs...
+PruneNodes...
+WriteBSP...
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+NODRAW on terrain surface!
+done (0)
+writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.prt...Building visibility clusters...
+done (0)
+Creating default LDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Creating default HDR cubemaps for env_cubemap using skybox materials:
+   skybox/sky_day01_05*.vmt
+ ! Run buildcubemaps in the engine to get the correct cube maps.
+Finding displacement neighbors...
+Found a displacement edge abutting multiple other edges.
+Finding lightmap sample positions...
+Displacement Alpha : 0...1...2...3...4...5...6...7...8...9...10
+Building Physics collision data...
+WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.
+done (1) (27368173 bytes)
+Error! prop_static using model "models/props_wasteland/controlroom_desk001b.mdl", which must be used on a dynamic entity (i.e. prop_physics). Deleted.
+Error loading studio model STATIC "models/props_wasteland/controlroom_desk001b.mdl"!
+Error loading studio model STATIC ""!
+Error loading studio model STATIC "models/cliffs/rockcluster01.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large03_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_large02_veg.mdl"!
+Error! To use model "models/props_foliage/rock_forest04.mdl"
+      with prop_static, it must be compiled with $staticprop!
+Error loading studio model STATIC "models/props_foliage/rock_forest04.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_xlarge02_veg.mdl"!
+Error loading studio model STATIC "models/cliffs/rocks_small01_veg.mdl"!
+Placing detail props : 0...1...2...3...4...5...6...7...8...9...10
+Compacting texture/material tables...
+Reduced 14154 texinfos to 2843
+Reduced 136 texdatas to 116 (5773 bytes to 4770)
+Writing C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\maps\Wip1-9.bsp
+11 seconds elapsed
+
+
+
+4 threads
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+reading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.prt
+ 297 portalclusters
+ 656 numportals
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10Optimized: 70 visible clusters (0.14%)
+Total clusters visible: 50653
+Average clusters visible: 170
+Building PAS...
+Average clusters audible: 289
+visdatasize:24325  compressed from 23760
+writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+1 second elapsed
+
+
+
+[Reading texlights from 'lights.rad']
+[45 texlights parsed from 'lights.rad']
+
+Loading c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+PREP OK
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+Patch Sample Radius Clamped!
+11174 faces
+2 degenerate faces
+41285396 square feet [5945097216.00 square inches]
+2237 Displacements
+9381384 Square Feet [1350919296.00 Square Inches]
+11172 patches before subdivision
+348228 patches after subdivision
+276 direct lights
+0...1...2...3...4...5...6...7...8...9...100...1...2...3...4...5...6...7...8...9...10transfers 67266069, max 3371
+transfer lists: 513.2 megs
+0...1...2...3...4...5...6...7...8...9...10	Bounce #1 added RGB(2961782, 2866673, 2697149)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #2 added RGB(919931, 901616, 868723)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #3 added RGB(301183, 298109, 293085)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #4 added RGB(106404, 105161, 103291)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #5 added RGB(36876, 36661, 36393)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #6 added RGB(13180, 13072, 12951)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #7 added RGB(4643, 4622, 4601)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #8 added RGB(1661, 1650, 1641)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #9 added RGB(589, 586, 584)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #10 added RGB(211, 209, 208)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #11 added RGB(75, 75, 74)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #12 added RGB(27, 27, 26)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #13 added RGB(10, 9, 9)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #14 added RGB(3, 3, 3)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #15 added RGB(1, 1, 1)
+0...1...2...3...4...5...6...7...8...9...10	Bounce #16 added RGB(0, 0, 0)
+Build Patch/Sample Hash Table(s).....Done<0.3083 sec>
+0...1...2...3...4...5...6...7...8...9...10FinalLightFace Done
+Computing detail prop lighting : 0...1...2...3...4...5...6...7...8...9...10
+0 of 0 (0% of) surface lights went in leaf ambient cubes.
+0...1...2...3...4...5...6...7...8...9...10Writing leaf ambient...done
+Ready to Finish
+
+Object names       Objects/Maxobjs  Memory / Maxmem  Fullness 
+------------       ---------------  ---------------  -------- 
+models                  22/4096         1056/196608   ( 0.5%) 
+brushes                865/16384       10380/196608   ( 5.3%) 
+brushsides            8794/65536       70352/524288   (13.4%) 
+planes               19792/65536      395840/1310720  (30.2%) 
+vertexes             19417/65536      233004/786432   (29.6%) 
+nodes                 9084/65536      290688/2097152  (13.9%) 
+texinfos              2843/12288      204696/884736   (23.1%) 
+texdata                116/2048         3712/65536    ( 5.7%) 
+dispinfos             2237/0          393712/0        ( 0.0%) 
+disp_verts          147909/0         2958180/0        ( 0.0%) 
+disp_tris           238816/0          477632/0        ( 0.0%) 
+disp_lmsamples     8157467/0         8157467/0        ( 0.0%) 
+faces                11174/65536      625744/3670016  (17.1%) 
+hdr faces                0/65536           0/3670016  ( 0.0%) 
+origfaces             4354/65536      243824/3670016  ( 6.6%) 
+leaves                9107/65536      291424/2097152  (13.9%) 
+leaffaces            10211/65536       20422/131072   (15.6%) 
+leafbrushes           6544/65536       13088/131072   (10.0%) 
+areas                    3/1024           24/8192     ( 0.3%) 
+surfedges            66388/512000     265552/2048000  (13.0%) 
+edges                39839/256000     159356/1024000  (15.6%) 
+LDR worldlights        276/8192        24288/720896   ( 3.4%) 
+HDR worldlights          0/8192            0/720896   ( 0.0%) 
+leafwaterdata            6/32768          72/393216   ( 0.0%) 
+waterstrips            747/32768        7470/327680   ( 2.3%) 
+waterverts               0/65536           0/786432   ( 0.0%) 
+waterindices         10437/65536       20874/131072   (15.9%) 
+cubemapsamples         155/1024         2480/16384    (15.1%) 
+overlays                 4/512          1408/180224   ( 0.8%) 
+LDR lightdata         [variable]    17735136/0        ( 0.0%) 
+HDR lightdata         [variable]           0/0        ( 0.0%) 
+visdata               [variable]       24325/16777216 ( 0.1%) 
+entdata               [variable]      137789/393216   (35.0%) 
+LDR ambient table     9107/65536       36428/262144   (13.9%) 
+HDR ambient table     9107/65536       36428/262144   (13.9%) 
+LDR leaf ambient     45340/65536     1269520/1835008  (69.2%) 
+HDR leaf ambient      9107/65536      254996/1835008  (13.9%) 
+occluders                0/0               0/0        ( 0.0%) 
+occluder polygons        0/0               0/0        ( 0.0%) 
+occluder vert ind        0/0               0/0        ( 0.0%) 
+detail props          [variable]           1/11481672 ( 0.0%) 
+dtl prp lght          [variable]           1/4        (25.0%) 
+HDR dtl prp lght      [variable]           1/4        (25.0%) 
+static props          [variable]           1/114202   ( 0.0%) 
+pakfile               [variable]    16506869/0        ( 0.0%) 
+physics               [variable]    27368173/4194304  (652.5%) VERY FULL!
+physics terrain       [variable]           0/1048576  ( 0.0%) 
+
+Level flags = 0
+
+Total triangle count: 26709
+Writing c:\program files (x86)\steam\steamapps\common\garrysmod\garrysmod\maps\Wip1-9.bsp
+9 minutes, 47 seconds elapsed

@@ -1,0 +1,91 @@
+@name CDU's holo antenna
+@persist Senitivity Mat:string [Scale,Color]:vector [E,Parent]:entity [Smooth,InitialAng]:angle SmoothSpeed MaxBend
+@model models/props_junk/PopCan01a.mdl
+
+if(dupefinished()|first()){
+    #---Holo antenna---V1.2---ChunderDownUndeR---
+    
+    #V1.2: Allows E2 to now be parented and allow speed-based flexing
+    
+#---Setup--- dont care about spelling errors
+
+#Note: Dont parent this E2 to a prop that is parented to a prop that is parented(or more), parent to a proper gate or unparented base prop
+
+Senitivity = 0.02 #how bendy she is
+SmoothSpeed = 30 #How smooth it is
+
+Mat = "sprops/trans/misc/ls_m2" #The material of the antenna
+Color = vec(255,255,255) #The color of the matieral of the antenna
+Scale = vec(0.7,0.7,0.5) #Hight and thickness
+InitialAng = ang(25,0,0)
+MaxBend = 45
+
+#---Finished---
+
+E=entity()
+if(E:parent():parent():parent():parent():parent():parent():isValid()){Parent=E:parent():parent():parent():parent():parent():parent()}
+elseif(E:parent():parent():parent():parent():isValid()){Parent=E:parent():parent():parent():parent()}
+elseif(E:parent():parent():parent():isValid()){Parent=E:parent():parent():parent()}
+elseif(E:parent():parent():isValid()){Parent=E:parent():parent()}
+elseif(E:parent():isValid()){Parent=E:parent()}
+else{Parent=E}
+
+E:setColor(E:parent():getColor())
+
+#LocalInitial=E:toWorld(Parent:angles())
+
+#Visual
+holoCreate(1,E:toWorld(vec(0,0,15)*Scale),vec(0.05,0.05,2.5)*Scale,E:angles(),Color,"hq_cylinder")
+holoMaterial(1,Mat)
+holoCreate(2,E:toWorld(vec(0,0,45)*Scale),vec(0.05,0.05,2.5)*Scale,E:angles(),Color,"hq_cylinder")
+holoMaterial(2,Mat)
+holoCreate(3,E:toWorld(vec(0,0,75)*Scale),vec(0.05,0.05,2.5)*Scale,E:angles(),Color,"hq_cylinder")
+holoMaterial(3,Mat)
+holoCreate(4,E:toWorld(vec(0,0,105)*Scale),vec(0.05,0.05,2.5)*Scale,E:angles(),Color,"hq_cylinder")
+holoMaterial(4,Mat)
+holoCreate(5,E:toWorld(vec(0,0,135)*Scale),vec(0.05,0.05,2.5)*Scale,E:angles(),Color,"hq_cylinder")
+holoMaterial(5,Mat)
+holoCreate(6,E:toWorld(vec(0,0,165)*Scale),vec(0.05,0.05,2.5)*Scale,E:angles(),Color,"hq_cone")
+holoMaterial(6,Mat)
+
+#hinges
+holoCreate(7,E:toWorld(vec(0,0,30)*Scale),vec(0.1),E:angles())
+holoParent(7,entity())
+holoCreate(8,E:toWorld(vec(0,0,60)*Scale),vec(0.1),E:angles())
+holoParent(8,7)
+holoCreate(9,E:toWorld(vec(0,0,90)*Scale),vec(0.1),E:angles())
+holoParent(9,8)
+holoCreate(10,E:toWorld(vec(0,0,120)*Scale),vec(0.1),E:angles())
+holoParent(10,9)
+holoCreate(11,E:toWorld(vec(0,0,150)*Scale),vec(0.1),E:angles())
+holoParent(11,10)
+
+#parenting
+holoParent(1,entity())
+holoParent(2,7)
+holoParent(3,8)
+holoParent(4,9)
+holoParent(5,10)
+holoParent(6,11)
+
+holoAlpha(7,0)
+holoAlpha(8,0)
+holoAlpha(9,0)
+holoAlpha(10,0)
+holoAlpha(11,0)
+
+}
+#else{
+interval(200) #lower this makes the antenna more smooth looking
+#runOnTick(1)
+
+Speed = E:toLocalAxis(Parent:vel()*Senitivity)
+Smooth = clamp(clamp(ang(Speed:x(),0,-Speed:y()),Smooth-SmoothSpeed,Smooth+SmoothSpeed),-MaxBend,MaxBend)
+
+holoAng(7,E:angles()+((InitialAng+Smooth)*-0.1))
+holoAng(8,E:angles()+((InitialAng+Smooth)*-0.2))
+holoAng(9,E:angles()+((InitialAng+Smooth)*-0.4))
+holoAng(10,E:angles()+((InitialAng+Smooth)*-0.6))
+holoAng(11,E:angles()+((InitialAng+Smooth)*-0.8))
+
+#}

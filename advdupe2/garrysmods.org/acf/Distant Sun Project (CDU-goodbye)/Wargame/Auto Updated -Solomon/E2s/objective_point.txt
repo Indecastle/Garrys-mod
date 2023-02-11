@@ -1,0 +1,52 @@
+@name Objective Point
+@persist E:entity Radius Alpha Ang Captured
+@inputs Color:vector Capture Refil
+@outputs Status Active
+@trigger Refil
+@model models/props_c17/utilitypole02b.mdl
+
+#ChunderDownUndeR
+#V1.0 Cap Point for ACF Wargame
+
+if(first()|dupefinished()){
+E=entity()
+#Self=entity()
+Radius = 14 # 0-14, the size/Radius of the holos and the ring
+Alpha = 200 # 0-255, how invisible the holos will be
+E:propFreeze(1)
+E:setMass(50000)
+
+holoCreate(1,E:pos(),Radius*vec(1,1,0.003)*3.6,ang(0),vec(255),"hq_tube_thin")
+holoAlpha(1,Alpha/2)
+holoParent(1,E)
+
+holoCreate(2,E:pos()+(vec(0,-20,600)),vec(0.01,0.4,0.2)*23,ang(0,0,45),vec(255),"cube")
+holoAlpha(2,Alpha)
+holoParent(2,1)
+holoCreate(3,E:pos()+(vec(0,25,620)+(vec(0,0.2,0.45)*(14*vec(0,0.1,1))*(vec(1,1.1,4)))),23*vec(0.01,0.2,0.4),ang(0,180,45),vec(255),"dome")
+holoAlpha(3,Alpha/2)
+holoParent(3,1)
+
+holoCreate(4,E:toWorld(vec(0,-50,100)),vec(0.1,8,6),E:angles(),vec(255),"cube")
+holoParent(4,E)  
+timer("Update",1000)  
+}
+interval(100)
+Ang+=3
+holoAng(1,ang(0,Ang,0))
+
+
+if(clk("Update")){
+if(Capture){
+Status=clamp(Status+Capture,-1,1)    
+}
+elseif(!Capture&Status<0){Status=clamp(Status+0.033,-1,0)}
+elseif(!Capture&Status>0){Status=clamp(Status-0.033,0,1)}
+ 
+timer("Update",1000)}
+
+if(changed(Status)){holoPos(4,E:toWorld(vec(0,-50,100+abs(Status)*255)))  }
+if(changed(Color)){for(I=1,4){holoColor(I,Color)}    
+}
+if(Capture==69){Status=0}
+if(~Refil){Active=Refil}

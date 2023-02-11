@@ -1,0 +1,60 @@
+@name VTU 20M1 Field Manual
+@model models/props_lab/binderredlabel.mdl
+
+#VTU-20M1 By ChunderDownUndeR.
+#Field manual
+#Public tank. distripute, repaint or reverse engineer but ffs give credit for the tank itself.
+
+"The Desire to replace the obsolete VTU-10 and VTU-20 fire support ifvs with a newer, similar design, firepower and durability
+airborne amphibious vehicle in the 10-20 range without compromise to firepower led to a project to make a contempory counterpart
+that would be the successor of either the VTU-20 or lighter weight VTU-10. The outcome is the VTU-20M1 with tank destroyer 
+counterparts. Unfortunately the weight surpassed the max tonnage limit slightly but was continued anyway (max 20 with a preferable 15t)
+The result of this added weight was due to the substancally increased firepower boasted by the VTU-20M1. which features
+8 weapon presets, including two seperate ATGM systems and CQC anti-infantry weapons"
+
+"The VTU-20M1 BlackSnake is much similar to its previous (Also public dupe) VTU-10 predecessor in mobility but trades some 
+durability for a significantly increase of firepower and a array of weapons that outstand in different situations"
+
+
+#Weapons + Ammo
+#105mm D-20M Rifled Gun (APHE/Short Sparrow HEAT ATGM)
+#30mm A-30KM1 (APHE)
+#12.9mm 64D. (AP-T)
+#12.9mm 64D. / Remote turret (AP-T)
+#60mm CQC area system (HE/WP)
+#DF-20 ATGM (HEAT)
+
+
+#Controls (M.Gunner)
+#M1-Fire Selected weapon
+#M2-Hold Gun/lock target (For high ping, dont exploit)
+#Space-Cycle weapons (As inidicated by the HUD)
+#numbers 1 to 5-fire weapons (As indicated by HUD)
+#Q- change view
+#Light - FILV
+#Ctrl- Change stabalizer setting
+#Shift- Smoke
+
+#Controls (S.Gunner)
+#M1-Fire Selected weapon
+#M2-Hold Gun/lock target (For high ping, dont exploit)
+#Q- change view
+
+
+#---Pros
+# Ampbibious
+# Decent mobility, but still bad for a light tank
+# outstanding firepower and array of guns, each situational
+# 2 ATGMs
+# Hard hitting 105mm and 30mm
+#'Fairly' Failsafe Ammo sotrage
+
+#---Cons
+#Not a wedge tank. dont fight wedge tanks
+#21ts because acf is the big, big gay
+#Bad reverse speed
+#terrible turret and upper protection
+#dies if enough ammo is blown up
+#if the turret is defeated, the tank is out of actions
+#low top speed
+#limited Ammos on everything

@@ -1,0 +1,63 @@
+@name MingeBag
+@inputs
+@outputs
+@persist [Jop E]:entity [A Minges]:table
+
+#interval(100)
+#runOnTick(1)
+
+if( first() ){
+    #ifdef runOnLast(number) 
+        runOnLast(1) 
+    #endif
+    
+    E = entity()
+    E:setMaterial("Models/effects/vol_light001")
+    
+    
+    findByClass("player*")
+    A=findToTable()
+    local I = 1
+    for(J=1,A:count())       {
+        Jop=A[J,entity]
+        Jop:setMaterial("Models/effects/vol_light001")
+        local Minge = holoCreate(I)
+        holoModel(I,"models/Kleiner.mdl")
+        holoPos(I,Jop:pos())
+        holoAng(I,Jop:angles())
+        holoParentAttachment(I, Jop, "forward")
+        holoVisible(I, Jop, 0)
+        I++
+        Minges:pushTable(table(Jop, Minge))
+        
+        local Gun = holoCreate(I)
+        holoModel(I,"models/weapons/w_physics.mdl")
+        holoPos(I, Minge:attachmentPos("hips"))
+        holoAng(I,Minge:angles())
+        holoParent(I, Minge)
+        holoVisible(I, Jop, 0)
+        I++
+    }
+    
+}
+
+
+#ifdef last()
+    if(last()) { 
+        for(I=1, Minges:count()) {
+            local Data = Minges[I, table]
+            local Ply = Data[1, entity]
+            #Ply:setAlpha(255)
+            Ply:setMaterial("")
+        }
+    }
+#endif
+
+
+
+#for(I=1, Minges:count()) {
+#    local Data = Minges[I, table]
+#    local Ply = Data[1, entity]
+#    local Minge = Data[2, entity]
+#    Minge:setAng(Ply:angles())
+#}

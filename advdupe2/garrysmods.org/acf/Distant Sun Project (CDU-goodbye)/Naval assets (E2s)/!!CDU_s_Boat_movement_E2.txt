@@ -1,0 +1,125 @@
+@name CDU's Boat movement E2
+@inputs [Pod]:wirelink W S Base:entity
+@outputs Speed Throttle Out:string #Base:entity
+@persist EnginePower Interval SetThrottle Friction Mass RudderSpeed RudderAng Pivot W A S D Active InitalPitch PitchSpeed Rudder AccelMul DownForce
+@persist [Sound,Bell,EngineSound]:string EnginePitch EngineInitalPitch I Inertia:angle Seat:entity Wash:effect WashPos:vector WashEffect WashSize AngFriction:angle ThrottleSpeed
+@trigger none
+
+
+#-----CDU's Boat movement-----ChunderDownUndeR-----V1.1!
+
+#Make sure this base is set to a hunter plate and NOT SPROP PLATE this is due to the base needing to be underwater.
+#you will need to use a second base as sprop or welded (physical) props for bouency. since this can for some reason not be the
+#souce of floatation because it messes with the apply force
+
+#How to make your boat float!
+#-second base prop as a sprop plate
+#-having other props of your boat around the waterline no gravity and weled (physical/non parented)
+#-ballons, highly not recommended
+#using the 'Downforce' variable, bear in mind you still need another souce of bouency. this base E2 cannot be the float device
+
+
+if(first()|dupefinished()){
+    
+#---Setup---
+
+Interval = 100 # The higher the number the lower the lag, lower the power of the values too
+
+EnginePower = 45 #Thrust
+ThrottleSpeed = 1 # How fast the engine adjust throttle
+AccelMul = 1.9 # If your ship suddenly goes supersonic lower this. its just acceleration ramp so the ships speed wont platueo
+Friction = 90 #resistance to accelerate and force that slows the boat 
+RudderAng = 5 #Not neccessarily a angle value. this is just the turnpower
+RudderSpeed = 0.3 #Ang per tick
+Pivot = 1 # Can the boat pivot turn?
+DownForce = 0 # Adjust waterline level. A negative number will provide downforce, a postative will push up the boat.
+AngFriction = ang(300,300,300) #roll yaw pitch friction. makes the boat more or less likely influenced by angle force like rollsing or cpaisizing (which shouldnt happen) or cpaisizing (which shouldnt happen)
+
+Bell = "ambient/alarms/warningbell1.wav"
+Sound = "ambient/ambience/wind_light02_loop.wav"
+InitalPitch = 0
+PitchSpeed = 5
+
+EngineSound = "acf_extra/airfx/aircraft_jet_a10_loop_1.wav"
+EnginePitch = 40
+EngineInitalPitch = 30
+
+WashEffect=1
+WashPos=vec(-300,0,40)
+WashSize = 40
+
+#---Setup Finished   --- 
+
+#Base=entity()
+Mass = Base:mass()/1000
+    Inertia = shiftL(ang(Base:inertia()))   
+    Wash=effect()
+    EnginePitch = EnginePitch/100
+    
+}
+interval(Interval) 
+
+if(Base:isUnderWater()){
+Active=Pod["Active",normal]
+
+#W=Pod["W",normal]
+#S=Pod["S",normal]
+A=Pod["A",normal]
+D=Pod["D",normal]
+
+Speed=round(toUnit("knots",Base:vel():length()))
+
+    if((changed(W)|changed(S))){
+    
+    I=clamp(I+W-S,-2,3)
+    
+    if(changed(I)){
+            soundPlay(2,0,Bell)
+    if(I==3){Out="Full Ahead"}
+    elseif(I==2){Out="2/3 Forward"}
+    elseif(I==1){Out="1/3 Forward"}
+    elseif(I==0){Out="Stop"}
+    elseif(I==-1){Out="1/3 Backwards"}
+    elseif(I==-2){Out="Full Backwards"}
+    SetThrottle = I*33
+    }
+    }
+    
+    if(!(Rudder==(A|D)*RudderAng))
+    {
+        if(A|D){
+        Rudder=clamp(Rudder+(-A+D)*RudderSpeed,-RudderAng,RudderAng)
+       }else{
+        Rudder=clamp(Rudder+(-(Rudder>0)+(Rudder<0))*RudderSpeed,-RudderAng,RudderAng)
+    }
+        
+    }
+    
+    Base:applyForce(((Base:forward()*EnginePower*((Speed^AccelMul)+33)*Throttle) + vec(0,0,DownForce*1000) + (Base:vel()*-Friction*3))*Mass)
+    if(Pivot){
+    Yaw =  Base:angles():yaw() -Rudder}
+    else{
+    Yaw =  Base:angles():yaw() -Rudder*(Speed/20)}
+    Base:applyAngForce((Base:toLocal(ang(0, Yaw, 0))*AngFriction - Base:angVel()* 90) * Inertia)
+
+    
+    soundPitch(1,InitalPitch+ (Speed*PitchSpeed))
+    
+    if(WashEffect&(I|((A|D)&Pivot))){
+Wash:setOrigin(Base:toWorld(WashPos))    
+Wash:setScale(WashSize)   #this should be like 500-0 based off altitude for mpfc using ThumperDust
+Wash:play("waterripple")}       
+
+}
+
+
+if(changed(Active)){
+ if(!Active){I=SetThrottle=0,soundStop(1),soundStop(3)}
+else{    soundPlay(1,0,Sound),soundPitch(1,InitalPitch),soundPlay(3,0,EngineSound),soundPitch(3,EngineInitalPitch)}
+}
+
+if(!(Throttle==SetThrottle)){
+    if(Throttle>SetThrottle){Throttle=clamp(Throttle-ThrottleSpeed,SetThrottle,99)}
+    elseif(Throttle<SetThrottle){Throttle=clamp(Throttle+ThrottleSpeed,-66,SetThrottle)}
+soundPitch(3,EngineInitalPitch+(abs(Throttle)*EnginePitch)) 
+}

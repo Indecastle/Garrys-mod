@@ -1,0 +1,71 @@
+Hello and thank you for investing time to read this file. I am ChunderDownUndeR. the creator of this public dupe pack. It means alot that you have decided to read file this before use.
+
+now the dirty stuff:
+PLEASE NOTE: DO NOT CLAIM ANY OF THE CONTENTS OF YOUR PACK AS YOU OWN. Do NOT ATTEMPT TO REVERSE ENGINEER MY E2s IT WILL KILL MY INCENTIVE TO MAKE E2s. ANY FURTHER QUESTIONS PM ME ON STEAM OTHER INFO IN MANUAL E2s THAT SPAWN WITH THE DUPES (if they are included)
+
+#Contents
+-Contents
+-Contents(of pack)
+-How to install
+-Controls and instructions
+
+#Contents of pack
+H2 (Unarmed)
+H2 (Standard/default brown)
+H2 (Desert)
+H2 (Navy white/grey)
+SA 37 Endrun E
+SA 37 Endrun A
+Endrun Manual
+H-30
+Versus's helcioter E2 (Not mine)
+Various bespoke E2s that cant or not worth thrying to use as your own or reverse engineer
+CDUs Moni Roundel
+
+#How to install
+The lazy version: drag parent folder into 'advdupe2' folder
+
+actually thats the best way. if you want the manual as a E2 (spawns with the plane anyway) drag the manual folder in 'Endrun' folder into 'Expression2' folder
+
+#Controls
+-H30(this is unarmed)
+Light key (f)-Start
+A/D -  Strafe left right
+W/S - increase / decrease throttle (vertical up/down)
+mouse - aim
+Space - Hover
+Shift (hold) - change view mode
+M2 - Arm designator (Dont use this its uselss without me on the server) 
+M1 - fire reguest designator (Dont use this its uselss without me on the server) 
+CTRL - Flares
+Mouse Up - Toggle Zoom
+
+-H2(Pilot seat)
+Light key (f)-Start
+A/D -  Strafe left right
+W/S - increase / decrease throttle (vertical up/down)
+mouse - aim
+Space - Hover
+Shift (hold) - change view mode
+M1 - Fire Wep
+M2 - Change Wep
+CTRL - Flares
+Mouse Up - Toggle Zoom
+
+-H2(Gunner Seat)
+M1-Fire
+M2-Hold Gun
+Space-Change Wep
+Shift-Flare i think
+Mouse Up - Toggle Zoom
+Q-Change View
+
+-SA37
+M1-Fire Wep
+Space-Change Wep
+Shift-change view
+M2-Look around
+A/D Roll
+W/S Throttle
+Gear is automatic
+i feel im forgetting stuff fiqure it out yourself

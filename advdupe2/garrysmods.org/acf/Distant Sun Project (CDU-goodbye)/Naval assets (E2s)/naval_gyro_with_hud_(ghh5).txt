@@ -1,0 +1,224 @@
+@name Naval Gyro (GHH5)
+@inputs [Gun]:entity [Cam,EGP]:wirelink [Base,Chair]:entity PrevWeapon M2 MainActive GunnerActive [MainRa,GunnerRa]:ranger GunnerFire MainFire [HAxis VAxis]:entity MuzzleVel
+@persist [Position]:vector FOV Distance Interval Active # [Gun]:entity
+@outputs Fire HoldGun Ops FLIR Toggle AimPos:vector
+@outputs [Self]:entity
+@outputs [Filter]:array
+@persist [Inertia GunAng]:angle [CrosshairColor, PointerColor]:vector [Res, ScreenRes]:vector2
+@persist MaxElevation MaxDepression MinYaw MaxYaw RotateSpeed Unlock Zoom Q CamDistance EnableBallistics
+@trigger  PrevWeapon M2 MainActive GunnerActive
+if(first()|dupefinished()){
+    Self=entity()   
+    GunAng = Self:toLocal(Gun:angles())
+    #Self:propNotSolid(0)
+    
+holoCreate(3,HAxis:pos(),vec(0.3),Self:toWorld(ang(0,GunAng:yaw(),0)))
+holoAlpha(3,0)
+
+holoCreate(2,VAxis:pos(),vec(0.3),Gun:angles():setRoll(0))  
+holoAlpha(2,0)
+
+VAxis:parentTo(holoEntity(2))
+HAxis:parentTo(holoEntity(3))
+Gun:parentTo(holoEntity(2))
+holoParent(3,Self)
+holoParent(2,3)
+runOnLast(1)
+ #   GunAng = angnorm(clamp(GunAng - clamp(heading(vec(), GunAng, Self:toLocalAxis(GunDir)), -RotateSpeed, RotateSpeed), ang(-MaxElevation, MinYaw, 0), ang(MaxDepression, MaxYaw, 0)))
+}
+#-----MAKE SURE THE E2 IS FACING NORTH FOR FUCKS SAKE. MAKE. SURE. IT. FACES. NORTHHHHHHHHHHHH.-----#
+#-----If you modify this to reach some 200 ops while idle you're scum and should kill yourself.-----#
+
+#--------------------------------------------------------------------------------------------------------------#
+#       ^
+#       |
+#       |
+#Fuck your insturctions -CDU
+#--------------------------------------------------------------------------------------------------------------#
+
+if ( changed(Active)|dupefinished() ) {
+    
+    EnableBallistics=1
+    
+    CrosshairColor = vec(130,220,130)
+    PointerColor = vec(255,255,255)
+    Interval=50 # Better rotation but with more Ops
+    
+    MaxElevation = 40 #---How High you can aim up (in degrees)---#
+    MaxDepression = 8 #---How Low you can aim down (in degrees)---#
+    MinYaw = 120 #---Keep This at 360. If making a tank destroyer or bow gun, make it 20 and 20---#
+    MaxYaw = 120 #---Keep This at 360. If making a tank destroyer or bow gun, make it 20 and 20---#
+    Position = vec(-196,0,300) #---Where your camera will be floating---#
+    CamDistance = 400 #---Camera Radius around the Camera Position---#
+    RotateSpeed = 60 #---Turret Rotation Speed in Degrees per Second---#
+    Self = entity() #---Ignore this shit, doesn't need to be touched---#
+#  -DO NOT TOUCH ANYTHING ELSE UNDER THIS.
+#--------------------------------------------------------------------------------------------------------------#
+        # Automatic settings
+    Filter = entity():getConstraints() # Ranger filter
+    Filter:pushEntity(Gun)
+    
+    Unlock = 0
+    RotateSpeed /= 20
+    PrevWeapon=0
+    Cam["Position",vector]=Base:toWorld(Position)
+    Cam["Parent",entity]=Base
+    Cam["Activated",normal]=Active
+#    Ra = Cam["Trace",ranger]
+    Cam["Distance",normal] = CamDistance
+    Q=0
+    holoCreate(1)
+    holoAlpha(1,0)
+}
+elseif ( inputClk() ) {
+    if(GunnerActive){
+    if ( ~PrevWeapon&PrevWeapon ) {Zoom=!Zoom}
+        if ( M2 ) { Unlock = 0}
+        else { Unlock = 1 , interval(Interval) }
+      
+    }
+if((~MainActive)|(~GunnerActive)){Active=MainActive|GunnerActive}     
+}
+
+
+if ((Unlock&clk())|(MainActive&!GunnerActive)) {
+
+    if(GunnerFire){
+    Fire=1
+}    
+    elseif(MainActive&MainFire&inrange(Gun:heading(AimPos),-ang(5),ang(5))){
+    Fire=1
+}
+else{Fire=0}
+    
+    if(GunnerActive){AimPos=GunnerRa:pos()}
+    elseif(MainActive){AimPos=MainRa:pos()}
+  #  else{AimPos=Ra:pos()}
+    if(EnableBallistics){    
+    Dist=Gun:pos():distance(AimPos) 
+    T = ((Dist*1.27) / 39.3701) / (MuzzleVel ) #0.032258 * Ra:distance() instead of (Ra:distance()*1.27) / 39.3701)
+
+    Drift = (Base:vel() * T)
+    Drop = (0.5 * 9.8 * T^2) * 39.3701}
+    
+    GunDir=(AimPos-Drift-vec(0,0,-Drop)-Gun:massCenter()):normalized()      
+   # GunDir = Gun:heading(AimPos)
+    GunAng = angnorm(clamp(GunAng - clamp(heading(vec(), GunAng, Self:toLocalAxis(GunDir)), -RotateSpeed, RotateSpeed), ang(-MaxElevation,-MinYaw, 0), ang(MaxDepression, MaxYaw, 0)))
+    
+    GunYaw = Self:toWorld(ang(0,clamp(GunAng:yaw(),-MinYaw,MaxYaw),0))
+    holoAng(3,GunYaw)
+    GunPitch = ang(clamp(GunAng:pitch(),-MaxElevation,MaxDepression),0,0)
+       holoAng(2,holoEntity(3):toWorld(GunPitch))
+        
+        
+    interval(Interval)
+    Ops=ops()
+}
+
+
+Aim=Chair:driver():keyPressed("Q")
+if(changed(Aim)&Aim){Q=!Q
+    Cam["Distance",normal] = !Q*CamDistance 
+if(!Q){  
+Cam["Position",vector]=Base:toWorld(Position)}
+else{
+    Cam["Position",vector]=Gun:pos()+vec(0,0,60)}}
+
+if(GunnerActive){
+    if(changed(Zoom)){
+    Cam["FOV",normal]=90-(Zoom*73)}
+    
+    if(~GunnerActive){
+# User = Chair:driver()
+        ScreenRes=egpScrSize(Chair:driver())
+        Res=ScreenRes/2
+    
+     #EGP Stuff, Add your HUD here   
+    
+        EGP:egpPolyOutline(1,Res+vec2(16,16),Res+vec2(8,16),Res+vec2(16,16),Res+vec2(16,8))
+        EGP:egpPolyOutline(2,Res+vec2(16,-16),Res+vec2(8,-16),Res+vec2(16,-16),Res+vec2(16,-8))
+        EGP:egpPolyOutline(3,Res+vec2(-16,16),Res+vec2(-8,16),Res+vec2(-16,16),Res+vec2(-16,8))
+        EGP:egpPolyOutline(4,Res+vec2(-16,-16),Res+vec2(-8,-16),Res+vec2(-16,-16),Res+vec2(-16,-8))
+        EGP:egpBox(5,Res+vec2(56,0),vec2(80,2))
+        EGP:egpBox(6,Res+vec2(-56,0),vec2(80,2))
+        EGP:egpBox(7,Res+vec2(0,56),vec2(2,80))
+        EGP:egpBox(8,Res+vec2(0,0),vec2(2,2))
+        EGP:egpBox(9,Res+vec2(-30,3),vec2(2,6)) 
+        EGP:egpBox(10,Res+vec2(-60,3),vec2(2,6)) 
+        EGP:egpBox(11,Res+vec2(-3,20),vec2(6,2)) 
+        EGP:egpBox(12,Res+vec2(-3,40),vec2(6,2)) 
+        EGP:egpBox(13,Res+vec2(-3,60),vec2(6,2)) 
+        EGP:egpBox(14,Res+vec2(-3,80),vec2(6,2)) 
+        EGP:egpBox(15,Res+vec2(30,3),vec2(2,6)) 
+        EGP:egpBox(16,Res+vec2(60,3),vec2(2,6)) 
+        EGP:egpBox(17,Res+vec2(180,0),vec2(40,2)) 
+        EGP:egpBox(18,Res+vec2(-180,0),vec2(40,2)) 
+        
+        EGP:egpText(45,"Text here",Res+vec2(80,40))
+        EGP:egpText(46,"Text here",Res+vec2(80,60))
+        EGP:egpBox(47,Res+vec2(400,300),vec2(2,200))
+        EGP:egpBox(48,Res+vec2(250,400),vec2(300,2))
+        EGP:egpBox(49,Res+vec2(400,-300),vec2(2,200))
+        EGP:egpBox(50,Res+vec2(250,-400),vec2(300,2))
+        EGP:egpBox(51,Res+vec2(-400,300),vec2(2,200))
+        EGP:egpBox(52,Res+vec2(-250,400),vec2(300,2))
+        EGP:egpBox(53,Res+vec2(-400,-300),vec2(2,200))
+        EGP:egpBox(54,Res+vec2(-250,-400),vec2(300,2))
+
+        
+        EGP:egpColor(45,CrosshairColor)
+        EGP:egpColor(46,CrosshairColor)
+        EGP:egpColor(47,CrosshairColor)
+        EGP:egpColor(48,CrosshairColor)
+        EGP:egpColor(49,CrosshairColor)
+        EGP:egpColor(50,CrosshairColor)
+        EGP:egpColor(51,CrosshairColor)
+        EGP:egpColor(52,CrosshairColor)
+        EGP:egpColor(53,CrosshairColor)
+        EGP:egpColor(54,CrosshairColor)
+        
+        
+        
+        
+        EGP:egpColor(1,CrosshairColor)
+        EGP:egpColor(2,CrosshairColor)
+        EGP:egpColor(3,CrosshairColor)
+        EGP:egpColor(4,CrosshairColor)
+        EGP:egpColor(5,CrosshairColor)
+        EGP:egpColor(6,CrosshairColor)
+        EGP:egpColor(7,CrosshairColor)
+        EGP:egpColor(8,CrosshairColor)
+        EGP:egpColor(9,CrosshairColor)
+        EGP:egpColor(10,CrosshairColor)
+        EGP:egpColor(11,CrosshairColor)
+        EGP:egpColor(12,CrosshairColor)
+        EGP:egpColor(13,CrosshairColor)
+        EGP:egpColor(14,CrosshairColor)
+        EGP:egpColor(15,CrosshairColor)
+        EGP:egpColor(16,CrosshairColor)
+        EGP:egpColor(17,CrosshairColor)
+        EGP:egpColor(18,CrosshairColor)
+        
+        EGP:egp3DTracker(40,vec(0))
+        EGP:egpParent(40,holoEntity(1))
+        
+        EGP:egpPolyOutline(41,vec2(6,6),vec2(0,0),vec2(-6,6),vec2(0,0))
+        EGP:egpParent(41,40)
+        EGP:egpColor(41,PointerColor)
+        
+        
+   
+        rangerFilter(Gun)
+        rangerFilter(entity():getConstraints())
+        rangerPersist(1)
+       
+        #Gun Stuff
+    }
+holoPos(1,rangerOffset(999999,Gun:pos()+Gun:forward()*100,Gun:forward()):position())
+}
+if(changed(MainActive)&!MainActive&!GunnerActive){Unlock=0}
+if(last()){
+Gun:parentTo(Self)    
+VAxis:parentTo(Self)    
+HAxis:parentTo(Self)  
+}

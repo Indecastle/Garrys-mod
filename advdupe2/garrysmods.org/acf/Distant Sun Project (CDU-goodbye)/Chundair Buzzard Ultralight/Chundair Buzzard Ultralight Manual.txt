@@ -1,0 +1,60 @@
+@name Chundair Buzzard UL-1 manual
+@model models/props_lab/binderredlabel.mdl
+
+
+#---Chundair Buzzard Manual
+#NOTE: this is not a copy of karbines manual, i had the idea of a E2 book and model before discovering he beat me to it
+#NOTE: AS ALWAYS GIVE CREDIT THIS IS NOT SOMETHING YOU MADE. Do not try and use the main helicopter E2. find the original release yourself on facepunch (by versus) or get from a mate. this one is custom settings so it will not work for any thing of yours
+
+
+#---Overview
+"A Ultralight with civillian and millitary service. the Buzzard ultralight is a popular touring plane in the outback and use with armed forced for its long range fuel tank and open cabin scenery"
+
+"Made by ChunderDownUnder ??/6/19."
+
+#---Contents
+#-overview
+#-Contents
+#Controls
+#-Info
+
+#---Controls
+"
+W/S - Throttle
+A/D - Roll
+Shift - View toggle
+Light (F) - toggle headlight
+Space - Fire secondary (40mm gl by default)
+M1 - Fire gun (12.9 by defualt)
+M2 - look around / lock heading / free look
+
+"
+
+#---Notes
+"
+-Dont use any E2 on this aircraft for your own purpose. read more about this at the bottom of the txt
+-You can get more dupes on my steam group 'Chunder's ACF Dupe Group'
+-color or retrofit the aircraft but dont reverse enginner or i will stop making public helis/aircraft
+-fk im tired
+-the public edition of the starks E2 has been reduced, iv taken away the setup so it cant be altered for your own purpose
+and some of the features like crash damage have been removed
+"
+
+#---Info
+"
+
+Buzzard weighs 0.5t to 0.85 t
+millitrary version is armed with a 12.9 and twin 40mm GL
+10 min of fuel
+top speed of 62 mph
+
+E2s 
+NOTE: Please do not reverse enginner the E2s or claim anything as your own. i setup the E2s so they are deliberately hard to 
+customize the settings. if you want to use the E2 your going to have to talk to me about it.
+DO NOT USE THE STARK E2 IN YOUR AIRCRAFT THIS IS MY CUSTOM E2 I WORKED VERY HARD ON if you want to use starks jet e2 you can
+find it on his yt channel. stealing the E2 for your own purpose destroys my incentive to release public dupes
+
+Stakrs Jet Engine (CDUMOD)- dont tanke this one for your creation. find the original. i set it up so you shouldnt be able to take it
+Integrated plane E2-bespoke
+CDU omni roundels
+"

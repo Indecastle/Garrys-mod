@@ -1,0 +1,155 @@
+--------------------------------------------------------------------------------------------------------
+CHUNDER'S DUPE FOLDER 2021 ####################DISTANT SUN PROJECT###################CHUNDERDOWNUNDER
+--------------------------------------------------------------------------------------------------------
+
+Please read me..
+
+
+--------------------------------------------------------------------------------------------------------
+Contents
+--------------------------------------------------------------------------------------------------------
+*optional read
+
+-Contents
+-Summary*
+-Why i am releasing the folder
+-What will and wont work (ACF2/3)
+-Google Drive and naviagting the folders + installing folders
+-Contacts and helpful links
+-Wargame folder*
+-Gm_provinggrounds*
+-Contacts, and helpful links
+-Final message - important
+
+--------------------------------------------------------------------------------------------------------
+Summary (optional)
+--------------------------------------------------------------------------------------------------------
+
+Hia. This is a message from Chunder; due to various reasons in life and the state of ACF which i will further elaborate on later i am 'retiring' from active gmod. as a last act i will release nearly the entirity of my gmod builds to public. There is alot ot cover so i will try to label parts les important such as this and make it snappy where possible.
+
+
+---Are you fully quitting gmod:---
+
+-Yes and no; intially i said i will quit gmod without elaborating any more. While i have actively quit building like i used to i will be on very occasionally either talking, helping or doing minor projects, this is due to plans not working out as i wanted and personal hiccups. I will also decide to stay on the ACFs discord for help and memez.
+
+
+---What made me quit gmod, was it ACF3?:---
+
+-Not acf3. I wish to explain that the 'ACF3 succ and 2 is better' is not to be taken seriously. while i stay on ACF2 because its better FOR ME its due to the personal reasons-im no longer finding a will to build on gmod. I wanted to cleanly tranistion to other more promising and different games such as stormworks (didnt work out well) and even blender. To futher elaborate on the new ACF, some vehicles wont work to their full extent on acf (see missiles). in reality gmod and inparticaully ACF was dying anyway, splitting the community only sped up the progress.followong the discord hiveminds and hating people for using ACF2 ACF3 or even ACE is only what the childish idiots do to validade themselves. While i do disagree with some of the changes they made to ACF3 (causing QOL issues instead of fixing minmax which hasnt changed -CDU2020) i would personally congratulate the 2 or more Devs that have worked hard to reanimate Armored Combat Frameowrk and give it new life.
+
+
+---I said 'nearly the entire folder:' to elaborate on that:---
+
+-only vehicles that have been 100% natively made my me, this means collaboration tanks, vehicles utilizing other peoples E2 or parts, much older dupes that are obsoletely or incorrectly made, hidious or underwhelming and some prototype tanks that were 99% done and, WIPS and overly minmax tanks
+
+
+---Why am i releasing my folder:---
+
+-its the right thing to do, i will explain this in its own contents right below VVV
+
+
+
+--------------------------------------------------------------------------------------------------------
+Why i am releasing the folder
+--------------------------------------------------------------------------------------------------------
+
+I hope to direct attention to both ACF versions and encourage people to reverse engineer and be inspired by the vehicles iv made.
+
+Personally i want to see all my vehicles get a new life in ACF3 for those who know how to build but still need a new vehicle or two. Some vehicles are already compatible save some ammo changes but others will not.
+
+to convert these vehicles you need to do the following as you wish:
+-proper Prop to mesh conversion. to do this you will need to use a E2 to find the low mass 'detail props' and convert them and not the shell armor since my tanks dont use holos :( (optional but HIGHLY reccomended)
+
+-ensure ACF components are working properly (some older dupes have coaxial and some props paretned directly to the main gun and not a gate paretned to main gun)
+
+-update guidance on the missiles (i cant help you here)
+
+-some tuning might be neccessary on mobility and E2s
+
+-ensure the vehicles are up-to-date on the acf general rules (THE ACTUAL ONE ON ACF DISCORD NOT SOME MINMAX WET DREAM)
+
+-Some E2s might need updating, if you cant do this part contact me and i will do it
+
+-if you dont like the controls (such as the terrible zoom i gave my custom GG5) they can be changed easily
+
+I am willing to help people in the conversion process. contacts are in another context below.
+
+People who successfully convert tanks to ACF3 and return them to me for public release will be properly credited and rewarded with discord nitro or Steam credit if contributed enough. just contact me first before doing begining conversions.
+
+
+--------------------------------------------------------------------------------------------------------
+What will and wont work
+--------------------------------------------------------------------------------------------------------
+
+Some vehicles due to even the most recent changes on ACF2 may not work as well as they use to however the differences may usually be unnoticable. This is because most of the dupes are very very obsolete to both ACF and its rules. If you are using ACF3 thats Ok and most will still work with little problem but the expect the folllwing:
+
+-Ship CIWS wont work on missiles
+-ATGM guidance will not work. Most infared missiles may will work..
+-Due to mobility change. some vehicles will have difficulty with torque especially or not be as fast
+-hill climbing will, but always has been a pain..
+-last time i checked incorrectly parented coaxial Mgs wont work (my bad)
+-They may violate ACF rules namely seat needing to be of ACF origin and fake armor.
+-Hull aimming on VTU-99 wont work due to tuning being acf2
+-Ammo Crate distance on ships might not work
+-Artillery fire control systems might of had changes and not match correctly at all distance
+
+
+--------------------------------------------------------------------------------------------------------
+Google Drive and naviagting the folders, installing
+--------------------------------------------------------------------------------------------------------
+
+-Grey/uncolroed Folders are categorized folders with the majority of all my dupes. the other colors are previous already made public releases
+
+-Green folders are packs of previous released dupes light green is E2 packs
+-purple are helpful E2s
+-Yellow folders are previous aircraft
+-Orange folder are previous land systems
+-Red is other
+-Pink is unreleased map(s)
+
+to install the dupes into your adv dupe2:
+dupes go in:	 \Steam\steamapps\common\GarrysMod\garrysmod\data\advdupe2
+E2s go in:	 \Steam\steamapps\common\GarrysMod\garrysmod\data\expression2
+map goes in:	 \Steam\steamapps\common\GarrysMod\garrysmod\maps
+
+
+--------------------------------------------------------------------------------------------------------
+Wargame folder (Optional)
+--------------------------------------------------------------------------------------------------------
+
+Wargame folder was a E2 that acted as a team-based gamemod that was ready for release but deemed inadequente shorlty before being made public, however made it onto the project. contains its own manual on how it works..
+
+Thanks to solomon on autoupdating feature.
+
+
+--------------------------------------------------------------------------------------------------------
+Gm_provinggrounds (Optional)
+--------------------------------------------------------------------------------------------------------
+
+Is a map that was nearly completed but i completely lost traction on it after i realized some of the roads where improperly made giving the map shading issued ingame as well as hammer being dumb dumb program. it can still be used and edited in hammer if you wish. place these in your maps folder in garrysmod.
+
+-Wargame folder (Optional)
+-Gm_provinggrounds (Optional)
+-Contacts, and helpful links
+
+
+--------------------------------------------------------------------------------------------------------
+Links helpful links and contacts
+--------------------------------------------------------------------------------------------------------
+
+Steam discord 	V e l c r o #1998
+steam		https://steamcommunity.com/profiles/76561198142474106/
+CDU dupe group  https://steamcommunity.com/groups/ChunderDupeGroup
+ACF discord	https://discord.gg/Dx84PvSuFs
+
+
+--------------------------------------------------------------------------------------------------------
+final message
+--------------------------------------------------------------------------------------------------------
+Each folder in the drive file has its own readme which can be viewed in E2 or on drive itself as notepad, it explains how to correctly use each or general tank controls
+
+on a last note its nearly chrimis as im typing this so i hope you have/had a nice one! <3
+
+07 -CDU 
+
+

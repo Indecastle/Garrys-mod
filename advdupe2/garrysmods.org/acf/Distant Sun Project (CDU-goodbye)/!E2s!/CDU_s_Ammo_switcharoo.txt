@@ -1,0 +1,67 @@
+@name CDU's Ammo switcharoo
+@inputs R GunReady [AmmoA1,AmmoA2,AmmoA3,AmmoA4,AmmoA5,AmmoA6,AmmoA7,AmmoA8,AmmoB1,AmmoB2,AmmoB3,AmmoB4,AmmoB5,AmmoC1,AmmoC2,AmmoC3,AmmoC4]:wirelink Seat:entity
+@persist AmmoType [Ammo1,Ammo2,Ammo3,Sound]:string Pitch [S1,S2]:string
+@trigger GunReady R 
+@outputs AmmoType Ammo1Left Ammo2Left Ammo3Left# AmmoString:string
+
+if(dupefinished()|first()){AmmoType=0 
+
+IsAcf3=0
+
+Ammo1 = "HEAT-FS"
+Ammo2 = "HESH"
+Ammo3 = "HEAT-FS"
+Sound = ""
+Pitch = 100
+
+if(IsAcf3){S1="Load",S2="Ammo"}
+else{S1="Active",S2="Munitions"}
+}
+
+if(changed(R)&R){
+    AmmoType++
+    if(AmmoType==3){AmmoType=0}
+if(!Ammo1Left&!AmmoType){AmmoType=1}
+if(!Ammo2Left&AmmoType==1){AmmoType=2}
+if(!Ammo3Left&AmmoType==2){AmmoType=!Ammo1Left}
+
+if(!AmmoType&Ammo1Left){Seat:hintDriver("Next round: " + Ammo1,2)}
+elseif(AmmoType==1&Ammo2Left){Seat:hintDriver("Next round: " + Ammo2,2)}
+elseif(AmmoType==2&Ammo3Left){Seat:hintDriver("Next round: " + Ammo3,2)}
+else{Seat:hintDriver("No more ammo!",2)}}
+
+if(changed(GunReady)){
+    Ammo1Left = AmmoA1[S2,normal]+AmmoA2[S2,normal]+AmmoA3[S2,normal]+AmmoA4[S2,normal]+AmmoA5[S2,normal]+AmmoA6[S2,normal]+AmmoA7[S2,normal]+AmmoA8[S2,normal]
+    Ammo2Left = AmmoB1[S2,normal]+AmmoB2[S2,normal]+AmmoB3[S2,normal]+AmmoB4[S2,normal]+AmmoB5[S2,normal]
+    Ammo3Left = AmmoC1[S2,normal]+AmmoC2[S2,normal]+AmmoC3[S2,normal]+AmmoC4[S2,normal]  
+  
+AmmoA1[S1,normal]=!AmmoType
+AmmoA2[S1,normal]=!AmmoType&!AmmoA1[S2,normal]
+AmmoA3[S1,normal]=!AmmoType&!AmmoA2[S2,normal]
+AmmoA4[S1,normal]=!AmmoType&!AmmoA3[S2,normal]
+AmmoA5[S1,normal]=!AmmoType&!AmmoA4[S2,normal]
+AmmoA6[S1,normal]=!AmmoType&!AmmoA5[S2,normal]
+AmmoA7[S1,normal]=!AmmoType&!AmmoA6[S2,normal]
+AmmoA8[S1,normal]=!AmmoType&!AmmoA7[S2,normal]
+AmmoB1[S1,normal]=AmmoType==1
+AmmoB2[S1,normal]=AmmoType==1&!AmmoB1[S2,normal]
+AmmoB3[S1,normal]=AmmoType==1&!AmmoB2[S2,normal]
+AmmoB4[S1,normal]=AmmoType==1&!AmmoB3[S2,normal]
+AmmoB5[S1,normal]=AmmoType==1&!AmmoB4[S2,normal]
+AmmoC1[S1,normal]=AmmoType==2
+AmmoC2[S1,normal]=AmmoType==2&!AmmoC1[S2,normal]
+AmmoC3[S1,normal]=AmmoType==2&!AmmoC2[S2,normal]
+AmmoC4[S1,normal]=AmmoType==2&!AmmoC3[S2,normal]
+
+if(GunReady&(Ammo1Left|Ammo2Left|Ammo3Left)){
+if(AmmoType==1){Left=Ammo2Left}elseif(AmmoType==2){Left=Ammo3Left}else{Left=Ammo1Left}
+Seat:hintDriver("Ready to fire! Shots left: "+Left,3)}
+
+if((Ammo1Left|Ammo2Left|Ammo3Left)&!GunReady){soundPlay(1,0,Sound),soundPitch(1,Pitch)}
+
+if(!(Ammo1Left|Ammo2Left|Ammo3Left)){Seat:hintDriver("No more ammo!",2)}
+elseif(!Ammo1Left&!AmmoType){AmmoType=1,Seat:hintDriver("Next round: " + Ammo3,2)}
+elseif(!Ammo2Left&AmmoType==1){AmmoType=2,Seat:hintDriver("Next round: " + Ammo2,2)}
+elseif(!Ammo3Left&AmmoType==2){AmmoType=0,Seat:hintDriver("Next round: " + Ammo1,2)}
+
+}

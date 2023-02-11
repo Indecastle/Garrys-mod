@@ -6,10 +6,10 @@
 local Volume = 2
 local Speed = 1
 local URL = "mc_mom_came_remix"
-local IsLooping = false
+local IsLooping = true
 
 local IsAllServer = false
-local Radius = 500
+local Radius = 1000
 
 ------------------------------------------------------------------------------------
 

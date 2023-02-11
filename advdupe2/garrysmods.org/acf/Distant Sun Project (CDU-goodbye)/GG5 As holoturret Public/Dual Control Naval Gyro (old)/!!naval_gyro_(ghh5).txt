@@ -1,0 +1,137 @@
+@name Naval Gyro (GHH5)
+@inputs [Gun]:entity [Cam,EGP]:wirelink [Base,Chair]:entity PrevWeapon M2 MainActive GunnerActive [MainRa,GunnerRa]:ranger GunnerFire MainFire [HAxis VAxis]:entity MuzzleVel
+@persist [Position]:vector FOV Distance Interval Active # [Gun]:entity
+@outputs Fire HoldGun Ops FLIR Toggle AimPos:vector
+@outputs [Self]:entity
+@outputs [Filter]:array
+@persist [Inertia GunAng]:angle [CrosshairColor, PointerColor]:vector [Res, ScreenRes]:vector2
+@persist MaxElevation MaxDepression MinYaw MaxYaw RotateSpeed Unlock Zoom Q CamDistance EnableBallistics
+@trigger  PrevWeapon M2 MainActive GunnerActive
+if(first()|dupefinished()){
+    Self=entity()   
+    GunAng = Self:toLocal(Gun:angles())
+    #Self:propNotSolid(0)
+    
+holoCreate(3,HAxis:pos(),vec(0.3),Self:toWorld(ang(0,GunAng:yaw(),0)))
+holoAlpha(3,0)
+
+holoCreate(2,VAxis:pos(),vec(0.3),Gun:angles():setRoll(0))  
+holoAlpha(2,0)
+
+VAxis:parentTo(holoEntity(2))
+HAxis:parentTo(holoEntity(3))
+Gun:parentTo(holoEntity(2))
+holoParent(3,Self)
+holoParent(2,3)
+runOnLast(1)
+ #   GunAng = angnorm(clamp(GunAng - clamp(heading(vec(), GunAng, Self:toLocalAxis(GunDir)), -RotateSpeed, RotateSpeed), ang(-MaxElevation, MinYaw, 0), ang(MaxDepression, MaxYaw, 0)))
+}
+#-----MAKE SURE THE E2 IS FACING NORTH FOR FUCKS SAKE. MAKE. SURE. IT. FACES. NORTHHHHHHHHHHHH.-----#
+#-----If you modify this to reach some 200 ops while idle you're scum and should kill yourself.-----#
+
+#--------------------------------------------------------------------------------------------------------------#
+#       ^
+#       |
+#       |
+#Fuck your insturctions -CDU
+#--------------------------------------------------------------------------------------------------------------#
+
+if ( changed(Active)|dupefinished() ) {
+    
+    EnableBallistics=1
+    
+    CrosshairColor = vec(130,220,130)
+    PointerColor = vec(255,255,255)
+    Interval=50 # Better rotation but with more Ops
+    
+    MaxElevation = 40 #---How High you can aim up (in degrees)---#
+    MaxDepression = 8 #---How Low you can aim down (in degrees)---#
+    MinYaw = 120 #---Keep This at 360. If making a tank destroyer or bow gun, make it 20 and 20---#
+    MaxYaw = 120 #---Keep This at 360. If making a tank destroyer or bow gun, make it 20 and 20---#
+    Position = vec(-196,0,300) #---Where your camera will be floating---#
+    CamDistance = 400 #---Camera Radius around the Camera Position---#
+    RotateSpeed = 60 #---Turret Rotation Speed in Degrees per Second---#
+    Self = entity() #---Ignore this shit, doesn't need to be touched---#
+#  -DO NOT TOUCH ANYTHING ELSE UNDER THIS.
+#--------------------------------------------------------------------------------------------------------------#
+        # Automatic settings
+    Filter = entity():getConstraints() # Ranger filter
+    Filter:pushEntity(Gun)
+    
+    Unlock = 0
+    RotateSpeed /= 20
+    PrevWeapon=0
+    Cam["Position",vector]=Base:toWorld(Position)
+    Cam["Parent",entity]=Base
+    Cam["Activated",normal]=Active
+#    Ra = Cam["Trace",ranger]
+    Cam["Distance",normal] = CamDistance
+    Q=0
+ #   holoCreate(1)
+  #  holoAlpha(1,0)
+}
+elseif ( inputClk() ) {
+    if(GunnerActive){
+    if ( ~PrevWeapon&PrevWeapon ) {Zoom=!Zoom}
+        if ( M2 ) { Unlock = 0}
+        else { Unlock = 1 , interval(Interval) }
+
+    }
+if((~MainActive)|(~GunnerActive)){Active=MainActive|GunnerActive}     
+}
+
+
+if ((Unlock&clk())|(MainActive&!GunnerActive)) {
+
+    if(GunnerFire){
+    Fire=1
+}    
+    elseif(MainActive&MainFire&inrange(Gun:heading(AimPos),-ang(5),ang(5))){
+    Fire=1
+}
+else{Fire=0}
+    
+
+    if(GunnerActive){AimPos=GunnerRa:pos()}
+    elseif(MainActive){AimPos=MainRa:pos()}
+  #  else{AimPos=Ra:pos()}
+    if(EnableBallistics){    
+    Dist=Gun:pos():distance(AimPos) 
+    T = ((Dist*1.27) / 39.3701) / (MuzzleVel ) #0.032258 * Ra:distance() instead of (Ra:distance()*1.27) / 39.3701)
+
+    Drift = (Base:vel() * T)
+    Drop = (0.5 * 9.8 * T^2) * 39.3701}
+    
+    GunDir=(AimPos-Drift-vec(0,0,-Drop)-Gun:massCenter()):normalized()      
+   # GunDir = Gun:heading(AimPos)
+    GunAng = angnorm(clamp(GunAng - clamp(heading(vec(), GunAng, Self:toLocalAxis(GunDir)), -RotateSpeed, RotateSpeed), ang(-MaxElevation,-MinYaw, 0), ang(MaxDepression, MaxYaw, 0)))
+    
+    GunYaw = Self:toWorld(ang(0,clamp(GunAng:yaw(),-MinYaw,MaxYaw),0))
+    holoAng(3,GunYaw)
+    GunPitch = ang(clamp(GunAng:pitch(),-MaxElevation,MaxDepression),0,0)
+       holoAng(2,holoEntity(3):toWorld(GunPitch))
+        
+        
+    interval(Interval)
+    Ops=ops()
+}
+
+
+Aim=Chair:driver():keyPressed("Q")
+if(changed(Aim)&Aim){Q=!Q
+    Cam["Distance",normal] = !Q*CamDistance 
+if(!Q){  
+Cam["Position",vector]=Base:toWorld(Position)}
+else{
+    Cam["Position",vector]=Gun:pos()+vec(0,0,60)}}
+
+if(GunnerActive){
+    if(changed(Zoom)){
+    Cam["FOV",normal]=90-(Zoom*73)}
+}
+if(changed(MainActive)&!MainActive&!GunnerActive){Unlock=0}
+if(last()){
+Gun:parentTo(Self)    
+VAxis:parentTo(Self)    
+HAxis:parentTo(Self)  
+}
