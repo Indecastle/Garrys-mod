@@ -15,7 +15,7 @@ if( first() ){
     E:setMaterial("Models/effects/vol_light001")
     
     
-    findByClass("player*")
+    findByClass("player")
     A=findToTable()
     local I = 1
     for(J=1,A:count())       {

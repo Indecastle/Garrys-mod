@@ -5,11 +5,11 @@
 
 local Volume = 2
 local Speed = 1
-local URL = "mc_mom_came_remix"
+local URL = "tak_nravits9"
 local IsLooping = true
 
-local IsAllServer = false
-local Radius = 1000
+local IsAllServer = true
+local Radius = 4000
 
 ------------------------------------------------------------------------------------
 
@@ -38,6 +38,8 @@ local _urls = {
     sidorovich_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
     mc_mom_came_remix = "https://cdn.discordapp.com/attachments/974678227362660395/1069328923114098819/oj-mama-prishla-miss-the-rage_456240694.mp3",
     mc_mom_came = "https://cdn.discordapp.com/attachments/974678227362660395/1069328923491581952/oy-mama-prishla.mp3",
+    starwars_duel_sudeb = "https://cdn.discordapp.com/attachments/974678227362660395/1074700721880047758/zvezdnie_vojni_-_duel_sudeb_z2.fm.mp3",
+    tak_nravits9 = "https://cdn.discordapp.com/attachments/974678227362660395/1075423243604856903/-_.mp3",
 }
 
 -- =================================================================================

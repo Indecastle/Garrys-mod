@@ -94,6 +94,7 @@ I = (I + SpeedRol) % 360
 holoAng(8, E:toWorld(ang(I*10,0,90)))
 findIncludeClass("prop")
 findIncludeClass("npc")
+findIncludeClass("zippygoremod3_gib")
 findInBox(E:toWorld(vec(5,35,43)),E:toWorld(vec(10,-35,49)))
 F=findToArray()
 

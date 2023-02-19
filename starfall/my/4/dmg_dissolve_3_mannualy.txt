@@ -90,6 +90,7 @@ if SERVER then
                 physEnt = _Killer:getPhysicsObject()
                 physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
                 physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
+                physEnt:enableMotion(true)
                 --physEnt:enableGravity(false)
                 up = Vector(0,0,_Killer:getMass()*ForceUp)
             end

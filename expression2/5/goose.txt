@@ -1,0 +1,314 @@
+@name Untitled Goose
+@persist Model:array Color:vector Walk Curtime Start X
+
+if(dupefinished()){
+    reset()
+}
+
+Exp = entity()
+E = entity():isWeldedTo()
+D = E:driver()
+
+BC = E:boxCenterW()
+Up = E:up()
+Right = E:right()
+Forward = E:forward()
+
+Speed = 300
+
+Model = array("","hqsphere","hqsphere","hqsphere","hqsphere",
+    "hqrcylinder","hqrcylinder","hqrcylinder","hqrcylinder","hqrcylinder",
+    "hqrcylinder","hqrcylinder","hqrcylinder","hqrcylinder","hqsphere",
+    "hqrcylinder","hqrcylinder","hqrcylinder","hqrcylinder","hqrcylinder",
+    "hqrcylinder","hqrcylinder","hqsphere","hqsphere","hqsphere",
+    "hqsphere","hqsphere","hqsphere","hq_rcube","hq_rcube",
+    "hq_rcube","","hqsphere","hqrcylinder","hqrcylinder",
+    "hqrcylinder","hqrcylinder","hq_cone","","hqsphere",
+    "hqrcylinder","hqrcylinder","hqrcylinder","hqrcylinder","hq_cone")
+
+
+function angle etwa(A:angle){
+    return E:toWorld(A)
+}
+function vector tw(N:number,V:vector){
+    return holoEntity(N):toWorld(V)
+}
+function angle twa(N:number,A:angle){
+    return holoEntity(N):toWorld(A)
+}
+function vector bc(N:number){
+    return holoEntity(N):boxCenterW()
+}
+
+if(first()){
+    runOnTick(1)
+    
+    Exp:setMass(0)
+    E:setMass(500)
+    
+    Start = 0
+    Color = vec(255)
+    
+    timer("set",10)
+}
+else{
+    if(clk("set")){
+        holoCreate(1,BC - Up*10,vec(),etwa(ang(0,90,0)))
+        holoParent(1,E)
+        holoCreate(100000,bc(1),vec(),twa(1,ang()))
+        holoParent(100000,1)
+        holoCreate(2,tw(1,vec(0,0,-18)),vec(5,3,3),twa(1,ang(-10,0,0)),Color,"hqsphere")
+        holoParent(2,100000)
+        holoCreate(3,tw(2,vec(-30,0,6)),vec(2,2,4/12),twa(1,ang(10,0,0)),Color,"hqsphere")
+        holoParent(3,2)
+        holoCreate(4,tw(3,vec(1,0,2)),holoScale(3),twa(3,ang(15,0,0)),Color,"hqsphere")
+        holoParent(4,3)
+        
+        holoCreate(5,tw(1,vec(21,0,-7.5)),vec(18/12,1,15/12),twa(1,ang()),Color,"hqsphere")
+        holoParent(5,2)
+        holoCreate(6,tw(5,vec(2,0,0)),vec(10/12,10/12,8/12),twa(1,vec(3,0,2):toAngle()+ang(90,0,0)),Color,"hqrcylinder")
+        holoParent(6,5)
+        
+        for(H = 7,14){
+            holoCreate(H,tw(H - 1,vec(0,0,3)),vec((10-0.7*(H-6))/12,(10-0.5*(H-6))/12,8.5/12),twa(H-1,ang(-7,0,0)),Color,"hqrcylinder")
+            holoParent(H,H-1)
+        }
+        
+        holoCreate(15,tw(14,vec(0,0,3.5)),holoScale(14),twa(1,ang()),Color,"hqsphere")
+        holoParent(15,14)
+        
+        for(H = 16,22){
+            holoCreate(H,tw(H - 1,vec(0,0,2)),(holoScale(H-1)+vec(0.1/12,0.05/12,0)):setZ(4/12),twa(H-1,ang(7,0,0)),Color,"hqrcylinder")
+            holoParent(H,H-1)
+        }
+        
+        holoCreate(23,tw(22,vec(0,0,2)),vec(6/12,6/12,6/12),twa(1,ang()),Color,"hqsphere")
+        holoParent(23,22)
+        holoCreate(24,tw(23,vec(2,0,0)),vec(11/12,8/12,8/12),twa(23,ang(1,0,0)),Color,"hqsphere")
+        holoParent(24,23)
+        holoCreate(25,tw(24,vec(3,3,1)),vec(1.5/12),twa(1,ang()),vec(),"hqsphere")
+        holoParent(25,24)
+        holoCreate(26,tw(24,vec(3,-3,1)),vec(1.5/12),twa(1,ang()),vec(),"hqsphere")
+        holoParent(26,24)
+        
+        holoCreate(27,tw(24,vec(6,0,-1)),vec(5/12,3/12,1/12),twa(23,ang(2,0,0)),vec(255,130,0),"hqsphere")
+        holoParent(27,24)
+        holoCreate(28,tw(24,vec(6,0,-1.5)),vec(5/12,3/12,1/12),twa(23,ang(-2,0,0)),vec(255,130,0),"hqsphere")
+        holoParent(28,24)
+        
+        holoCreate(29,tw(24,vec(30,0,2)),vec(2,1.5/24,1.5/24),(tw(24,vec()) - tw(24,vec(30,0,2))):toAngle():setRoll(0),vec(255),"hq_rcube")
+        holoParent(29,24)
+        holoCreate(30,tw(29,vec(0,0,12)),vec(2,1.5/24,1.5/24),(tw(24,vec()) - tw(29,vec(0,0,12))):toAngle():setRoll(0),vec(255),"hq_rcube")
+        holoParent(30,24)
+        holoCreate(31,tw(29,vec(0,0,-12)),vec(2,1.5/24,1.5/24),(tw(24,vec()) - tw(29,vec(0,0,-12))):toAngle():setRoll(0),vec(255),"hq_rcube")
+        holoParent(31,24)
+        
+        Ang1 = 100
+        Ang2 = 50
+        L1 = 30-12*sin(Ang1)
+        L2 = L1 - (L1 - 18)*sin(Ang2)
+        holoCreate(32,tw(2,vec(cos(Ang1)*L2*cos(Ang2),sin(Ang1)*L2*cos(Ang2),-L2*sin(Ang2) + 3)),vec(3/12),twa(1,ang()),vec(),"hqsphere")
+        holoParent(32,2)
+        holoCreate(33,tw(32,vec(0,-1,3)),vec(15/12,15/12,2),twa(1,ang()),Color,"hqsphere")
+        holoParent(33,32)
+        holoCreate(34,tw(33,vec(0,0,-12-6)),vec(3/12,3/12,18/12),twa(1,ang()),vec(255,130,0),"hqrcylinder")
+        holoParent(34,33)
+        holoCreate(35,tw(34,vec(6,0,-8)),vec(2/12,3/12,1),twa(34,ang(-90,0,0)),vec(255,130,0),"hqrcylinder")
+        holoParent(35,34)
+        V36 = tw(34,vec(cos(30)*6,sin(30)*6,-8))
+        holoCreate(36,V36,vec(2/12,3/12,1),(tw(34,vec(0,0,-8)) - V36):toAngle()+ang(-90,0,0),vec(255,130,0),"hqrcylinder")
+        holoParent(36,34)
+        V37 = tw(34,vec(cos(-30)*6,sin(-30)*6,-8))
+        holoCreate(37,V37,vec(2/12,3/12,1),(tw(34,vec(0,0,-8)) - V37):toAngle()+ang(-90,0,0),vec(255,130,0),"hqrcylinder")
+        holoParent(37,34)
+        holoCreate(38,tw(35,vec(-0.1,0,1)),vec(1/12,8/12,8/12),twa(35,ang()),vec(255,130,0),"hq_cone")
+        holoParent(38,34)
+        
+        holoCreate(39,tw(2,vec(cos(-Ang1)*L2*cos(Ang2),sin(-Ang1)*L2*cos(Ang2),-L2*sin(Ang2) + 3)),vec(3/12),twa(1,ang()),vec(),"hqsphere")
+        holoParent(39,2)
+        holoCreate(40,tw(39,vec(0,-1,3)),vec(15/12,15/12,2),twa(1,ang()),Color,"hqsphere")
+        holoParent(40,39)
+        holoCreate(41,tw(40,vec(0,0,-12-6)),vec(3/12,3/12,18/12),twa(1,ang()),vec(255,130,0),"hqrcylinder")
+        holoParent(41,40)
+        holoCreate(42,tw(41,vec(6,0,-8)),vec(2/12,3/12,1),twa(41,ang(-90,0,0)),vec(255,130,0),"hqrcylinder")
+        holoParent(42,41)
+        V43 = tw(41,vec(cos(30)*6,sin(30)*6,-8))
+        holoCreate(43,V43,vec(2/12,3/12,1),(tw(41,vec(0,0,-8)) - V43):toAngle()+ang(-90,0,0),vec(255,130,0),"hqrcylinder")
+        holoParent(43,41)
+        V44 = tw(41,vec(cos(-30)*6,sin(-30)*6,-8))
+        holoCreate(44,V44,vec(2/12,3/12,1),(tw(41,vec(0,0,-8)) - V44):toAngle()+ang(-90,0,0),vec(255,130,0),"hqrcylinder")
+        holoParent(44,41)
+        holoCreate(45,tw(42,vec(-0.1,0,1)),vec(1/12,8/12,8/12),twa(42,ang()),vec(255,130,0),"hq_cone")
+        holoParent(45,41)
+        
+        for(H = 2,5){
+            holoCreate(100 + H,bc(H),-holoScale(H)-vec(1/12),twa(H,ang()),vec(),Model[H,string])
+            holoDisableShading(100 + H,1)
+            holoParent(100 + H,H)
+        }
+        for(H = 6,22){
+            if(H%3 == 1){
+                holoCreate(100 + H,bc(H),-holoScale(H)-vec(1.5/12,1.5/12,3/12),twa(H,ang()),vec(),Model[H,string])
+                holoDisableShading(100 + H,1)
+                holoParent(100 + H,H)
+            }
+        }
+        for(H = 23,24){
+            holoCreate(100 + H,bc(H),-holoScale(H)-vec(1/12),twa(H,ang()),vec(),Model[H,string])
+            holoDisableShading(100 + H,1)
+            holoParent(100 + H,H)
+        }
+        for(H = 27,45){
+            if(H != 32 & H != 39){
+                if(H == 38|H == 45){
+                    holoCreate(100 + H,bc(H),-holoScale(H)-vec(1/12),twa(H,ang(180,0,0)),vec(),Model[H,string])
+                    holoDisableShading(100 + H,1)
+                    holoParent(100 + H,H)
+                }
+                else{
+                    holoCreate(100 + H,bc(H),-holoScale(H)-vec(1/12),twa(H,ang()),vec(),Model[H,string])
+                    holoDisableShading(100 + H,1)
+                    holoParent(100 + H,H)
+                }
+            }
+        }
+        
+        for(H = 29,31){
+            holoAlpha(H,0)
+            holoAlpha(100 + H,0)
+        }
+        
+        for(H = 2,50){
+            holoDisableShading(H,1)
+        }
+        
+        Start = 1
+    }
+    
+    if(Start == 1){
+        X += 1
+        
+        if(X%20 == 1){
+            for(H = 1,45){
+                holoModel(H,Model[H,string])
+                holoModel(100+H,Model[H,string])
+            }
+        }
+        
+        rangerFilter(E)
+        
+        rangerHitEntities(1)
+        R1 = 55
+        Ranger1 = rangerOffset(bc(1),bc(1) - vec(0,0,R1))
+        
+        rangerHitEntities(0)
+        Ranger2 = rangerOffsetHull(BC + vec(0,0,10),BC + vec(0,0,15),vec(10,10,5))
+        Ranger3 = rangerOffsetHull(BC + Forward * 25 - Up * 5,BC + Forward * 25 - Up * 5,vec(10,10,5))
+        Ranger4 = rangerOffsetHull(BC + vec(0,0,10),BC + vec(0,0,15),vec(10,10,5))
+        
+        if(!first()&!dupefinished()){
+            if(changed(D)){
+                if(D:isValid()){
+                    Exp:setAlpha(0)
+                    E:setAlpha(0)
+                }
+                else{
+                    Exp:setAlpha(255)
+                    E:setAlpha(255)
+                }
+            }
+        
+            if(changed(D:keyAttack1())){
+                if(D:keyAttack1()){
+                    E:soundPlay(1,0,"synth/tri.wav")
+                    soundPitch(1,112)
+                    soundVolume(1,0.8)
+                    
+                    stoptimer("honk")
+                }
+                else{
+                    timer("honk",2)
+                }
+            }
+        
+            if(D:keyAttack1()){
+                for(H = 29,31){
+                    holoAlpha(H,255)
+                    holoAlpha(100 + H,255)
+                    holoPos(28,tw(24,vec(6,0,-2)))
+                    holoAng(28,twa(23,ang(30,0,0)))
+                }
+            }
+            else{
+                for(H = 29,31){
+                    holoAlpha(H,0)
+                    holoAlpha(100 + H,0)
+                    holoPos(28,tw(24,vec(6,0,-1.5)))
+                    holoAng(28,twa(23,ang(-2,0,0)))
+                }
+            }
+        
+            if(D:keyForward()|D:keyLeft()){
+                if(Walk != -1){
+                    Walk = 1
+                }
+            }
+            elseif(D:keyBack()|D:keyRight()){
+                if(Walk != 1){
+                    Walk = -1
+                }
+            }
+            
+            #CurtimeP = 
+            
+            if(changed(Walk)){
+                
+            }
+            else{
+                if(!D:isValid()){
+                    Walk = 0
+                }
+                elseif(Walk == 1|Walk == -1){
+                    if(Curtime >= 150){
+                        if(Curtime%180 >= 172|Curtime%180 <= 8){
+                            if((!D:keyForward() & !D:keyBack() & !D:keyLeft() & !D:keyRight())){
+                                Walk = 0
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if(Walk == 0){
+                holoAng(100000,twa(1,ang()))
+                holoAng(32,twa(1,ang()))
+                holoAng(39,twa(1,ang()))
+            }
+            else{
+                Curtime += 15
+                if(Walk == 1){
+                    holoAng(100000,twa(1,ang(sin(Curtime*2)*10,sin(Curtime)*30,0)))
+                    holoAng(32,twa(1,ang(sin(Curtime*2)*40,0,0)))
+                    holoAng(39,twa(1,ang(-sin(Curtime*2)*40,0,0)))
+                }
+                elseif(Walk == -1){
+                    holoAng(100000,twa(1,ang(-sin(Curtime*2)*10,-sin(Curtime)*30,0)))
+                    holoAng(32,twa(1,ang(-sin(Curtime*2)*40,0,0)))
+                    holoAng(39,twa(1,ang(sin(Curtime*2)*40,0,0)))
+                }
+            }
+        }
+        
+        Movement = D:isValid()*(Forward * D:keyForward() - Forward * !D:keyForward() * D:keyBack())
+        UMovement = D:isValid()*(Up * D:keyJump() * (1 - 0.8 * !Ranger1:hit()))
+        E:applyForce(((-E:vel()*0.8):setZ((-E:vel():z() + (R1 - Ranger1:distance())*10) * Ranger1:hit()) + vec(0,0,(-E:vel():z() - 1000) * Ranger2:hit() * D:isValid()) + Movement * Speed + UMovement * 200)*E:mass())
+            
+        AMovement = D:isValid()*(D:keyLeft() - !D:keyLeft() * D:keyRight())
+        Local = E:toLocal(rotationVector(quat(ang(0,E:angles():yaw() + AMovement * 10,0))/quat(E))+E:pos())
+        E:applyTorque((Local*240-E:angVelVector()*20)*E:inertia())
+        
+        if(clk("honk")){
+            soundStop(1)
+        }
+    }
+}

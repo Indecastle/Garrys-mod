@@ -8,7 +8,8 @@ if(changed(owner():keyPressed("e")) & owner():keyPressed("e") & owner():aimEntit
 {
     #owner():aimEntity():remove()
     #print("owner: " + owner():name())
-    #print("owner tool name: " + owner():tool())
+    print("owner weapon name: " + owner():weapon():type())
+    print("owner tool name: " + owner():tool())
     print("id: " + owner():aimEntity():id())
     print("name: " + owner():aimEntity():getName())
     print("owner: " + owner():aimEntity():owner():toString())

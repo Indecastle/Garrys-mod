@@ -1,0 +1,120 @@
+@name Turret Rocket Air
+@inputs [Position]:array [Owner WhiteList]:array Detected
+@outputs TargetPos:vector Fire Reload Active Cone
+@persist [Turret Radar H]:entity [Players]:array
+@persist IsStart IsOldActive A [DetectedPos Dir_Turret Dir_Radar]:vector
+#@trigger none
+
+interval(100)
+if(first() | dupefinished()) { 
+    
+    Cone = 90
+
+
+    findByClass("acf_rack")
+    Turret = findClosest(entity():pos())
+    findByClass("ace_trackingradar")
+    Radar = findClosest(entity():pos())
+    
+    Active = 1
+    IsOldActive = 0
+    Reload = 1
+    
+    A = 0
+    
+    
+    H = holoCreate(1,entity():toWorld(vec(0,0,10)),vec(0.3)) H:setAlpha(0)
+    holoParent(1,entity())
+    
+    IsStart = 1
+    timer("update_players", 0)
+}
+
+if (clk("update_players")) {
+    Players = players()
+    timer("update_players", 1000)
+}
+
+
+if (first() | duped()) {
+    function number my_find_substr(Str:string, SubStr:string) {
+        return Str:lower():find(SubStr:lower())
+    }
+    function entity my_findPlayerByName(Name:string) {
+        local OK = noentity()
+        foreach(I, P:entity = Players) {
+            if(my_find_substr(P:name(), Name)) { OK = P break}
+        }
+        return OK
+    }
+    function number array:checkAr(Ent:entity) {
+        local OK = 0
+        for(I=1,This:count()) {
+            if(This[I, entity] == Ent) { OK = 1 break}
+        }
+        return OK
+    }
+    function angle getNextAngle(Ent:entity, Dir:vector) {
+        local Tar = Ent:angles():forward()
+        local X = (Tar:x()+0.2*Dir:x())/(1+0.2)
+        local Y = (Tar:y()+0.2*Dir:y())/(1+0.2)
+        local Z = (Tar:z()+0.2*Dir:z())/(1+0.2)
+        local An = vec(X,Y,Z):toAngle()
+        return An
+    }
+}
+
+
+if (IsStart) {
+
+    Turret:setPos(H:toWorld(vec(0,0,15)))
+    #Radar:setPos(H:toWorld(vec(100,0,15)))
+    
+    local IsActive = 0
+    
+    if (Detected > 0) {
+        local OwnerTarget = my_findPlayerByName(Owner[Detected, string])
+        if (WhiteList:count() == 0 | Owner[Detected, string] != "" & !WhiteList:checkAr(OwnerTarget)) {
+            DetectedPos = Position[Detected, vector]
+            Dir_Turret = (DetectedPos - Turret:pos()):normalized()
+            Dir_Radar = (DetectedPos - Radar:pos()):normalized()
+            if (Dir_Radar:z() > (IsOldActive ? 0 : 0.3)) {
+                IsActive = 1
+                TargetPos = DetectedPos
+            }
+        }
+    }
+    
+    IsOldActive = IsActive
+    
+    if(IsActive) {
+        timer("fire",700)
+    }
+    else { 
+        stoptimer("fire")
+        timer("stopfire",10) 
+        #Turret:setAng(holoEntity(1):angles())
+        A = (A+2)%360
+        Dir_Radar = Dir_Turret = H:toWorld(ang(-45,A,0)):forward()
+        Dir_Radar = Dir_Turret
+    }
+    
+    
+    
+    local Ang_Turret = getNextAngle(Turret, Dir_Turret)
+    local Ang_Radar = getNextAngle(Radar, Dir_Radar)
+    Turret:setAng(Ang_Turret)
+    Radar:setAng(Ang_Radar)
+    
+    if(clk("fire")) { #[W["Fire",number] = 1]# Fire=1 }
+    if(clk("stopfire")) { #[W["Fire",number] = 0]# Fire=0 }
+    
+    if(changed(IsActive)& IsActive) {
+        Turret:soundPlay("Alert",0.5,"NPC_Turret.Deploy")
+    }
+    
+    if(changed(IsActive) & IsActive) {
+        Turret:soundPlay("change",0.5,"NPC_Turret.Ping")
+    }
+
+}
