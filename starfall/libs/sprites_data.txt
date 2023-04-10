@@ -86,7 +86,11 @@ SpritesData = {
         size = {5, 4},
         frameCount = 5*4 - 4
     },
-    
+    putin1 = {
+        urls = {"https://i.imgur.com/CDJoq0H.png"},
+        size = {9, 9},
+        frameCount = 9*9 - 2
+    }
 
 }
 

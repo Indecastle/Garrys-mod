@@ -78,7 +78,9 @@ if (IsStart) {
             DetectedPos = Position[Detected, vector]
             Dir_Turret = (DetectedPos - Turret:pos()):normalized()
             Dir_Radar = (DetectedPos - Radar:pos()):normalized()
-            if (Dir_Radar:z() > (IsOldActive ? 0 : 0.3)) {
+            local Pitch = -Dir_Radar:toAngle(vec(0,0,1)):pitch()
+            #print(Pitch)
+            if (Pitch > (IsOldActive ? -10 : 30)) {
                 IsActive = 1
                 TargetPos = DetectedPos
             }

@@ -20,7 +20,7 @@ if(changed(owner():keyPressed("e")) & owner():keyPressed("e") & owner():aimEntit
     #print("materials: " + owner():aimEntity():getMaterials():concat(" | "))
     print("material: " + owner():aimEntity():getMaterial())
     #owner():aimEntity():propPhysicalMaterial("gmod_silent")
-    #print("color: " + owner():aimEntity():getColor())
+    print("color: " + toString(owner():aimEntity():getColor4()))
     #print(owner():aimBone())
     #owner():aimEntity():propDelete()
     #owner():aimEntity():propPhysicalMaterial("wood_crate")

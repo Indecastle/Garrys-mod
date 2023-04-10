@@ -2,7 +2,7 @@
 @inputs Open Close Lock AutoClose CloseTime Friends:array Door:entity
 @outputs IsOpenned FullyOpen FullyClosed #Blocked
 @persist [Players OP Path]:array [Door HDoor]:entity OK D SpeedD
-@trigger none
+@trigger Door
 
 if(first() | dupefinished()) { #[entity():setAng(owner():angles())]#    timer("s",100)}
 if(clk("s")) {
@@ -20,7 +20,7 @@ if(clk("t")) { #entity():setAlpha(0)
     holoModel(1, Door:model())
     HDoor:setBodygroup(1,1)
     holoAng(1,Door:angles())
-    #holoSkin(1, 2)
+    holoSkin(1, Door:getSkin())
     holoParent(1,Door)
    
     
@@ -31,6 +31,10 @@ if(clk("t")) { #entity():setAlpha(0)
     
     
     timer("scan",100)
+}
+
+if (~Door & Door) {
+    holoSkin(1, Door:getSkin())
 }
 
 if (clk("scan")){

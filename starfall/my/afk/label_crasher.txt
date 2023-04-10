@@ -15,7 +15,7 @@ end)[1]*/
 //print(Target)
 
 local Data = {
-    {   text={"Получи бессмертие"}, 
+    {   text={"Crasher"}, 
         //font = "Courier New",
         fontSize=100, 
         fontBold=600, 
@@ -26,17 +26,6 @@ local Data = {
         rainbowColorSpace = 50,
         rainbowReverse = false,
         //colorSpeed = 1.3,
-    },
-    {   text={"Нажми на кнопку",}, 
-        fontSize=100, 
-        fontBold=600, 
-        margin=60,
-        bold=true,
-        color=Color(0,255,150),
-        colorMode = 3,
-        rainbowColorSpace = 10,
-        rainbowReverse = true,
-        colorSpeed = 0.6,
     },
 }
 

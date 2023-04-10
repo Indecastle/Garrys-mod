@@ -1,0 +1,116 @@
+--@name Give God
+--@author Markiz
+--@server
+
+
+local LogToChat = true
+
+
+local Data = {
+    God = {
+        IsEnabled = true,
+        Delay = 60,
+        Reason = "godmode",
+        CheckFunc = function(ply, inflictor, attacker) return attacker:hasGodMode() end,
+        PayloadFunc = function(ply, inflictor, attacker) 
+            concmd('ulx ungod "' .. attacker:getName() .. '"')
+        end,
+    },
+    Noclip = {
+        IsEnabled = true,
+        Delay = 5,
+        Reason = "noclip",
+        CheckFunc = function(ply, inflictor, attacker) return attacker:isNoclipped() end,
+        PayloadFunc = nil,
+        
+    },
+    AlphaMaterial = {
+        IsEnabled = true,
+        Delay = 180,
+        Reason = "alpha material",
+        CheckFunc = function(ply, inflictor, attacker) return attacker:getMaterial() == "Models/effects/vol_light001" or attacker:getColor().a < 100 end,
+        PayloadFunc = nil,
+        
+    }
+}
+
+
+local WW = chip():getWirelink()
+
+wire.adjustPorts(
+    {
+        Button="entity",
+    },
+    {
+    }
+)
+
+
+hook.add("PlayerUse", "god", function(ply, ent)
+    
+    if isValid(wire.ports.Button) and wire.ports.Button == ent then
+        if isValid(ply) and not ply:hasGodMode() and not ply:keyDown(IN_KEY.USE) then
+            concmd('ulx god "' .. ply:getName() .. '"')
+            --print(ply, " - ", ent)
+        end
+    end
+    
+end)
+
+
+
+function log(reason)
+    if LogToChat then
+        concmd("say " .. reason)
+    else
+        print(reason)
+    end
+end
+
+
+function jailPlayer(ply, delay)
+    concmd('ulx jail "' .. ply:getName() .. '"' .. tostring(delay))
+end
+
+
+function getBetterDelay(choices, item)
+    choices[#choices+1] = {
+        delay = item.Delay,
+        reason = item.Reason
+    }
+end
+
+function generateTotalJailedReason(attacker, choices)
+    local totalChoice = ''
+    local delay = 0
+    for i, item in ipairs(choices) do
+        totalChoice = totalChoice .. (totalChoice == '' and '' or ', ') ..item.reason..'('..tostring(item.delay)..')'
+        delay = delay + item.delay
+    end
+    return delay, 'SECURE: ' .. attacker:getName() .. ' was jailed due to ' .. totalChoice
+end
+
+
+hook.add("PlayerDeath", "jail", function(ply, inflictor, attacker)
+    local choices = {}
+
+    if isValid(attacker) and attacker:isPlayer() then
+        if ply == attacker then return end
+        
+        for key, item in pairs(Data) do
+            if item.IsEnabled and item.CheckFunc(ply, inflictor, attacker) then
+                getBetterDelay(choices, item)
+                if item.PayloadFunc then
+                    item.PayloadFunc(ply, inflictor, attacker)
+                end
+            end
+        end
+        
+        if #choices > 0 then
+            delay, reason = generateTotalJailedReason(attacker, choices)
+            jailPlayer(attacker, delay)
+            log(reason)
+        end
+    end
+    
+end)

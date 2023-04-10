@@ -19,33 +19,39 @@ local HalfRes_ = 1024 / 2
 local dxy = HalfSquare*2 / Res_
 local SunDirection = Vector(-1,-1,-1):getNormalized()
 
-local tt = find.byModel("models/gibs/hgibs.mdl")
-local cam = find.closest(tt, chip():getPos())
+
 // ##### don't touch !!! ########
+
+
+local camEnt
 
 
 if SERVER then
     
+    local tt = find.byModel("models/gibs/hgibs.mdl")
+    camEnt = find.closest(tt, chip():getPos())
+    
     // holograms.create(any pos, any ang, any model, any scale)
     // H1 = holoCreate(1, Cam:toWorld(vec(DistanceToSquare, 0, 0)), vec(0.001,2,2), Cam:angles(), vec4(0,255,0, 100))
-    local realm_holo = holograms.create(cam:localToWorld(Vector(DistanceToSquare, 0, 0)), cam:getAngles(), "models/holograms/cube.mdl", Vector(0.001,2,2))
-    realm_holo:setParent(cam)
+    local realm_holo = holograms.create(camEnt:localToWorld(Vector(DistanceToSquare, 0, 0)), camEnt:getAngles(), "models/holograms/cube.mdl", Vector(0.001,2,2))
+    realm_holo:setParent(camEnt)
     realm_holo:setColor(Color(0,255,0, 100))
     realm_holo:setScale(Vector(0.001, HalfSquare*2, HalfSquare*2)/12)
     
     hook.add("ClientInitialized", "cl_init", function(ply)
         net.start("holo")
         net.writeEntity(realm_holo)
+        net.writeEntity(camEnt)
         net.send(ply)
     end)
     
 else
     render.createRenderTarget("myrendertarget")
     
-    setupPermissionRequest({ "render.screen", "input" }, "See an example of render.screen.", true)
-    local permissionSatisfied = hasPermission("render.screen") and hasPermission("input")
+    setupPermissionRequest({ "render.screen" }, "See an example of render.screen.", true)
+    local permissionSatisfied = hasPermission("render.screen") and false
     hook.add("permissionrequest", "fractal_Markiz", function()
-        permissionSatisfied = hasPermission("render.screen") and hasPermission("input")
+        permissionSatisfied = hasPermission("render.screen")
     end)
     
     local server_holo
@@ -62,11 +68,19 @@ else
     
     net.receive("holo", function(len)
         -- Since the client may not have created the hologram yet, it's important to use the callback of net.readEntity to wait and be sure it exists first.
-        net.readEntity(receivedHologram)
+        net.readEntity(function(ent)
+            if ent==nil then error("Failed to get hologram!") end
+            server_holo = ent:toHologram()
+        end)
+        net.readEntity(function(ent)
+            if ent==nil then error("Failed to get camera!") end
+            camEnt = ent
+            initHooks()
+        end)
     end)
     
 
-    function get_coro()
+    function get_coro(camEnt)
         return coroutine.wrap(function()
                 local I_ = 0
                 local time1 = timer.curtime()
@@ -77,14 +91,15 @@ else
                             I_ = 0
                             coroutine.yield()
                         end
-                        if !server_holo:isValid() or cam == nil or !cam:isValid() then
+
+                        if !isValid(server_holo) or camEnt == nil or !isValid(camEnt) then
                             return true
                         end
                         local Pos1 = server_holo:localToWorld(Vector(0, HalfSquare - x*dxy, HalfSquare - y*dxy))
                     
-                        local startPos = cam:getPos()
-                        local dir = (Pos1 - cam:getPos()):getNormalized()
-                        local tr = trace.trace(startPos, startPos + dir*RenderDistanceLimit, {cam}, bit.bor(MASK.ALL, 2^14), nil, false)
+                        local startPos = camEnt:getPos()
+                        local dir = (Pos1 - camEnt:getPos()):getNormalized()
+                        local tr = trace.trace(startPos, startPos + dir*RenderDistanceLimit, {camEnt}, bit.bor(MASK.ALL, 2^14), nil, false)
                         local hitPos = tr.HitPos
                         local dist = hitPos:getDistance(startPos)
                         //print(tr.HitNonWorld)
@@ -119,7 +134,7 @@ else
     
     
     function initHooks()
-        paint = get_coro()
+        paint = get_coro(camEnt)
         
         hook.add("renderoffscreen","",function()
             render.selectRenderTarget("myrendertarget")
@@ -130,7 +145,7 @@ else
                             hook.remove("renderoffscreen","")
                             return
                         end
-                        paint = get_coro()
+                        paint = get_coro(camEnt)
                     end
                 end
             end

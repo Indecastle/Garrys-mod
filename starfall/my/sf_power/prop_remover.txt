@@ -11,6 +11,29 @@ local Models = {
     'models/props_phx/amraam.mdl',
     'models/props_phx/torpedo.mdl',
     'models/props_c17/oildrum001_explosive.mdl',
+    'models/hunter/blocks/cube8x8x8.mdl',
+}
+
+local NocollideModels = {
+    'models/props_c17/furniturebathtub001a.mdl',
+    'models/props_c17/furniturefridge001a.mdl',
+    'models/props_c17/furniturefireplace001a.mdl',
+    'models/props_wasteland/laundry_dryer002.mdl',
+    
+    'models/mechanics/wheels/wheel_smooth2.mdl',
+    'models/mechanics/wheels/wheel_smooth_72w.mdl',
+    'models/mechanics/wheels/wheel_smooth_72.mdl',
+    'models/mechanics/wheels/wheel_smooth_48.mdl',
+    'models/mechanics/wheels/wheel_smooth_96.mdl',
+    'models/mechanics/wheels/wheel_smooth_24.mdl',
+    'models/mechanics/wheels/wheel_smooth_24f.mdl',
+    'models/props_phx/wheels/metal_wheel1.mdl',
+    'models/props_phx/wheels/metal_wheel2.mdl',
+    'models/props_phx/wheels/wooden_wheel1.mdl',
+    'models/props_phx/wheels/wooden_wheel2.mdl',
+    'models/props_phx/construct/metal_dome360.mdl',
+    'models/hunter/misc/shell2x2a.mdl',
+    --'',
 }
 
 
@@ -22,8 +45,9 @@ local Npc = {
     'npc_antlionguard',
 }
 
-
 local Classes = {
+    'gmod_wire_simple_explosive',
+    'gmod_wire_explosive',
     'gmod_dynamite',
     'ent_jack_clusterbomb',
     'ent_jack_clusterminebomb',
@@ -36,8 +60,8 @@ local Classes = {
 }
 
 
-timer.create("remover", 0.2, 0, function()
-    
+
+function removerHandler()
     --local ents = find.byClass('prop_physics', function(ent)
     --    return table.hasValue(Models, ent:getModel())
     --end)
@@ -57,6 +81,46 @@ timer.create("remover", 0.2, 0, function()
     for i, class in ipairs(Classes) do
         find.byClass(class, function(ent)
             ent:remove()
+        end)
+    end
+end
+
+function noCollideHandler()
+    local nocollideProps = find.all(function(ent) return table.hasValue(NocollideModels, ent:getModel()) end)
+
+    for i, ent in ipairs(nocollideProps) do
+        for j=i+1, #nocollideProps do
+            local ent2 = nocollideProps[j]
+            constraint.nocollide(ent, ent2)
+        end
+    end
+end
+
+function noCollideHandler2()
+    local nocollideProps = find.all(function(ent) return table.hasValue(NocollideModels, ent:getModel()) end)
+
+    if #nocollideProps > 5 then
+        for i, ent in ipairs(nocollideProps) do
+            ent:setNocollideAll(true)
+        end
+    end
+    
+end
+
+
+timer.create("remover", 0.6, 0, function()
+    removerHandler()
+end)
+
+
+timer.create("nocollide", 0.5, 0, function()
+    noCollideHandler2()
+end)
+
+hook.add("OnEntityCreated", "frozes", function(ent)
+    if isValid(ent) and ent:isValidPhys() and isValid(ent:getOwner()) then
+        pcall(function()
+            --ent:setFrozen(true)
         end)
     end
 end)

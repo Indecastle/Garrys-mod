@@ -1,0 +1,661 @@
+@name Paper Clip Mingebag Version 3.1
+@inputs 
+@outputs
+@persist Count Dir:vector Player:entity Follow Channel Sounds:array
+@persist Materials:array HoloIndex Hold ChangeDirection RepeatBuild Theta
+@persist BuildPosition:vector ContraptionProps:array WeldCount IntYaw PosCount NewPos:vector
+@persist BuildFrequency SpeakFrequency TurnFrequency WalkSpeed ContraptionIndex ContraptionPropIndex Entity:entity Entities:array MainEntity:entity
+@persist HoloCount PhysgunHoloIndex IsMaster CountMaster Players:array PlayerHolos:array Q_rot:quaternion ForceSound WeldEntity:entity
+@persist ForceDir ForceYaw ForceForward FileNames:array FileLoaded LearnFrequency LearnRadius MainProp:entity PropList:array LearnComparing LearnChecksum LearnIndex1 LearnIndex2
+@persist Absorbing CurrentContraption:string ForceLearn:entity MinSizePropToLearn Debug Index1 Index2
+@persist ContraptionList:string ContraptionListLoaded ContraptionLoaded [DelayedWriteName DelayedWriteContents]:string
+@model models/kleiner.mdl
+@trigger 
+
+#@model models/zombie/poison.mdl
+#@model models/weapons/v_superphyscannon.mdl
+if( first() | duped() )
+{
+    timer("init",randint(100,200))
+    exit()
+}elseif( clk("init") )
+{
+    
+    #########################################
+    ############### SETTINGS ################
+    #########################################
+    HoloCount = 12 # The maximum nubmer of holos each mingebag will create
+    BuildFrequency = 50 # It will build something every ~30th execution. (6 seconds)
+    SpeakFrequency = 10 # It will say something every ~30th execution. (6 seconds)
+    TurnFrequency = 30 # It will turn every %5 of executions. (6 seconds)
+    WalkSpeed = 1.3 # 1 is normal speed, 1.5 is faster, 0.5 is slower.
+    LearnFrequency = 40 # Will search for nearby contraptions to learn from every 30 seconds
+    LearnRadius = 3000 # Will search within 3000 units for contraptions to learn.
+    MinSizePropToLearn = 10 # Props of size less than 10 will not be included whean learning.
+    Debug = 0
+    #########################################
+    #########################################
+    #########################################
+    
+    
+    # Check to see if the master mingebag is still alive
+    Master = gGetEnt("masterMingebag")
+    if( !Master | ( Master == entity() ) )
+    {
+        # Enable chat commands
+        runOnChat(1)
+    
+        # This chip will be the master mingebag
+        IsMaster = 1
+        FileLoaded = 0
+        print("Master Mingebag Set")
+        gSetEnt("masterMingebag",entity())
+    }
+    
+    # Upload the contraption list
+    fileLoad("contraptionListNew.txt")
+    timer("cList",200)
+    
+    ForceLearn = noentity()
+    ContraptionInit = 0
+    PhysgunHoloIndex = 1
+    HoloIndex = 3
+    
+    print("Made by Paper Clip")
+
+    entity():setMass(5000)
+    Channel = randint(1,100000)
+    Sounds[1,string] = "vo/k_lab/kl_ahhhh.wav"
+    Sounds[2,string] = "vo/k_lab/kl_almostforgot.wav"
+    Sounds[3,string] = "vo/k_lab/kl_barneyhonor.wav"
+    Sounds[4,string] = "vo/k_lab/kl_barneysturn.wav"
+    Sounds[5,string] = "vo/k_lab/kl_besokind.wav"
+    Sounds[6,string] = "vo/k_lab/kl_blast.wav"
+    Sounds[7,string] = "vo/k_lab/kl_bonvoyage.wav"
+    Sounds[8,string] = "vo/k_lab/kl_cantcontinue.wav"
+    Sounds[9,string] = "vo/k_lab/kl_cantwade.wav"
+    Sounds[10,string] = "vo/k_lab/kl_careful.wav"
+    Sounds[11,string] = "vo/k_lab/kl_charger01.wav"
+    Sounds[12,string] = "vo/k_lab/kl_charger02.wav"
+    Sounds[13,string] = "vo/k_lab/kl_coaxherout.wav"
+    Sounds[14,string] = "vo/k_lab/kl_comeout.wav"
+    Sounds[15,string] = "vo/k_lab/kl_credit.wav"
+    Sounds[16,string] = "vo/k_lab/kl_dearme.wav"
+    Sounds[17,string] = "vo/k_lab/kl_debeaked.wav"
+    Sounds[18,string] = "vo/k_lab/kl_delaydanger.wav"
+    Sounds[19,string] = "vo/k_lab/kl_diditwork.wav"
+    Sounds[20,string] = "vo/k_lab/kl_ensconced.wav"
+    Sounds[21,string] = "vo/k_lab/kl_excellent.wav"
+    Sounds[22,string] = "vo/k_lab/kl_fewmoments01.wav"
+    Sounds[23,string] = "vo/k_lab/kl_fewmoments02.wav"
+    Sounds[24,string] = "vo/k_lab/kl_fiddlesticks.wav"
+    Sounds[25,string] = "vo/k_lab/kl_finalsequence.wav"
+    Sounds[26,string] = "vo/k_lab/kl_finalsequence02.wav"
+    Sounds[27,string] = "vo/k_lab/kl_fitglove01.wav"
+    Sounds[28,string] = "vo/k_lab/kl_fitglove02.wav"
+    Sounds[29,string] = "vo/k_lab/kl_fruitlessly.wav"
+    Sounds[30,string] = "vo/k_lab/kl_getinposition.wav"
+    Sounds[31,string] = "vo/k_lab/kl_getoutrun01.wav"
+    Sounds[32,string] = "vo/k_lab/kl_getoutrun02.wav"
+    Sounds[33,string] = "vo/k_lab/kl_getoutrun03.wav"
+    Sounds[34,string] = "vo/k_lab/kl_gordongo.wav"
+    Sounds[35,string] = "vo/k_lab/kl_gordonthrow.wav"
+    Sounds[36,string] = "vo/k_lab/kl_hedyno01.wav"
+    Sounds[37,string] = "vo/k_lab/kl_hedyno02.wav"
+    Sounds[38,string] = "vo/k_lab/kl_hedyno03.wav"
+    Sounds[39,string] = "vo/k_lab/kl_helloalyx01.wav"
+    Sounds[40,string] = "vo/k_lab/kl_helloalyx02.wav"
+    Sounds[41,string] = "vo/k_lab/kl_heremypet01.wav"
+    Sounds[42,string] = "vo/k_lab/kl_heremypet02.wav"
+    Sounds[43,string] = "vo/k_lab/kl_hesnotthere.wav"
+    Sounds[44,string] = "vo/k_lab/kl_holdup01.wav"
+    Sounds[45,string] = "vo/k_lab/kl_holdup02.wav"
+}elseif( clk("cList") )
+{
+    # Loading the contraption list
+    if( fileLoaded() )
+    {
+        FileNames = fileRead():explode("|")
+        
+        if( FileNames:count() < 1 )
+        {
+            print("No contraptions found. The mingebag likely is installed incorrectly.")
+        }else{
+            print((FileNames:count()/2):toString() + " contraptions found.")
+        }
+        
+        ContraptionListLoaded = 1
+    }else{
+        timer("cList",100)
+        exit()
+    }
+}elseif( !ContraptionListLoaded )
+{
+    interval(100)
+    exit()
+}elseif( clk("delayWrite") )
+{
+    fileWrite(DelayedWriteName,DelayedWriteContents)
+}elseif( clk("cListSchedule") )
+{
+    timer("cList",100)
+    ContraptionListLoaded = 0
+    fileLoad("contraptionListNew.txt")
+}
+
+if( IsMaster )
+{
+    # Check if it is a chat
+    if( chatClk() )
+    {
+        if( chatClk(owner()) & (owner():lastSaid() == ".skip") )
+        {
+            #hideChat(1)
+            print("MASTER MINGEBAG: Skipping current contraption")
+            # Skip the current contraption
+            ContraptionPropIndex = 10000
+        }elseif( chatClk(owner()) & (owner():lastSaid() == ".learn") )
+        {
+            if( owner():aimEntity() )
+            {
+                ForceLearn = owner():aimEntity()
+                print("Force learning the aimed-at contraption owned by " + ForceLearn:owner():name())
+            }else{
+                print("You must be aiming at a prop for this to work.")
+            }
+        }
+        exit()
+    }else{
+        # This code is only executed on a single mingebag
+    }
+}
+
+Count++
+
+# Don't do anything if we are frozen
+if( entity():isFrozen() & !ForceLearn )
+{
+    print("MINGEBAG: Please unfreeze me by looking at my physgun and pressing the key R")
+    interval(5000)
+    exit()
+}
+
+if( mod(Count,25) == 0 )
+{
+    # Check to see if the master mingebag is still alive
+    Master = gGetEnt("masterMingebag")
+    if( !Master )
+    {
+        # This chip will be the master mingebag
+        IsMaster = 1
+        print("Master Mingebag Set")
+        gSetEnt("masterMingebag",entity())
+    }
+}
+
+if( clk("chargeStart") )
+{
+    holoDelete(PhysgunHoloIndex)
+    Hold = 1
+    entity():soundPlay(Channel,3.275,"weapons/physcannon/superphys_chargeup.wav")
+    
+    # Load the prop position, and face towards it
+    TmpIndex = 1+ContraptionPropIndex*3
+    Tmp = ContraptionProps[TmpIndex+1,string]:explode(",")
+    PropPos = vec(Tmp[1,string]:toNumber(),Tmp[2,string]:toNumber(),Tmp[3,string]:toNumber())
+    DifPos = vec(Q_rot*PropPos*inv(Q_rot))+BuildPosition-entity():pos()
+    ForceYaw = DifPos:toAngle():yaw()
+    
+    # Create the crotch ball
+    holoCreate(PhysgunHoloIndex+1,entity():pos()+entity():up()*34+entity():forward()*20,vec(1.2,1.2,1.2),entity():angles(),vec(255,255,255))
+    holoModel(PhysgunHoloIndex+1,"hqicosphere")
+    holoMaterial(PhysgunHoloIndex+1,"models/alyx/emptool_glow")
+    holoParent(PhysgunHoloIndex+1,entity())
+    
+    timer("chargeDone",2000)
+    exit()
+}elseif( clk("chargeDone") )
+{
+    # Load the current prop information
+    TmpIndex = 1+ContraptionPropIndex*3
+    Tmp = ContraptionProps[TmpIndex+1,string]:explode(",")
+    PropPos = vec(Tmp[1,string]:toNumber(),Tmp[2,string]:toNumber(),Tmp[3,string]:toNumber())
+    Tmp = ContraptionProps[TmpIndex+2,string]:explode(",")
+    PropAng = ang(Tmp[1,string]:toNumber(),Tmp[2,string]:toNumber(),Tmp[3,string]:toNumber())
+    
+    # Rotate and place the prop
+    NewAngleF = vec(Q_rot*quat(PropAng:forward())*inv(Q_rot))
+    NewAngleUp = vec(Q_rot*quat(PropAng:up())*inv(Q_rot))
+    NewAngle = quat(NewAngleF,NewAngleUp):toAngle()
+    
+    Entity=propSpawn(ContraptionProps[TmpIndex,string],vec(Q_rot*PropPos*inv(Q_rot))+BuildPosition,NewAngle,1)
+    Entities[Entities:count() + 1,entity] = Entity
+    ContraptionPropIndex++
+    DifPos = Entity:pos()-entity():pos()
+    ForceYaw = DifPos:toAngle():yaw()
+    
+    # Create the physgun
+    SourcePosition = entity():pos()+entity():up()*34+entity():forward()*20
+    DestinationPosition = Entity:massCenter()
+    DifPosition = (DestinationPosition-SourcePosition)
+    
+    holoCreate(PhysgunHoloIndex,DifPosition/2+SourcePosition,vec(DifPosition:length(),0.5,0.5),DifPosition:toAngle(),vec(255,255,255))
+    holoScaleUnits(PhysgunHoloIndex,vec(DifPosition:length(),5,5))
+    holoModel(PhysgunHoloIndex,"cylinder")
+    holoMaterial(PhysgunHoloIndex,"models/alyx/emptool_glow")
+    holoParent(PhysgunHoloIndex,entity())
+    
+    entity():soundPlay(Channel,2,"weapons/physcannon/hold_loop.wav")
+    if( Debug )
+    {
+        timer("physDone",250)
+    }else{
+        timer("physDone",2000)
+    }
+    exit()
+}elseif( clk("physDone") )
+{
+    # Delete the physgun
+    holoDelete(PhysgunHoloIndex)
+    holoDelete(PhysgunHoloIndex+1)
+    #print(ContraptionLength[ContraptionIndex,number]:toString())
+    if( ContraptionPropIndex <= ContraptionProps:count()/3 )
+    {
+        if( ContraptionPropIndex != 1 )
+        {
+            # Perform a weld
+            if( Debug )
+            {
+                timer("chargeDone",200)
+            }else{
+                timer("faceEntityThenStart",100)
+                WeldCount = clamp(randint(1,5),1,Entities:count()-1)
+            }
+        }else{
+            timer("chargeStart",100)
+            MainEntity = Entity
+            ForceSound = 1
+        }
+    }else{
+        holoDelete(PhysgunHoloIndex)
+        holoDelete(PhysgunHoloIndex+1)
+        ChangeDirection = 2
+        Hold = 0
+    }
+    exit()
+}elseif( clk("weldStart") ){
+    WeldCount--
+    Entity:soundPlay(Channel,0,"weapons/airboat/airboat_gun_lastshot1.wav")
+    entity():soundPlay(Channel+1,0,"weapons/airboat/airboat_gun_lastshot1.wav")
+    
+    # Create the weld effect
+    SourcePosition = entity():pos()+entity():up()*34+entity():forward()*20
+    DestinationPosition = Entity:massCenter()
+    DifPosition = (DestinationPosition-SourcePosition)
+    holoCreate(PhysgunHoloIndex,DifPosition/2+SourcePosition,vec(DifPosition:length(),0.5,0.5),DifPosition:toAngle(),vec(0,255,0))
+    holoScaleUnits(PhysgunHoloIndex,vec(DifPosition:length(),5,5))
+    holoModel(PhysgunHoloIndex,"cylinder")
+    holoMaterial(PhysgunHoloIndex,"models/alyx/emptool_glow")
+    holoParent(PhysgunHoloIndex,entity())
+    WeldEntity = Entities[randint(1,Entities:count()-1),entity]
+    
+    timer("faceEntityThenEnd",500)
+    exit()
+}elseif( clk("changePositionsThenStart") ){
+    # Calculate the yaw to the new position
+    holoDelete(PhysgunHoloIndex)
+    DifPos = NewPos-entity():pos()
+    ForceYaw = DifPos:toAngle():yaw()
+    DifAng = angnorm(entity():angles()-ang(0,ForceYaw,0))
+    if( DifPos:length() < 100 | PosCount > 50 )
+    {
+        ForceForward = 0
+        timer("chargeStart",50)
+    }else{
+        ForceForward = 1
+        timer("changePositionsThenStart",100)
+    }
+    PosCount++
+    exit()
+}elseif( clk("faceEntityThenStart") ){
+    # Calculate the yaw to the entity
+    holoDelete(PhysgunHoloIndex)
+    DifPos = Entity:pos()-entity():pos()
+    ForceYaw = DifPos:toAngle():yaw()
+    DifAng = angnorm(entity():angles()-ang(0,ForceYaw,0))
+    if( abs(DifAng:yaw()) < 10 )
+    {
+        timer("weldStart",50)
+    }else{
+        timer("faceEntityThenStart",200)
+    }
+    exit()
+}elseif( clk("faceEntityThenEnd") ){
+    # Calculate the yaw to the entity
+    holoDelete(PhysgunHoloIndex)
+    DifPos = WeldEntity:pos()-entity():pos()
+    ForceYaw = DifPos:toAngle():yaw()
+    #Yaw=atan(entity():forward():cross(entity():up()):dot(DifPos),entity():forward():dot(DifPos))
+    DifAng = angnorm(entity():angles()-ang(0,ForceYaw,0))
+    if( abs(DifAng:yaw()) < 10 )
+    {
+        timer("weldEnd",50)
+    }else{
+        timer("faceEntityThenEnd",200)
+    }
+    exit()
+}elseif( clk("weldEnd") ){
+    WeldEntity:soundPlay(Channel,0,"weapons/airboat/airboat_gun_lastshot1.wav")
+    entity():soundPlay(Channel+1,0,"weapons/airboat/airboat_gun_lastshot1.wav")
+    
+    # Create the weld effect
+    SourcePosition = entity():pos()+entity():up()*34+entity():forward()*20
+    DestinationPosition = WeldEntity:massCenter()
+    DifPosition = (DestinationPosition-SourcePosition)
+    holoCreate(PhysgunHoloIndex,DifPosition/2+SourcePosition,vec(DifPosition:length(),0.5,0.5),DifPosition:toAngle(),vec(0,255,0))
+    holoScaleUnits(PhysgunHoloIndex,vec(DifPosition:length(),5,5))
+    holoModel(PhysgunHoloIndex,"cylinder")
+    holoMaterial(PhysgunHoloIndex,"models/alyx/emptool_glow")
+    holoParent(PhysgunHoloIndex,entity())
+    
+    # Create the weld
+    #WeldEntity:weld(Entity)
+    
+    if( WeldCount < 0 )
+    {
+        timer("changePositionsThenStart",700)
+        
+        # Load the prop position
+        TmpIndex = 1+ContraptionPropIndex*3
+        Tmp = ContraptionProps[TmpIndex+1,string]:explode(",")
+        PropPos = vec(Tmp[1,string]:toNumber(),Tmp[2,string]:toNumber(),Tmp[3,string]:toNumber())
+        
+        # Decide on a new position to stand at            
+        PosCount = 0
+        
+        ChangeTheta = random(1,7)*random(1,7)*random(1,4)*(randint(0,1)-0.5)*2
+        
+        Theta = mod((PropPos-entity():pos()):toAngle():yaw()+ChangeTheta,360)
+        Radius = random(200,400)
+        
+        
+        
+        NewPos = vec(Q_rot*PropPos*inv(Q_rot)) + BuildPosition + Radius*vec(sin(Theta),cos(Theta),0)
+        
+        ForceSound = 1
+    }else{
+        timer("faceEntityThenStart",500)
+    }
+    exit()
+}
+
+############################################
+############ CONTRAPTION LEARNING
+############################################
+if( !LearnComparing & ( ( randint(1,LearnFrequency) == 1 & findCanQuery() ) | ForceLearn ) )
+{
+    if( ForceLearn )
+    {
+        MainProp = ForceLearn
+    }else{
+        # Search for nearby contraptions to learn from
+        findClearWhiteList()
+        findClearBlackEntityList()
+        findExcludeEntity(entity())
+        findExcludeEntities(entity():getConstraints())
+        Count = findInSphere(entity():pos(),LearnRadius)
+        
+        # Check to see if the closest prop has a contraption
+        # propcount beween 5 and 15
+        findSortByDistance(entity():pos())
+        MainProp = findResult(1)
+    }
+    
+    if( MainProp )
+    {
+        PropList = MainProp:getConstraints()
+        PropList[PropList:count()+1,entity] = MainProp
+        
+        if( ( PropList:count() >= 5 & PropList:count() <= 300 ) | ForceLearn )
+        {
+            # This contraption makes a candidate for learning from.
+            # We need to perform a similarity comparison to all other
+            # contraptions before accepting this contraption. This is
+            # to prevent duplicate contraptions being recorded.
+            LearnComparing = 1
+            ContraptionListLoaded = 0
+            
+            # Reload the contraption list
+            timer("cList",200)
+            fileLoad("contraptionListNew.txt")
+            ContraptionListLoaded = 0
+            
+            
+            # Face the contraption we are considering duping
+            Hold = 1
+            DifPos = PropList[1,entity]:pos()-entity():pos()
+            ForceYaw = DifPos:toAngle():yaw()
+            if( DifPos:length() < 500 )
+            {
+                ForceForward = 0
+            }else{
+                ForceForward = 1
+            }
+            
+            interval(50)
+            exit()
+        }
+    }
+}elseif( LearnComparing == 1 & mod(Count,10) == 1 & ContraptionListLoaded ){
+    # We are comparing this contraption versus all the contraption files
+    # To compare, we only look at the models of each prop in common between the contraptions
+    
+    # Make sure we are close to the contraption and looking at it, pondering how to build it.
+    DifPos = PropList[1,entity]:pos()-entity():pos()
+    if( DifPos:length() < 500 )
+    {
+        ForceForward = 0
+    }else{
+        ForceForward = 1
+    }
+    
+    # Calculate this contraption checksum
+    LearnChecksum = 0
+    Index = 1
+    while( Index <= PropList:count() )
+    {
+        TmpString = PropList[Index,entity]:model()
+        LearnChecksum = LearnChecksum + toByte(TmpString,TmpString:length()-5) + toByte(TmpString,TmpString:length()-6) + toByte(TmpString,TmpString:length()-7) + toByte(TmpString,TmpString:length()-8)
+        Index++
+    }
+    
+    # Compare this checksum to other contraptions already leaned
+    Index = 1
+    while( Index <= FileNames:count()/2 )
+    {
+        # Compare this checksum
+        if( LearnChecksum == FileNames[Index*2,string]:toNumber() )
+        {
+            # This contraption is already learnt
+            if( ForceLearn )
+            {
+                print("Contraption is already known.")
+                ForceLearn = noentity()
+            }
+            LearnComparing = 0
+            Hold = 0
+            ForceForward = 0
+            interval(50)
+            exit()
+        }
+        Index++
+    }
+    print("New Contraption")
+    LearnComparing = 2
+}elseif( LearnComparing == 2 & mod(Count,10) == 1 & ContraptionListLoaded ){
+    # We have finished comparing, and this contraption is indeed new :)
+    # The mingebag will now assimilate this contraption.
+    ForceLearn = noentity()
+    RandIndex = randint(1,90000)
+    
+    # First find the minimum vector for the contraption
+    Minvec = vec(10000000,10000000,10000000)
+    Index = 1
+    while( Index <= PropList:count() )
+    {
+        Tmpvec = PropList[Index,entity]:pos()+PropList[Index,entity]:boxMin()/2
+        if( Tmpvec:x() < Minvec:x()) { Minvec = Minvec:setX( Tmpvec:x() ) }
+        if( Tmpvec:y() < Minvec:y()) { Minvec = Minvec:setY( Tmpvec:y() ) }
+        if( Tmpvec:z() < Minvec:z()) { Minvec = Minvec:setZ( Tmpvec:z() ) }
+        Index++
+    }
+    
+    Content = ""
+    Index = 1
+    while( Index <= PropList:count() )
+    {
+        Content = Content + PropList[Index,entity]:model() + "|" + (PropList[Index,entity]:pos()-Minvec):toString() + "|" + PropList[Index,entity]:angles():toString() + "|"
+        Index++
+    }
+    Content = Content:replace("[",""):replace("]","")
+    Content = Content:left(Content:length()-1)
+    DelayedWriteName = "mingebag_learned" + RandIndex + ".txt"
+    DelayedWriteContents = Content
+    fileWrite("contraptionListNew.txt",fileRead() + "|" + "mingebag_learned" + RandIndex:toString() + "|" + LearnChecksum )
+    
+    timer("cListSchedule",3000)
+    timer("delayWrite",2000)
+    
+    print("Absorbed a new mingebag contraption with " + PropList:count() + " props from player " + PropList[1,entity]:owner():name())
+    
+    LearnComparing = 0
+    Hold = 0
+    ForceForward = 0
+    Absorbing = 1
+    entity():soundPlay(10,0,"ambient/animal/bird11.wav")
+    interval(50)
+    exit()
+}
+
+############################################
+############ PLAYER ATTACKING
+############################################
+if( randint(1,30) == 1 & Hold == 0 )
+{ 
+    # Search for a nearby player
+    findIncludeClass("player")
+    Count = findInSphere(entity():pos(),randint(300,1500))
+    if( Count > 0 )
+    {
+        findSortByDistance(entity():pos())
+        Player = findResult(1)
+        Follow = randint(5,30)
+        #entity():soundPlay(Channel,5,"npc/fast_zombie/fz_scream1.wav")
+    }
+}
+
+############################################
+############ SOUND PLAYING
+############################################
+if( ( randint(1,SpeakFrequency) == 1 ) | ForceSound )
+{ 
+    # Play random soundfile
+    entity():soundPlay(Channel+20,10,Sounds[randint(1,Sounds:count()),string])
+    soundPitch(Channel+20,200)
+    ForceSound = 0
+}
+
+############################################
+############ STARTING A CONTRAPTION BUILD
+############################################
+if( ( randint(1,BuildFrequency) == 1 | clk("buildAgain") ) & Hold == 0 )
+{ 
+    if( !fileCanLoad() )
+    {
+        timer("buildAgain",500)
+    }else{
+        # Generate a random physgun target
+        SourcePosition = entity():pos()+entity():up()*34
+        rangerHitEntities(0)
+        Ranger = rangerOffset(1000,SourcePosition, entity():forward()-entity():up()/5+entity():right()*random(-1,1) )
+        if( Ranger:hit() & Ranger:distance() > 75 )
+        {
+            # Decide on a build position
+            BuildPosition = Ranger:position()
+            
+            # Decide on a contraption to build
+            ContraptionIndex = 2*(randint(1,FileNames:count()/2)-1)+1
+            
+            # Start loading this contraption
+            fileLoad( FileNames[ContraptionIndex,string] + ".txt" )
+            
+            # Wait until the contraption finishes loading
+            timer("startBuildFileLoading",100)
+        }else{
+            Hold = 0
+            ChangeDirection = 1
+            entity():soundPlay(Channel,5,"weapons/physcannon/physcannon_tooheavy.wav")
+        }
+    }
+}elseif( clk("startBuildFileLoading") )
+{
+    if( fileLoaded() )
+    {
+        # We have uploaded the contraption props
+        
+        # Load the contraption details
+        ContraptionProps = fileRead():explode("|")
+        
+        ContraptionPropIndex = 0
+        Entities = array()
+        
+        # Generate the prop orientation
+        Q_rot = qRotation(vec(0,0,1),random(0,360))
+    
+        # Start building
+        Hold = 1
+        RepeatBuild = -1
+        timer("chargeStart",100)
+    }else{
+        # Wait some more to let it finish uploading
+        timer("startBuildFileLoading",100)
+    }
+}
+
+
+############################################
+############ APPLY FORCE CODE
+############################################
+# Decide on a new direction if required
+if( random(1,100) > 100-TurnFrequency & Hold == 0 ) {ChangeDirection++}
+if( ChangeDirection & mod(Count,4) == 0 & Hold == 0 )
+{
+    Dir = vec(random(-1,1),random(-1,1),random(-1,1)):normalized()
+    ChangeDirection--
+}
+
+if( Follow > 0 )
+{
+    Follow-- 
+    Dir = (Player:shootPos()-entity():pos()):normalized()
+}
+
+# Angle the Kleiner
+#Roll = (mod(Count,10)-5)/10*5
+Roll = 0
+DesAng = Dir:toAngle():setRoll(Roll):setPitch(0)
+if( Hold ) { DesAng = DesAng:setYaw(ForceYaw) }
+DifAng = angnorm(entity():angles()-DesAng)
+IntYaw = clamp(DifAng:yaw()+IntYaw,-200,200)
+Force = clamp(ang(-DifAng:pitch()*70000 - 10000*entity():angVel():pitch(),-DifAng:yaw()*50000 - IntYaw*5000 - 10000*entity():angVel():yaw(),-DifAng:roll()*70000 - 10000*entity():angVel():roll()),-10000000,10000000)
+entity():applyAngForce(Force)
+
+# Move the Kleiner
+ForceV = random(0,600000)*(Dir+vec(0,0,random(0,0.8)^2))
+if( Follow > 0 | ForceForward ){ ForceV = ForceV * 1.3 }
+if( ForceForward )
+{ Dir = entity():forward() }
+if( ( ( Hold == 0 | ForceForward ) & entity():vel():length() < 300 ) )
+{entity():applyForce(WalkSpeed*ForceV)}
+
+interval(200)

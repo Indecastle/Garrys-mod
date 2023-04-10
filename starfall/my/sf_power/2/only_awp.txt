@@ -3,16 +3,29 @@
 --@server
 
 
-local WeaponType = 'weapon_cs16_awp'
+local WeaponTypes = {'ptp_cs_ak47'}
 
+local Performance_Cpu_Limit = 0.6
 
+function table.any(t, func)
+    for i=1, #t do
+        if func(t[i]) then
+            return true
+        end
+    end
+    return false
+end
 
 timer.create("onlyAWP", 0.1, 0, function()
     
     for i, p in ipairs(find.allPlayers()) do
+        if math.max(quotaAverage(), quotaUsed()) > quotaMax() * Performance_Cpu_Limit then
+            return
+        end
+        
         local haveAWP = false
         for i, w in ipairs(p:getWeapons()) do
-            if w:getClass() == WeaponType then
+            if table.any(WeaponTypes, function(typeName) return w:getClass() == typeName end) then
                 haveAWP = true
             else
                 w:remove()

@@ -1,0 +1,52 @@
+--@name WH Chip
+--@author Markiz
+--@client
+
+if player() == owner() then
+    enableHud(nil,true)
+end
+
+local font = render.createFont("Roboto", 15, 20, true)
+
+local _items_e2 = {}
+local _items_sf = {}
+
+function getOwnerName(ent)
+   return isValid(ent:getOwner()) and ent:getOwner():getName() or '' 
+end
+
+timer.create("find", 0.5, 0, function()
+    _items_e2 = find.byClass("gmod_wire_expression2")
+    _items_sf = find.byClass("starfall_processor")
+end)
+
+
+hook.add("drawhud","",function()
+    if render.isHUDActive() then
+        render.setFont(font)
+        
+        for k,v in pairs(_items_e2) do
+            if not isValid(v) then continue end
+            local pos = v:getPos():toScreen()
+            
+            render.setColor(Color(25,255,255))
+            render.drawText(pos.x,pos.y+10,v:getChipName(),1)
+            render.setColor(Color(255,255,255))
+            render.drawText(pos.x,pos.y+20, getOwnerName(v),1)
+        end
+        
+        for k,v in pairs(_items_sf) do
+            if not isValid(v) then continue end
+            local pos = v:getPos():toScreen()
+
+            render.setColor(Color(255,25,25))
+            render.drawText(pos.x,pos.y+10,v:getChipName(),1)
+            render.setColor(Color(255,255,255))
+            render.drawText(pos.x,pos.y+20, getOwnerName(v),1)
+        end
+    end
+end)
+
+hook.add("huddisconnected","",function(ent,ply)
+    hook.remove("drawhud","1")
+end)

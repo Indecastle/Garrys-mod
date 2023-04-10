@@ -1,0 +1,31 @@
+hook.Add( "GetGameDescription", "gamemodename", function()
+	-- return gname
+	return "Sandbox V2"
+end )
+
+
+
+
+local name = " Darkest Sandbox // "
+local prefix = "Wire, ACE, M9K"
+
+local function change( pref )
+	local n = ( name .. pref )
+
+	if n == GetHostName() then return end
+
+	RunConsoleCommand( "hostname", n )	
+end
+
+--
+
+-- :        motd.lua?       :)
+timer.Create( "dynamichostname", 60, 0, function()
+	local motd = GetGlobalString "motd"
+	
+	if #motd:Trim() < 1 then
+		change( prefix )
+	else
+		change( motd )	
+	end
+end )

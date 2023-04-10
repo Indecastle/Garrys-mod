@@ -24,6 +24,7 @@ if #li > 0 then
     prop1 = find.closest(li, chip():getPos())
 else
     prop1 = prop.create(chip():localToWorld(Vector(-0,0,0)), chip():getAngles(), "models/hunter/misc/lift2x2.mdl", true)
+    prop1:setDrawShadow(false)
 end
 
 if prop1:getOwner() == owner() then
