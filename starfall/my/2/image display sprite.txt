@@ -89,9 +89,9 @@ else
 
     local screen = holograms.create(chip():localToWorld(Vector(0, 0, 5)), chip():getAngles(), "models/holograms/plane.mdl")
     
-    hook.add("tick", "", function()
+    hook.add("renderscene", "", function(origin, angles, fov)
         --local d = -eyeVector()
-        local d = (player():getEyePos() - screen:getPos()):getNormalized()
+        local d = (origin - screen:getPos()):getNormalized()
         local eyeAngle = d:getAngle() + Angle(90,0,0)
         if ParentAngle then
             screen:setAngles(chip():getAngles())

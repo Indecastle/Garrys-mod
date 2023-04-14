@@ -7,30 +7,79 @@ local LogToChat = true
 
 
 local Data = {
-    God = {
-        IsEnabled = true,
-        Delay = 60,
-        Reason = "godmode",
-        CheckFunc = function(ply, inflictor, attacker) return attacker:hasGodMode() end,
-        PayloadFunc = function(ply, inflictor, attacker) 
-            concmd('ulx ungod "' .. attacker:getName() .. '"')
+    Choices = {
+        God = {
+            IsEnabled = true,
+            IsJail = true,
+            Delay = 30,
+            Reason = "godmode",
+            CheckFunc = function(ply, inflictor, attacker) return attacker:hasGodMode() end,
+            PayloadFunc = function(ply, inflictor, attacker, eventsVars) 
+                concmd('ulx ungod "' .. attacker:getName() .. '"')
+                eventsVars.RemoveAllWeapons = true
+            end,
+        },
+        Noclip = {
+            IsEnabled = false,
+            IsJail = false,
+            Delay = 5,
+            Reason = "noclip",
+            CheckFunc = function(ply, inflictor, attacker) return attacker:isNoclipped() end,
+            PayloadFunc = function(ply, inflictor, attacker, eventsVars)
+                eventsVars.DropAllWeapons = true
+            end,
+            
+        },
+        AlotHealth = {
+            IsEnabled = true,
+            IsJail = true,
+            Delay = 60,
+            Reason = "too much health",
+            CheckFunc = function(ply, inflictor, attacker) return attacker:getHealth() > 1000 end,
+            PayloadFunc = function(ply, inflictor, attacker, eventsVars)
+                --concmd('ulx hp "' .. attacker:getName() .. '" 100')
+                attacker:setHealth(100)
+                eventsVars.FlipScreen = true
+                eventsVars.RemoveAllWeapons = true
+            end,
+            
+        },
+        AlphaMaterial = {
+            IsEnabled = true,
+            IsJail = true,
+            Delay = 60,
+            Reason = "alpha material",
+            CheckFunc = function(ply, inflictor, attacker) return attacker:getMaterial() == "models/effects/vol_light001" or attacker:getColor().a < 100 end,
+            PayloadFunc = function(ply, inflictor, attacker, eventsVars) 
+                eventsVars.FlipScreen = true
+                attacker:setColor(Color(255,255,255))
+                attacker:setMaterial("")
+            end,
+            
+        }
+    },
+    Events = {
+        DropActiveWeapon = function(attacker)
+            local w = attacker:getActiveWeapon()
+            attacker:dropWeapon(w)
         end,
-    },
-    Noclip = {
-        IsEnabled = true,
-        Delay = 5,
-        Reason = "noclip",
-        CheckFunc = function(ply, inflictor, attacker) return attacker:isNoclipped() end,
-        PayloadFunc = nil,
-        
-    },
-    AlphaMaterial = {
-        IsEnabled = true,
-        Delay = 180,
-        Reason = "alpha material",
-        CheckFunc = function(ply, inflictor, attacker) return attacker:getMaterial() == "Models/effects/vol_light001" or attacker:getColor().a < 100 end,
-        PayloadFunc = nil,
-        
+        RemoveAllWeapons = function(attacker)
+            for i,v in ipairs(attacker:getWeapons()) do
+                if v:getClass() != 'gmod_camera' then
+                    pcall(function() v:remove() end)
+                end
+            end
+        end,
+        DropAllWeapons = function(attacker)
+            for i,v in ipairs(attacker:getWeapons()) do
+                if v:getClass() != 'gmod_camera' then
+                    pcall(function() attacker:dropWeapon(v) end)
+                end
+            end
+        end,
+        FlipScreen = function(attacker)
+            attacker:setEyeAngles(attacker:getEyeAngles() + Vector(0, 0, 180))
+        end,
     }
 }
 
@@ -87,29 +136,45 @@ function generateTotalJailedReason(attacker, choices)
         totalChoice = totalChoice .. (totalChoice == '' and '' or ', ') ..item.reason..'('..tostring(item.delay)..')'
         delay = delay + item.delay
     end
-    return delay, 'SECURE: ' .. attacker:getName() .. ' was jailed due to ' .. totalChoice
+    return delay, 'SECURE: ' .. attacker:getName() .. ' was jailed due to: ' .. totalChoice
+end
+
+
+function eventsHanler(vars, attacker)
+    for k, v in pairs(vars) do
+        if v then
+            Data.Events[k](attacker)
+        end
+    end
 end
 
 
 hook.add("PlayerDeath", "jail", function(ply, inflictor, attacker)
     local choices = {}
+    local eventVars = {}
 
     if isValid(attacker) and attacker:isPlayer() then
         if ply == attacker then return end
         
-        for key, item in pairs(Data) do
+        for key, item in pairs(Data.Choices) do
             if item.IsEnabled and item.CheckFunc(ply, inflictor, attacker) then
-                getBetterDelay(choices, item)
+                if item.IsJail then
+                    getBetterDelay(choices, item)
+                end
                 if item.PayloadFunc then
-                    item.PayloadFunc(ply, inflictor, attacker)
+                    item.PayloadFunc(ply, inflictor, attacker, eventVars)
                 end
             end
         end
-        
+
         if #choices > 0 then
             delay, reason = generateTotalJailedReason(attacker, choices)
             jailPlayer(attacker, delay)
             log(reason)
+        end
+
+        if #table.getKeys(eventVars) > 0 then
+            eventsHanler(eventVars, attacker)
         end
     end
     

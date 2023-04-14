@@ -6,7 +6,7 @@
 local offsetZ = 50
 
 
-local m2 = material.load("effects/tp_eyefx/tpeye")
+local m2 = material.load("matsys_regressiontest/background")
 --local m2 = render.createMaterial("effects/alyxmonitor_idle")
 
 render.createRenderTarget("afkscreen")
@@ -54,10 +54,15 @@ hook.add("renderoffscreen", "", function()
     render.drawTexturedRect(0,0,1024,1024)
 end)
 
+
+
+
+
 if owner() == player() then
-    hook.add("hologrammatrix", "setPos", function()
-        local eyeP = eyePos()
-        local eyeA = eyeAngles()
+    -- renderscene(Vector origin, Angle angles, number fov)
+    hook.add("renderscene", "", function(origin, angles, fov)
+        local eyeP = origin
+        local eyeA = angles
         eyeA.r = -eyeA.r
         holo:setPos(eyeP + eyeA:getForward()*10)
         --holo:setAngles((-eyeD):getAngle() + Angle(90,0,0))

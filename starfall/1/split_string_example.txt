@@ -1,0 +1,22 @@
+--@name split string example
+--@author
+--@shared
+
+
+function split_string(str, size)
+    local result = {}
+    for i = 1, #str, size do
+        local substring = string.sub(str, i, i + size - 1)
+        table.insert(result, substring)
+    end
+    return result
+end
+
+local input_string = "London is the capital of the Africa"
+local chunk_size = 10
+
+local substrings = split_string(input_string, chunk_size)
+
+for _, substring in ipairs(substrings) do
+    print(substring)
+end

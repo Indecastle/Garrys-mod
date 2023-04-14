@@ -7,7 +7,7 @@ local RadiusMode = true
 local Radius = 500
 
 
-local Material = "effects/tp_eyefx/tpeye" -- "matsys_regressiontest/background"
+local Material = "matsys_regressiontest/background" -- "matsys_regressiontest/background" | "effects/tp_eyefx/tpeye"
 local HaveAlpha = true
 
 local Offset = 8
@@ -132,26 +132,21 @@ end)
 
 
 --if owner() == player() then
-hook.add("hologrammatrix", "setPos", function()
+hook.add("renderscene", "setPos", function(origin, angles, fov)
     local inSphere = chip():getPos():getDistance(player():getPos()) < Radius
     
     if On and (RadiusMode and inSphere or Target == player()) then
         local vehicle = player():getVehicle()
-        local eyeP = eyePos()
-        local eyeA = eyeAngles()
+        local eyeP = origin
+        local eyeA = angles
+        _, eyeA = localToWorld(Vector(), Angle(90,0,180), Vector(), eyeA)
+        
         if vehicle == nil or !vehicle:isValid() then
-            eyeA.r = -eyeA.r
         else
-            local va = vehicle:getAngles()
-            
-            --va.p = -va.p/2
-            --va.r = -va.r/2
-            --print(va)
-            eyeA = eyeA + va
         end
-        holo:setPos(eyeP + eyeA:getForward()*Offset)
-        --holo:setAngles((-eyeD):getAngle() + Angle(90,0,0))
-        holo:setAngles(eyeA + Angle(90,0,180))
+        
+        holo:setPos(eyeP + angles:getForward()*Offset)
+        holo:setAngles(eyeA)
         
         local distance = chip():getPos():getDistance(player():getPos())
         local x = math.min(1, ((Radius-distance) / Radius))

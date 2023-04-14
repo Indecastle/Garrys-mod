@@ -1,5 +1,11 @@
 --@name eblanplayer_reloaded 
 
+
+local Speed = 1
+local Radius = 500
+local Volume = 2
+
+
 if SERVER then
     local scr = chip():isWeldedTo()
     scr:linkComponent(chip())
@@ -7,10 +13,14 @@ if SERVER then
 end
 
 if CLIENT then
+    local song
+    
     local function play(URL)
         bass.loadURL(URL, "3d noblock", function( snd , err , errtext )
             if snd then
                 song = snd
+                snd:setLooping(true)
+                snd:setPitch(Speed)
                 snd:play()
             end    
         end)
@@ -29,7 +39,7 @@ if CLIENT then
     local putin_uv_tex = "https://i.imgur.com/CDJoq0H.png"
     
     if not hasPermission("material.urlcreate", maintex) then
-        return
+        --return
     end     
     
     local tiles = 79 local gridSize = 9 local prikol = 0
@@ -40,8 +50,28 @@ if CLIENT then
         return n/1023.75 
     end
     
-    local Radio = "http://185.174.137.24:8000/radio282"
-    play(Radio)
+    local Radio = "https://cdn.discordapp.com/attachments/974678227362660395/1096427487535312966/X2Download.app_-_Alan_Aztec_-_Russian_Friend_feat._Karate_320_kbps.mp3"
+    
+    local perms = {
+        "bass.loadURL",
+        --"material.urlcreate",
+    }
+    setupPermissionRequest(perms, "URL sounds from external sites", true)
+    function checkGrant()
+        return Radio and hasPermission("bass.loadURL", Radio) --and hasPermission("material.urlcreate")
+    end
+    
+    if checkGrant() then
+        play(Radio)
+    end
+    
+    hook.add("permissionrequest", "perms", function()
+        if checkGrant() then
+            hook.remove("permissionrequest", "perms")
+            play(Radio)
+        end
+    end)
+    
     
     local mat = Matrix()
     mat:setTranslation(Vector(256,256,200))
@@ -59,7 +89,11 @@ if CLIENT then
     
     hook.add("render","",function()
         if song != nil then
-            song:setPos(render.getScreenEntity():getPos())
+            
+            local distance = chip():getPos():getDistance(player():getPos())
+            song:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
+            song:setPos(player():getPos())
+            
             FFT = song:getFFT()
             
             frame = frame + 0.1 + FFT[2]*4

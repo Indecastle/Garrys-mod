@@ -93,7 +93,7 @@ function startSmoke()
         local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1))
         
         
-        emitter = particle.create(Vector(), true)
+        emitter = particle.create(Vector(), false)
         emitter:setNoDraw(false)
         
         smoke(dir)
@@ -104,39 +104,3 @@ end
 
 
 startSmoke()
-
-
-hook.add("think", "", function()
---timer.create("updateAng", 0.05, 0, function()
-    --local angles = player():localToWorldAngles(Angle(0,180,0) + BaseAngle) --eyeAngles() + Angle(0,180,0)
-    local time = timer.curtime()
-    local pos = eyePos()
-    eyeAngle = (-eyeVector()):getAngle() + Angle(0,0,-90)
-    
-    for i, d in ipairs(parts) do
-        if d.t > time then
-            --local dir = (eyePos() - d.p:getPos()):getNormalized()
-            --eyeAngle = dir:getAngle()
-            d.p:setAngles(eyeAngle)
-            d.p:setVelocity( d.p:getVelocity() * deceleration )
-        else
-            table.removeByValue(parts, d)
-        end
-    end
-    --print(#parts)
-    
-    if enableSound and sound then
-        sound:setPos(Target:getPos())
-    end
-end)
-
-
-hook.add("Removed", "smoke", function()
-    local color = Color(0,0,0)
-    for i, d in ipairs(parts) do
-        d.p:setColor(color)
-        d.p:setAngles(Angle(90,0,0))
-    end
-    if emitter and emitter:isValid() then emitter:destroy() end
-    m:destroy()
-end)

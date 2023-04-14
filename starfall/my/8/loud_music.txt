@@ -5,8 +5,8 @@
 
 local Volume = 2
 local Speed = 1
-local URL = "tak_nravits9"
-local IsLooping = true
+local URL = "soldierMeme"
+local IsLooping = false
 
 local IsAllServer = true
 local Radius = 4000
@@ -78,7 +78,11 @@ end
 
 local _isActive = true
 local _sound
+local _eyePos = Vector()
 
+hook.add("renderscene", "", function(origin, angles, fov)
+    _eyePos = origin
+end)
 
 net.receive("Active", function(len)
     _isActive = net.readBool()
@@ -112,8 +116,8 @@ bass.loadURL(_urls[URL], "3d noblock noplay", function(Sound)
             local distance = chip():getPos():getDistance(player():getPos())
             _sound:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
         end
-
-        _sound:setPos(player():getPos())
+        local dirSound = (chip():getPos() - _eyePos):getNormalized()
+        _sound:setPos(_eyePos + dirSound*100)
     end)
         
 end)

@@ -17,7 +17,7 @@ end)[1]*/
 local Data = {
     {   text={"Crasher"}, 
         //font = "Courier New",
-        fontSize=100, 
+        fontSize=200, 
         fontBold=600, 
         bold=true,
         color=Color(255,100,0),

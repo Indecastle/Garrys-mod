@@ -19,16 +19,17 @@ local URLS = {
     sidorovich_brightness_less2 = "https://i.imgur.com/EIEuHDO.png",
     sidorovich_brightness_less3 = "https://i.imgur.com/e2mWcg5.png",
     sidorovich_brightness_less4 = "https://i.imgur.com/PXRDwZO.png",
+    hunta_rules = "https://i.imgur.com/JYvNUm8.png",
     custom = nil
 }
 
-local img = "sidorovich_brightness_less3"
+local img = "hunta_rules"
 
-local maxh = 70
+local maxh = 1000
 
-local ParentAngle = false
+local ParentAngle = true
 local VerticalAngle = true
-local PosUp = true
+local PosUp = false
 local ParentOnMe = false
 
 function isLookingAtChip()

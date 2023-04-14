@@ -9,11 +9,9 @@ local HeadDegree = 90
 
 local IsHookMode = true
 
-local Wait2 = 0.5
+local Wait2 = 1
 local DieTime = 10
-local alphaVel = 5
-
-local IsCreateHolo2 = true
+local alphaVel = 150
 
 local EnableSound = false
 local Volume = 2
@@ -32,7 +30,6 @@ local SoundBouncePath = "Flashbang.Bounce"
 local sounds = {}
 local sound = nil
 local holo = nil
-local holo2 = nil
 local alpha = 255
 local E = chip()
 local part = nil
@@ -107,19 +104,22 @@ end
 
 function wait2()
     alpha = 255
+    local oldTime = timer.systime()
     hook.add("think", "FlashBang", function()
-        alpha = alpha - alphaVel
+        local newTime = timer.systime() 
+        local diff = newTime - oldTime
+        oldTime = newTime
+        
+        alpha = alpha - diff*alphaVel
         if alpha < 0 then 
             alpha = 0
             hook.remove("think", "FlashBang") 
             holo:setColor(Color(255,255,255,alpha))
-            if IsCreateHolo2 then holo2:setColor(Color(255,255,255,alpha)) end
             return
         end
         
         local color = holo:getColor()
         holo:setColor(color:setA(alpha))
-        if IsCreateHolo2 then holo2:setColor(color:setA(alpha)) end
     end)
 end
 
@@ -145,17 +145,6 @@ function createHolo()
     holo:setMaterial("debug/debugsolidmodelhulls")
     holo:setColor(Color(255,255,255,alpha))
     --holo:setParent(player())
-    
-    if IsCreateHolo2 then
-        holo2 = holograms.create(
-            eyePos(), 
-            eyeAngles(), 
-            "models/sprops/geometry/sphere_144.mdl", 
-            Vector(-10))
-        holo2:setMaterial("debug/debugportals")
-        holo2:setColor(Color(255,255,255,alpha))
-        --holo:setParent(player())
-    end
 end
 
 function resetHolo()
@@ -163,26 +152,19 @@ function resetHolo()
     local color = holo:getColor()
     
     holo:setColor(color:setA(alpha))
-    
-    if IsCreateHolo2 then
-        holo2:setColor(color:setA(alpha))
-    end
 end
 
 createHolo()
 
 
 --hook.add("hologrammatrix", "setPos", function()
-hook.add("hologrammatrix", "setPos", function()
+hook.add("renderscene", "setPos", function(origin, angles, fov)
     if holo then
-        holo:setPos(eyePos())
-    end
-    if holo2 and IsCreateHolo2 then
-        holo2:setPos(eyePos())
+        holo:setPos(origin)
     end
     
     if part then
-        local eyeAngle = (-eyeVector()):getAngle() + Angle(0,0,-90)
+        local eyeAngle = (-angles:getForward()):getAngle() + Angle(0,0,-90)
         part:setAngles(eyeAngle)
     end
 end)
@@ -237,6 +219,10 @@ else
             local t = table.first(grenades, function(t) return t.e == ent end)
             if not t then
                 table.insert(grenades, 1, { e = ent, p = ent:getPos() })
+                --ent:addCollisionListener(function(colData, collider)
+                --    print(colData.Speed)
+                --    print(colData.OurOldVelocity:Length())
+                --end)
             end
         end
     end)

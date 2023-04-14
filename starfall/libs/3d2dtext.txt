@@ -319,6 +319,8 @@ function Text3D2D:run()
     local isCreated = false
     local isFirstParentPos = true
     local isFirstParentAngle = true
+    local _eyePos = Vector()
+    local _eyeAngles = Angle()
     
     function getMargin(obj, isUp)
         return obj.margin != nil and obj.margin or (isUp and obj.marginUp or obj.marginDown)
@@ -443,17 +445,20 @@ function Text3D2D:run()
         isCreated = true
     end)
     
-    
+    hook.add("renderscene", "", function(origin, angles, fov)
+        _eyePos = origin
+        _eyeAngles = angles
+    end)
     
     
     --hook.add("hologrammatrix", "3d2dText", function()
     hook.add("think", "3d2dText", function()
         local eyeAngle;
         if self.Mode == 1 then
-            local d = -eyeVector()
-            eyeAngle = d:getAngle() + self.InitAngle
+            local d = -_eyeAngles:getForward()
+            _, eyeAngle = localToWorld(Vector(), Angle(90,0,180), Vector(), _eyeAngles)
         elseif self.Mode == 2 then
-            local d = (player():getEyePos() - holoText:getPos()):getNormalized()
+            local d = (_eyePos - holoText:getPos()):getNormalized()
             eyeAngle = d:getAngle()  + self.InitAngle
         elseif self.Mode==3 or self.Mode==4 then
             if self.Target:isPlayer() then

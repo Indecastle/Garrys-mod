@@ -45,7 +45,7 @@ else
             fade = math.random(15,20),
             spawnedTrail = false,
             alpha = Alpha or 255,
-            letter = string.utf8char(math.random(200,2000))
+            letter = string.char(math.random(1,255))
             --letter = string.char(math.random(0,255))
         }, FallingLetter)
     end
@@ -107,9 +107,6 @@ else
     
         
     function renderSpookiSign()
-        Screen:setPos(player():getEyePos() + player():getAimVector() * ScreenSize / 2)
-        Screen:setAngles(player():getEyeAngles() + Angle(-90,0,0))
-        
         ResX, ResY = render.getResolution()
     
         setRenderTargetTexture("FallingText")
@@ -179,5 +176,10 @@ else
     
     hook.add("renderoffscreen", "lmao2", function()
         renderSpookiSign()
+    end)
+    
+    hook.add("renderscene", "setPos", function(origin, angles, fov)
+        Screen:setPos(origin + angles:getForward() * ScreenSize / 2)
+        Screen:setAngles(angles + Angle(-90,0,0))
     end)
 end

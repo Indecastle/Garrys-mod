@@ -27,7 +27,6 @@ local SoundBouncePath = "Flashbang.Bounce"
 
 local sound = nil
 local holo = nil
-local holo2 = nil
 local alpha = 255
 local E = chip()
 local part = nil
@@ -85,18 +84,21 @@ end
 
 
 function wait2()
+    local oldTime = timer.systime()
     hook.add("think", "FlashBang", function()
-        alpha = alpha - 2
+        local newTime = timer.systime() 
+        local diff = newTime - oldTime
+        oldTime = newTime
+        
+        alpha = alpha - diff*200
         if alpha < 0 then 
             hook.remove("think", "FlashBang") 
             holo:setColor(Color(0,0,0,0))
-            holo2:setColor(Color(0,0,0,0))
             return
         end
         
         local color = holo:getColor()
         holo:setColor(color:setA(alpha))
-        holo2:setColor(color:setA(alpha))
     end)
 end
 
@@ -120,27 +122,17 @@ function createHolo()
     holo:setMaterial("debug/debugsolidmodelhulls")
     holo:setColor(Color(255))
     --holo:setParent(player())
-    
-    holo2 = holograms.create(
-        eyePos(), 
-        eyeAngles(), 
-        "models/sprops/geometry/sphere_144.mdl", 
-        Vector(-10))
-    holo2:setMaterial("debug/debugportals")
-    holo2:setColor(Color(255))
-    --holo:setParent(player())
 end
 
 
 
-hook.add("hologrammatrix", "setPos", function()
-    if holo and holo2 then
-        holo:setPos(eyePos())
-        holo2:setPos(eyePos())
+hook.add("renderscene", "setPos", function(origin, angles, fov)
+    if holo then
+        holo:setPos(origin)
     end
 
     if part then
-        local eyeAngle = (-eyeVector()):getAngle() + Angle(0,0,-90)
+        local eyeAngle = (-angles:getForward()):getAngle() + Angle(0,0,-90)
         part:setAngles(eyeAngle)
     end
 end)
