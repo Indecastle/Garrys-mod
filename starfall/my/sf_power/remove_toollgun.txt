@@ -3,19 +3,19 @@
 --@server
 
 
-local IsBlackList = true
+local IsBlackList = false
 
 local players = {
     --'STEAM_0:1:54066003', -- Markiz,
     --'STEAM_0:1:100356779', -- Force2005,
-    'STEAM_0:0:715078552',
+    --'STEAM_0:0:715078552',
 }
 
 
 local DupeTools = { 
-    advdupe2 = 1, 
+    --advdupe2 = 1, 
     duplicator = 1, 
-    starfall_processor = 1
+    --starfall_processor = 1
 }
 
 -------------------------------------------------------------------------------------
@@ -42,8 +42,14 @@ function table.any(t, func)
     return false
 end
 
+
 function isInArray(ply)
     return table.any(players, function(x) return x == ply:getSteamID() end)
+end
+
+
+function isAdmin(ply)
+    return isValid(ply) and ply:getTeam() == 23
 end
 
 
@@ -53,9 +59,11 @@ timer.create("AntiDupe", 0.1, 0, function()
         
         if isValid(ply)
             and (IsBlackList and isInArray(ply) or !IsBlackList and !isInArray(ply))
+            and not isAdmin(ply)
             and isValid(ply:getActiveWeapon())
             and DupeTools[ply:getActiveWeapon():getToolMode()] then
                 ply:getActiveWeapon():remove()
+                ply:applyDamage(100000, chip(), chip())
         end
     end
 end)

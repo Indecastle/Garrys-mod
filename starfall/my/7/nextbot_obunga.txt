@@ -28,7 +28,7 @@ local Volume = 5
 local MusicSpeed = 1
 local URL_Music = "soldierMeme"
 local IsLooping = true
-local MusicRadius = 1000
+local MusicRadius = 500
 ----- music ------
 
 
@@ -275,6 +275,12 @@ mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
 end)
 
 
+local _eyePos = Vector()
+hook.add("renderscene", "", function(origin, angles, fov)
+    _eyePos = origin
+end)
+
+
 local _sound
 
 bass.loadURL(_urls_music[URL_Music], "3d noblock noplay", function(Sound)
@@ -284,17 +290,11 @@ bass.loadURL(_urls_music[URL_Music], "3d noblock noplay", function(Sound)
     
     _sound:play()
     
-    hook.add("think", "nextbot_music", function()
-        if IsAllServer then
-            _sound:setVolume(Volume)
-        else
-            if isValid(Killer) then
-                local distance = Killer:getPos():getDistance(player():getPos())
-                _sound:setVolume(math.min(1, ((MusicRadius-distance) / MusicRadius)) * Volume)
-            end
-        end
-
-        _sound:setPos(player():getPos())
+    hook.add("think", "", function()
+        if not isValid(Killer) then return end
+        local distance = Killer:getPos():getDistance(_eyePos)
+        _sound:setVolume(math.clamp(MusicRadius-distance, 0, MusicRadius) / MusicRadius * Volume)
+        local dirSound = (Killer:getPos() - _eyePos):getNormalized()
+        _sound:setPos(_eyePos + dirSound*100)
     end)
-        
 end)

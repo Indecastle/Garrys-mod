@@ -1,0 +1,291 @@
+--@name Camera Hud
+--@author Markiz
+--@shared
+
+
+local IsRect = true
+
+local RadiusMode = true
+local Radius = 1000
+local MaxAlpha = 1.0 -- if RadiusMode == false
+
+local Target = owner() -- if RadiusMode = false
+--Target = find.playersByName("markiz")[1]
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+
+
+local MaterialError = "matsys_regressiontest/background" -- "matsys_regressiontest/background" | "effects/tp_eyefx/tpeye"
+
+
+local Offset = 8
+
+
+local Width, Height = 1920, 1080
+local Fov = player():getFOV()
+
+local On = true
+
+local _NoEntity = RadiusMode and entity(0) or Target
+
+
+if SERVER then
+    local inputs = {
+        On="number"
+    }
+    if !RadiusMode then
+        inputs.Target = "entity"
+    end
+    
+    local WW = chip():getWirelink()
+    
+    wire.adjustPorts(
+        inputs,
+        {})
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        local target = wire.ports.Target
+        local on = !WW:isWired('On') or wire.ports.On
+        net.start("init")
+        net.writeEntity(target and isValid(target) and target or _NoEntity)
+        net.writeBool(on != 0)
+        net.send(ply)
+    end)
+    
+    hook.add("input","",function(inp, value)
+        if inp == "Target" then
+            net.start("wire_Target")
+            net.writeEntity(WW:isWired('Target') and isValid(value) and value or _NoEntity)
+            net.send()
+        elseif inp == "On" then
+            net.start("wire_On")
+            net.writeBool(!WW:isWired('On') or value != 0)
+            net.send()
+        end
+    end)
+    
+    return
+end
+
+
+if not RadiusMode and player() ~= Target then return end
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        Target = ent
+    end)
+    On = net.readBool()
+end)
+
+net.receive("wire_Target", function (len)
+    Target = net.readEntity()
+    --print("!!"..tostring(Target))
+end)
+net.receive("wire_On", function (len)
+    On = net.readBool()
+    --print("!!"..tostring(On))
+end)
+
+
+local mat_error = material.load(MaterialError)
+
+render.createRenderTarget("TargetScreen")
+    
+local m = material.create("VertexLitGeneric")
+m:setTextureRenderTarget("$basetexture", "TargetScreen")
+
+local VertexAlpha= false
+local VertexColor= false
+local AlphaTest= false
+local Additive= HaveAlpha
+local Translucent= false
+
+local flags = 
+    (VertexColor and 16 or 0) +
+    (VertexAlpha and 32 or 0) +
+    (Additive and 128 or 0) +
+    (AlphaTest and 256 or 0) +
+    (Translucent and 2097152 or 0)
+    
+    
+if flags ~= 0 then
+    m:setInt("$flags",  
+        flags)    
+end
+m:recompute()
+
+
+local holo = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/plane.mdl", Vector(1))
+holo:setColor(Color(0,0,0,0))
+holo:setMaterial("!" .. m:getName())
+holo:suppressEngineLighting(true)
+
+
+function renderCameraRect(size, lineWidth, lineLength)
+    local rectStartXY = 512-size
+    local rectEndXY = 512+size
+    
+    render.drawRect(rectStartXY, rectStartXY, lineWidth, lineLength) -- top-left
+    render.drawRect(rectStartXY, rectStartXY, lineLength, lineWidth)
+
+    render.drawRect(rectEndXY-lineWidth, rectEndXY-lineLength, lineWidth, lineLength) -- bottom-right
+    render.drawRect(rectEndXY-lineLength, rectEndXY-lineWidth, lineLength, lineWidth)
+    
+    render.drawRect(rectEndXY-lineWidth, rectStartXY, lineWidth, lineLength) -- top-right
+    render.drawRect(rectEndXY-lineLength, rectStartXY, lineLength, lineWidth)
+    
+    render.drawRect(rectStartXY, rectEndXY-lineLength, lineWidth, lineLength) -- bottom-left
+    render.drawRect(rectStartXY, rectEndXY-lineWidth, lineLength, lineWidth)
+end
+
+
+function renderCameraCenterPlus(lineWidth, lineLength)
+    local centerW = lineWidth / 2
+    local centerL = lineLength / 2
+    
+    render.drawRect(512-centerW, 512-centerL, lineWidth, lineLength)
+    render.drawRect(512-centerL, 512-centerW, lineLength, lineWidth)
+end
+
+
+function filterImage()
+    render.setFilterMin(1)
+    render.setFilterMag(1)
+end
+
+
+local _oldFOV = 0
+function fovHandler(newFOV)
+    if _oldFOV == newFOV then return end
+    _oldFOV = newFOV
+    
+    local ResK = Height / Width
+    FovH = newFOV * math.pi / 180
+    FovV = 2 * math.atan(math.tan(FovH/2) / ResK)
+    
+    local _w = 2 * Offset * math.tan(FovV/2)
+    local _h = 2 * Offset * math.tan(FovH/2)
+    
+    local kk = IsRect and (Height/Width) or 1
+
+    holo:setSize(Vector(_h*0.565, _w*0.565 * kk, 1))
+end
+
+
+local startTime = timer.systime()
+local fontRec = render.createFont("Arial", 30, 300, true)
+local text = render.createFont("Arial", 40, 300, true)
+local small = render.createFont("Arial", 11, 400, true)
+render.createRenderTarget("template")
+render.createRenderTarget("screen")
+
+
+hook.add("renderoffscreen", "InitTemplate", function()
+    hook.remove("renderoffscreen", "InitTemplate")
+    
+    Width, Height = render.getGameResolution()
+    
+    render.selectRenderTarget("template")
+    render.setLightingMode(0)
+    
+    render.clear(Color(0,0,0,0))
+    render.setColor(Color(255,255,255))
+
+    renderCameraRect(462, 2   , 100)
+    renderCameraRect(60, 2, 30)
+    renderCameraCenterPlus(2, 40)
+    
+    render.setFont(fontRec)
+    render.setColor(Color(255,255,255))
+    render.drawText(510, 55, "REC")
+    
+    render.setFont(text)
+    render.drawText(380, 950, "1/60")
+    render.drawText(495, 950, "f2,8")
+    render.drawText(590, 950, "ISO 200")
+    
+    render.drawRectOutline(838, 70, 50, 40)
+    render.drawText(840, 70, "4K")
+    render.drawText(890, 70, "60")
+    render.setFont(fontRec)
+    render.drawText(930, 75, "fps")
+    
+    render.drawRectOutline(60, 70, 90, 30, 2)
+    render.drawRectOutline(148, 75, 7, 20, 2)
+    render.drawRect(64, 74, 10, 22)
+    render.drawRect(64+12*1, 74, 10, 22)
+    render.drawRect(64+12*2, 74, 10, 22)
+    render.drawRect(64+12*3, 74, 10, 22)
+    render.drawRect(64+12*4, 74, 10, 22)
+    render.drawRect(64+12*5, 74, 10, 22)
+    render.drawRect(64+12*5, 74, 10, 22)
+end)
+
+
+hook.add("renderoffscreen", "Camera", function()
+    --if quota() > 0.4 then return end
+    
+    render.selectRenderTarget("screen")
+    render.setLightingMode(0)
+    render.clear(Color(0,0,0,0))
+
+    render.setRenderTargetTexture("template")
+    filterImage()
+    render.drawTexturedRect(0,0,1024,1024)
+    
+    render.setColor(Color(255,255,255))
+
+    render.setFont(fontRec)
+    render.setColor(Color(200,0,0, 255/2 + 255/2 * math.sin((timer.systime()*6) % 360)))
+    render.drawFilledCircle(490, 70, 10)
+    
+    render.setColor(Color(255,255,255))
+    render.setFont(text)
+    local time = os.date('!%H:%M:%S', timer.systime() - startTime)
+    local ms = string.match(tostring(os.clock()), "%d%.(%d+)") or ''
+    render.drawText(430, 900, string.format("%s:%s", time, ms:sub(1,2)))
+end)
+
+
+hook.add("renderoffscreen", "", function()
+    
+    render.selectRenderTarget("TargetScreen")
+    render.clear(Color(0, 0, 0, 0))
+    
+    render.setRenderTargetTexture("screen")
+    filterImage()
+    --render.setMaterial(_isImageErrored and mat_error or mat)
+    --render.setColor(Color(255,255,255,255))
+    --render.setLightingMode(0)
+    render.drawTexturedRect(0,0,1024,1024)
+end)
+
+
+hook.add("renderscene", "setPos", function(origin, angles, fov)
+    local inSphere = chip():getPos():getDistance(player():getPos()) < Radius
+    
+    if On and (RadiusMode and inSphere or !RadiusMode and Target == player()) then
+        fovHandler(fov)
+        
+        local _, eyeA = localToWorld(Vector(), Angle(90,0,180), Vector(), angles)
+        
+        holo:setPos(origin + angles:getForward()*Offset)
+        holo:setAngles(eyeA)
+        
+        local distance = chip():getPos():getDistance(player():getPos())
+        local x = RadiusMode and math.clamp((math.abs(distance-Radius) / Radius), 0, 1)*MaxAlpha or MaxAlpha
+
+        if HaveAlpha then
+            holo:setColor(Color(255*x,255*x,255*x))
+        else
+            holo:setColor(Color(255,255,255, 255*x))
+        end
+    else
+        holo:setPos(Vector())
+    end
+end)
+

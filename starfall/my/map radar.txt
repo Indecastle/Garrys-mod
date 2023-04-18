@@ -2,7 +2,7 @@
 --@author
 --@shared
 
-local Detail = 5
+local Detail = 10
 local SizeMap = 35000
 local Z = 3000
 local Zoom = 1
@@ -106,6 +106,26 @@ else
     
     function myIsInWorld(pos)
         return not trace.trace(pos, pos, nil, nil, 20).HitWorld
+    end
+    
+    local tc_buffer = {}//to reduce lag
+    function texturedCircle(pos,size,segments)
+        local id = pos.x.."_"..pos.y.."_"..size.y.."_"..size.y.."_"..segments
+        if not tc_buffer[id] then
+            local circle = {}
+            for i=0, segments, 1 do
+                local sin, cos = math.sin(math.rad((i/segments)*-360)), math.cos(math.rad((i/segments)*-360))
+                local data = {
+                    x = (sin*size.x)+pos.x,
+                    y = (cos*size.y)+pos.y,
+                    u = (sin*0.5)+0.5,
+                    v = (cos*0.5)+0.5
+                }
+                table.insert(circle,data)
+            end
+            tc_buffer[id] = circle
+        end
+        render.drawPoly(tc_buffer[id])
     end
     
     function getArrow(poly, curX, curY, scale)
@@ -222,6 +242,23 @@ else
     end
     
     
+    local segments = 32
+    local pos = Vector(128,128)
+    local radius = 128
+    local polyStructure = {}
+    
+    for i = 0, segments, 1 do
+        local sin, cos = math.sin( math.rad( (i/segments)*-360 ) ), math.cos( math.rad( (i/segments)*-360 ) )
+        
+        local data = {
+            x = (sin*radius)+pos.x,
+            y = (cos*radius)+pos.y,
+            u = (sin*0.5)+0.5,
+            v = (cos*0.5)+0.5
+        }
+        
+        table.insert(polyStructure,data)
+    end
     
     
     function initHooks()
@@ -262,7 +299,9 @@ else
                 render.setRenderTargetTexture("myrendertarget2")
                 render.clear(Color(0,0,0,0))
                   
-                render.drawTexturedRect(0, 0, 256, 256)
+                --render.drawTexturedRect(0, 0, 256, 256)
+                --render.drawPoly(polyStructure)
+                texturedCircle(Vector(128,128),Vector(128,128),64)
                 
                 render.setColor(Color())
                 render.drawCircle(128, 128, 3)

@@ -112,6 +112,8 @@ else
                                 color = Color(1,1, brightness*0.95 + 0.05):hsvToRGB()
                             elseif tr.HitSky then
                                 color = Color(0,255,255) 
+                            elseif bit.band(tr.SurfaceFlags, 8) ~= 0 then
+                                color = Color(0,150,200)
                             else
                                 color = render.traceSurfaceColor(hitNormal + hitPos, hitPos - hitNormal)
                             end

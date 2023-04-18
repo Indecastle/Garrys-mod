@@ -1,5 +1,5 @@
 --@name Portal Effect
---@author
+--@author Markiz
 --@shared
 
 
@@ -11,11 +11,10 @@ local Material = "matsys_regressiontest/background" -- "matsys_regressiontest/ba
 local HaveAlpha = true
 
 local Offset = 8
-local Resolution = 27
 
 
 local Width, Height
-local Fov = player():getFOV()
+local FovH, FovVy
 
 local Target
 local On = false
@@ -109,15 +108,26 @@ holo:setMaterial("!" .. m:getName())
 holo:suppressEngineLighting(true)
 
 
+local _oldFOV = 0
+function fovHandler(newFOV)
+    if _oldFOV == newFOV then return end
+    _oldFOV = newFOV
+    
+    local ResK = Height / Width
+    FovH = newFOV * math.pi / 180
+    FovV = 2 * math.atan(math.tan(FovH/2) / ResK)
+    
+    local _w = 2 * Offset * math.tan(FovV/2)
+    local _h = 2 * Offset * math.tan(FovH/2)
+
+    holo:setSize(Vector(_h*0.565, _w*0.565, 1))
+end
+
+
 hook.add("renderoffscreen", "Resolution", function()
     hook.remove("renderoffscreen", "Resolution")
     Width, Height = render.getGameResolution()
     --print(Width, Height, ' - ', Fov)
-    
-    local ResK = Height / Width
-    local FovK = Fov / 100
-    
-    holo:setSize(Vector(Resolution * ResK * FovK, Resolution * FovK, 1000))
 end)
 
 hook.add("renderoffscreen", "", function()
@@ -136,6 +146,8 @@ hook.add("renderscene", "setPos", function(origin, angles, fov)
     local inSphere = chip():getPos():getDistance(player():getPos()) < Radius
     
     if On and (RadiusMode and inSphere or Target == player()) then
+        fovHandler(fov)
+        
         local vehicle = player():getVehicle()
         local eyeP = origin
         local eyeA = angles

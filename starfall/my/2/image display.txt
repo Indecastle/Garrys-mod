@@ -1,5 +1,5 @@
 --@name Image Display
---@author OctopuSSX
+--@author Markiz
 --@shared
 
 local URLS = {

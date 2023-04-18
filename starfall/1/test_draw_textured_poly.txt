@@ -1,0 +1,35 @@
+--@name Test Draw Textured Poly
+--@author Tyunge [ STEAM_0:0:78909614 ]
+--@client
+
+
+
+local segments = 32
+local pos = Vector(512,512)
+local radius = 125
+local polyStructure = {}
+
+
+local mat = material.create("Sky_DX9")
+
+for i = 0, segments, 1 do
+    local sin, cos = math.sin( math.rad( (i/segments)*-360 ) ), math.cos( math.rad( (i/segments)*-360 ) )
+    
+    local data = {
+        x = (sin*radius)+pos.x,
+        y = (cos*radius)+pos.y,
+        u = (sin*0.5)+0.5,
+        v = (cos*0.5)+0.5
+    }
+    
+    table.insert(polyStructure,data)
+end
+
+
+
+hook.add("drawhud","",function()
+
+    mat:setTexture("$basetexture","hlmv/background")
+    render.setMaterial(mat)
+    render.drawPoly(polyStructure)
+end)

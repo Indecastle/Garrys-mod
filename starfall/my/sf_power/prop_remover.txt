@@ -35,6 +35,7 @@ local NocollideModels = {
     'models/hunter/misc/shell2x2a.mdl',
     'models/props_phx/construct/metal_plate_curve360x2.mdl',
     'models/props_phx/construct/metal_dome360.mdl',
+    'models/props_phx/construct/wood/wood_wire2x2x2b.mdl',
     --'',
 }
 
@@ -63,7 +64,7 @@ local Classes = {
 
 
 function isAdmin(ent)
-    return ent:getOwner():getTeam() == 23
+    return isValid(ent) and isValid(ent:getOwner()) and ent:getOwner():getTeam() == 23
 end
 
 
@@ -75,21 +76,27 @@ function removerHandler()
     for i, model in ipairs(Models) do
         find.byModel(model, function(ent)
             if isAdmin(ent) then return end
-            ent:remove()
+            pcall(function()
+                ent:remove()
+            end)
         end)
     end
     
     find.byClass('npc_*', function(ent)
         if table.hasValue(Npc, ent:getClass()) then
             if isAdmin(ent) then return end
-            ent:remove()
+            pcall(function()
+                ent:remove()
+            end)
         end
     end)
     
     for i, class in ipairs(Classes) do
         find.byClass(class, function(ent)
             if isAdmin(ent) then return end
-            ent:remove()
+            pcall(function()
+                ent:remove()
+            end)
         end)
     end
 end
@@ -117,8 +124,8 @@ function noCollideHandler2()
 end
 
 
-timer.create("remover", 0.6, 0, function()
-    --removerHandler()
+timer.create("remover", 0.3, 0, function()
+    removerHandler()
 end)
 
 

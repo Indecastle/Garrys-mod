@@ -8,8 +8,8 @@ local Speed = 1
 local URL = "soldierMeme"
 local IsLooping = false
 
-local IsAllServer = true
-local Radius = 4000
+local IsAllServer = false
+local Radius = 500
 
 ------------------------------------------------------------------------------------
 
@@ -76,7 +76,7 @@ end
 
 ---------------
 
-local _isActive = true
+local _isActive = false
 local _sound
 local _eyePos = Vector()
 
@@ -113,7 +113,7 @@ bass.loadURL(_urls[URL], "3d noblock noplay", function(Sound)
         if IsAllServer then
             _sound:setVolume(Volume)
         else
-            local distance = chip():getPos():getDistance(player():getPos())
+            local distance = chip():getPos():getDistance(_eyePos)
             _sound:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
         end
         local dirSound = (chip():getPos() - _eyePos):getNormalized()

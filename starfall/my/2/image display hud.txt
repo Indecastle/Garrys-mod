@@ -1,0 +1,237 @@
+--@name Image Display HUD
+--@author Markiz
+--@shared
+
+
+local URLS = {
+    rikka_1 = "https://i.imgur.com/xdOEuic.png",
+    rikka_2 = "https://i.imgur.com/qSiOCZH.jpg",
+    rikka_ch = "https://i.imgur.com/9UtATPQ.gif",
+    rikka_s = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg",
+    rikka_c = "https://i.imgur.com/5139yCi.jpg",
+    rikka_f = "https://anime-planet.com/images/characters/rikka-takanashi-43640.jpg",
+    horny = "https://media.discordapp.net/attachments/542043404629180417/849195384470503444/paLNxVWlfEM.png",
+    malina_booba = "https://media.discordapp.net/attachments/854459216839049267/854459668261109790/O2NFX9U5dT8.jpg",
+    malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
+    
+    obunga = "https://i.imgur.com/wEBb6mG.png",
+    sidorovich = "https://i.imgur.com/rHE1lsn.png",
+    sidorovich_brightness_less = "https://i.imgur.com/RjeaHYn.png",
+    sidorovich_brightness_less2 = "https://i.imgur.com/EIEuHDO.png",
+    sidorovich_brightness_less3 = "https://i.imgur.com/e2mWcg5.png",
+    sidorovich_brightness_less4 = "https://i.imgur.com/PXRDwZO.png",
+    hunta_rules = "https://i.imgur.com/JYvNUm8.png",
+    hunta_ad_1 = "https://i.imgur.com/XXP7clj.jpg",
+    hunta_ad_2 = "https://i.imgur.com/UiI2oEX.jpg",
+    hunta_ad_3 = "https://i.imgur.com/QOEDKlq.jpg",
+    hunta_ad_4 = "https://i.imgur.com/52vw8jo.jpg",
+    kitten = "https://i.imgur.com/qlhVKyZ.png",
+    soldierMeme = "https://i.imgur.com/etDODQs.jpg",
+    barryWood = "https://i.imgur.com/DiuOqz0.jpeg",
+    custom = nil
+}
+
+local img = "hunta_rules"
+
+local IsHaveProportions = false
+local HaveAlpha = false
+
+local RadiusMode = true
+local Radius = 500
+local MaxAlpha = 0.9 -- if RadiusMode == false
+
+local Target = owner() -- if RadiusMode = false
+Target = find.playersByName("tima")[1]
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+
+
+local MaterialError = "matsys_regressiontest/background" -- "matsys_regressiontest/background" | "effects/tp_eyefx/tpeye"
+
+
+local Offset = 8
+
+
+local Width, Height = 1, 1
+local Fov = player():getFOV()
+
+local On = false
+
+local _NoEntity = RadiusMode and entity(0) or Target
+
+if img == nil then return end
+if URLS[img] == nil then return end
+URL = URLS[img]
+
+if SERVER then
+    if not RadiusMode then
+        print(Target)
+    end
+    
+    local inputs = {
+        On="number"
+    }
+    if !RadiusMode then
+        inputs.Target = "entity"
+    end
+    
+    local WW = chip():getWirelink()
+    
+    wire.adjustPorts(
+        inputs,
+        {})
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        local target = wire.ports.Target
+        local on = !WW:isWired('On') or wire.ports.On
+        net.start("init")
+        net.writeEntity(target and isValid(target) and target or _NoEntity)
+        net.writeBool(on != 0)
+        net.send(ply)
+    end)
+    
+    hook.add("input","",function(inp, value)
+        if inp == "Target" then
+            net.start("wire_Target")
+            net.writeEntity(WW:isWired('Target') and isValid(value) and value or _NoEntity)
+            net.send()
+        elseif inp == "On" then
+            net.start("wire_On")
+            net.writeBool(!WW:isWired('On') or value != 0)
+            net.send()
+        end
+    end)
+    
+    return
+end
+
+
+if not RadiusMode and player() ~= Target then return end
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        Target = ent
+    end)
+    On = net.readBool()
+end)
+
+net.receive("wire_Target", function (len)
+    Target = net.readEntity()
+    --print("!!"..tostring(Target))
+end)
+net.receive("wire_On", function (len)
+    On = net.readBool()
+    --print("!!"..tostring(On))
+end)
+
+
+local mat_error = material.load(MaterialError)
+
+render.createRenderTarget("TargetScreen")
+    
+local m = material.create("VertexLitGeneric")
+m:setTextureRenderTarget("$basetexture", "TargetScreen")
+
+local VertexAlpha= false
+local VertexColor= false
+local AlphaTest= false
+local Additive= HaveAlpha
+local Translucent= false
+
+local flags = 
+    (VertexColor and 16 or 0) +
+    (VertexAlpha and 32 or 0) +
+    (Additive and 128 or 0) +
+    (AlphaTest and 256 or 0) +
+    (Translucent and 2097152 or 0)
+    
+    
+if flags ~= 0 then
+    m:setInt("$flags",  
+        flags)    
+end
+m:recompute()
+
+
+local holo = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/plane.mdl", Vector(1))
+holo:setColor(Color(0,0,0,0))
+holo:setMaterial("!" .. m:getName())
+holo:suppressEngineLighting(true)
+
+
+local _isImageErrored = false
+local _imageRatioH, _imageRatioW = 1, 1
+local mat = material.create("UnlitGeneric")
+mat:setInt("$flags", 256)
+mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+    if m == nil then _isImageErrored = false return end
+
+    _imageRatioH = IsHaveProportions and math.clamp(w / h, 0, 1) or 1
+    _imageRatioW = IsHaveProportions and math.clamp(h / w, 0, 1) or 1
+    local x=0 y=0 w=m:getWidth() h=m:getHeight()
+    l(x, y, w, h)
+    
+    
+    --Width, Height = Width or 1920, Height or 1080
+    --print(Width, Height, ' - ', Fov)
+    
+    hook.add("renderscene", "setPos", function(origin, angles, fov)
+        local inSphere = chip():getPos():getDistance(origin) < Radius
+        
+        if On and (RadiusMode and inSphere or !RadiusMode and Target == player()) then
+            fovHandler(fov)
+        
+            local _, eyeA = localToWorld(Vector(), Angle(90,0,180), Vector(), angles)
+            
+            holo:setPos(origin + angles:getForward()*Offset)
+            holo:setAngles(eyeA)
+            
+            local distance = chip():getPos():getDistance(origin)
+            local x = RadiusMode and math.clamp((math.abs(distance-Radius) / Radius), 0, 1)*MaxAlpha or MaxAlpha
+    
+            if HaveAlpha then
+                holo:setColor(Color(255*x,255*x,255*x))
+            else
+                holo:setColor(Color(255,255,255, 255*x))
+            end
+        else
+            holo:setPos(Vector())
+        end
+    end)
+end)
+
+
+local _oldFOV = 0
+function fovHandler(newFOV)
+    if _oldFOV == newFOV then return end
+    _oldFOV = newFOV
+    
+    Width, Height = render.getGameResolution()
+    
+    local ResK = Height / Width
+    FovH = newFOV * math.pi / 180
+    FovV = 2 * math.atan(math.tan(FovH/2) / ResK)
+    
+    local _w = 2 * Offset * math.tan(FovV/2)
+    local _h = 2 * Offset * math.tan(FovH/2)
+
+    holo:setSize(Vector(_h*0.565*_imageRatioW, _w*0.565*_imageRatioH, 1))
+end
+
+
+hook.add("renderoffscreen", "", function()
+    
+    render.selectRenderTarget("TargetScreen")
+    render.clear(Color(0, 0, 0, 0))
+    
+    render.setMaterial(_isImageErrored and mat_error or mat)
+    --render.setColor(Color(255,255,255,255))
+    --render.setLightingMode(0)
+    render.drawTexturedRect(0,0,1024,1024)
+end)
+
+
