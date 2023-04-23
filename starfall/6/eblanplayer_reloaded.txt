@@ -3,7 +3,7 @@
 
 local Speed = 1
 local Radius = 500
-local Volume = 2
+local Volume = 4
 
 
 if SERVER then
@@ -73,6 +73,12 @@ if CLIENT then
     end)
     
     
+    local _eyePos = Vector()
+    hook.add("renderscene", "", function(origin, angles, fov)
+        _eyePos = origin
+    end)
+    
+    
     local mat = Matrix()
     mat:setTranslation(Vector(256,256,200))
     
@@ -87,17 +93,26 @@ if CLIENT then
     local mat3 = material.create("UnlitGeneric")
     mat3:setTexture("$basetexture", "models/debug/debugwhite")
     
+    
+    owner():setAnimation("taunt_dance", nil, 1, true, nil, nil)
+    hook.add("Removed", "", function()
+        owner():resetAnimation()
+    end)
+    
+    
     hook.add("render","",function()
         if song != nil then
-            
-            local distance = chip():getPos():getDistance(player():getPos())
+
+            local distance = chip():getPos():getDistance(_eyePos)
             song:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
-            song:setPos(player():getPos())
+            local dirSound = (chip():getPos() - _eyePos):getNormalized()
+            song:setPos(_eyePos + dirSound*100)
             
             FFT = song:getFFT()
             
             frame = frame + 0.1 + FFT[2]*4
             mat:setAngles(Angle(frame, 0, 90))
+
             render.pushMatrix(mat)
             
             render.setMaterial(mat2)
@@ -122,6 +137,7 @@ if CLIENT then
             render.drawText(128, 256, "Zagruska"..string.rep(".",time)) 
         end
     end)
+    local _currentAnimSpeed = 0
     hook.add("render","uv",function()
         if song != nil then
             render.setFilterMin(1)
@@ -138,6 +154,12 @@ if CLIENT then
             local x,y = texSize.x*(prikol2%gridSize),texSize.y*math.floor(prikol2/gridSize)
             
             render.drawTexturedRectUV(-70, 256, 256, 256, uv(x), uv(y), uv(x + texSize.x), uv(y + texSize.y))
+            
+            _currentAnimSpeed = _currentAnimSpeed <= 0 and 0 or (_currentAnimSpeed - 0.1)
+            _currentAnimSpeed = (_currentAnimSpeed < FFT[1]*timer.frametime()*1000) and FFT[1]*timer.frametime()*1000 or _currentAnimSpeed
+
+            --printMessage(4, string.format("%f", math.round(_currentAnimSpeed, 7)))
+            owner():setAnimationRate(0.1 + _currentAnimSpeed)
         end
     end)
 end

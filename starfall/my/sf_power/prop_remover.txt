@@ -36,6 +36,7 @@ local NocollideModels = {
     'models/props_phx/construct/metal_plate_curve360x2.mdl',
     'models/props_phx/construct/metal_dome360.mdl',
     'models/props_phx/construct/wood/wood_wire2x2x2b.mdl',
+    'models/props_phx/misc/potato_launcher_cap.mdl',
     --'',
 }
 
@@ -124,8 +125,8 @@ function noCollideHandler2()
 end
 
 
-timer.create("remover", 0.3, 0, function()
-    removerHandler()
+timer.create("remover", 0.6, 0, function()
+    --removerHandler()
 end)
 
 

@@ -40,6 +40,7 @@ local _urls = {
     mc_mom_came = "https://cdn.discordapp.com/attachments/974678227362660395/1069328923491581952/oy-mama-prishla.mp3",
     starwars_duel_sudeb = "https://cdn.discordapp.com/attachments/974678227362660395/1074700721880047758/zvezdnie_vojni_-_duel_sudeb_z2.fm.mp3",
     tak_nravits9 = "https://cdn.discordapp.com/attachments/974678227362660395/1075423243604856903/-_.mp3",
+    screamer = "https://cdn.discordapp.com/attachments/1081967820172181578/1099705174836129912/-_.mp3",
 }
 
 -- =================================================================================

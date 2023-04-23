@@ -107,6 +107,10 @@ hook.add("PlayerUse", "god", function(ply, ent)
 end)
 
 
+function isAdmin(ply)
+    return isValid(ply) and ply:getTeam() == 23
+end
+
 
 function log(reason)
     if LogToChat then
@@ -154,7 +158,7 @@ hook.add("PlayerDeath", "jail", function(ply, inflictor, attacker)
     local eventVars = {}
 
     if isValid(attacker) and attacker:isPlayer() then
-        if ply == attacker then return end
+        if ply == attacker or isAdmin(attacker) then return end
         
         for key, item in pairs(Data.Choices) do
             if item.IsEnabled and item.CheckFunc(ply, inflictor, attacker) then

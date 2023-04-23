@@ -31,13 +31,13 @@ local URLS = {
     custom = nil
 }
 
-local img = "hunta_rules"
+local img = "rikka_s"
 
 local IsHaveProportions = false
 local HaveAlpha = false
 
 local RadiusMode = true
-local Radius = 500
+local Radius = 200
 local MaxAlpha = 0.9 -- if RadiusMode == false
 
 local Target = owner() -- if RadiusMode = false

@@ -1,0 +1,208 @@
+--@name My test GUI
+--@author Markiz
+--@client
+
+
+local mouseScale = 3
+
+
+
+
+------------------------------------
+
+
+local fps = 60
+local frame = 0
+
+local w, h = nil, nil
+local cx, cy = nil, nil
+local scr = nil
+--if player() ~= owner() then return end
+
+
+local Buttons = {
+    {
+        X = 50,
+        Y = 50,
+        Width = 200,
+        Height = 50,
+        RectRoundRadius = 20,
+        BgColor = Color(100,100,100),
+        BgColorFocused = Color(20,100,100),
+        Text = "Some Button",
+        TextX = 20,
+        TextY = 15,
+        TextFont = render.createFont("Arial", 18, 600, true),
+        TextAlign = TEXT_ALIGN.LEFT,
+        TextColor = Color(255,255,255),
+        TextColorFocused = Color(255,0,255),
+        Events = {
+            OnClick = function()
+                print(1)
+            end,
+            OnFocused = function()
+                local time = os.date('!%H:%M:%S', timer.systime())
+                local ms = string.match(tostring(os.clock()), "%d%.(%d+)") or ''
+                printMessage(4, string.format("%s:%s", time, ms:sub(1,2)))
+            end,
+        },
+    },
+    {
+        X = 150,
+        Y = 70,
+        Width = 200,
+        Height = 50,
+        RectRoundRadius = 20,
+        BgColor = Color(100,100,100),
+        BgColorFocused = Color(20,100,100),
+        Text = "Some Button",
+        TextX = 20,
+        TextY = 15,
+        TextFont = render.createFont("Arial", 18, 600, true),
+        TextAlign = TEXT_ALIGN.LEFT,
+        TextColor = Color(255,255,255),
+        TextColorFocused = Color(255,0,255),
+        Events = {
+            OnClick = function()
+                print(2)
+            end,
+        },
+    }
+}
+
+
+
+local _backgroundMaterial = render.createMaterial("maps/thumb/gm_construct.png")
+
+local fontButtonText = render.createFont("Arial", 18, 600, true)
+render.createRenderTarget("screen")
+
+
+local mouse = {
+    { x=0, y=0 },
+    { x=3, y=2 },
+    { x=1.1, y=2 },
+    { x=2.1, y=3.9 },
+    { x=1.9, y=4 },
+    { x=0.9, y=2.1 },
+    { x=0.1, y=3.75 },
+}
+
+function getMouse(curX, curY, scale)
+    local copyMouse = table.copy(mouse)
+    for i=1, #copyMouse do
+        copyMouse[i].x = copyMouse[i].x*scale + curX
+        copyMouse[i].y = copyMouse[i].y*scale + curY
+    end
+    return copyMouse
+end
+
+function drawMouse(curX, curY, scale)
+    render.setRenderTargetTexture()
+
+    copyMouse = getMouse(curX, curY, scale)
+    render.setColor(Color(255, 255, 255))
+    render.drawPoly(copyMouse)
+end
+
+function quota()
+    return math.max(quotaAverage(), quotaUsed()) / quotaMax()
+end
+
+
+
+hook.add("render", "", function()
+    local w, h = render.getResolution()
+    scr = render.getScreenEntity()
+    
+    render.clear(Color(0,0,0,0))
+
+    render.setMaterial(_backgroundMaterial)
+    render.drawTexturedRect(0, 0, w, h)
+
+    render.setRenderTargetTexture("screen")
+    render.drawTexturedRect(0, 0, w, h)
+    
+    cx, cy = render.cursorPos(player())
+    
+    if cx then
+        cx = cx * 2
+        cy = cy * 2
+    end
+    
+    if cx == nil then return end
+    
+    render.setColor(Color(255,255,255))
+
+    drawMouse(cx/2, cy/2, mouseScale)
+end)
+
+
+function getFocusedButton()
+    if cx == nil then return nil end
+    
+    local mousePos = Vector(cx, cy, 0)
+    for i=1 , #Buttons do
+        local data = Buttons[#Buttons-i+1] -- Reversed
+        if cx > data.X and cx < data.X+data.Width  and   cy > data.Y and cy < data.Y+data.Height then
+            return data
+        end
+        --if mousePos:withinAABox(
+        --        Vector(data.X, data.Y, 0),
+        --        Vector(data.X+data.Width, data.Y+data.Height, 0)) then
+        --    return data
+        --end
+    end
+    return nil
+end
+
+
+hook.add("renderoffscreen", "", function()
+    
+    if quota() > 0.05 then return end
+    local now = timer.systime()
+    if frame > now then return end
+    frame = now + 1/fps
+
+    render.selectRenderTarget("screen")
+    --w, h = render.getResolution()
+    render.clear(Color(0, 0, 0, 0))
+    
+    
+    local focusedbutton = getFocusedButton()
+    
+    for i, data in ipairs(Buttons) do
+        
+        render.setColor(focusedbutton == data and data.BgColorFocused or data.BgColor)
+        render.drawRoundedBox(data.RectRoundRadius or 0, data.X, data.Y, data.Width, data.Height)
+        
+        render.setFont(data.TextFont or fontButtonText)
+        render.setColor(focusedbutton == data and data.TextColorFocused or data.TextColor)
+        local tx, ty, talg = data.TextX, data.TextY, data.TextAlign
+        if tx == nil or ty == nil then
+            tx = data.Width/2
+            ty = data.Height/2
+            talg = TEXT_ALIGN.CENTER
+        end
+        render.drawText(data.X+tx, data.Y+ty, data.Text, talg or 0)
+        
+        if focusedbutton == data then
+            if data.Events and data.Events.OnFocused then
+                data.Events.OnFocused()
+            end
+        end
+    end
+
+end)
+
+
+hook.add("inputPressed", "", function(btn)
+    if btn != MOUSE.MOUSE1 then return end
+    --if player():getPos():getDistance(chip():getPos()) > Distance then return end
+    if cx == nil or player():getEyeTrace().Entity ~= scr then return end
+    
+    local data = getFocusedButton()
+    if data and data.Events and data.Events.OnClick then
+        data.Events.OnClick()
+    end
+end)
