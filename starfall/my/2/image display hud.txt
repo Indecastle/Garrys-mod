@@ -28,10 +28,13 @@ local URLS = {
     kitten = "https://i.imgur.com/qlhVKyZ.png",
     soldierMeme = "https://i.imgur.com/etDODQs.jpg",
     barryWood = "https://i.imgur.com/DiuOqz0.jpeg",
+    barryWood2 = "https://i.imgur.com/PQiuccK.png",
+    barryWood3 = "https://i.imgur.com/rzWJOKP.jpg",
+    obobrali_do_gola = "https://i.imgur.com/YeA7JbG.png",
     custom = nil
 }
 
-local img = "rikka_s"
+local img = "hunta_rules"
 
 local IsHaveProportions = false
 local HaveAlpha = false

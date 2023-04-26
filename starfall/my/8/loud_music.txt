@@ -3,10 +3,12 @@
 --@shared
 
 
-local Volume = 2
+local Volume = 10
 local Speed = 1
-local URL = "soldierMeme"
-local IsLooping = false
+local URL = "aahh"
+local IsLooping = true
+local RestartAfterPause = false
+local StartTime = 0
 
 local IsAllServer = false
 local Radius = 500
@@ -41,6 +43,7 @@ local _urls = {
     starwars_duel_sudeb = "https://cdn.discordapp.com/attachments/974678227362660395/1074700721880047758/zvezdnie_vojni_-_duel_sudeb_z2.fm.mp3",
     tak_nravits9 = "https://cdn.discordapp.com/attachments/974678227362660395/1075423243604856903/-_.mp3",
     screamer = "https://cdn.discordapp.com/attachments/1081967820172181578/1099705174836129912/-_.mp3",
+    aahh = "https://cdn.discordapp.com/attachments/974678227362660395/1100475849314148442/onlymp3.to_-_AUUGHHH_Sound_Effect-srodNyimqTM-256k-1654135608956.mp3",
 }
 
 -- =================================================================================
@@ -91,8 +94,10 @@ net.receive("Active", function(len)
         if _isActive then
             _sound:play()
         else
-            
             _sound:pause()
+            if RestartAfterPause then
+                _sound:setTime(StartTime)
+            end
         end
     end
 end)
@@ -106,8 +111,10 @@ bass.loadURL(_urls[URL], "3d noblock noplay", function(Sound)
     if _isActive then
         _sound:play()
     else
-        
         _sound:pause()
+        if RestartAfterPause then
+            _sound:setTime(StartTime)
+        end
     end
     
     hook.add("think", "", function()
