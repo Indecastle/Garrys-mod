@@ -3,12 +3,12 @@
 --@shared
 
 
-local Volume = 10
+local Volume = 1
 local Speed = 1
-local URL = "aahh"
+local URL = "wither_storm"
 local IsLooping = true
-local RestartAfterPause = false
-local StartTime = 0
+local RestartAfterPause = true
+local StartTime = 90
 
 local IsAllServer = false
 local Radius = 500
@@ -38,12 +38,14 @@ local _urls = {
     soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3",
     soldierMeme = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
     sidorovich_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
+    stalker_1 = "https://cdn.discordapp.com/attachments/900794622878564362/1025497202094776320/100_.mp3",
     mc_mom_came_remix = "https://cdn.discordapp.com/attachments/974678227362660395/1069328923114098819/oj-mama-prishla-miss-the-rage_456240694.mp3",
     mc_mom_came = "https://cdn.discordapp.com/attachments/974678227362660395/1069328923491581952/oy-mama-prishla.mp3",
     starwars_duel_sudeb = "https://cdn.discordapp.com/attachments/974678227362660395/1074700721880047758/zvezdnie_vojni_-_duel_sudeb_z2.fm.mp3",
     tak_nravits9 = "https://cdn.discordapp.com/attachments/974678227362660395/1075423243604856903/-_.mp3",
     screamer = "https://cdn.discordapp.com/attachments/1081967820172181578/1099705174836129912/-_.mp3",
     aahh = "https://cdn.discordapp.com/attachments/974678227362660395/1100475849314148442/onlymp3.to_-_AUUGHHH_Sound_Effect-srodNyimqTM-256k-1654135608956.mp3",
+    wither_storm = "https://cdn.discordapp.com/attachments/974678227362660395/1101220414325280798/SnapInsta.io_-_Wither_Storm_-_FULL_GAME_MUSIC_128_kbps.mp3",
 }
 
 -- =================================================================================
@@ -108,14 +110,14 @@ bass.loadURL(_urls[URL], "3d noblock noplay", function(Sound)
     _sound:setLooping(IsLooping)
     _sound:setPitch(Speed)
     
-    if _isActive then
-        _sound:play()
-    else
-        _sound:pause()
-        if RestartAfterPause then
-            _sound:setTime(StartTime)
+    timer.simple(0.5, function()
+        _sound:setTime(StartTime)
+        if _isActive then
+            _sound:play()
+        else
+            _sound:pause()
         end
-    end
+    end)
     
     hook.add("think", "", function()
         if IsAllServer then

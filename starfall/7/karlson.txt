@@ -1,0 +1,32 @@
+--@name Karlson
+--@author MongRaff
+--@server
+
+local Target = owner()
+--Target = find.playersByName("mong")[1]
+
+local holo = holograms.create(Target:getBonePosition(4)-Target:getAngles():getForward()*2,Target:getEyeAngles()+Angle(-90,g,0),"models/props_phx/misc/propeller3x_small.mdl",Vector(0.5))
+holo:setColor(Color(255,25,25))
+holo:setParent(Target,Target:lookupAttachment("chest"))
+local g = 0
+local a,b = true,true
+hook.add("think", "",function()
+    holo:setAngles(Target:getAngles()+Angle(-90+g,90,-90))
+    if Target:keyDown(IN_KEY.JUMP) and not Target:isNoclipped() then
+        g = g + 40
+        b = true
+        if a then
+            holo:emitSound("Airboat_fan_idle",100,100)
+            a = false
+        end
+        local velForward_0 = Target:getEyeAngles():getForward()
+        velForward_0.z = 0
+        Target:setVelocity(Vector(0,0,25) + velForward_0*10)
+    else
+        a = true
+        if b then
+            holo:stopSound("Airboat_fan_idle")
+            b = false
+        end
+    end
+end)

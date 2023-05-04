@@ -1,9 +1,9 @@
---@name eblanplayer_reloaded 
+--@name eblanplayer_reloaded 2
 
 
 local Speed = 1
-local Radius = 2000
-local Volume = 4
+local Radius = 2500
+local Volume = 10
 
 
 if SERVER then
@@ -35,8 +35,8 @@ if CLIENT then
     
     
     --local maintex = "https://i.imgur.com/R1BUrVH.jpg"
-    local maintex = "https://i.imgur.com/ngN7RZF.jpg"
-    local putin_uv_tex = "https://i.imgur.com/CDJoq0H.png"
+    local maintex = "https://i.imgur.com/L48W8qr.png"
+    local putin_uv_tex = "https://i.imgur.com/dDTs11r.png"
     
     if not hasPermission("material.urlcreate", maintex) then
         --return
@@ -50,8 +50,7 @@ if CLIENT then
         return n/1023.75 
     end
     
-    local Radio = "https://cdn.discordapp.com/attachments/974678227362660395/1096427487535312966/X2Download.app_-_Alan_Aztec_-_Russian_Friend_feat._Karate_320_kbps.mp3"
-    --local Radio = "https://cdn.discordapp.com/attachments/1081967820172181578/1096924000879382641/-_.mp3"
+    local Radio = "https://cdn.discordapp.com/attachments/900794622878564362/1099408403551498250/ec491be52f7600a6.mp3"
     
     local perms = {
         "bass.loadURL",
@@ -94,13 +93,6 @@ if CLIENT then
     local mat3 = material.create("UnlitGeneric")
     mat3:setTexture("$basetexture", "models/debug/debugwhite")
     
-    
-    owner():setAnimation("taunt_dance", nil, 1, true, nil, nil)
-    hook.add("Removed", "", function()
-        owner():resetAnimation()
-    end)
-    
-    
     hook.add("render","",function()
         if song != nil then
 
@@ -113,7 +105,6 @@ if CLIENT then
             
             frame = frame + 0.1 + FFT[2]*4
             mat:setAngles(Angle(frame, 0, 90))
-
             render.pushMatrix(mat)
             
             render.setMaterial(mat2)
@@ -138,7 +129,6 @@ if CLIENT then
             render.drawText(128, 256, "Zagruska"..string.rep(".",time)) 
         end
     end)
-    local _currentAnimSpeed = 0
     hook.add("render","uv",function()
         if song != nil then
             render.setFilterMin(1)
@@ -155,12 +145,6 @@ if CLIENT then
             local x,y = texSize.x*(prikol2%gridSize),texSize.y*math.floor(prikol2/gridSize)
             
             render.drawTexturedRectUV(-70, 256, 256, 256, uv(x), uv(y), uv(x + texSize.x), uv(y + texSize.y))
-            
-            _currentAnimSpeed = _currentAnimSpeed <= 0 and 0 or (_currentAnimSpeed - 0.1)
-            _currentAnimSpeed = (_currentAnimSpeed < FFT[1]*timer.frametime()*1000) and FFT[1]*timer.frametime()*1000 or _currentAnimSpeed
-
-            --printMessage(4, string.format("%f", math.round(_currentAnimSpeed, 7)))
-            owner():setAnimationRate(0.1 + _currentAnimSpeed)
         end
     end)
 end

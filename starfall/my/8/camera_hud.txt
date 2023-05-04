@@ -3,10 +3,11 @@
 --@shared
 
 
+local IsAllWeapons = true
 local IsRect = true
 
 local RadiusMode = true
-local Radius = 1000
+local Radius = 1000000000000
 local MaxAlpha = 1.0 -- if RadiusMode == false
 
 local Target = owner() -- if RadiusMode = false
@@ -268,7 +269,9 @@ end)
 hook.add("renderscene", "setPos", function(origin, angles, fov)
     local inSphere = chip():getPos():getDistance(player():getPos()) < Radius
     
-    if On and (RadiusMode and inSphere or !RadiusMode and Target == player()) then
+    if On 
+            and (RadiusMode and inSphere or !RadiusMode and Target == player()) 
+            and (IsAllWeapons or isValid(player():getActiveWeapon()) and player():getActiveWeapon():getClass() == 'gmod_camera') then
         fovHandler(fov)
         
         local _, eyeA = localToWorld(Vector(), Angle(90,0,180), Vector(), angles)

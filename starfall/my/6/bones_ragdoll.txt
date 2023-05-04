@@ -1,9 +1,9 @@
---@name CCCC
+--@name Bones ragdoll
 --@author Markiz
 --@client
 
 
-local isAttachment = false
+local isAttachment = true
 
 if player() == owner() then enableHud(nil, true) end
 

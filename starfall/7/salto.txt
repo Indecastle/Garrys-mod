@@ -1,0 +1,48 @@
+--@name salto
+--@author
+--@shared
+if SERVER then
+    local a = true
+    local b = true
+    timer.create("2",0,0,function()
+        if owner():keyDown(IN_KEY.JUMP) and owner():keyDown(IN_KEY.BACK) and not owner():isNoclipped() then
+            if a then
+                for k,v in pairs(find.allPlayers()) do
+                    net.start("salton")
+                    net.send(v)
+                end
+                a = false
+            end
+        else
+            a = true
+        end
+        if owner():keyDown(IN_KEY.JUMP) and not owner():keyDown(IN_KEY.BACK) and not owner():isNoclipped() then
+            if b then
+                for k,v in pairs(find.allPlayers()) do
+                    net.start("salto")
+                    net.send(v)
+                end
+                b = false
+            end
+        else
+            b = true
+        end
+    end)
+else
+    net.receive("salto",function()
+        local y = 0
+        timer.create("",0,18,function()
+            y = y + 20
+            owner():manipulateBoneAngles(0,Angle(0,0,y))
+            owner():manipulateBonePosition(0,Vector(0,0,0))
+        end)
+    end)
+    net.receive("salton",function()
+        local y = 0
+        timer.create("",0,18,function()
+            y = y - 20
+            owner():manipulateBoneAngles(0,Angle(0,0,y))
+            owner():manipulateBonePosition(0,Vector(0,0,0))
+        end)
+    end)
+end

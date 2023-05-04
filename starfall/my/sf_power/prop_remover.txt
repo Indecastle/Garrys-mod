@@ -2,6 +2,10 @@
 --@author Markiz
 --@server
 
+
+local WarningMinCollideProps = 100
+
+
 local Models = {
     'models/props_phx/mk-82.mdl',
     'models/props_phx/ww2bomb.mdl',
@@ -78,7 +82,7 @@ function removerHandler()
         find.byModel(model, function(ent)
             if isAdmin(ent) then return end
             pcall(function()
-                ent:remove()
+                --ent:remove()
             end)
         end)
     end
@@ -87,7 +91,7 @@ function removerHandler()
         if table.hasValue(Npc, ent:getClass()) then
             if isAdmin(ent) then return end
             pcall(function()
-                ent:remove()
+                --ent:remove()
             end)
         end
     end)
@@ -113,6 +117,9 @@ function noCollideHandler()
     end
 end
 
+local _s1 = sounds.create(owner(), "NPC_AttackHelicopter.BadlyDamagedAlert", true)
+local _s1_state = false
+
 function noCollideHandler2()
     local nocollideProps = find.all(function(ent) return table.hasValue(NocollideModels, ent:getModel()) end)
 
@@ -122,11 +129,17 @@ function noCollideHandler2()
         end
     end
     
+    local s1_state_new = #nocollideProps > WarningMinCollideProps
+    if s1_state_new and s1_state_new != _s1_state then
+        _s1:stop()
+        _s1:play()
+    end
+    _s1_state = s1_state_new
 end
 
 
 timer.create("remover", 0.6, 0, function()
-    --removerHandler()
+    removerHandler()
 end)
 
 

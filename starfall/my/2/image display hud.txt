@@ -70,6 +70,8 @@ if URLS[img] == nil then return end
 URL = URLS[img]
 
 if SERVER then
+    --chip():setSolid(false)
+    
     if not RadiusMode then
         print(Target)
     end
@@ -161,7 +163,7 @@ m:recompute()
 
 
 local holo = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/plane.mdl", Vector(1))
-holo:setColor(Color(0,0,0,0))
+holo:setColor(Color(0,0,0,1))
 holo:setMaterial("!" .. m:getName())
 holo:suppressEngineLighting(true)
 

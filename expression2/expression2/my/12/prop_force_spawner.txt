@@ -1,18 +1,19 @@
 @name Prop Force Spawner
 @inputs
 @outputs [ActiveProps]:table
-@persist [O E]:entity LivingTime DistanceSpawn Force Mass Model:string IsKeyPressed AttackDelay IsNoCollide
+@persist [O E]:entity LivingTime DistanceSpawn Force Mass Model:string IsKeyPressed AttackDelay HasTrail IsNoCollide
 
 if(first() | dupefinished()) {
     O = owner(), E = entity()
     
     Model = "models/props_junk/watermelon01.mdl"
-    LivingTime = 4 # Seconds
+    LivingTime = 2 # Seconds
     DistanceSpawn = 100
     Force = 1000
     Mass = 10
     AttackDelay = 0.4 # Seconds
-    
+
+    HasTrail = 1  # Boolean
     IsNoCollide = 1  # Boolean
     
     
@@ -72,20 +73,24 @@ if(first() | dupefinished()) {
             P:propFreeze(0)
             P:propSetVelocity(Dir * Force)
             P:propNotSolid(0)
-            noCollideAll(P,0)
-            noCollide(P, O)
-            
-            Color = hsv2rgb(randint(0,360), 1, 1)
-            P:setTrails(100, 1, 2, "trails/laser", Color, 255)
-            
-            if (IsNoCollide) {
-                for(I=1, ActiveProps:count()) {
-                    local Ent = ActiveProps[I, array][1, entity]
-                    if (Ent:isValid() & P:isValid()) {
-                        noCollide(P, Ent)
+            #ifdef noCollideAll(entity, entity)
+                noCollideAll(P,0)
+                noCollide(P, O)
+                if (IsNoCollide) {
+                    for(I=1, ActiveProps:count()) {
+                        local Ent = ActiveProps[I, array][1, entity]
+                        if (Ent:isValid() & P:isValid()) {
+                            #noCollide(P, Ent)
+                        }
                     }
                 }
+            #endif
+            
+            if (HasTrail) {
+                Color = hsv2rgb(randint(0,360), 1, 1)
+                P:setTrails(50, 1, 2, "trails/laser", Color, 255)
             }
+            
             ActiveProps:addEnt(P)
         }
     }

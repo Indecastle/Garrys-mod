@@ -1,0 +1,14 @@
+--@name lestnitsa
+--@author MongRaff
+--@server
+local i = -1
+timer.create("",0,0,function()
+    if prop.canSpawn() then
+        if i < 100 then
+            i = i + 1
+            P = prop.create(chip():getPos()+Vector(i/10,0,i*12),Angle(),"models/hunter/blocks/cube025x8x025.mdl",true)
+            P:setMaterial("debug/debugdrawflat")
+            P:setColor(Color(i*10,1,1):hsvToRGB())
+        end
+    end
+end)

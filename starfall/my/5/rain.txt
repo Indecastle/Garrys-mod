@@ -17,6 +17,8 @@ local alpha = 0.4
 local enableSound = true
 local volume = 1
 
+local checkSky = false
+
 
 local soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348343148584/f969747680e8276.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
 --soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348645146684/28f2bf70e8d0701.mp3" -- https://zvukipro.com/index.php?do=download&id=11777
@@ -30,7 +32,7 @@ local sound = nil
 local m = material.load("effects/spark")
 
 
-if enableSound then
+if enableSound and hasPermission("bass.loadURL", soundUrl) then
     bass.loadURL(soundUrl, "3d noblock noplay", function(snd)
         if snd then
             sound = snd
@@ -46,6 +48,13 @@ function rain(radius, degree)
     local x =  radius * math.cos(degree)
     local y = -radius * math.sin(degree)
     local pos = Target:getPos() + Vector(x, y, startZ)
+    
+    if checkSky then
+        local tr = trace.trace(pos, pos+Vector(0,0,1000000), nil, MASK.ALL, nil, false)
+        if not tr.Hit or not tr.HitSky then
+            return
+        end
+    end
     
     -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
     local part = emitter:add( m, pos, 2, 0, 20, 1, 0, 200, 1 ) -- Create a new particle at pos

@@ -1,0 +1,40 @@
+@name cyberCorrupt by Noname
+@inputs 
+@outputs 
+@persist Textures:array I J Speed_Color
+@trigger 
+
+if(first() | dupefinished()) {
+    #entity():setColor(255,255,255,0)
+    #entity():setAlpha(0)
+    #entity():setMaterial("null")
+    Speed_Color = 3
+}
+
+interval(500)
+
+
+PRP = owner()
+
+Textures:pushString("debug/debugempty")
+Textures:pushString("vgui/bg-lines")
+Textures:pushString("models/wireframe")
+Textures:pushString("models/debug/debugwhite")
+Textures:pushString("hlmv/debugmrmwireframe")
+Textures:pushString("models/props_combine/stasisfield_beam")
+Textures:pushString("models/screenspace")
+Textures:pushString("models/shadertest/predator")
+Textures:pushString("models/props_combine/portalball001_sheet")
+Textures:pushString("models/props_combine/stasisshield_sheet")
+Textures:pushString("phoenix_storms/checkers_map")
+
+I = (I + 1) % Textures:count()
+PRP:setMaterial(Textures[I+1,string])
+#PRP:setColor(random(255),random(255),random(255))
+
+J = (J + Speed_Color) % 360
+local Color = hsv2rgb(J, 1, 1)
+PRP:setColor(Color)
+
+#PRP:soundPlay(1,999,"synth/square.wav")
+#soundPitch(1,random(50))

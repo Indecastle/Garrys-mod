@@ -1,0 +1,17 @@
+--@name PlayerSpawn
+--@author Markiz
+--@server
+
+
+local H = holograms.create(chip():localToWorld(Vector(0,0,5)), chip():localToWorldAngles(Angle(90,0,0)), "models/holograms/cone.mdl", Vector(0.5))
+H:setParent(chip())
+H:setColor(Color(255,255,255,150))
+
+hook.add("PlayerSpawn", "", function(ply)
+    
+    pcall(function()
+        ply:setPos(chip():localToWorld(Vector(0,0,5)))
+        ply:setEyeAngles(chip():getAngles():getForward():getAngle())
+    end)
+    
+end)

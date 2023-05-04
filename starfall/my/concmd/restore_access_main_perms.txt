@@ -1,0 +1,32 @@
+--@name Restore access main perms
+--@author Markiz
+--@client
+
+
+setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+local permissionSatisfied = hasPermission("console.command")
+
+
+function handle()
+    if hasPermission("console.command") then
+        --concmd("sf_permission_cl console.command client 3")
+        concmd('sf_permission_cl entities.setRenderProperty client 3')
+        concmd('sf_permission_cl material.load client 3')
+        concmd('sf_permission_cl material.create client 3')
+        concmd('sf_permission_cl material.urlcreate client 3')
+        concmd('sf_permission_cl bass.loadURL client 3')
+        concmd('sf_permission_cl hologram.create client 3')
+        
+        concmd('sf_permission_cl entities.setRenderProperty entities 4')
+        concmd('sf_permission_cl entities.setPersistent entities 4')
+
+    end
+end
+
+
+handle()
+
+hook.add("permissionrequest", "", function()
+    handle()
+end)
+

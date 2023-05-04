@@ -1,13 +1,13 @@
---@name Red Guys
+--@name Sidorovich Guy
 --@author Sevii, MOST
 
 local count = 5
 local jump_delay = 2
 local volume = 0.5
 
-local size = 9
-local offset = Vector(0, 0, 0)
-local img = "https://u.teknik.io/aDpH5.png"
+local size = 60
+local offset = Vector(0, 0, -40)
+local img = "https://i.imgur.com/rHE1lsn.png"
 
 -- local size = 12
 -- local offset = Vector(0, 0, 20)

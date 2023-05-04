@@ -3,7 +3,7 @@
 --@shared
 
 local Detail = 10
-local SizeMap = 35000
+local SizeMap = 15000
 local Z = 3000
 local Zoom = 1
 local LevelDiff = 100
@@ -221,17 +221,17 @@ else
                             end
                         end
                         
-                        local color = Color(0,0,0)
+                        local color = Color(0,0,0,0)
                         if dist ~= -1 then
                             if bit.band(tr.SurfaceFlags, 8) ~= 0 then
                                 color = Color(0,200,200)
                             else
                                 color = render.traceSurfaceColor(tr.HitNormal + tr.HitPos, tr.HitPos - tr.HitNormal)
                             end
+                            
+                            render.setColor(color)
+                            render.drawRectFast(x*Detail,Res_*Detail - y*Detail, Detail, Detail)
                         end
-                        
-                        render.setColor(color)
-                        render.drawRectFast(x*Detail,Res_*Detail - y*Detail, Detail, Detail)
                         
                     end
                     //coroutine.yield()
@@ -246,6 +246,7 @@ else
     local pos = Vector(128,128)
     local radius = 128
     local polyStructure = {}
+    local _ifFirstTime = true
     
     for i = 0, segments, 1 do
         local sin, cos = math.sin( math.rad( (i/segments)*-360 ) ), math.cos( math.rad( (i/segments)*-360 ) )
@@ -268,6 +269,11 @@ else
         
         hook.add("renderoffscreen","",function()
             render.selectRenderTarget("myrendertarget")
+            if _ifFirstTime then
+                _ifFirstTime = false
+                render.clear(Color(0,0,0,0))
+            end
+            
             while math.max(quotaAverage(), quotaUsed()) < quotaMax() * Performance_Cpu_Limit do
                 if paint() then
                     hook.remove("renderoffscreen","")

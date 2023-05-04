@@ -1,0 +1,27 @@
+--@name Meat Man
+--@author Tom1K
+--@server
+
+
+print("Meat Man has spawned!")
+
+local Razmer = Vector(3,3,3)
+local Animation = "ACT_GMOD_TAUNT_DANCE"
+
+meat = holograms.create(chip():getPos(), Angle(), 'models/player/breen.mdl')
+
+meat:setMaterial("models/flesh")
+meat:setAnimation(Animation)
+meat:setScale(Razmer)
+meat:emitSound('ambient/music/piano1.wav', 100, 100, 1)
+meat:setColor(Color(255,0,0))
+
+hook.add("think", "", function()
+    meat:setScale(Vector(1, 1, (1.5 + math.sin(timer.systime()*2)*1)))
+end)
+
+
+timer.simple(8.7,function()
+    chip():remove()
+end)
+
