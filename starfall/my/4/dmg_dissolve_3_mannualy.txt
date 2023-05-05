@@ -228,40 +228,31 @@ hook.add("mouseWheeled", "", function(delta)
     if _ThPersDist > 500 then _ThPersDist = 500 end
 end)
 
-local _oldKeyPress
-local _oldKeyRelease
-hook.add("KeyPress", "cheat spectator", function(ply, key)
-    if _oldKeyPress == key then return end
-    _oldKeyPress = key
-    --print(key, "Press")
+
+hook.add("inputPressed", "cheat spectator", function(key)
     if render.isHUDActive() then
-        if key == IN_KEY.FORWARD then Key_W = true end
-        if key == IN_KEY.BACK then Key_S = true end
-        if key == IN_KEY.MOVELEFT then Key_A = true end
-        if key == IN_KEY.MOVERIGHT then Key_D = true end
-        if key == IN_KEY.SPEED then Key_Shift = true end
-        if key == IN_KEY.DUCK then Key_Ctrl = true end
+        if key == KEY.W then Key_W = true end
+        if key == KEY.S then Key_S = true end
+        if key == KEY.A then Key_A = true end
+        if key == KEY.D then Key_D = true end
+        if key == KEY.SHIFT then Key_Shift = true end
+        if key == KEY.CTRL then Key_Ctrl = true end
         
-        if key == IN_KEY.JUMP and isValid(_Killer) then
+        if key == KEY.SPACE and isValid(_Killer) then
             net.start("Jump")
             net.send()
         end
     end
 end)
 
-
-hook.add("KeyRelease", "cheat spectator", function(ply, key)
-    if !_oldKeyPress and _oldKeyRelease == key then return end
-    _oldKeyRelease = key
-    _oldKeyPress = nil
-    --print(key, "Release")
+hook.add("inputReleased", "cheat spectator", function(key)
     if render.isHUDActive() then    
-        if key == IN_KEY.FORWARD then Key_W = false end
-        if key == IN_KEY.BACK then Key_S = false end
-        if key == IN_KEY.MOVELEFT then Key_A = false end
-        if key == IN_KEY.MOVERIGHT then Key_D = false end
-        if key == IN_KEY.SPEED then Key_Shift = false end
-        if key == IN_KEY.DUCK then Key_Ctrl = false end
+        if key == KEY.W then Key_W = false end
+        if key == KEY.S then Key_S = false end
+        if key == KEY.A then Key_A = false end
+        if key == KEY.D then Key_D = false end
+        if key == KEY.SHIFT then Key_Shift = false end
+        if key == KEY.CTRL then Key_Ctrl = false end
     end
 end)
 

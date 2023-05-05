@@ -3,14 +3,14 @@
 --@shared
 
 
-local Volume = 1
+local Volume = 10
 local Speed = 1
-local URL = "wither_storm"
-local IsLooping = true
+local URL = "pornhub_intro"
+local IsLooping = false
 local RestartAfterPause = true
 local StartTime = 90
 
-local IsAllServer = false
+local IsAllServer = true
 local Radius = 500
 
 ------------------------------------------------------------------------------------

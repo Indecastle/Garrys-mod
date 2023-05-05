@@ -2,7 +2,7 @@
 --@author Markiz
 --@shared
 
-local Radius = 1000
+local Radius = 1500
 local Health = 500
 local MaxTakeDamage = 200
 
@@ -15,12 +15,12 @@ local PreparationTime = 10
 local DeathTime = 8
 
 local ExplodeModel = "models/props_phx/oildrum001_explosive.mdl"
-local TargetHomingAccuracy = 0.5
+local TargetHomingAccuracy = 0.6
 local PropDamageMode = true
 local Damage = 20
-local HeadFireVelocity = 15
+local HeadFireVelocity = 20
 local MinRandomFire = 0.3
-local MaxRandomFire = 3
+local MaxRandomFire = 2.5
 local HeadFireLifeTime = 10
 
 local SoundVolumeMain = 1
@@ -61,7 +61,7 @@ if SERVER then
         self.damage = Damage or nil
         self.isExploded = false
         self.isRemoved = false
-        self.propDamageMode = propDamageMode or true
+        self.propDamageMode = propDamageMode
         self.lastLifeTime = timer.systime() + HeadFireLifeTime
         self.forward = (self.target:obbCenterW()-pos):getNormalized()
         self.head = holograms.create(pos, self.forward and self.forward:getAngle() or Angle(), "models/holograms/cube.mdl", Vector(1.0, 1.0, 0.9))
@@ -96,9 +96,11 @@ if SERVER then
     end
     
     function HeadFire:explode()
-        if PropDamageMode then
-            local p = prop.create(self.head:getPos(), Angle(), ExplodeModel)
-            p:breakEnt()
+        if self.propDamageMode then
+            pcall(function()
+                local p = prop.create(self.head:getPos(), Angle(), ExplodeModel)
+                p:breakEnt()
+            end)
             self:destroy()
             return
         else
@@ -151,6 +153,7 @@ if SERVER then
         Prop_Base:setPos(E:localToWorld(Vector(0,0,50)))
         Prop_Base:setAngles(E:getAngles())
         Prop_Base:setColor(Color(0,0,0,0))
+        Prop_Base:setMaterial("Models/effects/vol_light001")
         --Prop_Base:setMass(35)
     end
 
@@ -240,6 +243,7 @@ if SERVER then
     
     
     function setEyesState(scale)
+        if not isValid(Holo_Head1_Eye1) then return end
         Holo_Head1_Eye1:setScale(scale)
         Holo_Head1_Eye2:setScale(scale)
         Holo_Head2_Eye1:setScale(scale)
@@ -263,6 +267,8 @@ if SERVER then
     end
     
     hook.add("think", "tail", function()
+        if not isValid(Holo_Tail_Bone) or not isValid(Holo_Base) then return end
+        
         local x = (timer.systime()*2) % 360
         Holo_Tail_Bone:setAngles(Holo_Base:localToWorldAngles(Angle(math.sin(x)*15, 0, 0)))
     end)
@@ -277,6 +283,17 @@ if SERVER then
     local _heads = { Holo_Head1, Holo_Head2, Holo_Head3 }
     
     
+    function isValidFindPlayerOrNPC(ent)
+        return ent ~= nil and ent:isValid() and ent:isValidPhys()
+            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode()
+                or ent:isNPC()) 
+    end
+    
+    function isValidPlayerOrNPC(ent)
+        return ent ~= nil and ent:isValid() and ent:isValidPhys()
+            and (ent:isNPC() or ent:isPlayer() and ent:isAlive() and !ent:hasGodMode())
+    end
+    
     function tryAddTarget(ent)
         if not _targets[1] then _targets[1] = ent
         elseif not _targets[2] then _targets[2] = ent
@@ -288,6 +305,8 @@ if SERVER then
     end
     
     timer.create("preparating", 0.25, 0, function()
+        if not isValid(Prop_Base) or not isValid(Holo_Base) then return end
+        
         if _isPreparating then
             setBodyColor(Holo_Spine:getColor() == Color(35,35,35) and Color(39, 54, 76) or Color(35,35,35))   
         else
@@ -297,21 +316,21 @@ if SERVER then
     end)
     
     timer.create("auto_heal", AutoHealDelay, 0, function()
+        if not isValid(Prop_Base) or not isValid(Holo_Base) then return end
+        
         if not _isAlive or _isPreparating or timer.systime() < _lastTakeDamage then return end
         _health = math.clamp(_health + AutoHealAmount, 0, Health)
         sendHealth()
     end)
     
     timer.create("find_targets", 0.5, 0, function()
-        if _isPreparating or not _isAlive then return end
+        if not isValid(Prop_Base) or _isPreparating or not _isAlive then return end
         
-        if not isValid(_targets[1]) or Holo_Base:getPos():getDistance(_targets[1]:getPos()) > Radius then _targets[1] = nil end
-        if not isValid(_targets[2]) or Holo_Base:getPos():getDistance(_targets[2]:getPos()) > Radius then _targets[2] = nil end
-        if not isValid(_targets[3]) or Holo_Base:getPos():getDistance(_targets[3]:getPos()) > Radius then _targets[3] = nil end
+        if not isValidPlayerOrNPC(_targets[1]) or Holo_Base:getPos():getDistance(_targets[1]:getPos()) > Radius then _targets[1] = nil end
+        if not isValidPlayerOrNPC(_targets[2]) or Holo_Base:getPos():getDistance(_targets[2]:getPos()) > Radius then _targets[2] = nil end
+        if not isValidPlayerOrNPC(_targets[3]) or Holo_Base:getPos():getDistance(_targets[3]:getPos()) > Radius then _targets[3] = nil end
         
-        local ents = find.inSphere(Holo_Base:getPos(), Radius, function(ent)
-            return ent:isNPC() or ent:isPlayer() and ent:isAlive()
-        end)
+        local ents = find.inSphere(Holo_Base:getPos(), Radius, isValidPlayerOrNPC)
         
         for i, ent in ipairs(ents) do
             --print(ent)
@@ -320,7 +339,9 @@ if SERVER then
     end)
     
     function setEyeContact(holoHead, ent)
-        if isValid(ent) then 
+        if not isValid(Prop_Base) or not isValid(Holo_Base) then return end
+        
+        if isValid(ent) and isValid(holoHead) then 
             --local attachmentIndex = Entity:lookupAttachment("head")
             holoHead:setAngles((ent:obbCenterW()-holoHead:getPos()):getNormalized():getAngle()) 
         end
@@ -328,6 +349,8 @@ if SERVER then
     
     local _nextTimeFire = timer.systime()
     hook.add("think", "heads", function()
+        if isValid(ent) and isValid(Prop_Base) or not isValid(Holo_Base) then return end
+        
         for i, head in ipairs(_activeHeadFires) do
             head:think()
             if head.isExploded or head.isRemoved then
@@ -356,6 +379,8 @@ if SERVER then
     local _killingHoloAngle = 0
     function killingScene()
         hook.add("think", "killingScene", function()
+            if not isValid(Prop_Base) or not isValid(Holo_Base) then return end
+            
             Holo_Base:setAngles(Prop_Base:localToWorldAngles(Angle(20,0,_killingHoloAngle)))
             
             _killingHoloAngle = _killingHoloAngle + 2
@@ -367,7 +392,7 @@ if SERVER then
     end
 
     hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
-        if target != Prop_Base or timer.systime() < _oldLockDamageTime or _isPreparating or not _isAlive then return end
+        if not isValid(Prop_Base) or target != Prop_Base or timer.systime() < _oldLockDamageTime or _isPreparating or not _isAlive then return end
         _oldLockDamageTime = timer.systime() + LockDamageTime
         --Prop_Base:emitSound('Explo.ww2bomb', 100, 100, 1)
         _health = math.max(0, _health - math.clamp(amount, 0, MaxTakeDamage))
@@ -393,6 +418,8 @@ if SERVER then
     local _prepTime = timer.curtime()
     local _prepTimeEnd = timer.curtime() + PreparationTime
     timer.simple(PreparationTime, function()
+        if not isValid(Prop_Base) or not isValid(Holo_Base) then return end
+        
         local headFire = HeadFire:new(Prop_Base:getPos(), Prop_Base, owner(), true)
         headFire:explode()
         timer.simple(0.3, function()
@@ -544,7 +571,7 @@ loadUrl('shoot', soundUrls_other.shoot, sounds_other, SoundVolumeShoot, 0, true)
 
 
 timer.create("main", 10, 0, function()
-    if not _isAlive then return end
+    if not isValid(Holo_Base) or not _isAlive then return end
     
     local sound = table.random(sounds_main)
     sound:setPos(Holo_Base:getPos())
@@ -634,7 +661,7 @@ hook.add("renderoffscreen", "InitTemplate", function()
     
     render.setFont(text)
     render.setColor(Color(255,255,255,255))
-    render.drawText(512-35, 20, "Wither")
+    render.drawText(512, 20, "Wither", 1)
     
     --render.drawRectOutline(512-150, 70, 300, 25, 2)
     local _k = 0.3
@@ -686,7 +713,7 @@ hook.add("renderscene", "setPos", function(origin, angles, fov)
         holo:setAngles(eyeA)
         
         local distance = Holo_Base:getPos():getDistance(origin)
-        local x = math.clamp((math.abs(distance-RenderRadius) / RenderRadius), 0, 1)*RenderMaxAlpha
+        local x = math.clamp((math.abs(distance-RenderRadius) / RenderRadius), 0, 0.99)*RenderMaxAlpha
 
         holo:setColor(Color(255,255,255, 255*x))
     else
