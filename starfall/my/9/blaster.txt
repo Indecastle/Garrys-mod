@@ -1,0 +1,158 @@
+--@name Blaster
+--@author Markiz
+--@shared
+
+
+local DistanceStep = 50
+local DistanceMax = 2000
+local LockTime = 1
+
+local ExplodeModels = {
+    "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_phx/oildrum001_explosive.mdl",
+    "models/props_c17/oildrum001_explosive.mdl",
+}
+
+
+if SERVER then
+    
+    local _lockTime = timer.systime()
+    function checkLockTime()
+        local newTIme = timer.systime()
+        if _lockTime < newTIme then
+            _lockTime = newTIme + LockTime
+            return true
+        end
+        return false
+    end
+    
+    
+    function explodeTo(pos)
+        while #ExplodeModels > 0 do
+            local succeed = pcall(function()
+                local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p:setNoDraw(true)
+                p:breakEnt()
+            end)
+            
+            if succeed then return end
+            table.remove(ExplodeModels, 1)
+        end
+    end
+
+
+    hook.add("KeyPress", "", function(ply, key)
+        if ply != owner() 
+            or not isValid(ply:getActiveWeapon()) 
+            or ply:getActiveWeapon():getClass() != "weapon_crowbar" --'weapon_crowbar' / "weapon_physgun"
+            or key != IN_KEY.ATTACK
+            or ply:inVehicle()
+            or not ply:isAlive()
+            or not checkLockTime() then return end
+        
+        local shootPos = ply:getShootPos()
+        local dir = ply:getEyeAngles():getForward()
+        
+        net.start("fire")
+        net.writeVector(shootPos)
+        net.writeVector(dir)
+        net.send()
+        
+        local tr = trace.trace(shootPos, shootPos + dir*DistanceMax, {owner(), chip()}, MASK.ALL, nil, false)
+        if isValid(tr.Entity) or tr.HitWorld then
+            explodeTo(tr.HitPos)
+        end
+    end)
+    
+    return
+end
+
+
+
+local mat = material.load("particle/particle_glow_04")
+local mat2 = material.load("models/props_c17/fisheyelens")
+
+
+function createParticleDirs(dir)
+    local dirs = {}
+    local maxDirs = 10
+    local offset = math.random(0, 360/maxDirs)
+    
+    for degree=1, 360, 360/maxDirs do
+        local _, newDir = localToWorld(Vector(), Angle(0,90,0), Vector(), dir:getAngle())
+        _, newDir = localToWorld(Vector(), Angle(degree + offset,0,0), Vector(), newDir)
+        --local newDir = dir:rotateAroundAxis(Vector(0,1,0), 90):rotateAroundAxis(Vector(1,0,0), degree)
+        table.insert(dirs, newDir:getForward())
+    end
+    
+    return dirs
+end
+
+
+function fireOne(particleDirs, emit, pos, dir, k)
+    for i, particleDir in ipairs(particleDirs)do
+        local part = emit:add(mat, pos, 1,1+7*(1-k), 0,0, 255,0, 2)
+        if part then
+            part:setColor(Color(150,255,255))
+            part:setVelocity(particleDir * (2 + 40*(1-k)) )
+            part:setCollide(true)
+            --part:setBounce(0.75)
+        end
+    end
+end
+
+function fireOne2(particleDirs, emit, pos, dir, k)
+    for i, particleDir in ipairs(particleDirs)do
+        local part = emit:add(mat, pos, 1,1+3*(1-k), 0,0, 255,0, 1)
+        if part then
+            part:setColor(Color(255,150,0))
+            part:setVelocity(particleDir * (1 + 20*(1-k)) )
+            --part:setCollide(true)
+            --part:setBounce(0.75)
+        end
+    end
+end
+
+function fireDistortion(pos, emit)
+    local part = emit:add(mat2, pos, 100,0, 0,0, 255,255, 1)
+    if part then
+    end
+end
+
+
+function fireHandler(shootPos, dir)
+    local particleDirs = createParticleDirs(dir)
+    
+    local prevPos = shootPos
+    
+    for dist=DistanceStep, DistanceMax, DistanceStep do
+        local emit = particle.create(chip():getPos(),false)
+        
+        local nextPos = shootPos + dir * dist
+        local nextPos2 = shootPos + dir * (dist-DistanceStep/2)
+        local tr = trace.trace(prevPos, nextPos, {owner(), chip()}, MASK.ALL, nil, false)
+        if isValid(tr.Entity) or tr.HitWorld then
+            fireDistortion(nextPos + tr.HitNormal*10, emit)
+            emit:destroy()
+            break
+        end
+        
+        
+        local k = dist/DistanceMax
+        fireOne(particleDirs, emit, nextPos, dir, k)
+        fireOne2(particleDirs, emit, nextPos2, dir, k)
+        emit:destroy()
+        
+        prevPos = nextPos
+    end
+    
+    owner():emitSound("npc/strider/fire.wav", 75, 100, 1, nil)
+end
+
+
+net.receive("fire", function()
+    local shootPos = net.readVector()
+    local dir = net.readVector()
+    
+    fireHandler(shootPos, dir)
+end)

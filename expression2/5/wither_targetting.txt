@@ -1,0 +1,307 @@
+@name Wither Targetting
+@inputs 
+@outputs 
+@persist Base:entity Skull:entity Skull2:entity Health:number Target:entity
+@trigger
+
+interval(12)
+timer("shoot",2000)
+timer("shoot2",2500)
+if( first() ){
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    
+    
+    Base=propSpawn("models/hunter/blocks/cube2x2x2.mdl",+entity():toWorld(vec(0,-10,130)),1)
+ #Base:trackDamage()
+    Base:propDraw(0)
+ 
+    
+holoCreate(2)
+holoPos(2,entity():toWorld(vec(0,-11,135)))    
+holoScale(2,vec(1.3,8,1.2))
+holoParent(2,Base)
+holoMaterial(2,"sprops/trans/misc/ls_m1")
+
+holoCreate(3)
+holoPos(3,entity():toWorld(vec(9,34,152)))
+holoScale(3,vec(2.5))
+holoMaterial(3,"sprops/trans/misc/ls_m1")
+Headright=holoEntity(3)
+holoParent(3,2)
+
+holoCreate(4)
+holoPos(4,entity():toWorld(vec(9,-54,152)))  
+holoScale(4,vec(2.5))
+holoParent(4,2)
+holoMaterial(4,"sprops/trans/misc/ls_m1")
+Headleft=holoEntity(4)
+
+holoCreate(5)
+holoPos(5,entity():toWorld(vec(0,-11,110)))
+holoScale(5,vec(1.2,1.2,6))
+holoMaterial(5,"sprops/trans/misc/ls_m1")
+Chest=holoEntity(5)
+holoParent(5,2)
+
+holoCreate(6)
+holoPos(6,entity():toWorld(vec(0,-11,118)))
+holoScale(6,vec(1.12,5,1.1))
+holoMaterial(6,"sprops/trans/misc/ls_m2")
+holoParent(6,5)
+holoColor(6,vec(200,200,200))
+
+holoCreate(7)
+holoPos(7,entity():toWorld(vec(0,-11,103))) 
+holoScale(7,vec(1.12,5,1.1))
+holoMaterial(7,"sprops/trans/misc/ls_m2")
+holoColor(7,vec(200,200,200))
+holoParent(7,5)
+
+holoCreate(8)
+holoPos(8,entity():toWorld(vec(0,-11,88)))
+holoScale(8,vec(1.12,5,1.1))
+holoMaterial(8,"sprops/trans/misc/ls_m2")
+holoColor(8,vec(200,200,200))
+holoParent(8,5)
+
+holoCreate(9)
+holoPos(9,entity():toWorld(vec(-9,-11,63)))
+holoScale(9,vec(1.2,1.2,3))
+holoAng(9,ang(0,-90,-30))
+holoParent(9,5)
+holoMaterial(9,"sprops/trans/misc/ls_m1")
+
+
+   holoCreate(1)
+    holoPos(1,entity():toWorld(vec(15,-10,160)))
+    holoScale(1,vec(3)) 
+    holoParent(1,2)
+    holoMaterial(1,"sprops/trans/misc/ls_m1")
+    Headmain=holoEntity(1)    
+    
+    holoCreate(10)
+    holoPos(10,holoEntity(1):toWorld(vec(13,9,3)))
+    holoScale(10,vec(1,0.8,0.3))
+    holoDisableShading(10,1)
+    holoParent(10,1)
+
+   holoCreate(11)
+    holoPos(11,holoEntity(1):toWorld(vec(13,-9,3)))
+    holoScale(11,vec(1,0.8,0.3))
+     holoDisableShading(11,1)
+    holoParent(11,1)
+    
+       holoCreate(12)
+    holoPos(12,holoEntity(4):toWorld(vec(10,9,3)))
+    holoScale(12,vec(1,0.8,0.3))
+    holoDisableShading(12,1)
+    holoParent(12,4)
+    
+       holoCreate(13)
+    holoPos(13,holoEntity(4):toWorld(vec(10,-9,3)))
+    holoScale(13,vec(1,0.8,0.3))
+    holoDisableShading(13,1)
+    holoParent(13,4)
+    
+    
+         holoCreate(14)
+    holoPos(14,holoEntity(3):toWorld(vec(10,9,3)))
+    holoScale(14,vec(1,0.8,0.3))
+    holoDisableShading(14,1)
+    holoParent(14,3)
+    
+       holoCreate(15)
+    holoPos(15,holoEntity(3):toWorld(vec(10,-9,3)))
+    holoScale(15,vec(1,0.8,0.3))
+    holoDisableShading(15,1)
+    holoParent(15,3)
+    
+    
+Base:propGravity(0)
+Base:setAlpha(0)
+Health = 2000
+}
+
+#these are for the head always facing the player
+holoAng(1, (Target:pos()-holoEntity(1):pos()):toAngle())
+holoAng(3, (Target:pos()-holoEntity(1):pos()):toAngle())
+holoAng(4, (Target:pos()-holoEntity(1):pos()):toAngle())
+
+
+
+#Prevents the body's Pitch from rotating when following the player
+LookDirection = ( Target:boxCenterW() - Base:pos() )
+holoAng( 2, LookDirection:toAngle():setPitch(0) )
+
+
+
+#When the wither is in a close vicinity he will hover around the player at a slow pace
+if(Target:pos():distance(Base:pos())<1000){
+Base:applyForce((Target:pos()+vec(0,0,300) - Base:pos()):normalized() * 5  * Base:mass() - Base:vel()*30)
+}
+
+
+
+
+
+#If the player is a great distance away from the wither it's speed will increase to catch up
+
+if(Target:pos():distance(Base:pos())>1000){
+Base:applyForce((Target:pos()+vec(0,0,600) - Base:pos()):normalized() * 70  * Base:mass() - Base:vel()*30)
+}
+
+
+
+
+
+
+#If the wither hits a wall or building, it will fly upwards above the building to prevent being stuck
+
+R = rangerOffsetHull(5,Base:pos()+vec(0,0,Base:height()/1.5),Base:up(),Base:boxSize() * 1.1)
+
+if(R:hit()){
+    if(R:entity():isWorld()){
+Base:applyForce(90000*Base:up())
+    }
+}
+
+
+
+
+
+
+
+#Allows the projectile to be shot from the left skull to the player at an interval
+if(Target:pos():distance(Base:pos())<1500){
+Shoot=clk("shoot")
+if(changed(Shoot)&Shoot){
+    
+Skull=propSpawn("models/hunter/blocks/cube05x05x05.mdl",holoEntity(4):pos(),0)
+Skull:setAng((Target:pos()-Skull:pos()):toAngle())
+Skull:applyForce((Target:boxCenterW()+vec(0,0,0) - Skull:pos()):normalized() * 2400  * Skull:mass() - Skull:vel()*0.01)
+}
+
+
+
+
+
+#Allows the projectile to be shot from the right skull to the player at an interval
+Shoot2=clk("shoot2")
+if(changed(Shoot2)&Shoot2){
+    
+Skull2=propSpawn("models/hunter/blocks/cube05x05x05.mdl",holoEntity(3):pos(),0)
+Skull2:setAng((Target:pos()-Skull2:pos()):toAngle())
+
+Skull2:applyForce((Target:boxCenterW()+vec(0,0,0) - Skull2:pos()):normalized() * 2400  * Skull2:mass() - Skull2:vel()*0.01)
+}
+
+}
+
+
+
+Skull:propNotSolid(1)
+Skull:propGravity(0)
+Skull2:propNotSolid(1)
+Skull2:propGravity(0)
+
+Skull:setMaterial("sprops/trans/misc/ls_m1")
+Skull2:setMaterial("sprops/trans/misc/ls_m1")
+
+
+
+
+#If any of the wither projectiles/skulls hit the world or a player it will be removed and replaced with an explosion
+
+R = rangerOffsetHull(5,Skull:pos()+vec(0,0,Skull:height()/1.5),Skull:up(),Skull:boxSize() * 2)
+
+if(R:hit()){
+    if(R:entity():isWorld()){
+#boomCustom(1,Skull:boxCenterW(),30,150)
+Skull:propDelete()
+    }
+}
+if(R:hit()){
+    if(R:entity():isPlayer()){
+#boomCustom(1,Skull:boxCenterW(),30,150)
+Skull:propDelete()
+    }
+}
+
+
+
+R = rangerOffsetHull(5,Skull2:pos()+vec(0,0,Skull2:height()/1.5),Skull2:up(),Skull2:boxSize() * 2)
+
+if(R:hit()){
+    if(R:entity():isWorld()){
+#boomCustom(1,Skull2:boxCenterW(),30,150)
+Skull2:propDelete()
+    }
+}
+if(R:hit()){
+    if(R:entity():isPlayer()){
+#boomCustom(1,Skull2:boxCenterW(),30,150)
+Skull2:propDelete()
+    }
+}
+
+
+
+
+
+
+
+
+
+#if (dmgClk()) {
+  #  if (dmgVictim() == Base) {
+   #     Health = Health - dmgDamage()
+        
+        if (Health <= 0) {
+
+            selfDestruct()
+           propSpawn("models/props_phx/torpedo.mdl",entity():pos(),1):propBreak() 
+
+         
+        }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+if(changed(owner():keyPressed("t"))&owner():keyPressed("t")){
+
+        
+    
+    findByClass("player")
+    Target = findClosest(owner():aimPos())
+hint(Target:name(),1)
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+#Allows the base hitbox for the wither to keep standing upright
+
+local PAng = Base:angles()
+local PAngVel = Base:angVel()
+local Force = (ang(PAng:pitch(), 0, PAng:roll()) * -20) + (PAngVel * -2)
+Base:applyAngForce(Force * Base:mass())

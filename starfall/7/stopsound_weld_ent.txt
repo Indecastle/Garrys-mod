@@ -1,0 +1,6 @@
+--@name StopSound Weld Ent
+--@author
+--@server
+for i = 1,50 do
+    chip():emitSound("synth/square.wav",100,50+i)
+end

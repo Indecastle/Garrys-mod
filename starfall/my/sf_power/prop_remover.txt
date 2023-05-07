@@ -41,6 +41,7 @@ local NocollideModels = {
     'models/props_phx/construct/metal_dome360.mdl',
     'models/props_phx/construct/wood/wood_wire2x2x2b.mdl',
     'models/props_phx/misc/potato_launcher_cap.mdl',
+    'models/props_wasteland/horizontalcoolingtank04.mdl',
     --'',
 }
 
@@ -139,13 +140,41 @@ end
 
 
 timer.create("remover", 0.6, 0, function()
-    removerHandler()
+    --removerHandler()
 end)
 
 
 timer.create("nocollide", 0.5, 0, function()
     noCollideHandler2()
 end)
+
+
+/*
+timer.create("inertia", 0.5, 0, function()
+    local ents = find.all(function(ent) 
+        return isValid(ent) and ent:isValidPhys() and isValid(ent:getOwner()) and ent:getInertia():getDistance(Vector()) > 100
+    end)
+
+    for i, ent in ipairs(ents) do
+        local inertia = ent:getInertia():getDistance(Vector())
+        print('player ' .. ent:getOwner():getName() .. ' inertia: ' .. inertia .. ' - prop - ' .. tostring(ent))
+    end
+end)
+*/
+
+/*
+hook.add("OnEntityCreated", "inercia", function(ent)
+    if isValid(ent) and ent:isValidPhys() and isValid(ent:getOwner()) then
+        local inertia = ent:getInertia():getDistance(Vector())
+        if inertia > 1000 then
+            print('player ' .. ent:getOwner():getName() .. ' inertia: ' .. inertia .. ' - prop - ' .. ent:getModel())
+            --pcall(function()
+                --ent:setInertia(Vector())
+            --end)
+        end
+    end
+end)
+*/
 
 /*
 hook.add("OnEntityCreated", "frozes", function(ent)

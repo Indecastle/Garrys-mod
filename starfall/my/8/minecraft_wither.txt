@@ -14,8 +14,12 @@ local LockDamageTime = 0.5
 local PreparationTime = 10
 local DeathTime = 8
 
-local ExplodeModel = "models/props_phx/oildrum001_explosive.mdl"
-local TargetHomingAccuracy = 0.6
+local ExplodeModels = {
+    "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_phx/oildrum001_explosive.mdl",
+    "models/props_c17/oildrum001_explosive.mdl",
+}
+local TargetHomingAccuracy = 0.5
 local PropDamageMode = true
 local Damage = 20
 local HeadFireVelocity = 20
@@ -51,6 +55,22 @@ if SERVER then
     local _eyeSize = Vector(0.4,0.3,0.13)
     local _eyeClosedSize = Vector(0.4,0.3,0.03)
     local _activeHeadFires = {}
+    local _boneShields = {}
+    
+    
+    
+    function explodeTo(pos)
+        while #ExplodeModels > 0 do
+            local succeed = pcall(function()
+                local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p:setNoDraw(true)
+                p:breakEnt()
+            end)
+            
+            if succeed then return end
+            table.remove(ExplodeModels, 1)
+        end
+    end
     
     -----------------------------------------------------------------
     local HeadFire = class("HeadFire")
@@ -97,10 +117,7 @@ if SERVER then
     
     function HeadFire:explode()
         if self.propDamageMode then
-            pcall(function()
-                local p = prop.create(self.head:getPos(), Angle(), ExplodeModel)
-                p:breakEnt()
-            end)
+            explodeTo(self.head:getPos())
             self:destroy()
             return
         else
@@ -139,6 +156,24 @@ if SERVER then
         self.head:setAngles(self.forward:getAngle())
     end
     -----------------------------------------------------------------
+    
+    function createShieldForBone(increasePercent, ...)
+        local args = {...}
+        for i, holo in ipairs(args) do
+            local holo_shield = holograms.create(holo:getPos(), holo:getAngles(), "models/holograms/cube.mdl", holo:getScale() * (1 + increasePercent/100))
+            holo_shield:setMaterial("models/effects/comball_sphere")
+            holo_shield:setParent(holo)
+            table.insert(_boneShields, holo_shield)
+        end
+    end
+    
+    function setEnableShield(value)
+        local color = value and Color(255,255,255) or Color(255,255,255, 0)
+        
+        for i, h in ipairs(_boneShields) do
+            h:setColor(color)
+        end
+    end
 
     
     local li = find.inSphere(E:getPos(), 50, function(ent)
@@ -207,6 +242,9 @@ if SERVER then
     Holo_Head3_Eye1:setParent(Holo_Head3)
     Holo_Head3_Eye2:setParent(Holo_Head3)
     Holo_Head3_Mouth:setParent(Holo_Head3)
+    
+    createShieldForBone(30, Holo_Spine, Holo_Spine_Rib1, Holo_Spine_Rib2, Holo_Spine_Rib3, Holo_Tail, Holo_Clavicle, Holo_Head1, Holo_Head2, Holo_Head3)
+    setEnableShield(true)
     
     
     function setBodyColor(color)
@@ -289,10 +327,12 @@ if SERVER then
                 or ent:isNPC()) 
     end
     
+    
     function isValidPlayerOrNPC(ent)
         return ent ~= nil and ent:isValid() and ent:isValidPhys()
             and (ent:isNPC() or ent:isPlayer() and ent:isAlive() and !ent:hasGodMode())
     end
+    
     
     function tryAddTarget(ent)
         if not _targets[1] then _targets[1] = ent
@@ -303,6 +343,7 @@ if SERVER then
         elseif _targets[2]==_targets[3] then _targets[3] = ent
         end
     end
+    
     
     timer.create("preparating", 0.25, 0, function()
         if not isValid(Prop_Base) or not isValid(Holo_Base) then return end
@@ -315,13 +356,18 @@ if SERVER then
         end
     end)
     
+    
     timer.create("auto_heal", AutoHealDelay, 0, function()
         if not isValid(Prop_Base) or not isValid(Holo_Base) then return end
         
         if not _isAlive or _isPreparating or timer.systime() < _lastTakeDamage then return end
         _health = math.clamp(_health + AutoHealAmount, 0, Health)
+        if _health > Health/2 then
+            setEnableShield(false)
+        end
         sendHealth()
     end)
+    
     
     timer.create("find_targets", 0.5, 0, function()
         if not isValid(Prop_Base) or _isPreparating or not _isAlive then return end
@@ -338,6 +384,7 @@ if SERVER then
         end
     end)
     
+    
     function setEyeContact(holoHead, ent)
         if not isValid(Prop_Base) or not isValid(Holo_Base) then return end
         
@@ -346,6 +393,7 @@ if SERVER then
             holoHead:setAngles((ent:obbCenterW()-holoHead:getPos()):getNormalized():getAngle()) 
         end
     end
+
     
     local _nextTimeFire = timer.systime()
     hook.add("think", "heads", function()
@@ -376,6 +424,7 @@ if SERVER then
         end
     end)
 
+
     local _killingHoloAngle = 0
     function killingScene()
         hook.add("think", "killingScene", function()
@@ -385,11 +434,13 @@ if SERVER then
             
             _killingHoloAngle = _killingHoloAngle + 2
             if _killingHoloAngle > 90 then
-                hook.remove("think", "killing")
+                hook.remove("think", "killingScene")
                 hideHolos()
+                setEnableShield(false)
             end
         end)
     end
+
 
     hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
         if not isValid(Prop_Base) or target != Prop_Base or timer.systime() < _oldLockDamageTime or _isPreparating or not _isAlive then return end
@@ -411,6 +462,9 @@ if SERVER then
             timer.simple(LockDamageTime*0.9, function()
                 openEyes()
             end)
+            if _health < Health/2 then
+                setEnableShield(true)
+            end
         end
     end)
 
@@ -425,6 +479,7 @@ if SERVER then
         timer.simple(0.3, function()
             _isPreparating = false
             _health = Health
+            setEnableShield(false)
         end)
     end)
     
@@ -523,22 +578,17 @@ end)
 
 
 function loadUrl(name, url, ar, volume, temp, isDict, callback)
-    --if index > math.min(#_keys, MaxIndex) then return end
     if temp > 5 then 
         return 
     end
     
     bass.loadURL(url, "3d noblock noplay", function(Sound)
-        
-        --print(""..name.." - "..tostring(isValid(Sound)))
         if !isValid(Sound) then
-            --MaxIndex = MaxIndex + 1
             timer.simple(AgainLoadDelay, function()
-                loadUrl(index, temp + 1)
+                loadUrl(name, temp + 1)
             end)
             return 
         end
-        --loadUrl(index + 1)
         
         if isDict then
             ar[name] = Sound

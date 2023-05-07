@@ -140,8 +140,8 @@ function createHolo()
     holo = holograms.create(
         eyePos(), 
         eyeAngles(), 
-        "models/sprops/geometry/sphere_144.mdl", 
-        Vector(-0.3))
+        "models/holograms/hq_sphere.mdl", 
+        Vector(-1.7))
     holo:setMaterial("debug/debugsolidmodelhulls")
     holo:setColor(Color(255,255,255,alpha))
     --holo:setParent(player())

@@ -369,7 +369,7 @@ timer.create("isHUDActive", 0.2, 0, function()
         oldIsHUDActive = newIsHUDActive
         if newIsHUDActive then
             printMessage(4, [[
-NUMLOCK - Turn on/off HUD
+F12 - Turn on/off HUD
 ALT - Change eye pos
 CTRL - Enable third person
 ArrowUp/ArrowDown - Switching to another player

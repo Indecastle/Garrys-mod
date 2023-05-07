@@ -1,5 +1,5 @@
 --@name Smoke
---@author
+--@author Markiz
 --@model models/items/grenadeammo.mdl
 --@shared
 

@@ -30,8 +30,8 @@ local Translucent= false
 
 local StartSize = 50
 local EndSize = 100
-local StartLength = 50
-local EndLength = 100
+local StartLength = 0
+local EndLength = 0
 local StartAlpha = 255
 local EndAlpha = 0
 
@@ -181,7 +181,7 @@ m:recompute()
 
 
 
-local pe = particle.create(eyePos(), true)
+local pe = particle.create(eyePos(), false)
 pe:setNoDraw(false)
 --pe:setNearClip(1, 2)
 --pe:setBBox(chipPos, chipPos+Vector(1,1,1)*100)
@@ -190,12 +190,9 @@ hook.add("postdrawopaquerenderables",'',function()
     --pe:draw()
 end)
 
-local parts = {}
 
 timer.create("particle", SpawnDelay, 0, function()
     pcall(function()
-        if #parts == 95 then return end
-    
         local randPos = Vector(math.rand(-100, 100), math.rand(-100, 100), math.rand(-100, 100))
         local angles = Angle(0,0,0)  --player():localToWorldAngles(Angle(0,180,0)) --eyeAngles() + Angle(0,180,0)
         
@@ -210,37 +207,7 @@ timer.create("particle", SpawnDelay, 0, function()
         --p:setRoll(100)
         --p:setRollDelta(400)
         p:setVelocity(Vector(math.rand(-RandX,RandX), math.rand(-RandX,RandX), RandZ):getNormalized() * Velocity)
-        
-        table.insert(parts, 1, {p=p, t=timer.curtime()+DieTime})
     end)
 end)
 
 
-hook.add("tick", "", function()
-    --local angles = player():localToWorldAngles(Angle(0,180,0) + BaseAngle) --eyeAngles() + Angle(0,180,0)
-    
-    
-    local time = timer.curtime()
-    
-    for i, d in ipairs(parts) do
-        if d.t > time then
-            local dir = (eyePos() - d.p:getPos()):getNormalized()
-            local angles = dir:getAngle() + Angle(0,0,-90)
-            local eyeAngle = (-eyeVector()):getAngle() + Angle(0,0,-90)
-            
-            d.p:setAngles(eyeAngle)
-        else
-            table.removeByValue(parts, d)
-        end
-    end
-    --print(#parts)
-end)
-
-hook.add("Removed", "anim", function()
-    local color = Color(0,0,0)
-    for i, d in ipairs(parts) do
-        d.p:setColor(color)
-        d.p:setAngles(Angle(90,0,0))
-    end
-    pe:destroy()
-end)

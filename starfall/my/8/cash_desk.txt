@@ -1,0 +1,108 @@
+--@name Cash desk
+--@author
+--@model models/props_c17/cashregister01a.mdl
+--@include libs/3d2dtext.txt
+--@shared
+
+
+local ThrowForce = 150
+
+local URL = "https://cdn.discordapp.com/attachments/974678227362660395/1104082373408215162/X2Download.app_-_Cash_Register_Kaching_-_Sound_Effect_HD_320_kbps.mp3"
+local StartTime = 0.5
+--local EndTime = 0.4
+local LockUseTime = 0.5
+
+local MultiplyThrowCount = 3
+local MultiplyThrowDelay = 0.1
+
+local MaxEntsCount = 50
+
+
+if SERVER then
+    
+    local ents = {}
+    
+    --hook.add("PlayerUse", "", function(ply, ent)
+    --    if ent != chip() or not ply:keyDown(IN_KEY.USE) then return end
+    --    net.start("use")
+    --    net.send()
+    --end)
+    
+    local _lockTime = timer.systime()
+    function checkLockTime()
+        local newTIme = timer.systime()
+        if _lockTime < newTIme then
+            _lockTime = newTIme + LockUseTime
+            return true
+        end
+        return false
+    end
+    
+    
+    
+    function throwMoney()
+        if prop.canSpawn() then
+            local Prop = chip()
+            local originDirA = Prop:localToWorldAngles(Angle(45,-90,0))
+            local spreadDir = -Vector(10, math.rand(-1,1), math.rand(-1,1)):getNormalized()
+            local _, dirA = localToWorld(Vector(), spreadDir:getAngle(), Vector(), originDirA)
+
+            P = prop.create(Prop:localToWorld(Vector(7, -5, -10)), originDirA, "models/props/cs_assault/dollar.mdl")
+            P:setPhysMaterial("gmod_silent")
+            P:applyForceCenter(dirA:getForward() * ThrowForce)
+            P:setMass(35)
+            constraint.nocollide(P, Prop)
+            
+            table.insert(ents, 1, P)
+            if #ents > MaxEntsCount then
+                pcall(function()
+                    ents[#ents]:remove()
+                end)
+                table.remove(ents, #ents)
+            end
+        end
+    end
+    
+    hook.add("KeyPress", "", function(ply, key)
+        local tr = ply:getEyeTrace()
+        local distance = ply:getEyePos():getDistance(tr.HitPos)
+        if not ply:keyDown(IN_KEY.USE) or tr.Entity != chip() or distance > 100 or not checkLockTime() then return end
+        net.start("use")
+        net.send()
+        
+        timer.create("throw", MultiplyThrowDelay, MultiplyThrowCount, function()
+            throwMoney()
+        end)
+    end)
+    
+    return
+end
+
+local _sound
+local Data
+
+net.receive("use", function()
+    --print(_sound:getTime())
+    --if not isValid(_sound) or (_sound:getTime() != 0 and _sound:getTime() < LockUseTime) then return end
+    if not isValid(_sound) then return end
+    _sound:setPos(chip():getPos())
+    _sound:pause()
+    _sound:setVolume(3)
+    _sound:setTime(StartTime)
+    _sound:play()
+    if EndTime then
+        timer.simple(EndTime, function()
+             _sound:pause()
+        end)
+    end
+end)
+
+
+
+bass.loadURL(URL, "3d noblock noplay", function(Sound)
+    _sound = Sound
+    _length = _sound:getLength()
+    LockUseTime = LockUseTime or _length
+end)
+
+
