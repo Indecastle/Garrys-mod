@@ -5,10 +5,10 @@
 
 
 if (first()) { E=entity() O=owner()
-    Develop = 0
-    SunDirection = sunDirection()
+    Develop = 1
+    SunDirection = vec(-1,-1,-1):normalized()
     
-    Res = 256
+    Res = 128
     HalfSquare = 10
     DistanceToSquare = 20
     RenderDistanceLimit = 15000

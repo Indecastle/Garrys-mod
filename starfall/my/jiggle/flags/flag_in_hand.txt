@@ -1,10 +1,10 @@
---@name Cloak
---@author Markiz
+--@name Flag in hand
+--@author
 --@client
 
 
 local Target = owner()
-Target = find.playersByName("markiz")[1]
+--Target = find.playersByName("kostan")[1]
 /*AFK = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -12,7 +12,7 @@ Target = find.playersByName("markiz")[1]
 end)[1]*/
 --print(Target)
 
-if player() == Target then return end
+--if player() == Target then return end
 
 
 ------------------------------------------------
@@ -27,48 +27,57 @@ local _flag_russia = "https://i.imgur.com/jR2vDAC.png"
 local _flag_usa = "https://i.imgur.com/lIfVWWm.png"
 local _flag_anime = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg"
 local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
-local _flag_gigachad = "https://cdn.discordapp.com/attachments/900794622878564362/1020975776096587776/unknown.png?size=4096"
+local _flag_trollface = "https://i.imgur.com/lLIw3Im.png"
 local _flag_lgbt = "https://cdn.discordapp.com/attachments/885840722786418711/1096202070861819924/image.png"
 
-
-local URL = _flag_gigachad
+local URL = _flag_lgbt
 
 
 ------------------------------------------------
 
 
-
 local BoneScale = Vector(4,0.0001,0.0001)
 local Degree = 0
-local BoneHeight = 0.1
+local BoneHeight = 1
 
 local FlagModel = 'models/pac/jiggle/base_cloth_4'..(HasGravity and '_gravity' or '')..'.mdl'
 
+local HBase = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(0))
+local HBase2 = holograms.create(chip():localToWorld(Vector(0,0,0)), chip():getAngles(), "models/holograms/cube.mdl", Vector(0))
+HBase2:setParent(HBase)
 
-local head_bone = Target:lookupBone("ValveBiped.Bip01_Spine4")
-local pos1, ang1 = Target:getBonePosition(head_bone)
---local pos2, ang2 = localToWorld(Vector(-50, 31, -7), Angle(90,-90,0), pos1, ang1)
+local HPole = holograms.create(chip():localToWorld(Vector(0,0,43.5)), chip():getAngles(), "models/holograms/hq_cylinder.mdl", Vector(0.1,0.1,7))
+HPole:setMaterial("models/props_docks/dock01a")
+HPole:setParent(HBase2)
 
-local HFlag = holograms.create(pos1, ang1, FlagModel, Vector(1))
+local HPoleCap = holograms.create(chip():localToWorld(Vector(0,0,86)), chip():getAngles(), "models/holograms/hq_icosphere.mdl", Vector(0.15,0.15,0.15))
+HPoleCap:setMaterial("models/props_docks/dock01a")
+HPoleCap:setParent(HPole)
+
+local HFlag = holograms.create(chip():localToWorld(Vector(0,-2,65)), chip():localToWorldAngles(Angle(0,Degree,-90)), FlagModel, Vector(1))
+HFlag:setParent(HPole)
 HFlag:setMaterial("brick/brick_model")
---HFlag:setParent(Target, nil, head_bone)
 
-
-timer.simple(2, function()
-    --hook.remove("think","myshook")
-    --HFlag:setParent(Target, nil, head_bone)
-end)
-
-
-function moveCloak()
-    local pos1, ang1 = Target:getBonePosition(head_bone)
-    local pos2, ang2 = localToWorld(Vector(5, -3, 0), Angle(180,-90+10,90), pos1, ang1)
-    HFlag:setPos(pos2)
-    HFlag:setAngles(ang2)
+if HFlag:getBoneCount() == 1 then
+    throw("No Model")
 end
 
-hook.add("think","myshook", moveCloak)
-hook.add("hologrammatrix","myshook", moveCloak)
+local attachmentIndex = Target:lookupAttachment("anim_attachment_RH")
+--HFlag:setParent(chip(), "anim_attachment_RH")
+
+hook.add("think", "", function()
+    if isValid(Target) and Target:isAlive() then
+        local handPos, handAng = Target:getAttachment(attachmentIndex)
+        local flagPos, flagAng = localToWorld(Vector(0,0,0), Angle(0,130,-10), handPos, handAng)
+        --local _, flagAng = localToWorld(Vector(), Angle(0,Degree,0), Vector(), handAng)
+        HBase:setPos(flagPos)
+        HBase:setAngles(flagAng)
+    else
+        HBase:setPos(chip():getPos() - Vector(0,0,100000))
+        HBase:setAngles(Angle())
+    end
+end)
+
 
 
 for i = 0, HFlag:getBoneCount() - 1 do

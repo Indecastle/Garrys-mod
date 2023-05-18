@@ -6,6 +6,10 @@ local Radius = 1500
 local Health = 500
 local MaxTakeDamage = 200
 
+local AiFlyEnabled = true
+local FlyVelocityMax = 10
+local FlyHomingAccuracy = 1
+
 local AutoHealAfterTime = 5
 local AutoHealDelay = 1
 local AutoHealAmount = 50
@@ -56,6 +60,7 @@ if SERVER then
     local _eyeClosedSize = Vector(0.4,0.3,0.03)
     local _activeHeadFires = {}
     local _boneShields = {}
+    local _state = 1 // 1 or 2
     
     
     
@@ -258,6 +263,7 @@ if SERVER then
         Holo_Head2:setColor(color)
         Holo_Head3:setColor(color)
     end
+    
     function setEyeColor(color)
         Holo_Head1_Eye1:setColor(color)
         Holo_Head1_Eye2:setColor(color)
@@ -269,11 +275,11 @@ if SERVER then
         Holo_Head3_Eye2:setColor(color)
         Holo_Head3_Mouth:setColor(color)
     end
+    
     function hideHolos()
         setBodyColor(Color(0,0,0,0))
         setEyeColor(Color(0,0,0,0))
     end
-    
     
     
     setBodyColor(Color(35,35,35))
@@ -303,15 +309,6 @@ if SERVER then
         net.writeFloat(_health)
         net.send()
     end
-    
-    hook.add("think", "tail", function()
-        if not isValid(Holo_Tail_Bone) or not isValid(Holo_Base) then return end
-        
-        local x = (timer.systime()*2) % 360
-        Holo_Tail_Bone:setAngles(Holo_Base:localToWorldAngles(Angle(math.sin(x)*15, 0, 0)))
-    end)
-    
-    
     
     local _targets = {
         [1] = nil,
@@ -364,6 +361,7 @@ if SERVER then
         _health = math.clamp(_health + AutoHealAmount, 0, Health)
         if _health > Health/2 then
             setEnableShield(false)
+            _state = 1
         end
         sendHealth()
     end)
@@ -437,13 +435,38 @@ if SERVER then
                 hook.remove("think", "killingScene")
                 hideHolos()
                 setEnableShield(false)
+                local headFire = HeadFire:new(Prop_Base:getPos(), Prop_Base, owner(), true)
+                headFire:explode()
             end
         end)
     end
 
 
+    -- https://wiki.facepunch.com/gmod/Enums/DMG
+    local _state2_avaliable_damagetypes = {
+        64,
+        4096,
+        67108865,
+        134217728,
+    }
+    function isEqualDamageType(type)
+        for i, f in ipairs(_state2_avaliable_damagetypes) do
+            if bit.band(type, f) != 0 then
+                return true
+            end
+        end
+        return false
+    end
+    
+    
     hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
-        if not isValid(Prop_Base) or target != Prop_Base or timer.systime() < _oldLockDamageTime or _isPreparating or not _isAlive then return end
+        if not isValid(Prop_Base) 
+                or target != Prop_Base 
+                or timer.systime() < _oldLockDamageTime 
+                or _isPreparating 
+                or not _isAlive
+                or _state == 2 and not isEqualDamageType(type) then return end
+                
         _oldLockDamageTime = timer.systime() + LockDamageTime
         --Prop_Base:emitSound('Explo.ww2bomb', 100, 100, 1)
         _health = math.max(0, _health - math.clamp(amount, 0, MaxTakeDamage))
@@ -464,10 +487,63 @@ if SERVER then
             end)
             if _health < Health/2 then
                 setEnableShield(true)
+                _state = 2
             end
         end
+        --print(type)
     end)
-
+    
+    
+    local _HeightStep1 = 500
+    local _HeightStep2 = 100
+    
+    function getTargetPos(ent)
+        local heightStep = _state == 1 and _HeightStep1 or _HeightStep2
+        local obbCentre = ent:obbCenterW()
+        local tr = trace.trace(obbCentre, obbCentre + Vector(0,0,heightStep), nil, 24737, nil, false)
+        if tr.Hit then
+            heightStep = (tr.HitPos):getDistance(obbCentre) - 50
+        end
+        return ent:getPos() + Vector(0,0,heightStep)
+    end
+    
+    
+    local _oldDir = Vector()
+    hook.add("think", "main", function()
+        ---- tail
+        if not isValid(Holo_Tail_Bone) or not isValid(Holo_Base) then return end
+        
+        local x = (timer.systime()*2) % 360
+        Holo_Tail_Bone:setAngles(Holo_Base:localToWorldAngles(Angle(math.sin(x)*15, 0, 0)))
+        ----
+        
+        local HeightStep1 = 500
+        local HeightStep2 = 100
+        ---- Fly
+        if AiFlyEnabled and not _isPreparating and _isAlive then
+            
+            
+            local target = isValidPlayerOrNPC(_targets[1]) and _targets[1] or chip()
+            local targetPos = getTargetPos(target)
+            local distance = targetPos:getDistance(Prop_Base:getPos())
+            if distance < 10 then return end
+            
+            local currentDir = _oldDir
+            local targetDir = (targetPos - Prop_Base:getPos()):getNormalized()
+            local nextDir = math.lerpVector(FlyHomingAccuracy/10, currentDir, targetDir)
+            _oldDir = nextDir
+            
+            local nextStepDistance = math.clamp(distance/100, 0, FlyVelocityMax)
+            
+            local nextAng = nextDir:getAngle()
+            nextAng.p = 0
+            
+            Prop_Base:setAngles(nextAng)
+            Prop_Base:setPos(Prop_Base:getPos() + nextDir * nextStepDistance)
+        end
+        ----
+    end)
+    
 
     local _prepTime = timer.curtime()
     local _prepTimeEnd = timer.curtime() + PreparationTime

@@ -3,12 +3,12 @@
 --@shared
 
 
-local Volume = 10
+local Volume = 5
 local Speed = 1
-local URL = "pornhub_intro"
-local IsLooping = false
+local URL = "kitten_music"
+local IsLooping = true
 local RestartAfterPause = true
-local StartTime = 90
+local StartTime = 0
 
 local IsAllServer = true
 local Radius = 500
@@ -46,6 +46,8 @@ local _urls = {
     screamer = "https://cdn.discordapp.com/attachments/1081967820172181578/1099705174836129912/-_.mp3",
     aahh = "https://cdn.discordapp.com/attachments/974678227362660395/1100475849314148442/onlymp3.to_-_AUUGHHH_Sound_Effect-srodNyimqTM-256k-1654135608956.mp3",
     wither_storm = "https://cdn.discordapp.com/attachments/974678227362660395/1101220414325280798/SnapInsta.io_-_Wither_Storm_-_FULL_GAME_MUSIC_128_kbps.mp3",
+    kitten_music = "https://cdn.discordapp.com/attachments/987731371495669820/1061101327561789440/Maxwell_The_Cat_Theme_SAMString_Remix.mp3",
+    gangamstyle_mima_mintip = "https://cdn.discordapp.com/attachments/974678227362660395/1108378684575989770/X2Download.app_-_Mina_mintip_unheard_lirik11_320_kbps.mp3",
 }
 
 -- =================================================================================

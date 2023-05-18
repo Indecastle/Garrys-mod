@@ -29,7 +29,7 @@ local WorkTimerDelay = 0.2
 local IsOnlyPlayers = false
 
 local Friends = {
-
+    --'markiz'
 }
 
 --local SphereMode = 'ihv' -- invisible / ihv
@@ -111,7 +111,7 @@ end
 
 
 function checkEntity(ent)
-    if ent == E or ent == nil or !ent:isValid() or !inSphere(ent) then return false end
+    if ent == E or ent == nil or !ent:isValid() or ent:isWeapon() or !inSphere(ent) then return false end
 
         if IsOnlyPlayers and ent:getClass() != 'player' then return false end
         
@@ -136,7 +136,7 @@ function checkEntity(ent)
         
         return ent ~= nil and ent:isValid()
             --and (ent:getClass() == 'prop_physics' or ent:getClass() == 'player')
-            and ent:getClass() ~= 'starfall_processor'
+            and ent != chip()
     
 end
 

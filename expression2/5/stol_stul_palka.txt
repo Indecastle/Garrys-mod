@@ -4,13 +4,13 @@
 
 STOL = propSpawn("models/props_combine/breendesk.mdl", entity():pos()+vec(0,0,0), 0)
 STOL:propInertia(vec(1,1,100000))
-STYL = propSpawn("models/props_interiors/Furniture_chair01a.mdl", entity():pos()+vec(0,0,50), ang(0,0,90) , 0)
-PALKA = propSpawn("models/props_junk/wood_pallet001a.mdl", entity():pos()+vec(0,0,100), 0)
-PALKA:setMass(500)
+#STYL = propSpawn("models/props_interiors/Furniture_chair01a.mdl", entity():pos()+vec(0,0,50), ang(0,0,90) , 0)
+#PALKA = propSpawn("models/props_junk/wood_pallet001a.mdl", entity():pos()+vec(0,0,100), 0)
+#PALKA:setMass(500)
 
 
-noCollideAll(STYL, 1)
-noCollideAll(PALKA, 1)
+#noCollideAll(STYL, 1)
+#noCollideAll(PALKA, 1)
 
 selfDestruct()
 

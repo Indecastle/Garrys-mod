@@ -2,7 +2,7 @@
 
 
 local Speed = 1
-local Radius = 2000
+local Radius = 500
 local Volume = 4
 
 
@@ -51,6 +51,7 @@ if CLIENT then
     end
     
     local Radio = "https://cdn.discordapp.com/attachments/974678227362660395/1096427487535312966/X2Download.app_-_Alan_Aztec_-_Russian_Friend_feat._Karate_320_kbps.mp3"
+    --local Radio = "https://cdn.discordapp.com/attachments/987731371495669820/1061101327561789440/Maxwell_The_Cat_Theme_SAMString_Remix.mp3"
     --local Radio = "https://cdn.discordapp.com/attachments/1081967820172181578/1096924000879382641/-_.mp3"
     
     local perms = {
