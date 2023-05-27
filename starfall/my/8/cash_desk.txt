@@ -15,7 +15,7 @@ local LockUseTime = 0.5
 local MultiplyThrowCount = 3
 local MultiplyThrowDelay = 0.1
 
-local MaxEntsCount = 50
+local MaxEntsCount = 25
 
 
 if SERVER then

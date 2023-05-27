@@ -32,15 +32,15 @@ local Data = {
         },
         AlotHealth = {
             IsEnabled = true,
-            IsJail = true,
+            IsJail = false,
             Delay = 60,
             Reason = "too much health",
-            CheckFunc = function(ply, inflictor, attacker) return attacker:getHealth() > 1000 end,
+            CheckFunc = function(ply, inflictor, attacker) return attacker:getHealth() > 3000 end,
             PayloadFunc = function(ply, inflictor, attacker, eventsVars)
                 --concmd('ulx hp "' .. attacker:getName() .. '" 100')
                 attacker:setHealth(100)
                 eventsVars.FlipScreen = true
-                eventsVars.RemoveAllWeapons = true
+                eventsVars.DropAllWeapons = true
             end,
             
         },
@@ -52,6 +52,7 @@ local Data = {
             CheckFunc = function(ply, inflictor, attacker) return attacker:getMaterial() == "models/effects/vol_light001" or attacker:getColor().a < 100 end,
             PayloadFunc = function(ply, inflictor, attacker, eventsVars) 
                 eventsVars.FlipScreen = true
+                eventsVars.DropAllWeapons = true
                 attacker:setColor(Color(255,255,255))
                 attacker:setMaterial("")
             end,

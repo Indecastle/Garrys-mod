@@ -4,10 +4,10 @@
 
 
 local RadiusMode = true
-local Radius = 500
+local Radius = 200
 
 
-local Material = "matsys_regressiontest/background" -- "matsys_regressiontest/background" | "effects/tp_eyefx/tpeye"
+local Material = "models/rendertarget" -- "matsys_regressiontest/background" | "effects/tp_eyefx/tpeye" | "models/rendertarget"
 local HaveAlpha = true
 
 local Offset = 8
@@ -132,6 +132,7 @@ end)
 
 hook.add("renderoffscreen", "", function()
     render.selectRenderTarget("TargetScreen")
+    render.setLightingMode(2)
     render.clear(Color(0, 0, 0, 0))
     
     render.setMaterial(m2)

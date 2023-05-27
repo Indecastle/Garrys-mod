@@ -1,0 +1,90 @@
+--@name SpaceX
+--@author MongRaff
+--@shared
+--@model models/props_phx/rocket1.mdl
+if SERVER then
+    chip():emitSound("ambient/alarms/siren.wav",750,100, 1)
+    timer.simple(5,function()
+        chip():enableMotion(true)
+        chip():stopSound("ambient/alarms/siren.wav")
+        chip():emitSound("ambient/levels/launch/rockettakeoffblast.wav",750,100, 1)
+        --chip():setTrails(75,25,2,"trails/smoke",Color(255,255,255))
+        
+        net.start("res")
+        net.writeBool(true)
+        net.send()
+        
+        hook.add("tick","",function()
+            chip():applyForceCenter(chip():getAngles():getUp()*20000)
+        end)
+        
+        
+        timer.create("tryHit", 0.1, 0, function()
+            local tr = trace.trace(chip():getPos() + chip():getUp()*50, chip():getPos() + chip():getUp()*600, {chip()}, MASK.ALL, nil, false)
+            if tr.Hit or tr.HitWorld then
+                chip():emitSound("ambient/explosions/explode_6.wav", 750, 100, 10)
+                chip():setNoDraw(true)
+                timer.simple(10, function()
+                    chip():remove()
+                end)
+                net.start("Power")
+                net.writeBool(false)
+                net.send()
+                timer.stop("tryHit")
+            end
+        end)
+    
+    end)
+
+else
+    
+    local emit = particle.create(chip():getPos(),false)
+    local mat = material.load("particles/flamelet5")
+    local a = false
+    net.receive("res",function()
+        a = net.readBool()
+    end)
+    
+    net.receive("Power",function()
+        timer.stop("Power")
+        a = false
+        emit:destroy()
+        emit = particle.create(chip():getPos(),false)
+
+        for i=1, 50 do
+            part = emit:add(mat,chip():obbCenterW(),255,400,0,0,255,0,10)
+            local dir = Vector(math.rand(-1,1), math.rand(-1,1), math.rand(-1,1)):getNormalized()
+            part:setVelocity(dir*200)
+            part:setRoll(math.random(0,90))
+            part:setRollDelta(3)
+            
+            part:setCollide(true)
+            part:setBounce(0.1)
+        end
+        
+    end)
+    timer.create("Power",0.05,0,function()
+        if not a then return end
+        if emit:getParticlesLeft() >= 1 then
+            part = emit:add(mat,chip():getPos(),45,255,0,0,255,0,1)
+            if part then
+                local originDirA = chip():localToWorldAngles(Angle(-90,0,0))
+                local spreadDir = -Vector(4, math.rand(-1,1), math.rand(-1,1)):getNormalized()
+                local _, dirA = localToWorld(Vector(), spreadDir:getAngle(), Vector(), originDirA)
+                
+                part:setVelocity(dirA:getForward()*1000)
+                part:setRoll(math.random(0,90))
+                part:setRollDelta(5)
+                
+                part:setCollide(true)
+                part:setBounce(0.1)
+            end
+        end
+        
+    end)
+    
+end
+
+-- ParticleEmitter:add(Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
+-- particle(1,45,255,"particles/flamelet5",vec(255,255,255),entity():pos(),-entity():up()*1600,5,random(-20,20),255,0)
+-- Nil:soundPlay(9,5,"ambient/explosions/explode_6.wav",0)

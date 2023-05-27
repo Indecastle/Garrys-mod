@@ -3,7 +3,7 @@
 --@server
 
 
-local WarningMinCollideProps = 100
+local WarningMinCollideProps = 50
 
 
 local Models = {
@@ -42,6 +42,7 @@ local NocollideModels = {
     'models/props_phx/construct/wood/wood_wire2x2x2b.mdl',
     'models/props_phx/misc/potato_launcher_cap.mdl',
     'models/props_wasteland/horizontalcoolingtank04.mdl',
+    'models/props_interiors/bathtub01a.mdl',
     --'',
 }
 

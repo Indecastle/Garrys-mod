@@ -1,0 +1,29 @@
+--@name RenderScene Turning
+--@author Markiz
+--@server
+
+
+local Speed = 5
+
+
+hook.add("think", "", function()
+    
+    for i, p in ipairs(find.allPlayers()) do
+        --if p != owner() then continue end
+        local ang = p:getEyeAngles()
+        local rotatedAng = ang:rotateAroundAxis(ang:getForward(), Speed)
+        p:setEyeAngles(rotatedAng)
+    end
+    
+end)
+
+
+
+hook.add("Removed", "", function()
+    for i, p in ipairs(find.allPlayers()) do
+        local ang = p:getEyeAngles()
+        ang.r = 0
+        p:setEyeAngles(ang)
+    end
+
+end)

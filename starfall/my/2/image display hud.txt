@@ -34,7 +34,7 @@ local URLS = {
     custom = nil
 }
 
-local img = "kitten"
+local img = "hunta_rules"
 
 local IsHaveProportions = false
 local HaveAlpha = false

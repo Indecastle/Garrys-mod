@@ -13,7 +13,7 @@ local i = 0
 hook.add("PlayerSay","Say",function(ply,txt)
     if ply ~= owner() then return txt end
 
-    local Text = ""
+    local Text = "<font=Trebuchet24>"
     
     
     for index, uChar in string.utf8codes(txt) do

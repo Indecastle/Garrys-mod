@@ -1,0 +1,59 @@
+// --@name Crush Test
+--@name Fun Test
+--@author Markiz
+--@shared
+
+
+local Target = owner()
+--Target = find.playersByName("force")[1]
+/*Target = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+
+
+if SERVER then
+    print(Target)
+    
+    function createRecieverServer(name)
+        net.receive(name, function(len,pl) 
+            net.start(name) 
+            net.send(pl) 
+        end)
+    end
+    
+    for i=1, 10 do
+        createRecieverServer("init" .. tostring(i))
+    end
+    
+        
+    return
+
+end
+
+
+
+if player() != Target then return end
+
+
+
+function createRecieverClient(name)
+    net.receive(name, function(len) 
+        net.start(name) net.send() 
+    end)
+end
+
+
+
+for i=1, 10 do
+    local name = "init" .. tostring(i)
+    createRecieverClient(name)
+    net.start(name)
+    net.send()
+end
+
+
+
+
+

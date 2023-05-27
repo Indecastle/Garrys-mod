@@ -5,12 +5,12 @@
 
 local Volume = 5
 local Speed = 1
-local URL = "kitten_music"
+local URL = "gangamstyle_mima_mintip"
 local IsLooping = true
 local RestartAfterPause = true
 local StartTime = 0
 
-local IsAllServer = true
+local IsAllServer = false
 local Radius = 500
 
 ------------------------------------------------------------------------------------
@@ -48,6 +48,7 @@ local _urls = {
     wither_storm = "https://cdn.discordapp.com/attachments/974678227362660395/1101220414325280798/SnapInsta.io_-_Wither_Storm_-_FULL_GAME_MUSIC_128_kbps.mp3",
     kitten_music = "https://cdn.discordapp.com/attachments/987731371495669820/1061101327561789440/Maxwell_The_Cat_Theme_SAMString_Remix.mp3",
     gangamstyle_mima_mintip = "https://cdn.discordapp.com/attachments/974678227362660395/1108378684575989770/X2Download.app_-_Mina_mintip_unheard_lirik11_320_kbps.mp3",
+    govnovoz = "https://cdn.discordapp.com/attachments/1016746778537758803/1022877170714026004/-_1.mp3",
 }
 
 -- =================================================================================

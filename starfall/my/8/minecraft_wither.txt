@@ -19,6 +19,7 @@ local PreparationTime = 10
 local DeathTime = 8
 
 local ExplodeModels = {
+    "models/props_junk/propane_tank001a.mdl",
     "models/props_phx/misc/potato_launcher_explosive.mdl",
     "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001_explosive.mdl",
@@ -37,6 +38,7 @@ local SoundVolumeShoot = 0.5
 local SoundVolumeSpawn = 7
 local SoundVolumeDeath = 7
 local Speed = 1
+local AgainLoadSoundDelay = 1
 
 
 local RenderRadius = 5000
@@ -319,15 +321,15 @@ if SERVER then
     
     
     function isValidFindPlayerOrNPC(ent)
-        return ent ~= nil and ent:isValid() and ent:isValidPhys()
-            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode()
+        return ent ~= nil and ent:isValid()
+            and (ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode()
                 or ent:isNPC()) 
     end
     
     
     function isValidPlayerOrNPC(ent)
-        return ent ~= nil and ent:isValid() and ent:isValidPhys()
-            and (ent:isNPC() or ent:isPlayer() and ent:isAlive() and !ent:hasGodMode())
+        return ent ~= nil and ent:isValid()
+            and (ent:isNPC() or ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode())
     end
     
     
@@ -660,7 +662,7 @@ function loadUrl(name, url, ar, volume, temp, isDict, callback)
     
     bass.loadURL(url, "3d noblock noplay", function(Sound)
         if !isValid(Sound) then
-            timer.simple(AgainLoadDelay, function()
+            timer.simple(AgainLoadSoundDelay, function()
                 loadUrl(name, temp + 1)
             end)
             return 

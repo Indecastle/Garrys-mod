@@ -1,0 +1,14 @@
+--@name Reset owner material
+--@author Markiz
+--@server
+
+
+for i=0, 10 do
+   owner():setSubMaterial(i, "") 
+end
+
+owner():setMaterial("") 
+owner():setColor(Color(255,255,255))
+
+
+owner():setMaterial("models/props_combine/stasisfield_beam")  owner():setColor(Color(255,0,191))
