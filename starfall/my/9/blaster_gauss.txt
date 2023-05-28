@@ -1,0 +1,258 @@
+--@name Blaster Gauss
+--@author Markiz
+--@shared
+
+
+local DistanceStep = 50
+local DistanceMax = 2000
+local LockTime = 0.5
+
+local ExplodeModels = {
+    "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_phx/oildrum001_explosive.mdl",
+    "models/props_c17/oildrum001_explosive.mdl",
+}
+
+
+if SERVER then
+    
+    local _lockTime = timer.systime()
+    function checkLockTime()
+        local newTIme = timer.systime()
+        if _lockTime < newTIme then
+            _lockTime = newTIme + LockTime
+            return true
+        end
+        return false
+    end
+    
+    
+    function explodeTo(pos)
+        while #ExplodeModels > 0 do
+            local succeed = pcall(function()
+                local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p:setNoDraw(true)
+                p:breakEnt()
+            end)
+            
+            if succeed then return end
+            table.remove(ExplodeModels, 1)
+        end
+    end
+    
+    local attachmentRHIndex = owner():lookupAttachment("anim_attachment_RH")
+
+    hook.add("KeyPress", "", function(ply, key)
+        if ply != owner() 
+            or not isValid(ply:getActiveWeapon()) 
+            or ply:getActiveWeapon():getClass() != "weapon_crossbow" --'weapon_crowbar' / "weapon_physgun"
+            or ply:getActiveWeapon():clip1() == 0
+            or key != IN_KEY.ATTACK
+            or ply:inVehicle()
+            or not ply:isAlive()
+            or not checkLockTime() then return end
+        
+        local shootPos, _ = owner():getAttachment(attachmentRHIndex)
+        --local shootPos = ply:getShootPos()
+        local dir = ply:getEyeAngles():getForward()
+        
+        net.start("fire")
+        net.writeVector(shootPos)
+        net.writeVector(dir)
+        net.send()
+        
+        local tr = trace.trace(shootPos, shootPos + dir*DistanceMax, {owner(), chip()}, MASK.ALL, nil, false)
+        if isValid(tr.Entity) or tr.HitWorld then
+            explodeTo(tr.HitPos)
+        end
+    end)
+    
+    function setWeaponColor(color)
+        if hasPermission("entities.setRenderProperty") then
+            local w = owner():getWeapon("weapon_crossbow")
+            if isValid(w) then
+                w:setColor(color)
+            end
+        end
+    end
+    
+    timer.create("hide_weapon", 0.2, 0, function()
+        setWeaponColor(Color(0,0,0,0))
+    end)
+    
+    hook.add("Removed", "", function()
+        setWeaponColor(Color(255,255,255,255))
+    end)
+    
+    return
+end
+
+
+
+local mat = material.load("particle/particle_glow_04")
+local mat2 = material.load("models/props_c17/fisheyelens")
+
+
+function createParticleDirs(dir)
+    local dirs = {}
+    local maxDirs = 10
+    local offset = math.random(0, 360/maxDirs)
+    
+    for degree=1, 360, 360/maxDirs do
+        local _, newDir = localToWorld(Vector(), Angle(0,90,0), Vector(), dir:getAngle())
+        _, newDir = localToWorld(Vector(), Angle(degree + offset,0,0), Vector(), newDir)
+        --local newDir = dir:rotateAroundAxis(Vector(0,1,0), 90):rotateAroundAxis(Vector(1,0,0), degree)
+        table.insert(dirs, newDir:getForward())
+    end
+    
+    return dirs
+end
+
+
+function fireOne(particleDirs, emit, pos, dir, k)
+    for i, particleDir in ipairs(particleDirs)do
+        local part = emit:add(mat, pos, 1,1+7*(1-k), 0,0, 255,0, 2)
+        if part then
+            part:setColor(Color(150,255,255))
+            part:setVelocity(particleDir * (2 + 40*(1-k)) )
+            part:setCollide(true)
+            --part:setBounce(0.75)
+        end
+    end
+end
+
+function fireOne2(particleDirs, emit, pos, dir, k)
+    for i, particleDir in ipairs(particleDirs)do
+        local part = emit:add(mat, pos, 1,1+3*(1-k), 0,0, 255,0, 1)
+        if part then
+            part:setColor(Color(255,150,0))
+            part:setVelocity(particleDir * (1 + 20*(1-k)) )
+            --part:setCollide(true)
+            --part:setBounce(0.75)
+        end
+    end
+end
+
+function fireDistortion(pos, emit)
+    local part = emit:add(mat2, pos, 100,0, 0,0, 255,255, 1)
+    if part then
+    end
+end
+
+
+function fireHandler(shootPos, dir)
+    local particleDirs = createParticleDirs(dir)
+    
+    local prevPos = shootPos
+    
+    for dist=DistanceStep, DistanceMax, DistanceStep do
+        local emit = particle.create(chip():getPos(),false)
+        
+        local nextPos = shootPos + dir * dist
+        local nextPos2 = shootPos + dir * (dist-DistanceStep/2)
+        local tr = trace.trace(prevPos, nextPos, {owner(), chip()}, MASK.ALL, nil, false)
+        if isValid(tr.Entity) or tr.HitWorld then
+            fireDistortion(nextPos + tr.HitNormal*10, emit)
+            emit:destroy()
+            break
+        end
+        
+        
+        local k = dist/DistanceMax
+        fireOne(particleDirs, emit, nextPos, dir, k)
+        fireOne2(particleDirs, emit, nextPos2, dir, k)
+        emit:destroy()
+        
+        prevPos = nextPos
+    end
+    
+    owner():emitSound("npc/strider/fire.wav", 75, 100, 1, nil)
+end
+
+
+net.receive("fire", function()
+    local shootPos = net.readVector()
+    local dir = net.readVector()
+    
+    fireHandler(shootPos, dir)
+end)
+
+
+---------------------------------------------------------------------------
+
+
+local Scale = 70
+
+
+local holo = holograms.create(chip():getPos(), chip():getAngles()+Angle(0,0,90), "models/Combine_Helicopter/helicopter_bomb01.mdl", Vector(1)*Scale)
+holo:setColor(Color(0,0,0,0))
+holo:setParent(chip())
+holo:setAngles(chip():localToWorldAngles(Angle(0,0,90)))  
+holo:setPos(chip():getPos())
+
+local attachmentRHIndex = owner():lookupAttachment("anim_attachment_RH")
+local attachmentChestIndex = owner():lookupAttachment("chest")
+
+local mymesh
+
+local texture = material.create("VertexLitGeneric")
+texture:setTextureURL("$basetexture", "https://i.imgur.com/G32ysII.png")
+
+
+local _eyePos = Vector()
+hook.add("renderscene", "", function(origin, angles, fov)
+    _eyePos = origin
+end)
+
+
+http.get("https://raw.githubusercontent.com/KonstantinKomend/My_repository/master/gauss.obj",function(objdata)
+    local triangles = mesh.trianglesLeft()
+
+    local function doneLoadingMesh()
+        --print("Used "..(triangles - mesh.trianglesLeft()).." triangles.")
+        holo:setMesh(mymesh)
+        holo:setMeshMaterial(texture)
+        holo:setRenderBounds(Vector(-200),Vector(200))
+        holo:setColor(Color(255,255,255))
+        
+        hook.add("think","setPos",function()
+            local activeWeapon = owner():getActiveWeapon()
+            holo:setColor(Color(255,255,255))
+            
+            if not isValid(activeWeapon) then
+                holo:setPos(chip():getPos())
+                holo:setAngles(chip():localToWorldAngles(Angle(0, -90, 90)))
+                return
+            elseif activeWeapon:getClass() != "weapon_crossbow" then
+                local handPos, handAng = owner():getAttachment(attachmentChestIndex)
+                local flagPos, flagAng = localToWorld(Vector(-8,-10,0), Angle(0,0,40), handPos, handAng)
+                --local _, flagAng = localToWorld(Vector(), Angle(0,Degree,0), Vector(), handAng)
+                holo:setPos(flagPos)
+                holo:setAngles(flagAng)
+                
+                if owner() == player() and eyePos():getDistance(_eyePos) < 10 then
+                    holo:setColor(Color(0,0,0,0))
+                end
+                
+                return
+            end
+            
+            local handPos, handAng = owner():getAttachment(attachmentRHIndex)
+            local flagPos, flagAng = localToWorld(Vector(0,0,0), Angle(0,-90,90), handPos, handAng)
+            --local _, flagAng = localToWorld(Vector(), Angle(0,Degree,0), Vector(), handAng)
+            holo:setPos(flagPos)
+            holo:setAngles(flagAng)
+        end)
+    end
+
+    local loadmesh = coroutine.wrap(function() mymesh = mesh.createFromObj(objdata, true, true)["wpn_gauss.ogf_01"] return true end)
+    hook.add("think","loadingMesh",function()
+        while math.max(quotaAverage(), quotaUsed()) < quotaMax() * 0.5 do
+            if loadmesh() then
+                doneLoadingMesh()
+                hook.remove("think","loadingMesh")
+                return
+            end
+        end
+    end)
+end)

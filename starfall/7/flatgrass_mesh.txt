@@ -1,0 +1,42 @@
+--@name Flatgrass mesh
+--@author
+--@client
+
+local Speed = 7
+local Scale = 1
+
+
+local holo = holograms.create(chip():getPos(), chip():getAngles()+Angle(0,0,90), "models/Combine_Helicopter/helicopter_bomb01.mdl", Vector(1)*Scale)
+holo:setColor(Color(0,0,0,0))
+holo:setParent(chip())
+holo:setAngles(chip():localToWorldAngles(Angle(0,0,90)))  
+holo:setPos(chip():getPos())
+
+
+local textureloaded, mymesh
+
+--local texture = material.load("models/props/de_inferno/infflra")
+
+
+http.get("https://raw.githubusercontent.com/KonstantinKomend/My_repository/master/buildflatbig.obj",function(objdata)
+    local triangles = mesh.trianglesLeft()
+
+    local function doneLoadingMesh()
+        --print("Used "..(triangles - mesh.trianglesLeft()).." triangles.")
+        holo:setMesh(mymesh)
+        holo:setMeshMaterial(texture)
+        holo:setRenderBounds(Vector(-1000),Vector(1000))
+        holo:setColor(Color(255,255,255))
+    end
+
+    local loadmesh = coroutine.wrap(function() mymesh = mesh.createFromObj(objdata, true, true).building return true end)
+    hook.add("think","loadingMesh",function()
+        while math.max(quotaAverage(), quotaUsed()) < quotaMax() * 0.5 do
+            if loadmesh() then
+                doneLoadingMesh()
+                hook.remove("think","loadingMesh")
+                return
+            end
+        end
+    end)
+end)

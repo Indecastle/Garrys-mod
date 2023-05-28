@@ -6,7 +6,7 @@
 dofile("libs/3d2dtext.txt")
 
 local Target = chip()
-Target = find.playersByName("mya")[1]
+Target = find.playersByName("asshunt")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -24,7 +24,7 @@ if SERVER then
 end
 
 
-if Target == player() then return end
+--if Target == player() then return end
 
 local Data = {
     {   text={"Cheater"}, 
@@ -60,7 +60,7 @@ local Vars = {
     
     alphaGlobal=255,
     
-    textSize=132,
+    textSize=200,
     DataOffsetZ=10,
     
     isParentPos=true,

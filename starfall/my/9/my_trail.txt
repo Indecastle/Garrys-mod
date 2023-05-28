@@ -1,0 +1,85 @@
+--@name My Trail
+--@author Markiz
+--@client
+
+local Target = owner()
+Target = find.playersByName("markiz")[1]
+/*AFK = find.allPlayers(function(p)
+    if p:getSteamID() == "STEAM_0:0:582893321" then
+        return true
+    end
+end)[1]*/
+--print(Target)
+
+--if player() == Target then return end
+
+
+
+--local MaterialPath = "voice/icntlk_pl"
+--local MaterialPath = "https://i.imgur.com/wEBb6mG.png"
+local MaterialPath = "https://cdn.discordapp.com/attachments/974678227362660395/1112447847711916112/penis.png"
+--local MaterialPath = "https://i.imgur.com/9UtATPQ.gif"
+--local MaterialPath = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg"
+
+local StartWidth = 20
+local EndWidth = 0
+
+local StartAlpha = 255
+local EndAlpha = 0
+
+local LifeTime = 1
+
+local MinStep = 20
+
+function getPos()
+    return Target:obbCenterW()
+end
+
+
+---------------------------------------------------------------------
+
+local mat
+
+if string.startWith(MaterialPath, "http") then
+    mat = material.create("UnlitGeneric")
+    mat:setInt("$flags", 32)
+    
+    mat:setTextureURL("$basetexture", MaterialPath, function(m, u, w, h, l)
+        if m == nil then return end
+        local x=0 y=0 w=m:getWidth() h=m:getHeight()
+        l(x, y, w, h)
+    end)
+else
+    mat = material.load(MaterialPath)
+end
+
+
+
+
+local _lastPos = getPos()
+local _time = timer.systime()
+local emit = particle.create(chip():getPos(), false)
+
+--timer.create("MyTrail", 0.1, 0, function()
+hook.add("tick", "MyTrail", function()
+    local newTime = timer.systime()
+    if _time < newTime then
+        _time = newTime + 0.5
+        emit:destroy()
+        emit = particle.create(chip():getPos(), false)
+    end
+    
+    local newPos = getPos()
+    local distance = _lastPos:getDistance(newPos)
+    if distance < MinStep then return end
+    
+    local dir = (newPos - _lastPos ):getNormalized()
+    
+    part = emit:add(mat, _lastPos ,StartWidth, EndWidth, distance,distance, StartAlpha,EndAlpha, LifeTime)
+    if part then
+        part:setVelocityScale(false)
+        part:setVelocity(dir*0.001)
+    end
+    
+    _lastPos = newPos
+end)

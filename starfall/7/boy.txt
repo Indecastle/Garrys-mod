@@ -1,0 +1,35 @@
+--@name Horn
+--@author MongRaff
+--@client
+function play()
+    --chip():emitSound("citadel.al_comeon",100,100)
+    timer.simple(0.3,function()
+        chip():stopSound("citadel.al_comeon")
+    end)
+    timer.simple(0.5,play)
+end
+play()
+local fath = holograms.create(chip():getPos(),Angle(),"models/alyx.mdl")
+local uparmr = fath:lookupBone("ValveBiped.Bip01_R_UpperArm")
+local uparml = fath:lookupBone("ValveBiped.Bip01_L_UpperArm")
+local pelv = fath:lookupBone("ValveBiped.Bip01_Pelvis")
+hook.add("tick","",function()
+    local t = timer.curtime()
+    fath:manipulateBoneAngles(uparmr,Angle(-30,0,0))
+    fath:manipulateBoneAngles(uparml,Angle(35,-25-math.sin(t*10)*10-10,0))
+end)
+local balls = holograms.create(fath:getBonePosition(pelv)+Vector(5,2,-5),Angle(-30,90,55),"models/Gibs/HGIBS_spine.mdl")
+local emit = particle.create(fath:getBonePosition(pelv)+Vector(12,2,-3),false)
+local mat = material.load("particle/water/waterdrop_001a")
+timer.create("cum",0.5,0,function()
+    for i = 1,10 do
+        local part = emit:add(mat,fath:getBonePosition(pelv)+Vector(12,2,-3),5,25,1,20,255,0,2)
+        if part then
+            part:setGravity(Vector(0,0,-600))
+            part:setVelocity(Vector(math.random(100,400),math.random(-15,15),50))
+            part:setCollide(true)
+            part:setBounce(0.2)
+        end
+    end
+    fath:emitSound("Underwater.BulletImpact",100,100)
+end)

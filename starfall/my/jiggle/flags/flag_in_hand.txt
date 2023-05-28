@@ -29,6 +29,7 @@ local _flag_anime = "https://cdn.discordapp.com/attachments/510528712320483329/7
 local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
 local _flag_trollface = "https://i.imgur.com/lLIw3Im.png"
 local _flag_lgbt = "https://cdn.discordapp.com/attachments/885840722786418711/1096202070861819924/image.png"
+local _flag_sweden = "https://i.imgur.com/jw5qZMs.jpg"
 
 local URL = _flag_lgbt
 

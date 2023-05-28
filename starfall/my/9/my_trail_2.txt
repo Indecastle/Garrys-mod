@@ -1,0 +1,130 @@
+--@name My Trail 2
+--@author Markiz
+--@shared
+
+
+--local MaterialPath = "voice/icntlk_pl"
+local MaterialPath = "https://i.imgur.com/wEBb6mG.png"
+local MaterialPath = "https://cdn.discordapp.com/attachments/974678227362660395/1112447847711916112/penis.png"
+
+local StartWidth = 20
+local EndWidth = 20
+
+local StartAlpha = 255
+local EndAlpha = 0
+
+local LifeTime = 1
+
+local MinStep = 20
+
+function getPos(ent)
+    --throw(tostring(ent))
+    return isValid(ent) and ent:obbCenterW() or chip():getPos()
+end
+
+
+------------------------------------------------------------------
+
+
+if SERVER then
+    
+    local WW = chip():getWirelink()
+    
+    wire.adjustPorts(
+        {
+            ON="number",
+            TargetHiddenMode="number",
+            Target="entity",
+        },
+        {
+        }
+    )
+    
+    function sendInputs(ply) 
+        net.start("init")
+        net.writeBool(wire.ports.ON != 0)
+        net.writeBool(wire.ports.TargetHiddenMode != 0)
+        net.writeEntity(WW:isWired('Target') and isValid(wire.ports.Target) and wire.ports.Target or entity(0))
+        net.send(ply)
+    end
+    
+    hook.add("input", "", function(input_name, value) 
+        if  input_name == 'ON' or
+            input_name == 'TargetHiddenMode' or
+            input_name == 'Target' then
+                
+            sendInputs()
+        end
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        sendInputs(ply)
+    end)
+    
+    return
+end
+
+
+local On, TargetHiddenMode, Target
+local _lastPos
+
+
+net.receive("init", function(len)
+    On = net.readBool()
+    TargetHiddenMode = net.readBool()
+    net.readEntity(function(ent)
+        Target = ent
+        _lastPos = getPos(Target)
+    end)
+end)
+
+
+------------------------------------------------------------------
+
+
+local mat
+
+if string.startWith(MaterialPath, "http") then
+    mat = material.create("UnlitGeneric")
+    mat:setInt("$flags", 32)
+    
+    mat:setTextureURL("$basetexture", MaterialPath, function(m, u, w, h, l)
+        if m == nil then return end
+        local x=0 y=0 w=m:getWidth() h=m:getHeight()
+        l(x, y, w, h)
+    end)
+else
+    mat = material.load(MaterialPath)
+end
+
+
+
+
+local _time = timer.systime()
+local emit = particle.create(chip():getPos(), false)
+
+--timer.create("MyTrail", 0.1, 0, function()
+hook.add("tick", "MyTrail", function()
+    if not On or TargetHiddenMode and Target == player() then return end
+
+    local newTime = timer.systime()
+    if _time < newTime then
+        _time = newTime + 0.5
+        emit:destroy()
+        emit = particle.create(chip():getPos(), false)
+    end
+    
+    local newPos = getPos(Target)
+    local distance = _lastPos:getDistance(newPos)
+    if distance < MinStep then return end
+    
+    local dir = (newPos - _lastPos ):getNormalized()
+    
+    part = emit:add(mat, _lastPos ,StartWidth, EndWidth, distance,distance, StartAlpha,EndAlpha, LifeTime)
+    if part then
+        part:setVelocityScale(false)
+        part:setVelocity(dir*0.001)
+    end
+    
+    _lastPos = newPos
+end)
