@@ -80,7 +80,7 @@ if(first() | dupefinished()) {
                     for(I=1, ActiveProps:count()) {
                         local Ent = ActiveProps[I, array][1, entity]
                         if (Ent:isValid() & P:isValid()) {
-                            #noCollide(P, Ent)
+                            noCollide(P, Ent)
                         }
                     }
                 }

@@ -3,7 +3,7 @@
 --@client
 
 local Target = owner()
-Target = find.playersByName("mark")[1]
+--Target = find.playersByName("mark")[1]
 
 local TargetModel = Target
 --TargetModel = find.playersByName("rony")[1]
