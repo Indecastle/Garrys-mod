@@ -31,28 +31,27 @@ local URLS = {
     barryWood2 = "https://i.imgur.com/PQiuccK.png",
     barryWood3 = "https://i.imgur.com/rzWJOKP.jpg",
     obobrali_do_gola = "https://i.imgur.com/YeA7JbG.png",
-    custom = nil
+    custom = nil,
+    
+    built_background = "matsys_regressiontest/background",
+    built_tpeye = "effects/tp_eyefx/tpeye",
 }
 
-local img = "kitten"
+local img = "barryWood2"
 
 local IsHaveProportions = false
-local HaveAlpha = false
+local HaveAlpha = true
 
 local RadiusMode = true
 local Radius = 200
 local MaxAlpha = 0.9 -- if RadiusMode == false
 
 local Target = owner() -- if RadiusMode = false
-Target = find.playersByName("tima")[1]
+--Target = find.playersByName("markiz")[1]
 
 
 
 --------------------------------------------------------------------------------------------------------------------
-
-
-
-local MaterialError = "matsys_regressiontest/background" -- "matsys_regressiontest/background" | "effects/tp_eyefx/tpeye"
 
 
 local Offset = 8
@@ -67,7 +66,12 @@ local _NoEntity = RadiusMode and entity(0) or Target
 
 if img == nil then return end
 if URLS[img] == nil then return end
-URL = URLS[img]
+local URL = URLS[img]
+
+local _isUrl = string.startWith(URL, "https://")
+--HaveAlpha = _isUrl and HaveAlpha or true
+
+
 
 if SERVER then
     --chip():setSolid(false)
@@ -134,8 +138,6 @@ net.receive("wire_On", function (len)
 end)
 
 
-local mat_error = material.load(MaterialError)
-
 render.createRenderTarget("TargetScreen")
     
 local m = material.create("VertexLitGeneric")
@@ -170,44 +172,7 @@ holo:suppressEngineLighting(true)
 
 local _isImageErrored = false
 local _imageRatioH, _imageRatioW = 1, 1
-local mat = material.create("UnlitGeneric")
-mat:setInt("$flags", 256)
-mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
-    if m == nil then _isImageErrored = false return end
-
-    _imageRatioH = IsHaveProportions and math.clamp(w / h, 0, 1) or 1
-    _imageRatioW = IsHaveProportions and math.clamp(h / w, 0, 1) or 1
-    local x=0 y=0 w=m:getWidth() h=m:getHeight()
-    l(x, y, w, h)
-    
-    
-    --Width, Height = Width or 1920, Height or 1080
-    --print(Width, Height, ' - ', Fov)
-    
-    hook.add("renderscene", "setPos", function(origin, angles, fov)
-        local inSphere = chip():getPos():getDistance(origin) < Radius
-        
-        if On and (RadiusMode and inSphere or !RadiusMode and Target == player()) then
-            fovHandler(fov)
-        
-            local _, eyeA = localToWorld(Vector(), Angle(90,0,180), Vector(), angles)
-            
-            holo:setPos(origin + angles:getForward()*Offset)
-            holo:setAngles(eyeA)
-            
-            local distance = chip():getPos():getDistance(origin)
-            local x = RadiusMode and math.clamp((math.abs(distance-Radius) / Radius), 0, 1)*MaxAlpha or MaxAlpha
-    
-            if HaveAlpha then
-                holo:setColor(Color(255*x,255*x,255*x))
-            else
-                holo:setColor(Color(255,255,255, 255*x))
-            end
-        else
-            holo:setPos(Vector())
-        end
-    end)
-end)
+local mat
 
 
 local _oldFOV = 0
@@ -228,12 +193,62 @@ function fovHandler(newFOV)
 end
 
 
+function renderScene()
+    hook.add("renderscene", "setPos", function(origin, angles, fov)
+        local inSphere = chip():getPos():getDistance(origin) < Radius
+        
+        if On and (RadiusMode and inSphere or !RadiusMode and Target == player()) then
+            fovHandler(fov)
+        
+            local _, eyeA = localToWorld(Vector(), Angle(90,0,180), Vector(), angles)
+            
+            holo:setPos(origin + angles:getForward()*Offset)
+            holo:setAngles(eyeA)
+            
+            local distance = chip():getPos():getDistance(origin)
+            local x = RadiusMode and math.clamp((math.abs(distance-Radius) / Radius), 0, 1)*MaxAlpha or MaxAlpha
+    
+            if !_isUrl or HaveAlpha then
+                holo:setColor(Color(255*x,255*x,255*x))
+            else
+                holo:setColor(Color(255,255,255, 255*x))
+            end
+        else
+            holo:setPos(Vector())
+        end
+    end)
+end
+
+
+if _isUrl then
+    mat = material.create("UnlitGeneric")
+    mat:setInt("$flags", 256)
+    
+    mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+        if m == nil then _isImageErrored = false return end
+    
+        _imageRatioH = IsHaveProportions and math.clamp(w / h, 0, 1) or 1
+        _imageRatioW = IsHaveProportions and math.clamp(h / w, 0, 1) or 1
+        local x=0 y=0 w=m:getWidth() h=m:getHeight()
+        l(x, y, w, h)
+        
+        
+        --Width, Height = Width or 1920, Height or 1080
+        --print(Width, Height, ' - ', Fov)
+        renderScene()
+    end)
+else
+    mat = material.load(URL)
+    renderScene()
+end
+
+
 hook.add("renderoffscreen", "", function()
     
     render.selectRenderTarget("TargetScreen")
     render.clear(Color(0, 0, 0, 0))
-    
-    render.setMaterial(_isImageErrored and mat_error or mat)
+    --print(_isImageErrored)
+    render.setMaterial(mat)
     --render.setColor(Color(255,255,255,255))
     --render.setLightingMode(0)
     render.drawTexturedRect(0,0,1024,1024)

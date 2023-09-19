@@ -1,0 +1,159 @@
+--@name Image Display Hud Shake
+--@author Markiz
+--@shared
+
+
+--local img = "models/shadertest/shader4"
+--local img = "models/props_combine/com_shield001a"
+--local img = "water64"
+--local img = "invis3"
+local img = "models/props_lab/Tank_Glass001"
+
+local IsHaveProportions = false
+local HaveAlpha = true
+
+local RadiusMode = true
+local Radius = 200
+local MaxAlpha = 0.9 -- if RadiusMode == false
+
+local Target = owner() -- if RadiusMode = false
+--Target = find.playersByName("markiz")[1]
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+
+local Offset = 8
+
+
+local Width, Height = 1, 1
+local Fov = player():getFOV()
+
+local On = false
+
+local _NoEntity = RadiusMode and entity(0) or Target
+
+
+
+
+if SERVER then
+    --chip():setSolid(false)
+    
+    if not RadiusMode then
+        print(Target)
+    end
+    
+    local inputs = {
+        On="number"
+    }
+    if !RadiusMode then
+        inputs.Target = "entity"
+    end
+    
+    local WW = chip():getWirelink()
+    
+    wire.adjustPorts(
+        inputs,
+        {})
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        local target = wire.ports.Target
+        local on = !WW:isWired('On') or wire.ports.On
+        net.start("init")
+        net.writeEntity(target and isValid(target) and target or _NoEntity)
+        net.writeBool(on != 0)
+        net.send(ply)
+    end)
+    
+    hook.add("input","",function(inp, value)
+        if inp == "Target" then
+            net.start("wire_Target")
+            net.writeEntity(WW:isWired('Target') and isValid(value) and value or _NoEntity)
+            net.send()
+        elseif inp == "On" then
+            net.start("wire_On")
+            net.writeBool(!WW:isWired('On') or value != 0)
+            net.send()
+        end
+    end)
+    
+    return
+end
+
+
+if not RadiusMode and player() ~= Target then return end
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        Target = ent
+    end)
+    On = net.readBool()
+end)
+
+net.receive("wire_Target", function (len)
+    Target = net.readEntity()
+    --print("!!"..tostring(Target))
+end)
+net.receive("wire_On", function (len)
+    On = net.readBool()
+    --print("!!"..tostring(On))
+end)
+
+
+local holo = hologram.create(chip():getPos(), chip():getAngles(), "models/segment.mdl", Vector(1))
+--holo:setColor(Color(0,0,0,1))
+holo:setMaterial(img)
+holo:suppressEngineLighting(true)
+
+
+local _imageRatioH, _imageRatioW = 1.5, 1.5
+
+
+local _oldFOV = 0
+function fovHandler(newFOV)
+    if _oldFOV == newFOV then return end
+    _oldFOV = newFOV
+    
+    Width, Height = render.getGameResolution()
+    
+    local ResK = Height / Width
+    FovH = newFOV * math.pi / 180
+    FovV = 2 * math.atan(math.tan(FovH/2) / ResK)
+    
+    local _w = 2 * Offset * math.tan(FovV/2)
+    local _h = 2 * Offset * math.tan(FovH/2)
+
+    holo:setSize(Vector(1, _h*0.565*_imageRatioW, _w*0.565*_imageRatioH))
+end
+
+
+
+hook.add("renderscene", "setPos", function(origin, angles, fov)
+    local inSphere = chip():getPos():getDistance(origin) < Radius
+    
+    if On and (RadiusMode and inSphere or !RadiusMode and Target == player()) then
+        fovHandler(fov)
+    
+        local _, eyeA = localToWorld(Vector(), Angle(0,0,90), Vector(), angles)
+        
+        holo:setPos(origin + angles:getForward()*Offset)
+        holo:setAngles(eyeA)
+        
+        local distance = chip():getPos():getDistance(origin)
+        local x = RadiusMode and math.clamp((math.abs(distance-Radius) / Radius), 0, 1)*MaxAlpha or MaxAlpha
+
+        if HaveAlpha then
+            holo:setColor(Color(255*x,255*x,255*x))
+        else
+            holo:setColor(Color(255,255,255, 255*x))
+        end
+    else
+        holo:setPos(Vector())
+    end
+end)
+
+
+
+
