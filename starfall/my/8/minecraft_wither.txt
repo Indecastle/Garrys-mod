@@ -54,6 +54,11 @@ local _isPreparating = true
 local _isAlive = true
 
 
+function getFrameTime()
+    return timer.frametime() * 30
+end
+
+
 if SERVER then
     
     local _oldLockDamageTime = timer.systime()
@@ -151,7 +156,7 @@ if SERVER then
         local pos = self.head:getPos()
         local forwardToTarget = (self.target:obbCenterW()-pos):getNormalized()
         self.forward = math.lerpVector(TargetHomingAccuracy/10, self.head:getForward(), forwardToTarget)
-        local nextPos = pos + self.forward * HeadFireVelocity
+        local nextPos = pos + self.forward * HeadFireVelocity * getFrameTime()
         
         local tr = trace.trace(pos, nextPos, {self.propBase}, MASK.ALL, nil, false)
         if isValid(tr.Entity) or tr.HitWorld or self.target:obbCenterW():getDistance(pos) < 20 then
@@ -541,7 +546,7 @@ if SERVER then
             nextAng.p = 0
             
             Prop_Base:setAngles(nextAng)
-            Prop_Base:setPos(Prop_Base:getPos() + nextDir * nextStepDistance)
+            Prop_Base:setPos(Prop_Base:getPos() + nextDir * nextStepDistance * getFrameTime())
         end
         ----
     end)
@@ -663,7 +668,7 @@ function loadUrl(name, url, ar, volume, temp, isDict, callback)
     bass.loadURL(url, "3d noblock noplay", function(Sound)
         if !isValid(Sound) then
             timer.simple(AgainLoadSoundDelay, function()
-                loadUrl(name, temp + 1)
+                loadUrl(name, url, ar, volume, temp + 1, isDict, callback)
             end)
             return 
         end
