@@ -1,0 +1,129 @@
+AddCSLuaFile()
+
+if SERVER then return end
+
+local target_texture = "nature/snowfloor001a"
+local default_value = false
+local snow_enabled = CreateClientConVar("snowflakes_enabled", default_value and "1" or "0", true, false)
+local old_value = snow_enabled:SetBool(default_value)
+local emitter = ParticleEmitter(Vector(), false)
+
+// change grass to snow
+local mat_whitelist = {
+	["grass"] = true,
+	["dirt"] = true,
+	["paper"] = true,
+	["antlionsand"] = true,
+}
+
+markiz_snow_old_mats = {}
+
+
+local function saveOldData(mat)
+	local texture = mat:GetString("$basetexture")
+	
+	markiz_snow_old_mats[mat] = markiz_snow_old_mats[mat] != nil and markiz_snow_old_mats[mat] or {
+		basetexture = texture,
+		basetexture2 = mat:GetString("$basetexture2"),
+		color2 = mat:GetVector("$color2"),
+	}
+end
+
+
+local function setSnowFloor()
+	for k, v in ipairs(game.GetWorld():GetBrushSurfaces()) do
+		local mat = v:GetMaterial()
+		local mat_surfaceprop = string.lower(mat:GetString("$surfaceprop") or "")
+		if mat_whitelist[mat_surfaceprop] then
+			saveOldData(mat)
+		end
+	end
+
+	for k, v in ipairs(game.GetWorld():GetBrushSurfaces()) do
+		local mat = v:GetMaterial()
+		local mat_surfaceprop = string.lower(mat:GetString("$surfaceprop") or "")
+		if mat_whitelist[mat_surfaceprop] then
+			mat:SetTexture("$basetexture", target_texture)
+			mat:SetTexture("$basetexture2", target_texture)
+			mat:SetVector("$color2", Vector(0.6, 0.6, 0.6))	// snow is kinda bright, tone it down a bit.
+			mat:Recompute()
+		end
+	end
+
+	local mat0 = Material("infmap/flatgrass")
+	saveOldData(mat0)
+	mat0:SetTexture("$basetexture", target_texture)
+	mat0:SetVector("$color2", Vector(0.75, 0.75, 0.75))
+end
+
+
+local function removeSnowFloor()
+	for mat, data in pairs( markiz_snow_old_mats ) do
+		mat:SetTexture( "$basetexture", data.basetexture or '' )
+		mat:SetTexture( "$basetexture2", data.basetexture2 or '' )
+		mat:SetVector( "$color2", data.color2 or Vector(1,1,1) )
+		mat:Recompute()
+	end
+	markiz_snow_old_mats = {}
+end
+
+
+hook.Add("InitPostEntity", "snow_initialize", function()
+	if default_value then
+		-- setSnowFloor()
+	end
+end)
+
+
+hook.Add("Think", "snow_spawn", function()
+	if !snow_enabled then return end
+	local new_value = snow_enabled:GetBool()
+	if new_value != old_value then
+		old_value = new_value
+		if new_value then setSnowFloor()
+		else removeSnowFloor() end
+	end
+	
+	if !new_value then return end
+	if !util.IsSkyboxVisibleFromPoint(EyePos()) then return end
+	-- if !spawned then return end
+
+
+	for i = 1, 5 do
+		local startpos = EyePos() + Vector(math.Rand(-3000, 3000), math.Rand(-3000, 3000), math.Rand(1000, 2000))
+		local particle = emitter:Add("particle/particle_glow_04", startpos)
+		if particle then
+			local tr = util.QuickTrace(startpos, Vector(0, 0, -2000)).HitPos
+			local dietime = (startpos[3] - tr[3]) * 0.0035	// weird conversion
+			particle:SetDieTime(math.min(dietime, 10)) 
+		
+			particle:SetStartAlpha(255)
+			particle:SetEndAlpha(255) 
+			particle:SetAirResistance(120)
+		
+			local flake_size = math.Rand(2, 5)
+			particle:SetStartSize(flake_size) 
+			particle:SetEndSize(flake_size) 
+		
+			particle:SetGravity(Vector(0, 0, -600)) 
+			particle:SetVelocity(Vector(0, 0, -600))
+			particle:SetNextThink(CurTime())
+		end
+	end
+end)
+
+
+local function calc_fog(mult)
+	if !snow_enabled or !snow_enabled:GetBool() then return end
+
+	render.FogStart(0)
+	render.FogMaxDensity(1)	// magic numbers that look good
+	render.FogColor(240, 240, 240)
+	render.FogEnd(20000 * (mult or 1))
+	render.FogMode(MATERIAL_FOG_LINEAR)
+	return true
+end
+
+
+hook.Add("SetupWorldFog", "!snowfog", calc_fog)
+hook.Add("SetupSkyboxFog", "!snowfog", calc_fog)

@@ -224,8 +224,8 @@ end
 
 
 local function CreateDoor(ply, trace, ang, class, model, hardware, autoclose, closetime)
-	if URS and URS.Check(ply, 'props', class) == false or not ply:CheckLimit("props") then return end
-	
+    if URS and URS.Check(ply, 'props', class) == false or not ply:CheckLimit("props") then return end
+    
     local entit = ents.Create(class)
     --PrintTable(entit:GetKeyValues())
     if not entit then
@@ -366,8 +366,8 @@ local function CreateCombineBall(ply)
             
             local Forward = ply:EyeAngles():Forward()
             local ForwardAng = Forward:Angle()
-		    local launchAng = ( ply:GetShootPos() + Forward * 50 )
-		    local launchVel = ( Forward*200 )
+            local launchAng = ( ply:GetShootPos() + Forward * 50 )
+            local launchVel = ( Forward*200 )
             
             comBall:SetSaveValue( "m_flRadius", 50 )
             comBall:SetPos( ply:EyePos() + Forward * 32 + ForwardAng:Up() * 32 )
@@ -434,3 +434,5 @@ end)
 --hook.Remove('OnEntityCreated', 'Markiz_OnCreated1')
 --hook.Remove('KeyPress', 'Markiz_OnAttack1')
 --hook.Remove('EntityRemoved', 'Markiz_OnRemoved1')
+--hook.Remove('PlayerButtonDown', 'Markiz_KeyDown')
+--hook.Remove('PlayerButtonUp', 'Markiz_KeyUp')

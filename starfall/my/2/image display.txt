@@ -20,6 +20,7 @@ local URLS = {
     sidorovich_brightness_less3 = "https://i.imgur.com/e2mWcg5.png",
     sidorovich_brightness_less4 = "https://i.imgur.com/PXRDwZO.png",
     hunta_rules = "https://i.imgur.com/JYvNUm8.png",
+    flag_poland = "https://i.imgur.com/2l0Eq5L.png",
     custom = nil
 }
 

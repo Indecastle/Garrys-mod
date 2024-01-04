@@ -1,0 +1,162 @@
+--@name 2.5d skybox
+--@author Sparky
+--@client
+
+local MONITOR_DATA = {
+    "plate8x8.mdl",
+          RS    =    0.741,
+          RatioX    =    1,
+          offset    =    Vector(0, 0, 2),
+          rot    =    Angle(0, 90, 180),
+          x1    =    -189.8,
+          x2    =    189.8,
+          y1    =    -189.8,
+          y2    =    189.8,
+          z    =    1.7,
+}
+
+local materials = {
+    "https://cdn.discordapp.com/attachments/642904079663890432/1057795165982560448/1.png",
+    "https://cdn.discordapp.com/attachments/642904079663890432/1057795166360051764/2.png",
+    "https://cdn.discordapp.com/attachments/642904079663890432/1057795166708191312/3.png",
+    "https://cdn.discordapp.com/attachments/642904079663890432/1057795167031136306/4.png",
+    "https://cdn.discordapp.com/attachments/642904079663890432/1057795167354101921/5.png",
+    "https://cdn.discordapp.com/attachments/642904079663890432/1057795167672881232/6.png"
+}
+
+local angles = {
+    Angle(0,0,0),
+    Angle(0,-90,0),
+    Angle(0,180,0),
+    Angle(0,90,0),
+    Angle(90,0,0),
+    Angle(-90,0,0)
+}
+
+local scale = 14000
+
+for n, img in pairs(materials) do
+    local mat = material.create("UnlitGeneric")
+    mat:setTextureURL("$basetexture", img, function()
+        mat:setInt("$flags",0x0100 + 0x0010 + 0x2000) -- fullbright
+        mat:recompute()
+    end)
+    materials[n] = mat
+end
+
+function getScreenMatrixInverse(ent)
+    
+    if not ent.ScreenMatrix then
+        local rotation, translation, translation2, scale = Matrix(), Matrix(), Matrix(), Matrix()
+        
+        rotation:setAngles(MONITOR_DATA.rot)
+        translation:setTranslation(MONITOR_DATA.offset)
+        translation2:setTranslation(Vector(-256, -256, 0))
+        scale:setScale(Vector(MONITOR_DATA.RS, MONITOR_DATA.RS, MONITOR_DATA.RS))
+        
+        ent.ScreenMatrix = translation * rotation * scale * translation2
+        ent.Aspect = MONITOR_DATA.RatioX
+        ent.Scale = MONITOR_DATA.RS
+        ent.Origin = MONITOR_DATA.offset
+    end
+    
+    return ( ent:getMatrix() * ent.ScreenMatrix ):getInverse()
+    
+end
+
+local particles = {}
+
+local freeParticles = {}
+local freeParticlePtr = 0
+
+local particleLen = 14000
+local particleFade = 6000
+
+function spawnParticle()
+    local theta = math.rand(-2.5,2.5)
+    local radius = math.rand(2500,13500)
+    local size = 15
+    local part = {
+        pos = Vector( math.sin(theta)*radius, particleLen, math.cos(theta)*radius ),
+        vel = Vector( 0, -30, 0 ),
+        ang = Angle( math.rand(-180,180), math.rand(-180,180), math.rand(-180,180) ),
+        axis = Vector( math.rand(-1,1), math.rand(-1,1), math.rand(-1,1) ):getNormalized(),
+        angvel = math.rand(1,4),
+        min = -Vector(size,size,size),
+        max = Vector(size,size,size)
+    }
+    if( freeParticlePtr > 0 ) then
+        particles[ freeParticles[ freeParticlePtr ] ] = part
+        freeParticles[ freeParticlePtr ] = nil
+        freeParticlePtr = freeParticlePtr - 1
+    else
+        particles[#particles + 1] = part
+    end
+end
+
+function getOpacity(p)
+    return math.max( (-math.max( math.abs( p.pos[2] ) - particleLen + particleFade, 0) + particleFade ) / particleFade, 0 )
+end
+
+timer.create("balls", 3, 0, spawnParticle)
+
+local time = timer.curtime()
+
+local quickdraw = {}
+
+hook.add("tick","",function()
+    
+    local dt = (timer.curtime() - time)*60
+    time = timer.curtime()
+    
+    quickdraw = {}
+    
+    for n, p in pairs(particles) do
+        if(p.pos[2] < -particleLen * 2) then
+            freeParticlePtr = freeParticlePtr + 1
+            particles[n] = nil
+            freeParticles[ freeParticlePtr ] = n
+            continue
+        end
+        
+        p.pos = p.pos + p.vel * dt
+        p.ang = p.ang:rotateAroundAxis(p.axis, p.angvel * dt)
+        table.insert(quickdraw,p)
+    end
+    
+end)    
+
+hook.add("render","",function()
+    
+    local screen = render.getScreenEntity()
+    local m = getScreenMatrixInverse(screen)
+    render.pushMatrix(m)
+    
+        local ply = Matrix()
+        ply:setTranslation(player():getShootPos())
+        render.pushMatrix(ply)
+        
+            render.setColor(Color(255,255,255))
+            for i=1, 6 do
+                local a = angles[i] + Angle(0,90,0)
+                render.setMaterial(materials[i])
+                render.draw3DBox(a:getForward() * scale,a,Vector(-50,-scale,-scale),Vector(scale,scale,scale))
+            end
+            render.setMaterial()
+            
+        render.popMatrix()
+        
+        local origin = Matrix()
+        origin:setTranslation(chip():getPos())
+        render.pushMatrix(origin)
+            
+            for n, p in ipairs(quickdraw) do
+                render.setColor(Color(255,255,255,getOpacity(p)*255))
+                render.draw3DBox(p.pos, p.ang, p.min, p.max)
+            end
+            
+        render.popMatrix()
+        
+    render.popMatrix()
+    
+end)

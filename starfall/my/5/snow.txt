@@ -9,10 +9,10 @@ local Target = player()
 
 
 local maxRadius = 1500
-local forMax = 5
-local spawnDelay = 0.1
+local forMax = 100
+local spawnDelay = 0.2
 local startZ = 300
-local velocity = 70
+local velocity = 100
 
 local enableSound = false
 local volume = 5
@@ -32,7 +32,7 @@ local eyeAngle = Angle()
 
 
 -------------------
-local m = material.load("particle/particle_glow_04")
+local m = material.load("particle/particle_smokegrenade1")
 /*
 --local m = material.create("UnlitGeneric")
 --m:setTexture("$basetexture","effects/flashlight/soft") -- effects/spark
@@ -80,13 +80,13 @@ function rain(radius, degree)
     -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
     local part = emitter:add( m, pos, flake_size, flake_size, 0, 0, 255, 255, dieTime ) -- Create a new particle at pos
     if ( part ) then
-        part:setCollide(true)
+        part:setCollide(false)
         --part:setBounce(0)
-        part:setAirResistance(120) -- Initial velocity of the particle
-        --part:setColor(Color(0,math.rand(150,200),255))
+        part:setAirResistance(0) -- Initial velocity of the particle
+        --part:setColor(Color(0,0,255))
 
-        part:setGravity(Vector(0, 0, -100)) 
-        part:setVelocity(Vector(0, 0, -100))
+        --part:setGravity(Vector(0, 0, -100)) 
+        part:setVelocity(Vector(math.rand(10, 20), math.rand(10, 20), -50))
     end
 end
 
