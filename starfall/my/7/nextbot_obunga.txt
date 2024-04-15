@@ -60,8 +60,8 @@ local _urls_music = {
     pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
     pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
     bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
-    soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3",
-    soldierMeme = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3",
+    soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3?ex=66085294&is=65f5dd94&hm=e385423a08cc54c0767f2b13d381073b3a9c81e383342281c452e89468df6f6d&",
+    soldierMeme = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3?ex=660863b6&is=65f5eeb6&hm=88f879ca02e1282aa1e647adc9db356e31e0bce678d061f1c8db3f76e76c1e0c&",
     sidorovich_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
 }
 
@@ -283,18 +283,20 @@ end)
 
 local _sound
 
-bass.loadURL(_urls_music[URL_Music], "3d noblock noplay", function(Sound)
-    _sound = Sound
-    _sound:setLooping(IsLooping)
-    _sound:setPitch(MusicSpeed)
-    
-    _sound:play()
-    
-    hook.add("think", "", function()
-        if not isValid(Killer) then return end
-        local distance = Killer:getPos():getDistance(_eyePos)
-        _sound:setVolume(math.clamp(MusicRadius-distance, 0, MusicRadius) / MusicRadius * Volume)
-        local dirSound = (Killer:getPos() - _eyePos):getNormalized()
-        _sound:setPos(_eyePos + dirSound*100)
+if URL_Music then
+    bass.loadURL(_urls_music[URL_Music], "3d noblock noplay", function(Sound)
+        _sound = Sound
+        _sound:setLooping(IsLooping)
+        _sound:setPitch(MusicSpeed)
+        
+        _sound:play()
+        
+        hook.add("think", "", function()
+            if not isValid(Killer) then return end
+            local distance = Killer:getPos():getDistance(_eyePos)
+            _sound:setVolume(math.clamp(MusicRadius-distance, 0, MusicRadius) / MusicRadius * Volume)
+            local dirSound = (Killer:getPos() - _eyePos):getNormalized()
+            _sound:setPos(_eyePos + dirSound*100)
+        end)
     end)
-end)
+end

@@ -44,7 +44,7 @@ local Bounce = 0.8
 
 
 
-local img = "triangle"
+local img = "chiken"
 local maxh = 50
 local delay = 0.03
 

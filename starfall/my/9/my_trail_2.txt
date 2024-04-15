@@ -5,7 +5,7 @@
 
 --local MaterialPath = "voice/icntlk_pl"
 local MaterialPath = "https://i.imgur.com/wEBb6mG.png"
-local MaterialPath = "https://cdn.discordapp.com/attachments/974678227362660395/1112447847711916112/penis.png"
+local MaterialPath = "https://cdn.discordapp.com/attachments/974678227362660395/1112447847711916112/penis.png?ex=65f736cb&is=65e4c1cb&hm=453d478d79b885bde7d880048eb9611eb734857b16cc4d5c61de1ee855c14e8d&"
 
 local StartWidth = 20
 local EndWidth = 20

@@ -1,0 +1,150 @@
+--@name Clone Material Test 2
+--@author Markiz
+--@shared
+--@include libs/my_methods.txt
+
+dofile("libs/my_methods.txt")
+
+
+local _value = -0.03999999910593
+
+if SERVER then
+    
+    local WW = chip():getWirelink()
+    
+    wire.adjustPorts(
+        {
+            Value="number",
+        },
+        {
+        }
+    )
+    
+    hook.add("input", "", function(input_name, value) 
+        if input_name == 'Value' then
+            net.start("Data")
+            net.writeFloat(value)
+            net.send()
+        end
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("Data")
+        net.writeFloat(_value)
+        net.send(ply)
+    end)
+    
+    
+    return
+end
+
+
+local offsetZ = 50
+
+function cloneMaterial(shader, path)
+    local mat0 = material.load(path)
+    local mat = material.create(shader)
+    
+    local blockedVars = {
+        '$frame',
+        '$frame2',
+        '$flags2',
+    }
+    
+    local texturedVars = {
+        '$basetexture',
+        '$dudvmap',
+        '$normalmap',
+        '$refracttinttexture',
+        '$flashlighttexture',
+    }
+    
+    for i, k in ipairs(texturedVars) do
+        mat:setUndefined(k)
+    end
+    
+    if owner() == player() then
+        --log(mat0:getKeyValues())
+    end
+    
+    for k, v in pairs(mat0:getKeyValues()) do
+        if table.hasValue(blockedVars, k) then
+            continue
+        end
+        if owner() == player() then
+            --log('' .. k .. ' - ' .. type(v))
+        end
+
+        --print(k, ' - ', v)
+        if type(v) == 'number' then
+            local ss = pcall(function()
+                mat:setFloat(k, v)
+            end)
+            if not ss then
+                mat:setInt(k, v)
+            end
+        elseif type(v) == 'Vector' then
+            mat:setVector(k, v)
+        elseif type(v) == 'VMatrix' then
+            mat:setMatrix(k, v)
+        elseif table.hasValue(texturedVars, k) then
+            mat:setTexture(k, v)
+        else
+            mat:setString(k, v)
+        end
+    end
+    mat:recompute()
+    
+    return mat
+end
+
+
+local m = cloneMaterial("Refract_DX90", "models/props_c17/fisheyelens")
+--m:setInt("$flags", 128)
+m:setFloat("$refractamount", _value)
+--m:setInt("$numframes", 4)
+
+
+net.receive("Data", function(len)
+    _value = net.readFloat()
+    --m:setFloat("$refractamount", _value)
+end)
+
+
+local holo = holograms.create(chip():localToWorld(Vector(0,0, offsetZ+10)), chip():getAngles() + Angle(90,0,0), "models/holograms/plane.mdl", Vector(1))
+--holo:setColor(Color(255,255,255,10))
+holo:setParent(chip())
+holo:setSize(Vector(600))
+holo:setMaterial("!" .. m:getName())
+holo:suppressEngineLighting(true)
+
+
+
+local _numFrames = 0
+local _startTime = timer.systime()
+hook.add("think", "time", function()
+--timer.create("time", 0.1, 0, function()
+    --local time = timer.systime() - _startTime
+    --m:setFloat("$time", time)
+    _numFrames = (_numFrames + 1) % 30
+    m:setInt("$bumpframe", _numFrames)
+    --m:setInt("$detailframe", _numFrames)
+    --m:setInt("$envmapframe", _numFrames)
+    --m:setInt("$envmapmaskframe", _numFrames)
+    --m:setInt("$flashlighttextureframe", _numFrames)
+    
+    m:setFloat("$refractamount", math.sin(timer.systime()*2)*0.3)
+    
+    if isValid(holo) then
+        --holo:setAngles((eyePos() - holo:getPos()):getAngle() + Angle(90,0,0))
+        holo:setAngles(eyeAngles() + Angle(-90,0,0))
+    end
+end)
+
+
+
+
+hook.add("Removed", "", function()
+    m:destroy()
+end)
+

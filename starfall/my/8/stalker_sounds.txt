@@ -3,7 +3,7 @@
 --@shared
 
 
-local Volume = 3
+local Volume = 2
 local VolumeBackground = 0.5
 local Speed = 1
 
@@ -15,35 +15,35 @@ local Radius = 2000
 
 ------------------------------------------------------------------------------------
 
-local _backgroundSoundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/1062480239546081381/stalker--muzyka-iz-stalkera-u-sidorovicha.mp3"
+local _backgroundSoundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/1062480239546081381/stalker--muzyka-iz-stalkera-u-sidorovicha.mp3?ex=65fa00d5&is=65e78bd5&hm=863cd8a22589dabe992e116bd55f4bfe65d6463be83ed143a222edd755c180f9&"
 
 local _urls = {
-    trader_script1c_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863403991170/trader_script1c_5.mp3",
-    trader_script1c_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863085228165/trader_script1c_3.mp3",
-    trader_script1c_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862774837298/trader_script1c_2.mp3",
-    trader_script1c_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862493827123/trader_script1c_1.mp3",
-    trader_script1b_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476831929925632/trader_script1b_6.mp3",
-    trader_script1b_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833754452008/trader_script1b_5.mp3",
-    trader_script1b_4 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833418903552/trader_script1b_4.mp3",
-    trader_script1b_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833033027725/trader_script1b_3.mp3",
-    trader_script1b_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476832697499769/trader_script1b_2.mp3",
-    trader_script1b_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476832240308315/trader_script1b_1.mp3",
-    trader_script1a_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476790678945822/trader_script1a_6.mp3",
-    trader_script1a_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476792360861917/trader_script1a_5.mp3",
-    trader_script1a_4 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476792046301254/trader_script1a_4.mp3",
-    trader_script1a_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791710765127/trader_script1a_3.mp3",
-    trader_script1a_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791404560485/trader_script1a_2.mp3",
-    trader_script1a_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791018696815/trader_script1a_1.mp3",
-    sidorovich____ = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
-    trader1a = "https://cdn.discordapp.com/attachments/974678227362660395/1062476890083971133/trader1a.mp3",
-    trader1b = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889802936370/trader1b.mp3",
-    trader3b = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889488371832/trader3b.mp3",
-    trader3c = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889207361646/trader3c.mp3",
-    trader_tutorial_rejection_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888909549728/trader_tutorial_rejection_1.mp3",
-    trader_tutorial_rejection_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888628539443/trader_tutorial_rejection_2.mp3",
-    trader_script1c_8 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862141509733/trader_script1c_8.mp3",
-    trader_script1c_7 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476864054112407/trader_script1c_7.mp3",
-    trader_script1c_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863735332924/trader_script1c_6.mp3",
+    trader_script1c_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863403991170/trader_script1c_5.mp3?ex=65f9fdb0&is=65e788b0&hm=b8dcea8b7569cba9107b64fe6fd6901e3278c35efa98be72bf1b110a5d761aec&",
+    trader_script1c_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863085228165/trader_script1c_3.mp3?ex=65f9fdb0&is=65e788b0&hm=1d4ec99ff7b5aadec66df88e8a462ea1bb02acf43640776b1245696ccabc57c1&",
+    trader_script1c_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862774837298/trader_script1c_2.mp3?ex=65f9fdaf&is=65e788af&hm=3af0bea5c244425c51262658f219ded4147faa1b3ed5765591612fd8a433cc1b&",
+    trader_script1c_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862493827123/trader_script1c_1.mp3?ex=65f9fdaf&is=65e788af&hm=4b17341a121f9e312b472c20c4304f2741267d146c0a0d60de617e22e7f5220e&",
+    trader_script1b_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476831929925632/trader_script1b_6.mp3?ex=65f9fda8&is=65e788a8&hm=f3d77b695d72e2a4202e95bf9505dadd313166ac242a409cca0e6d3f741e93e2&",
+    trader_script1b_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833754452008/trader_script1b_5.mp3?ex=65f9fda9&is=65e788a9&hm=7ace1d3017698ecae909d7209f270c9f8a7b9df8d826a26b7ef22569ca05a7a1&",
+    trader_script1b_4 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833418903552/trader_script1b_4.mp3?ex=65f9fda8&is=65e788a8&hm=448c586d53bacba6a8a123279107af513606ed99e3a971420a2e46a486b38a72&",
+    trader_script1b_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476833033027725/trader_script1b_3.mp3?ex=65f9fda8&is=65e788a8&hm=c8edc43922cf5b1f98731c8c1b3796eb34755a9c292950a9730515548e9f0f4f&",
+    trader_script1b_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476832697499769/trader_script1b_2.mp3?ex=65f9fda8&is=65e788a8&hm=ab5ad146543b9fd2ee4e3ade2ed7805d39b87d993cc49dc28da27961bb036076&",
+    trader_script1b_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476832240308315/trader_script1b_1.mp3?ex=65f9fda8&is=65e788a8&hm=2eb5f7d8e2609de4d9442519c73bc5cf5c36f697cfd2c04ce4bae8cb78879586&",
+    trader_script1a_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476790678945822/trader_script1a_6.mp3?ex=65f9fd9e&is=65e7889e&hm=ebfc05513acc3f26335f7c32348f33137f7a7db4cc1023a8a80c352cd716f8ab&",
+    trader_script1a_5 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476792360861917/trader_script1a_5.mp3?ex=65f9fd9f&is=65e7889f&hm=c3ce41cb57d9b8df56b99d22c0e028ca2ed074d769045e1aae52c82ad59e365c&",
+    trader_script1a_4 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476792046301254/trader_script1a_4.mp3?ex=65f9fd9f&is=65e7889f&hm=72024c28883c80279fa7bfe5f6fed6c9a54bec4283a3ef7b3df99df6b81a5271&",
+    trader_script1a_3 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791710765127/trader_script1a_3.mp3?ex=65f9fd9f&is=65e7889f&hm=ae1a1cbe08a40f1fd9e8987c06ca1915fabdecffca4cb73d84d54571a1f20ed4&",
+    trader_script1a_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791404560485/trader_script1a_2.mp3?ex=65f9fd9e&is=65e7889e&hm=35765f218ba34068a8f46e2ee7e683b55ede86b03b75208f86298ce67a63ba10&",
+    trader_script1a_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476791018696815/trader_script1a_1.mp3?ex=65f9fd9e&is=65e7889e&hm=2e8c2cc21376f226429616758f6b3bf7fced80849ada3320d340ece5eaecd24b&",
+    sidorovich____ = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3?ex=65f9fdb6&is=65e788b6&hm=961bdb95f276eb1207c96ee3e0cc075d819e547ec2a497cbd7f8f6ae703599e2&",
+    trader1a = "https://cdn.discordapp.com/attachments/974678227362660395/1062476890083971133/trader1a.mp3?ex=65f9fdb6&is=65e788b6&hm=2bacde265fbdf3d245bb5c36f1e4d21e28cccc4efcda1ebc4fe6d3cc7dc1a3c1&",
+    trader1b = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889802936370/trader1b.mp3?ex=65f9fdb6&is=65e788b6&hm=e0befe2f84357a1c4ade505cfca03216e835e13609700fe230c902c5853cd001&",
+    trader3b = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889488371832/trader3b.mp3?ex=65f9fdb6&is=65e788b6&hm=2d1150bfec7305544fb69ae10fbcf44e66ad25e54d5f210d7bda00a68d83d224&",
+    trader3c = "https://cdn.discordapp.com/attachments/974678227362660395/1062476889207361646/trader3c.mp3?ex=65f9fdb6&is=65e788b6&hm=d63c0bbba2d8848fa81a6ea91b5606cfd242eabaefe72db5e20c96faeb640bd6&",
+    trader_tutorial_rejection_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888909549728/trader_tutorial_rejection_1.mp3?ex=65f9fdb6&is=65e788b6&hm=172631f7e8987300ff83bd07c57330f2f661c8389890dd4df1f23b8d6c741f44&",
+    trader_tutorial_rejection_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888628539443/trader_tutorial_rejection_2.mp3?ex=65f9fdb6&is=65e788b6&hm=df2840cf2d71f3dbf0f74f91ddff538b0b37159d52910e1d1b64911c4857b743&",
+    trader_script1c_8 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476862141509733/trader_script1c_8.mp3?ex=65f9fdaf&is=65e788af&hm=b105179dafb4a7557795780b43a6b23ed03c63eb69f7fc4ad12eef0e67d26265&",
+    trader_script1c_7 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476864054112407/trader_script1c_7.mp3?ex=65f9fdb0&is=65e788b0&hm=dabc9ebd86ddf40db9f516cc140dada5263f699f044752ea6c1c50f43fcc071a&",
+    trader_script1c_6 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476863735332924/trader_script1c_6.mp3?ex=65f9fdb0&is=65e788b0&hm=1225e6d07e2acb11a82bd9518afb8ef916e5283904fae6e8e06c6d2e23d06b2e&",
 }
 local _keys = table.getKeys(_urls)
 

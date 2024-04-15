@@ -90,8 +90,12 @@ SpritesData = {
         urls = {"https://i.imgur.com/CDJoq0H.png"},
         size = {9, 9},
         frameCount = 9*9 - 2
+    },
+    chiken = {
+        urls = {"https://i.imgur.com/W93x9Zv.png"},
+        size = {4, 3},
+        frameCount = 4*3
     }
-
 }
 
 

@@ -40,12 +40,12 @@ if(clk("scan")) {
     local R = array()
     for(I=1,Players:count()) {
         Pos = holoEntity(1):angles():forward()
-        Pos0 = (Players:entity(I):attachmentPos("eyes") - Turret:pos()):normalized()
+        Pos0 = (Players[I, entity]:attachmentPos("eyes") - Turret:pos()):normalized()
         Cos = (Pos:x()*Pos0:x()+Pos:y()*Pos0:y()+Pos:z()*Pos0:z()) / (Pos:distance(vec(0))*Pos0:distance(vec(0)))
         Acos = acos(Cos)
-        if(Acos<MaxDegree & Players:entity(I):isAlive()) {
+        if(Acos<MaxDegree & Players[I, entity]:isAlive()) {
             if(!CheckGod) {
-                R:pushEntity(Players:entity(I))
+                R:pushEntity(Players[I, entity])
             }
         }
     }

@@ -1,4 +1,5 @@
---@name WH simple
+//--@name WH simple
+--@name Generic
 
 --@shared
 
