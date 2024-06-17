@@ -1,0 +1,113 @@
+--@name Sakura petals v2
+--@author Markiz
+--@client
+
+
+local Target = owner()
+--Target = find.playersByName("Markiz")[1]
+--print(Target)
+
+
+local maxRadius = 500
+local forMax = 10
+local spawnDelay = 0.1
+local startZ = 1
+local velocity = 10
+local wind_strength = 50 --  
+local wind_direction = Vector(1, 0.5, 0.5) --   (     )
+
+local enableSound = false
+local volume = 5
+local dieTime = 5
+
+local soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348343148584/f969747680e8276.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
+soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348645146684/28f2bf70e8d0701.mp3" -- https://zvukipro.com/index.php?do=download&id=11777
+
+-------------------------------------------------
+
+--if player() ~= Target then return end
+
+local emitter = nil
+local sound = nil
+local parts = {}
+local eyeAngle = Angle()
+
+
+-------------------
+local m = material.load("particles/balloon_bit")
+/*
+--local m = material.create("UnlitGeneric")
+--m:setTexture("$basetexture","effects/flashlight/soft") -- effects/spark
+
+local VertexAlpha= true
+local VertexColor= true
+local AlphaTest= false
+local Additive= true
+local Translucent= false
+
+local flags = 
+    (VertexColor and 16 or 0) +
+    (VertexAlpha and 32 or 0) +
+    (Additive and 128 or 0) +
+    (AlphaTest and 256 or 0) +
+    (Translucent and 2097152 or 0)
+    
+    
+if flags ~= 0 then
+    m:setInt("$flags",  
+        flags)    
+end
+m:recompute()
+-------------------
+*/
+
+if enableSound then
+    bass.loadURL(soundUrl, "3d noblock noplay", function(snd)
+        if snd then
+            sound = snd
+            sound:setLooping(true)
+            sound:setVolume(volume)
+            sound:play()
+        end
+    end)
+end
+
+
+function rain(radius, degree)
+    local x =  radius * math.cos(degree)
+    local y = -radius * math.sin(degree)
+    local pos = Target:getPos() + Vector(x, y, startZ)
+    
+    local flake_size = math.rand(0.4, 2)
+    -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
+    local part = emitter:add( m, pos, flake_size, flake_size, 0, 0, 255, 0, dieTime ) -- Create a new particle at pos
+    if ( part ) then
+        part:setCollide(false)
+        --part:setBounce(0)
+        part:setAirResistance(0) -- Initial velocity of the particle
+        --part:setColor(Color(0,0,255))
+        part:setColor(Color(255, 192, 203)) --   ,  
+        part:setGravity(Vector(0, 0, -0.1)) --  ,    
+        part:setVelocity(Vector(0, 0, -velocity) + wind_direction * wind_strength) --      
+        part:setAngles(eyeAngle)
+        part:setRollDelta(math.random(-8, 8))
+        --part:setGravity(Vector(0, 0, -100)) 
+    end
+end
+
+function startRain()
+    if emitter and emitter:isValid() then emitter:destroy() end
+    emitter = particle.create(Vector(), false)
+    --emitter:setNoDraw(false)
+    
+    for i=0, forMax do
+        local radius, degree = math.rand(0, maxRadius), math.rand(0, math.pi*2)
+        rain(radius, degree)
+    end
+    --emitter:destroy()
+end
+
+timer.create("rain", spawnDelay, 0, function()
+--hook.add("think", "", function()
+    startRain()
+end)

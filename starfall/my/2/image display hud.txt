@@ -40,7 +40,7 @@ local URLS = {
 local img = "barryWood2"
 
 local IsHaveProportions = false
-local HaveAlpha = true
+local HaveAlpha = false
 
 local RadiusMode = true
 local Radius = 200
