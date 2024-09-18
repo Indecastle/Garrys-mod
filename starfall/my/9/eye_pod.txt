@@ -1,0 +1,123 @@
+--@name Eye Pod
+--@author Markiz
+--@shared
+
+
+---------------- SERVER --------------------------------------------------
+
+
+local _hud, _vehicle
+local _lastEyeAngles
+
+if SERVER then
+    
+    function identifyVehicle()
+        local li = chip():getLinkedComponents()
+        if #li > 0 and li[1]:getClass() == 'starfall_hud' then
+            _hud = li[1]
+        else
+            throw("Not linked HUD")
+        end
+        
+        local li2 = _hud:getLinkedComponents()
+        if #li2 > 0 and li2[1]:isVehicle() then
+            _vehicle = li2[1]
+        else
+            throw("Not linked Vehicle")
+        end
+    end
+
+    identifyVehicle()
+    
+    function sendData(ply)
+        net.start("init")
+        net.writeEntity(_vehicle)
+        net.send(ply or nil)
+    end
+
+
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        sendData(ply)
+    end)
+    
+    --timer.create("getMouseVelocityClient", 0.1, 0, function()
+    hook.add("think", "getMouseVelocityClient",  function()
+        local driver = _vehicle:getDriver()
+        if not isValid(driver) then return end
+        
+        
+        if _lastEyeAngles == nil then 
+            _lastEyeAngles = driver:getEyeAngles()
+            return
+        end
+        local newEyeAngles = driver:getEyeAngles()
+        local x = math.angleDifference(_lastEyeAngles.y, newEyeAngles.y)
+        local y = math.angleDifference(_lastEyeAngles.p, newEyeAngles.p)
+        _lastEyeAngles = newEyeAngles
+        if (x == 0 and y == 0) then return end
+        handle(x, y)
+    end)
+    
+    
+    function handle(x, y)
+        --print('x:' .. math.round(x) .. '  y: ' .. math.round(y))
+    end
+    
+
+    return
+end
+
+
+----------------- CLIENT -----------------------------------------------------------
+
+
+local O = owner()
+local OO = player()
+local _isActive = false
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get Entity(Vehicle) !!!") end
+        _vehicle = ent
+    end)
+end)
+
+hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    if not _isActive then return end
+    
+    local _, ang = localToWorld(Vector(), Angle(0,90,0), Vector(), _vehicle:getAngles())
+    return {
+        origin= player():getEyePos()
+        ,angles= ang
+        ,fov=fov
+        ,znear=znear + 2
+        ,zfar=zfar,
+        drawviewer=false}
+end)
+
+timer.create("getMouseVelocityClient", 0.2, 0, function()
+--hook.add("think", "getMouseVelocityClient",  function()
+    _isActive = isValid(_vehicle) and _vehicle:getDriver() == player()
+    if not _isActive then return end
+    
+    if _lastEyeAngles == nil then 
+        _lastEyeAngles = eyeAngles()
+        return
+    end
+    local newEyeAngles = eyeAngles()
+    local x = math.angleDifference(_lastEyeAngles.y, newEyeAngles.y)
+    local y = math.angleDifference(_lastEyeAngles.p, newEyeAngles.p)
+    _lastEyeAngles = newEyeAngles
+    if (x == 0 and y == 0) then return end
+    handle(x, y)
+end)
+
+
+function handle(x, y)
+    printMessage(4, 'x:' .. math.round(x) .. '  y: ' .. math.round(y))
+end
+
+
+
+

@@ -4,6 +4,7 @@
 
 local Radius = 1500
 local Health = 500
+local HealthTriggerShield = 250
 local MaxTakeDamage = 200
 
 local AiFlyEnabled = true
@@ -496,7 +497,7 @@ if SERVER then
             timer.simple(LockDamageTime*0.9, function()
                 openEyes()
             end)
-            if _health < Health/2 then
+            if _health < HealthTriggerShield then
                 setEnableShield(true)
                 _state = 2
             end

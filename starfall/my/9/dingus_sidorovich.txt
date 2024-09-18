@@ -7,7 +7,7 @@ local Scale = 1
 local IsLargeMusicFade = false
 local MusicVolume = 1
 
-local SoundUrl = "https://cdn.discordapp.com/attachments/987731371495669820/1061101327561789440/Maxwell_The_Cat_Theme_SAMString_Remix.mp3"
+local SoundUrl = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/master/starfall/Resources/Maxwell%20the%20Cat%20Theme..mp3"
 
 
 local holo = holograms.create(chip():getPos(), chip():getAngles()+Angle(0,0,90), "models/Combine_Helicopter/helicopter_bomb01.mdl", Vector(1)*Scale*40)

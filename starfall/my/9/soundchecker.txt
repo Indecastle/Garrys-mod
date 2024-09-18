@@ -1,0 +1,19 @@
+--@name SoundChecker
+--@author Markiz
+--@shared
+
+local Target = owner()
+local Radius = 100
+
+hook.add("EntityEmitSound", "", function(data)
+    local pos = data.Pos or data.Entity:getPos()
+    local ownerEnt = data.Entity:isPlayer() and data.Entity or data.Entity:getOwner()
+    if not isValid(ownerEnt) then return end
+    --if (data.Entity == Target or data.Entity:getOwner() == Target) then
+    --printTable(data)
+    --print(pos:getDistance(owner():getPos()))
+    if pos:getDistance(owner():getPos()) < Radius then
+        print(ownerEnt:getName() .. ' - ' .. data.SoundName)
+    end
+    --end
+end)

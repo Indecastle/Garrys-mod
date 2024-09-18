@@ -4,7 +4,7 @@
 
 
 local Target = owner()
---Target = find.playersByName("markiz")[1]
+--Target = find.playersByName("russia")[1]
 /*AFK = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -99,6 +99,17 @@ mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
 end)
 
 
+local _eyePos = Vector()
+hook.add("renderscene", "", function(origin, angles, fov)
+    _eyePos = origin
+end)
+hook.add("think", "FirstPerson", function()
+    if Target == player() and eyePos():getDistance(_eyePos) < 10 then
+        HFlag:setColor(Color(0,0,0,0))
+    else
+        HFlag:setColor(Color(255,255,255))
+    end
+end)
 
 
 hook.add("drawhud","myshook",function()

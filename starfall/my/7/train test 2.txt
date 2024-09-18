@@ -1,21 +1,21 @@
 --@name sf train test 2
---@author Mar
+--@author Markiz
 --@include libs/criticalpd.txt
 --@shared
-local EntityCriticalPD = require("libs/criticalpd.txt")
+
 
 -------------- Init ---------------------------------------------
 
 local HoloTest = true
 local DiffTrace = 3.9
-local MaxTraces = 11
+local MaxTraces = 9
 
-local IsSetPos = false
+local IsSetPos = true
 local CustomSetPosSpeed = 150
 local CustomForceSpeed = 300
 
-local LocalPos1 = Vector(50, 100, 0)
-local LocalPos2 = Vector(50, -100, 0)
+local LocalPos1 = Vector(50, 50, 0)
+local LocalPos2 = Vector(50, -50, 0)
 local LocalPosCenter= Vector(0, 50, 0)
 local OffsetHeight = 100
 local AddOwnAngle = Angle(0, 90, 0)
@@ -23,6 +23,8 @@ local AddOwnAngle = Angle(0, 90, 0)
 
 function calcDegree(degree)
     if IsSetPos then
+        --print(''..degree .. ' ' .. math.sign(degree)*(math.sign(degree)*degree)^1.3)
+        --return math.sign(degree)*(math.sign(degree)*degree)^1.5
         return degree*1.0
     else
         --degree = degree + 2
@@ -81,6 +83,7 @@ end)
 local P = find.closest(ents, E:getPos())  -- models/sprops/rectangles/size_6/rect_96x240x3.mdl
 --P:enableGravity(false)
 
+local EntityCriticalPD = require("libs/criticalpd.txt")
 local pd = EntityCriticalPD:new(P, 500, 500)
 
 local _pos = P:getPos()

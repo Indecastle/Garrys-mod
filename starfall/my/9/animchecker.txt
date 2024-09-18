@@ -1,0 +1,12 @@
+--@name AnimChecker
+--@author
+--@client
+
+local Target = owner()
+local Radius = 100
+
+hook.add("DoAnimationEvent", "", function(ply, event, data)
+    if ply != Target then return end
+    
+    print(data)
+end)

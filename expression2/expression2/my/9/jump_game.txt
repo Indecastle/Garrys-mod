@@ -16,7 +16,7 @@ if (first() | dupefinished()) { O=owner()
     function number array:checkAr(Ent:entity) {
         local OK = 0
         for(I=1,This:count()) {
-            if(This:entity(I) == Ent) { OK = 1 break}
+            if(This[I, entity] == Ent) { OK = 1 break}
         }
         return OK
     }

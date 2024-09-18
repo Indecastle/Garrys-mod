@@ -10,7 +10,10 @@ local Speed = 500
 local img = "soldierMeme"
 local size = 200
 
-local IsGivingDamage = false
+local IsGivingDamage = true
+local IsPropExposiveDamage = true
+local PropExposiveDamageTimer = 0.5
+
 local IsForsing = false
 local IsForcingOnlyPlayers = false
 local IsForcingUnfrozeProps = false
@@ -60,14 +63,20 @@ local _urls_music = {
     pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
     pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
     bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
-    soldierMinus = "https://cdn.discordapp.com/attachments/974678227362660395/1061342876648345713/-__minus.mp3?ex=66085294&is=65f5dd94&hm=e385423a08cc54c0767f2b13d381073b3a9c81e383342281c452e89468df6f6d&",
-    soldierMeme = "https://cdn.discordapp.com/attachments/974678227362660395/1061361274233036933/-_mp3-2020.com.mp3?ex=660863b6&is=65f5eeb6&hm=88f879ca02e1282aa1e647adc9db356e31e0bce678d061f1c8db3f76e76c1e0c&",
+    soldierMinus = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo-minus.mp3",
+    soldierMeme = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo.mp3",
     sidorovich_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
 }
 
 -- =================================================================================
 
-
+local ExplodeModels = {
+    "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_junk/propane_tank001a.mdl",
+    "models/props_phx/oildrum001_explosive.mdl",
+    "models/props_c17/oildrum001_explosive.mdl",
+}
+local _exposiveDamageLastTime = timer.systime()
 local Killer
 
 
@@ -85,7 +94,24 @@ if SERVER then
     Killer:setAcceleration(Speed)
     Killer:setDeceleration(0)
     Killer:setStepHeight(50)
+    Killer:setHealth(9999999999999999999)
     
+    
+    function explodeTo(pos)
+        if timer.systime() < _exposiveDamageLastTime then return end
+        _exposiveDamageLastTime = timer.systime() + PropExposiveDamageTimer
+        
+        while #ExplodeModels > 0 do
+            local succeed = pcall(function()
+                local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p:setNoDraw(true)
+                p:breakEnt()
+            end)
+            
+            if succeed then return end
+            table.remove(ExplodeModels, 1)
+        end
+    end
     
     function gethead(ent)
         if ent:lookupBone("ValveBiped.Bip01_Head1") then
@@ -199,7 +225,11 @@ if SERVER then
                 end
                 
                 if IsGivingDamage then
-                    p:applyDamage(100000, Killer, Killer)
+                    if IsPropExposiveDamage then
+                        explodeTo(Killer:getPos())
+                    else
+                        p:applyDamage(100000, Killer, Killer)
+                    end
                 end
             end
         end
