@@ -7,14 +7,24 @@
 
 local Radius = 1000
 
-local Force = 10
+local Force = 65
 local ForceUp = 250
 
 local killer, physEnt;
 
 
-local img = "obunga"
+local img = "soldierMeme"
 local size = 300
+
+
+----- music ------
+local Volume = 5
+local MusicSpeed = 1
+local URL_Music = "soldierMeme"
+local IsLooping = true
+local MusicRadius = 500
+----- music ------
+
 
 local URLS = {
     rikka_1 = "https://i.imgur.com/xdOEuic.png",
@@ -28,8 +38,26 @@ local URLS = {
     malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
     
     obunga = "https://i.imgur.com/wEBb6mG.png",
+    kitten = "https://i.imgur.com/qlhVKyZ.png",
+    soldierMeme = "https://i.imgur.com/etDODQs.jpg",
+    sidorovich_1 = "https://i.imgur.com/e2mWcg5.png",
     custom = nil
 }
+
+
+------------------------------------------------------------------------------------
+
+local _urls_music = {
+    morgenshtern_1 = "https://u.teknik.io/o2Fly.mp3",
+    pornhub_intro = "https://cdn.discordapp.com/attachments/974678227362660395/1021517108997259284/Pornhub_.mp3",
+    pornhub_2 = "https://cdn.discordapp.com/attachments/974678227362660395/1021562126101393508/DIKIY_KRXT_-_Pornhub_71671016.mp3",
+    bs1 = "https://cdn.discordapp.com/attachments/952924658456494111/1023239769074962492/S.T.A.L.K.E.R.-Shadow-of-Chernobyl-Brain-Scorcher-Ambience.mp3",
+    soldierMinus = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo-minus.mp3",
+    soldierMeme = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo.mp3",
+    sidorovich_1 = "https://cdn.discordapp.com/attachments/974678227362660395/1062476888334946344/sidorovich-ya-tebya-spas.mp3",
+}
+
+-- =================================================================================
 
 
 if SERVER then
@@ -107,7 +135,7 @@ if SERVER then
         if killer ~= nil and killer:isValid() and isValidPlayer(closestPlayer) then
             local dir = (gethead(closestPlayer) - killer:getPos()):getNormalized()
             dir = dir:setZ(0):getNormalized()
-            physEnt:applyForceCenter(dir * killer:getMass() * Force)
+            physEnt:applyForceCenter(dir * killer:getMass() * Force - killer:getVelocity()*(killer:getMass()/8))
         end
     end)
     
@@ -179,3 +207,31 @@ mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
     
     screen:setMaterial("!" .. mat:getName())
 end)
+
+
+-------------------------------------------------
+
+local _eyePos = Vector()
+hook.add("renderscene", "", function(origin, angles, fov)
+    _eyePos = origin
+end)
+
+local _sound
+
+if URL_Music then
+    bass.loadURL(_urls_music[URL_Music], "3d noblock noplay", function(Sound)
+        _sound = Sound
+        _sound:setLooping(IsLooping)
+        _sound:setPitch(MusicSpeed)
+        
+        _sound:play()
+        
+        hook.add("think", "music", function()
+            if not isValid(Base) then return end
+            local distance = Base:getPos():getDistance(_eyePos)
+            _sound:setVolume(math.clamp(MusicRadius-distance, 0, MusicRadius) / MusicRadius * Volume)
+            local dirSound = (Base:getPos() - _eyePos):getNormalized()
+            _sound:setPos(_eyePos + dirSound*100)
+        end)
+    end)
+end

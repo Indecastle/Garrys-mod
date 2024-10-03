@@ -1,11 +1,11 @@
 --@name Dingus_Cat
---@author Sparky
+--@author Markiz
 --@client
 
 local Speed = 1
 local Scale = 1
 local IsLargeMusicFade = false
-local MusicVolume = 1
+local MusicVolume = 0.5
 
 local SoundUrl = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/master/starfall/Resources/Maxwell%20the%20Cat%20Theme..mp3"
 

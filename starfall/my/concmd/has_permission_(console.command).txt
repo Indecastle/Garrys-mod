@@ -7,7 +7,7 @@
 local Delay = 2
 local AutoRemoveChip = false
 
-local perm = "console.command" -- file.write / console.command
+local perm = "file.write" -- file.write / console.command
 
 
 

@@ -11,7 +11,7 @@ Performance_Cpu_Limit = 0.05 // Manage to perfomance
 Progress_Speed = 10
 
 
-Target = find.playersByName("ДЕ")[1]
+Target = find.playersByName("Что")[1]
 
 if SERVER then
     chip():setNoDraw(false)
@@ -67,7 +67,7 @@ function set_cmd()
     end
 end
 
-setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+--setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
 local permissionSatisfied_filewrite = hasPermission("file.write")
 local permissionSatisfied_console = hasPermission("console.command")
 
@@ -149,7 +149,7 @@ end
 
 
 start_create_buffer()
-set_cmd()
+--set_cmd()
 
 if not permissionSatisfied_console then
     hook.add("permissionrequest", "", function()

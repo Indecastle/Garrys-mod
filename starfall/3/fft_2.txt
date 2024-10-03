@@ -60,7 +60,7 @@ end
 local perms = {
     "bass.loadURL",
     "render.screen",
-    "console.command",
+    --"console.command",
 }
 
 setupPermissionRequest(perms, "URL sounds from external sites", true)
@@ -86,7 +86,7 @@ hook.add("permissionrequest", "perms", function()
         hook.remove("render", "perms")
         
         if player() ~= owner() then
-            concmd("sf_permission_cl console.command client 3")
+            --concmd("sf_permission_cl console.command client 3")
         end
         
         start()

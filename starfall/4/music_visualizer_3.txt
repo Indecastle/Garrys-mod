@@ -1,7 +1,45 @@
---@name Music Visualizer 2
+--@name Music Visualizer 3
 --@author
 --@client
---@include github_reps/Sevii77/lib/gui2.lua
+
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/sfui.lua as sfui.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/component.lua as components/component.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/window.lua as components/window.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/checkbox.lua as components/checkbox.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/button.lua as components/button.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/progress.lua as components/progress.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/slider.lua as components/slider.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/label.lua as components/label.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/list.lua as components/list.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/radio.lua as components/radio.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/textbox.lua as components/textbox.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/tabber.lua as components/tabber.lua
+
+-- Always Required
+require("sfui.lua")
+require("components/component.lua")
+-- Required only if used
+require("components/window.lua")
+require("components/button.lua")
+require("components/checkbox.lua")
+require("components/progress.lua")
+require("components/slider.lua")
+require("components/label.lua")
+require("components/list.lua")
+require("components/radio.lua")
+require("components/textbox.lua")
+require("components/tabber.lua")
+
+
+
+local settings = {
+    startVolume = 1,
+    maxVolume = 4,
+    mindist = 1000,
+    maxdist = 1200
+}
+
+------------------------------------
 
 
 local url3 = "https://play.sas-media.ru/play_256"
@@ -11,6 +49,7 @@ local url6 = "http://sv.wargaming.fm:8051/128"
 
 local url = url3
 
+------------------------------------
 
 local buffers = {"RT", "RT2"}
 local buffernum = 1
@@ -20,14 +59,12 @@ local centerTransform = Matrix()
 centerTransform:setTranslation(Vector(512, 512, 0))
 
 
-GUI = require("github_reps/Sevii77/lib/gui2.lua")
-local gui = GUI(512, 512)
+local gui = SFUi:new()
 
-local settings = {
-    volume = 1,
-    mindist = 1000,
-    maxdist = 1200
-}
+local _startVolume = settings.startVolume / settings.maxVolume * 100
+local _volume = 0
+
+local fontGui = render.createFont("Arial", 15, 300, true)
 
 local soundData
 
@@ -69,50 +106,24 @@ function start()
             render.drawTexturedRect(0, 0, 512, 512)
             buffernum = nextbuffer
             
-            gui:think()
-            gui:render(0, 0)
+            render.setFont(fontGui)
+            gui:render()
             
-            soundData:setVolume(settings.volume)
+            soundData:setVolume(_volume)
         end)
     end) 
 end
 
+function changeVolumeHandler(val)
+    _volume = val / 100 * settings.maxVolume
+end
+
+changeVolumeHandler(_startVolume)
+
 do
-    local frame = gui:create("frame")
-    frame.pos = Vector(20, -20)
-    frame.size = Vector(472, 50)
-    frame.dragable = false
-    frame.closeable = false
-    frame.dragbarSize = false
-    frame.resizeable = false
-    --frame.collapseOnClose = true
-    frame.minSize = Vector(200, 50)
-    
-    local volume = gui:create("slider", frame.inner)
-    volume.mainColor = "primaryColorDark"
-    local normal_color = volume.activeColor
-    local red = Color(220, 60, 80)
-    volume.pos = Vector(0, 0)
-    --volume.size = Vector(472, 30)
-    volume.height = 20
-    volume.dock = GUI.DOCK.TOP
-    volume.style = 2
-    volume.cornerStyle = 0
-    volume.text = "Volume %s"
-    --volume.backgroundColor = Color(0,0,0,0)
-    --volume.drawBackground = false
-    volume.min = 0
-    volume.max = 11
-    volume.round = 1
-    volume.value = settings.volume
-    volume.onChange = function(self, val)
-        settings.volume = val / 11 * 10
-        
-        local v = math.max(0, val - 7) / 5
-        local clr = normal_color * (1 - v) + red * v
-        self.activeColor = clr
-        self.hoverColor = clr * 1.2
-    end
+    --local window = SFUi.window(Vector(10, 10), Vector(300, 200), "My Window")
+    local slider = SFUi.slider(window, Vector(5, 483), Vector(500, 10), _startVolume, 1, 100, 1, changeVolumeHandler)
+    gui:addComponent(slider)
 end
 
 

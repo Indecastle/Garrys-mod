@@ -3,14 +3,14 @@
 --@shared
 
 
-local Volume = 5
+local Volume = 1
 local Speed = 1
-local URL = "morgenshtern_1"
+local URL = "putin"
 local IsLooping = true
 local RestartAfterPause = true
-local StartTime = 0
+local StartTime = 0.7
 
-local IsAllServer = false
+local IsAllServer = true
 local Radius = 500
 
 ------------------------------------------------------------------------------------
@@ -33,6 +33,8 @@ end)[1]*/
 local _urls = {
     soldierMinus = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo-minus.mp3",
     soldierMeme = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo.mp3",
+    stalker = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/stalker/stalker--muzyka-iz-stalkera-u-sidorovicha.mp3",
+    putin = "https://cdn.discordapp.com/attachments/974678227362660395/1291456856421830696/gimn-rossii-gimn-rossii-so-slovam2.mp3?ex=67002a6c&is=66fed8ec&hm=1cab5cd70316b56e75ec5060926953377472991315fe268febedc3d6ee986793&",
 }
 
 -- =================================================================================

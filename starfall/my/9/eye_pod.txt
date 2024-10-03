@@ -96,7 +96,7 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
         drawviewer=false}
 end)
 
-timer.create("getMouseVelocityClient", 0.2, 0, function()
+timer.create("getMouseVelocityClient", 0.1, 0, function()
 --hook.add("think", "getMouseVelocityClient",  function()
     _isActive = isValid(_vehicle) and _vehicle:getDriver() == player()
     if not _isActive then return end

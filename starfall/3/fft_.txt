@@ -10,20 +10,20 @@ local fft={}
 mat = material.create("UnlitGeneric")
 mat:setInt("$flags",138414080)
 //mat:setInt("$flags", bit.bxor(bit.bor(2^11, 2^22, 2^27, 2^22)))
-mat:setTexture("$basetexture","gm_construct/grass1")
+mat:setTexture("$basetexture","matsys_regressiontest/background")
+--mat:setTexture("$basetexture","gm_construct/grass1")
 
 local url1 = "http://radio.licen777.ru/chechnya"
 local url2 = "http://radio.licen777.ru/stream"
 local url3 = "https://play.sas-media.ru/play_256"
 local url4 = "http://sv.wargaming.fm:8051/128"
-local url5 = "https://u.teknik.io/o2Fly.mp3"
-local url6 = "http://radio-srv1.11one.ru/record192k.mp3"
+local url5 = "https://cdn.discordapp.com/attachments/1272145125518217282/1283817257918791752/Butyrka_-_Attestat_48114686.mp3?ex=66ff663e&is=66fe14be&hm=dbf863c314067f2457ef7fd22b7ef01db0fbce0f47556fe495ed08191c394264&"
 
-local url = url6
+local url = url5
 
 function start() 
     bass.loadURL( url, "3d noblock", function(Sound)
-        Sound:setVolume(5.2)
+        Sound:setVolume(2.2)
         Sound:play()
         hook.add("think","",function()
             Sound:setPos(chip():getPos())
@@ -62,7 +62,7 @@ end
 local perms = {
     "bass.loadURL",
     "render.screen",
-    "console.command",
+    --"console.command",
 }
 
 setupPermissionRequest(perms, "URL sounds from external sites", true)
@@ -88,7 +88,7 @@ hook.add("permissionrequest", "perms", function()
         hook.remove("render", "perms")
         
         if player() ~= owner() then
-            concmd("sf_permission_cl console.command client 3")
+            --concmd("sf_permission_cl console.command client 3")
         end
         
         start()
