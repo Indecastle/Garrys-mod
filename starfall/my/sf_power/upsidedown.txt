@@ -7,7 +7,7 @@ local Radius = 10000
 
 
 local Target = owner()
-Target = find.playersByName("markiz")[1]
+Target = find.playerBySteamID("STEAM_0:1:223787018")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:1:541873840" then
         return true
@@ -15,10 +15,20 @@ Target = find.playersByName("markiz")[1]
 end)[1]*/
 print(Target)
 
---Target:setEyeAngles(Angle(0, 0, 180))
+Target:setEyeAngles(Angle(0, 0, 180))
 
 
 
 ----- Reset -----
 
---Target:setEyeAngles(Angle(0, 0, 0))
+hook.add("Removed", "", function()
+    /*
+    for i, p in ipairs(find.allPlayers()) do
+        local ang = p:getEyeAngles()
+        ang.r = 0
+        p:setEyeAngles(Angle(0, 0, 0))
+    end
+    Target:setEyeAngles(Angle(0, 0, 0))
+    */
+    Target:setEyeAngles(Angle(0, 0, 0))
+end)

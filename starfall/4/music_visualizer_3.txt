@@ -46,8 +46,11 @@ local url3 = "https://play.sas-media.ru/play_256"
 local url4 = "http://air.radiorecord.ru:8102/rock_128" -- not working
 local url5 = "http://radio-srv1.11one.ru/record192k.mp3"
 local url6 = "http://sv.wargaming.fm:8051/128"
+local url7 = "https://eu.hitmotop.com/get/music/20230507/i_plyasali_na_mogile_-_tvoyu_mamu_my_ubili_75929106.mp3"
+local url8 = "https://cdn.discordapp.com/attachments/974678227362660395/1292158453313175754/Jazzdauren_-_.mp3?ex=6702b7d6&is=67016656&hm=0783736d72219eead58f3edce267d88c0c5ae583d82e1926635072cb150eb5cb&"
 
-local url = url3
+
+local url = url8
 
 ------------------------------------
 
@@ -139,8 +142,10 @@ function checkGrant()
     return url and hasPermission("bass.loadURL", url)
 end
 
+local _isStarget = false
 
 if checkGrant() then
+    _isStarget = true
     start(url)
 else
     hook.add("render", "perms", function()
@@ -149,7 +154,7 @@ else
 end
 
 hook.add("permissionrequest", "perms", function()
-    if checkGrant() and hasPermission("render.screen") then
+    if not _isStarget and checkGrant() and hasPermission("render.screen") then
         hook.remove("permissionrequest", "perms")
         hook.remove("render", "perms")
         

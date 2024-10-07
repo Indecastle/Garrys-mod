@@ -1,88 +1,149 @@
 --@name DMG_DISSOLVE 2
 --@author Markiz
---@server
+--@shared
 
 
 local Radius = 1000
 
-local Force = 5
+local Force = 25
 local ForceUp = 250
 
-local killer, physEnt;
---ent = prop.create(chip():getPos(), Angle(), "models/cheeze/wires/nano_compare.mdl", false)
---ent:setNocollideAll(true)
---ent:setFrozen(false)
-
---ent:setColor(Color(0,0,0,0))
+local ShockEffect = true
+local ShockSoundEffect = true
+local ShockRandMin = 0.2
+local ShockRandMax = 4
 
 
+------------------------------------------------------------------------
 
-local i = -1;
-local players = find.allPlayers()
+local _Killer, physEnt;
 
 
-function gethead(ent)
-    if ent:lookupBone("ValveBiped.Bip01_Head1") then
-        local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
-        return pos
+if SERVER then
+    local i = -1;
+    local players = find.allPlayers()
+    
+    
+    timer.create("send_killer", 0.3, 0, function()
+        net.start("send_killer")
+        net.writeEntity(isValid(_Killer) and _Killer or chip())
+        net.send()
+    end)
+    
+    function gethead(ent)
+        if ent:lookupBone("ValveBiped.Bip01_Head1") then
+            local pos = ent:getBonePosition(ent:getHitBoxBone(0, 0))
+            return pos
+        end
+        return ent:localToWorld(ent:obbCenter())
     end
-    return ent:localToWorld(ent:obbCenter())
-end
-
-function isValidFindPlayer(ent)
-    local nvars = ent:getNWVarTable()
-    return ent ~= nil and ent:isValid() and ent:isValidPhys()
-        and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and (nvars == nil or !nvars["_Kyle_Buildmode"])
-            or ent:isNPC()) 
-end
-
-function isValidPlayer(ent)
-    return ent ~= nil and ent:isValid() and ent:isValidPhys()
-end
-
-local closestPlayer;
-local up;
-
-
-timer.create("createIfDestroyed", 0.5, 0, function()
-    if killer == nil or !killer:isValid() then
-        --killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_c17/doll01.mdl", false)
-        killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_junk/watermelon01.mdl", false)
-        killer:setPhysMaterial("gmod_silent")
-        physEnt = killer:getPhysicsObject()
-        physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
-        physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
-        --physEnt:enableGravity(false)
-        up = Vector(0,0,killer:getMass()*ForceUp)
+    
+    function isValidFindPlayer(ent)
+        local nvars = ent:getNWVarTable()
+        return ent ~= nil and ent:isValid() and ent:isValidPhys()
+            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and (nvars == nil or !nvars["_Kyle_Buildmode"])
+                or ent:isNPC()) 
     end
+    
+    function isValidPlayer(ent)
+        return ent ~= nil and ent:isValid() and ent:isValidPhys()
+    end
+    
+    local closestPlayer;
+    local up;
+    
+    
+    timer.create("createIfDestroyed", 0.5, 0, function()
+        if _Killer == nil or !_Killer:isValid() then
+            --_Killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_c17/doll01.mdl", false)
+            _Killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_junk/watermelon01.mdl", false)
+            _Killer:setPhysMaterial("gmod_silent")
+            physEnt = _Killer:getPhysicsObject()
+            physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
+            physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
+            --physEnt:enableGravity(false)
+            up = Vector(0,0,_Killer:getMass()*ForceUp)
+        else
+            _Killer:setNocollideAll(false)
+        end
+    end)
+    
+    
+    timer.create("findPlayer", 0.2, 0, function()
+        if _Killer ~= nil and _Killer:isValid() then
+            local validPlayers = find.inSphere(_Killer:getPos(), Radius, function(e)
+                return isValidFindPlayer(e)
+            end)
+            
+            validPlayers = find.sortByClosest(validPlayers, _Killer:getPos())
+            closestPlayer = #validPlayers ~= nil and validPlayers[1] or nil
+        else
+            closestPlayer = nil
+        end
+    end)
+    
+    
+    timer.create("jump", 2, 0, function()
+        if _Killer ~= nil and _Killer:isValid() and _Killer:isValidPhys()  and isValidPlayer(closestPlayer) then
+            _Killer:applyForceCenter(up)
+        end
+    end)
+    
+    
+    hook.add("think", "fun", function()
+        if _Killer ~= nil and _Killer:isValid() and isValidPlayer(closestPlayer) then
+            local dir = (gethead(closestPlayer) - _Killer:getPos()):getNormalized()
+            dir = dir:setZ(0):getNormalized()
+            local xyVel = _Killer:getVelocity()
+            xyVel.z = 0
+            physEnt:applyForceCenter(dir * _Killer:getMass() * Force - xyVel*(_Killer:getMass()/8))
+        end
+    end)
+    
+    return
+end
+
+
+------------------------------------------------------------------------------------
+
+local effectData = effect:create()
+
+
+net.receive("send_killer", function(len)
+    net.readEntity(function(ent)
+        --if ent==nil then error("Failed to get Killer!") end
+        if ent==nil then return end
+        _Killer = ent
+    end)
 end)
 
 
-timer.create("findPlayer", 0.2, 0, function()
-    if killer ~= nil and killer:isValid() then
-        local validPlayers = find.inSphere(killer:getPos(), Radius, function(e)
-            return isValidFindPlayer(e)
-        end)
+function showLightning()
+    pcall(function()
+        effectData:setEntity(_Killer)
+        effectData:setMagnitude(20)
+        effectData:setScale(30)
+        effectData:play("TeslaHitboxes")
         
-        validPlayers = find.sortByClosest(validPlayers, killer:getPos())
-        closestPlayer = #validPlayers ~= nil and validPlayers[1] or nil
-    else
-        closestPlayer = nil
-    end
-end)
+        if ShockSoundEffect then
+            local path = 'ambient/energy/spark'..string.format('%01d', math.round(math.rand(2,3)))..'.wav'
+            _Killer:emitSound(path)
+        end
+    end)
+end
 
 
-timer.create("jump", 2, 0, function()
-    if killer ~= nil and killer:isValid() and killer:isValidPhys()  and isValidPlayer(closestPlayer) then
-        killer:applyForceCenter(up)
-    end
-end)
+function lightningHandle()
+    timer.simple(math.rand(ShockRandMin,ShockRandMax), function()
+        showLightning()
+        lightningHandle()
+    end)
+end
+
+if ShockEffect then
+    lightningHandle()
+end
 
 
-hook.add("think", "fun", function()
-    if killer ~= nil and killer:isValid() and isValidPlayer(closestPlayer) then
-        local dir = (gethead(closestPlayer) - killer:getPos()):getNormalized()
-        dir = dir:setZ(0):getNormalized()
-        physEnt:applyForceCenter(dir * killer:getMass() * Force)
-    end
-end)
+
+ 

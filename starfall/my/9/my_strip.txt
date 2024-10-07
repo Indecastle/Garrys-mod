@@ -22,7 +22,7 @@ local Chip = chip()
 --Chip:setNoDraw(true)
 --Chip:setSolid(false)
 
-local Seat
+local Seat, ExitPointer
 
 
 wire.adjustPorts(
@@ -61,6 +61,10 @@ wire.ports.Seat = Seat
 
 wire.create(ExitPointer, chip(), 'Local Position', 'LocalPos')
 wire.create(ExitPointer, chip(), 'Entity', 'Seat')
+wire.create(Pod1, chip(), 'Entity', 'Seat')
+wire.create(Pod2, chip(), 'Entity', 'Seat')
+wire.create(Pod1, Pod1, 'Eject', 'Active')
+wire.create(Pod2, Pod2, 'Eject', 'Active')
 Seat:setNocollideAll(true)
 Seat:setNoDraw(true)
 ExitPointer:setNocollideAll(true)

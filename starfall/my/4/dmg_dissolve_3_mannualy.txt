@@ -119,11 +119,19 @@ if SERVER then
             if driver ~= nil then
                 CumHolo:setPos(_Killer:getPos())
                 driver:setViewEntity(CumHolo)
+                if driver:hasGodMode() then
+                    physEnt:clearGameFlags(FVPHYSICS.DMG_DISSOLVE)
+                else
+                    physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
+                end
             end
             
             --if _velocity:getDistance(Vector()) ~= 0 and false then
+                local xyVel = _velocity:isZero() and Vector() or _Killer:getVelocity()
+                xyVel.z = 0
+                
                 pcall(function()
-                physEnt:applyForceCenter(_velocity * _Killer:getMass())
+                physEnt:applyForceCenter(_velocity * _Killer:getMass()*4 - xyVel*_Killer:getMass()/10)
                 end)
             --end
         end
@@ -137,6 +145,10 @@ if SERVER then
 
     return
 end
+
+
+------------------------------------------------------------------------------------
+
 
 net.receive("send_killer", function(len)
     net.readEntity(function(ent)

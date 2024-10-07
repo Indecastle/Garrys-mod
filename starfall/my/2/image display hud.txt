@@ -31,19 +31,21 @@ local URLS = {
     barryWood2 = "https://i.imgur.com/PQiuccK.png",
     barryWood3 = "https://i.imgur.com/rzWJOKP.jpg",
     obobrali_do_gola = "https://i.imgur.com/YeA7JbG.png",
+    putin = "https://i.imgur.com/ngN7RZF.jpg",
     custom = nil,
     
     built_background = "matsys_regressiontest/background",
     built_tpeye = "effects/tp_eyefx/tpeye",
+    core_sheet = "models/props_combine/core_sheet",
 }
 
-local img = "barryWood2"
+local img = "sidorovich"
 
 local IsHaveProportions = false
 local HaveAlpha = false
 
 local RadiusMode = true
-local Radius = 200
+local Radius = 1000
 local MaxAlpha = 0.9 -- if RadiusMode == false
 
 local Target = owner() -- if RadiusMode = false

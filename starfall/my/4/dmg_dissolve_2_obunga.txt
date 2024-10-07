@@ -14,7 +14,7 @@ local killer, physEnt;
 
 
 local img = "soldierMeme"
-local size = 300
+local size = 200
 
 
 ----- music ------
@@ -111,6 +111,7 @@ if SERVER then
     
     timer.create("findPlayer", 0.2, 0, function()
         if killer ~= nil and killer:isValid() then
+            killer:setNocollideAll(false)
             local validPlayers = find.allPlayers(function(e)
                 return e:getPos():getDistance(killer:getPos()) < Radius 
                         and isValidFindPlayer(e)
@@ -135,7 +136,9 @@ if SERVER then
         if killer ~= nil and killer:isValid() and isValidPlayer(closestPlayer) then
             local dir = (gethead(closestPlayer) - killer:getPos()):getNormalized()
             dir = dir:setZ(0):getNormalized()
-            physEnt:applyForceCenter(dir * killer:getMass() * Force - killer:getVelocity()*(killer:getMass()/8))
+            local xyVel = killer:getVelocity()
+            xyVel.z = 0
+            physEnt:applyForceCenter(dir * killer:getMass() * Force - xyVel*(killer:getMass()/8))
         end
     end)
     

@@ -2,8 +2,8 @@
 
 
 local Speed = 1
-local Radius = 500
-local Volume = 4
+local Radius = 1000
+local Volume = 3
 
 
 if SERVER then
@@ -50,10 +50,11 @@ if CLIENT then
         return n/1023.75 
     end
     
-    local Radio = "https://cdn.discordapp.com/attachments/974678227362660395/1096427487535312966/X2Download.app_-_Alan_Aztec_-_Russian_Friend_feat._Karate_320_kbps.mp3?ex=65fd882b&is=65eb132b&hm=c492f55d55e597495a729a2f18156c4bf87d65a72b99289e0a218d00ce4d641d&"
-    --local Radio = "https://cdn.discordapp.com/attachments/987731371495669820/1061101327561789440/Maxwell_The_Cat_Theme_SAMString_Remix.mp3"
-    --local Radio = "https://cdn.discordapp.com/attachments/1081967820172181578/1096924000879382641/-_.mp3"
-    
+    --local Radio = "https://cdn.discordapp.com/attachments/974678227362660395/1291493272870715535/keftemix-cho-za-cho-za-tyagi-barhatnye-tyagi-mp3.mp3?ex=67004c57&is=66fefad7&hm=2eb59683e344d8de0e266b06f8c30b702faad51bb7835e52286131c3faf0555a&"
+    --local Radio = "https://cdn.discordapp.com/attachments/974678227362660395/1291456856421830696/gimn-rossii-gimn-rossii-so-slovam2.mp3?ex=67002a6c&is=66fed8ec&hm=1cab5cd70316b56e75ec5060926953377472991315fe268febedc3d6ee986793&"
+    --local Radio = "https://cdn.discordapp.com/attachments/974678227362660395/1291493272870715535/keftemix-cho-za-cho-za-tyagi-barhatnye-tyagi-mp3.mp3?ex=67004c57&is=66fefad7&hm=2eb59683e344d8de0e266b06f8c30b702faad51bb7835e52286131c3faf0555a&"
+    local Radio = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Maxwell%20the%20Cat%20Theme..mp3"
+ 
     local perms = {
         "bass.loadURL",
         --"material.urlcreate",

