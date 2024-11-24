@@ -1,0 +1,32 @@
+--@name Jakuse
+--@author ???
+--@server
+
+local HPole = hologram.create(chip():localToWorld(Vector(0,0,4.231)), chip():getAngles(), "models/holograms/hq_torus.mdl", Vector(15.6,15.6,15.6))
+HPole:setMaterial("models/debug/debugwhit")
+HPole:setColor(Color(0,200,0))
+
+local HPole = hologram.create(chip():localToWorld(Vector(0,0,17.231)), chip():getAngles(), "models/holograms/hq_torus.mdl", Vector(15.6,15.6,15.6))
+HPole:setMaterial("models/debug/debugwhit")
+HPole:setColor(Color(0,200,0))
+
+local HPole = hologram.create(chip():localToWorld(Vector(0,0,26.231)), chip():getAngles(), "models/holograms/hq_torus.mdl", Vector(15.6,15.6,15.6))
+HPole:setMaterial("models/debug/debugwhit")
+HPole:setColor(Color(0,200,0))
+
+local HPole = hologram.create(chip():localToWorld(Vector(0,0,36.231)), chip():getAngles(), "models/holograms/hq_torus.mdl", Vector(15.6,15.6,15.6))
+HPole:setMaterial("models/debug/debugwhit")
+HPole:setColor(Color(0,200,0))
+
+
+
+
+local HPole = hologram.create(chip():localToWorld(Vector(0,0,2.231)), chip():getAngles(), "models/holograms/cplane.mdl", Vector(15.6,15.6,15.6))
+HPole:setMaterial("models/XQM/CellShadedCamo_diffuse")
+
+local HPole = hologram.create(chip():localToWorld(Vector(0,0,38.231)), chip():getAngles(), "models/holograms/cplane.mdl", Vector(15.6,15.6,15.6)) 
+HPole:setMaterial("models/shadertest/predator")
+
+local HPole = hologram.create(chip():localToWorld(Vector(0,0,36.231)), chip():getAngles(), "models/holograms/cplane.mdl", Vector(-15.6,-15.6,-15.6))
+HPole:setMaterial("models/shadertest/predator")
+

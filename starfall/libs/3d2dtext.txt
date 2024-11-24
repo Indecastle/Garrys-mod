@@ -54,83 +54,6 @@ function table.filter(t, func)
 end
 
 
-shortSymbols = { 
-    46, // .
-    44, // ,
-    33, // !
-    124, // |
-    45, // -
-    40, // (
-    41, // )
-    49, // 1
-    108, // l
-    105, // i
-    73, // I
-    106, // j
-    114, // r
-    123, // {
-    125, // }
-    39, // '
-    34, // "
-    58, // :
-    59, // ;
-    46, // .
-    32, //  
-}
-
-LongKirilicSymbols = {
-    208144, // А
-    208145, // Б
-    208146, // В
-    208147, // Г
-    208148, // Д
-    208149, // Е
-    208129, // Ё
-    208150, // Ж
-    208151, // З
-    208152, // И
-    208153, // Й
-    208154, // К
-    208155, // Л
-    208156, // М
-    208157, // Н
-    208158, // О
-    208159, // П
-    208160, // Р
-    208161, // С
-    208162, // Т
-    208163, // У
-    208164, // Ф
-    208165, // Х
-    208166, // Ц
-    208167, // Ч
-    208168, // Ш
-    208169, // Щ
-    208172, // Ь
-    208171, // Ы
-    208170, // Ъ
-    208173, // Э
-    208174, // Ю
-    208175, // Я
-
-    208182, // ж
-    209132, // ф
-    209136, // ш
-    209137, // щ
-    209142, // ю
-}
-
-function checkShortSymbols(c)
-    return table.hasValue(shortSymbols, c)
-end
-
-function checkUpperCaseSymbols(c)
-    return c >= 65 and c <= 90
-        or table.hasValue(LongKirilicSymbols, c)
-end
-
-
-
 function Text3D2D:initialize(data, vars)
     self.Data = data
     self.Vars = vars
@@ -235,8 +158,6 @@ function Text3D2D:run()
         holoText2:setColor(Color(0,0,0,0))
     end
     
-    local isStatic = table.all(self.Data, function(V) return V.colorMode == 1 end)
-    
     function getUChar(text, index)
         local a = string.byte(text, index, index)
         if a == 208 or a == 209 then
@@ -299,14 +220,24 @@ function Text3D2D:run()
         if V.symbolSpaceLevel1 == nil then V.symbolSpaceLevel1 = V.fontSize / 6 end
         if V.symbolLongSpace == nil then V.symbolLongSpace = V.fontSize / 3 end
         if V.symbolOtherSpace == nil then V.symbolOtherSpace = V.fontSize / 3.3 end
-        
-        if V.colorMode == 3 then
-            V._Avgs = {}
-            for i, t in ipairs(V.text) do
-                V._Avgs[i] = getAvg(V, i)
+
+    end
+    
+    local isStatic = table.all(self.Data, function(V) return V.colorMode == 1 end)
+    
+    function initRender()
+        for i, V in ipairs(self.Data) do
+            if V.colorMode == 3 then
+                V._Avgs = {}
+                for j, t in ipairs(V.text) do
+                    --V._Avgs[i] = getAvg(V, i)
+                    render.setFont(self.Data[i]._font)
+                    --print(render.getTextSize(t))
+                    local size, _ = render.getTextSize(t) / 2
+                    V._Avgs[j] = size
+                end
             end
         end
-        
     end
     
     //local font = render.createFont("Roboto", fontSize, fontBold, true)
@@ -366,18 +297,13 @@ function Text3D2D:run()
                         if self.Data[j].colorMode == 3 then
                             //local avg = (getULength(self.Data[j], k) + 1) / 2
                             local avg = self.Data[j]._Avgs[k]
-                            local indexSpace = 0
                             local indexText = 1
-                            local SymbolSpace = 0
                             local xOffset = 0
                             local uChar, uCharNum;
                             while indexText <= #self.Data[j].text[k] do
-                                indexSpace = indexSpace+1
-                                xOffset = xOffset + SymbolSpace
                                 uChar, indexText, uCharNum = getUChar(self.Data[j].text[k], indexText)
-                                SymbolSpace = getSymbolSpace(uCharNum, self.Data[j])
-                                xOffset = xOffset + SymbolSpace
-                                render.drawSimpleText(_startX - avg + xOffset + i*self.shadowOffset, offset + _startY - i*self.shadowOffset, uChar, self.Data[j].align, TEXT_ALIGN.CENTER)
+                                SymbolSpace, _ = render.drawSimpleText(_startX - avg + xOffset + i*self.shadowOffset, offset + _startY - i*self.shadowOffset, uChar, TEXT_ALIGN.LEFT, TEXT_ALIGN.CENTER)
+                                xOffset = xOffset + SymbolSpace + 0
                             end
                         else
                             render.drawSimpleText(_startX + i*self.shadowOffset, offset + _startY - i*self.shadowOffset, self.Data[j].text[k], self.Data[j].align, TEXT_ALIGN.CENTER)
@@ -413,17 +339,14 @@ function Text3D2D:run()
                     local avg = self.Data[j]._Avgs[k]
                     local indexSpace = 0
                     local indexText = 1
-                    local SymbolSpace = 0
                     local xOffset = 0
                     local uChar, uCharNum;
                     while indexText <= #self.Data[j].text[k] do
                         indexSpace = indexSpace+1
-                        xOffset = xOffset + SymbolSpace
                         uChar, indexText, uCharNum = getUChar(self.Data[j].text[k], indexText)
-                        SymbolSpace = getSymbolSpace(uCharNum, self.Data[j])
-                        xOffset = xOffset + SymbolSpace
                         render.setColor(Color(timer.systime() * self.Data[j].colorSpeed * 360 * self.Data[j]._rainbowReverse + indexSpace*self.Data[j].rainbowColorSpace, 1, 1):hsvToRGB():setA(self.Data[j].alpha))
-                        render.drawSimpleText(_endX - avg + xOffset, offset + _endY, uChar, self.Data[j].align, TEXT_ALIGN.CENTER)
+                        SymbolSpace, _ = render.drawSimpleText(_endX - avg + xOffset, offset + _endY, uChar, TEXT_ALIGN.LEFT, TEXT_ALIGN.CENTER)
+                        xOffset = xOffset + SymbolSpace + 0
                     end
                 else
                     render.drawSimpleText(_endX, offset + _endY, self.Data[j].text[k], self.Data[j].align, TEXT_ALIGN.CENTER)
@@ -434,6 +357,8 @@ function Text3D2D:run()
     
     
     hook.add("renderoffscreen", "", function()
+        initRender()
+        
         if !isCreated then
             renderBold()
         end

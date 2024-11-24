@@ -47,7 +47,7 @@ local url4 = "http://air.radiorecord.ru:8102/rock_128" -- not working
 local url5 = "http://radio-srv1.11one.ru/record192k.mp3"
 local url6 = "http://sv.wargaming.fm:8051/128"
 local url7 = "https://eu.hitmotop.com/get/music/20230507/i_plyasali_na_mogile_-_tvoyu_mamu_my_ubili_75929106.mp3"
-local url8 = "https://cdn.discordapp.com/attachments/974678227362660395/1292158453313175754/Jazzdauren_-_.mp3?ex=6702b7d6&is=67016656&hm=0783736d72219eead58f3edce267d88c0c5ae583d82e1926635072cb150eb5cb&"
+local url8 = "https://cdn.discordapp.com/attachments/974678227362660395/1291493272870715535/keftemix-cho-za-cho-za-tyagi-barhatnye-tyagi-mp3.mp3?ex=672a7c57&is=67292ad7&hm=29137cfa0e02e1f8ec1b048ba6a3978cd5d4f89732211bfbcd6d78c1d227ceb6&"
 
 
 local url = url8

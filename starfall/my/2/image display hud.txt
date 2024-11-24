@@ -39,13 +39,13 @@ local URLS = {
     core_sheet = "models/props_combine/core_sheet",
 }
 
-local img = "sidorovich"
+local img = "kitten"
 
 local IsHaveProportions = false
-local HaveAlpha = false
+local HaveAlpha = true
 
 local RadiusMode = true
-local Radius = 1000
+local Radius = 300
 local MaxAlpha = 0.9 -- if RadiusMode == false
 
 local Target = owner() -- if RadiusMode = false

@@ -3,7 +3,7 @@
 --@client
 
 local Target = owner()
-Target = find.playersByName("markiz")[1]
+--Target = find.playersByName("markiz")[1]
 /*AFK = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -15,9 +15,9 @@ end)[1]*/
 
 
 
---local MaterialPath = "voice/icntlk_pl"
+local MaterialPath = "voice/icntlk_pl"
 --local MaterialPath = "https://i.imgur.com/wEBb6mG.png"
-local MaterialPath = "https://cdn.discordapp.com/attachments/974678227362660395/1112447847711916112/penis.png?ex=65f736cb&is=65e4c1cb&hm=453d478d79b885bde7d880048eb9611eb734857b16cc4d5c61de1ee855c14e8d&"
+--local MaterialPath = "https://cdn.discordapp.com/attachments/974678227362660395/1112447847711916112"
 --local MaterialPath = "https://i.imgur.com/9UtATPQ.gif"
 --local MaterialPath = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg"
 
@@ -27,9 +27,11 @@ local EndWidth = 0
 local StartAlpha = 255
 local EndAlpha = 0
 
-local LifeTime = 1
+local LifeTime = 1.0
 
 local MinStep = 20
+
+local Is3D = true
 
 function getPos()
     return Target:obbCenterW()
@@ -75,7 +77,8 @@ hook.add("tick", "MyTrail", function()
     
     local dir = (newPos - _lastPos ):getNormalized()
     
-    part = emit:add(mat, _lastPos ,StartWidth, EndWidth, distance,distance, StartAlpha,EndAlpha, LifeTime)
+    local particleDistance = Is3D and distance or 0
+    part = emit:add(mat, _lastPos ,StartWidth, EndWidth, particleDistance,particleDistance, StartAlpha,EndAlpha, LifeTime)
     if part then
         part:setVelocityScale(false)
         part:setVelocity(dir*0.001)

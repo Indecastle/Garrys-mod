@@ -3,7 +3,7 @@
 --@client
 
 
-setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
+--setupPermissionRequest({ "console.command" }, "See an example of console.command.", true)
 local permissionSatisfied = hasPermission("console.command")
 
 

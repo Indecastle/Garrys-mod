@@ -385,6 +385,12 @@ F - flashlight (only in free spectating)
     end
 end)
 
+local players = {}
+
+timer.create("update_players", 1,0, function()
+    players = find.allPlayers()
+end)
+
 
 hook.add("drawhud","cheat spectator",function()
     if GameW == nil then
@@ -406,18 +412,16 @@ hook.add("drawhud","cheat spectator",function()
     render.drawText(100, 50, ""..math.clamp(TargetPlayer:getArmor(), 0, 999), 0) 
     
     if WH then
-        for i, p in ipairs(find.allPlayers()) do
-            if p ~= player() then
-                //if p:getPos():getDistance( owner():getPos() ) > 1300 then continue end
-                local obbw = p:obbCenterW()
+        render.setFont(font2)
+        for i, p in ipairs(players) do
+            if isValid(p) and p ~= player() then
                 local obbhs = p:obbSize()
                 
                 local pos = (p:getPos() + Vector(0, 0, obbhs.z+10)):toScreen()
                 
-    
-                render.setFont(font2)
+                
                 render.setColor(team.getColor(p:getTeam()))
-                render.drawText(pos.x, pos.y-10, p:getName(), 1)
+                render.drawSimpleText(pos.x, pos.y-10, p:getName(), 1, 1)
             end
         end
     end

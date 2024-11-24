@@ -71,8 +71,8 @@ local _urls_music = {
 -- =================================================================================
 
 local ExplodeModels = {
-    "models/props_phx/misc/potato_launcher_explosive.mdl",
-    "models/props_junk/propane_tank001a.mdl",
+    --"models/props_phx/misc/potato_launcher_explosive.mdl",
+    --"models/props_junk/propane_tank001a.mdl",
     "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001_explosive.mdl",
 }

@@ -4,7 +4,7 @@
 
 local MONITOR_DATA = {
     "plate8x8.mdl",
-          RS    =    0.741,
+          RS    =    0.940,
           RatioX    =    1,
           offset    =    Vector(0, 0, 2),
           rot    =    Angle(0, 90, 180),
@@ -16,12 +16,12 @@ local MONITOR_DATA = {
 }
 
 local materials = {
-    "https://cdn.discordapp.com/attachments/642904079663890432/1057795165982560448/1.png",
-    "https://cdn.discordapp.com/attachments/642904079663890432/1057795166360051764/2.png",
-    "https://cdn.discordapp.com/attachments/642904079663890432/1057795166708191312/3.png",
-    "https://cdn.discordapp.com/attachments/642904079663890432/1057795167031136306/4.png",
-    "https://cdn.discordapp.com/attachments/642904079663890432/1057795167354101921/5.png",
-    "https://cdn.discordapp.com/attachments/642904079663890432/1057795167672881232/6.png"
+    "https://i.imgur.com/tTwGxl9.jpeg",
+    "https://i.imgur.com/lQXgCZ4.jpeg",
+    "https://i.imgur.com/FEm3LAv.jpeg",
+    "https://i.imgur.com/4IUj0aX.jpeg",
+    "https://i.imgur.com/ZemsIg1.jpeg",
+    "https://i.imgur.com/fvRSAz5.jpeg"
 }
 
 local angles = {
@@ -138,7 +138,7 @@ hook.add("render","",function()
         
             render.setColor(Color(255,255,255))
             for i=1, 6 do
-                local a = angles[i] + Angle(0,90,0)
+                local a = angles[i] + Angle(180,90,0)
                 render.setMaterial(materials[i])
                 render.draw3DBox(a:getForward() * scale,a,Vector(-50,-scale,-scale),Vector(scale,scale,scale))
             end

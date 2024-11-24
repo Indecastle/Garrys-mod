@@ -8,9 +8,9 @@ local Speed = 1
 local URL = "putin"
 local IsLooping = true
 local RestartAfterPause = true
-local StartTime = 0.7
+local StartTime = 0
 
-local IsAllServer = true
+local IsAllServer = false
 local Radius = 500
 
 ------------------------------------------------------------------------------------
@@ -34,7 +34,8 @@ local _urls = {
     soldierMinus = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo-minus.mp3",
     soldierMeme = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo.mp3",
     stalker = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/stalker/stalker--muzyka-iz-stalkera-u-sidorovicha.mp3",
-    putin = "https://cdn.discordapp.com/attachments/974678227362660395/1291456856421830696/gimn-rossii-gimn-rossii-so-slovam2.mp3?ex=67002a6c&is=66fed8ec&hm=1cab5cd70316b56e75ec5060926953377472991315fe268febedc3d6ee986793&",
+    xxx = "https://raw.githubusercontent.com/Ykropcheg/StarFall-EX_Resources/refs/heads/main/epTvoyMat.mp3",
+    putin = "https://cdn.discordapp.com/attachments/974678227362660395/1291456856421830696/gimn-rossii-gimn-rossii-so-slovam2.mp3?ex=672a5a6c&is=672908ec&hm=c9e6c2108e3a897929623fd9c352ec828ce087a6db266d21043d7080a9543029&",
 }
 
 -- =================================================================================

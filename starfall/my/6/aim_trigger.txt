@@ -6,7 +6,7 @@
 local HeadDegree = 5
 local WarnDiffDegree = 80
 local WarnLimitDistance = 1000
-local HoldOnHeadDelay = 0.1  -- sec
+local HoldOnHeadDelay = 0.05  -- sec
 
 
 

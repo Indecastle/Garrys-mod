@@ -19,14 +19,14 @@ local URLS = {
     sidorovich_brightness_less2 = "https://i.imgur.com/EIEuHDO.png",
     sidorovich_brightness_less3 = "https://i.imgur.com/e2mWcg5.png",
     sidorovich_brightness_less4 = "https://i.imgur.com/PXRDwZO.png",
-    hunta_rules = "https://i.imgur.com/JYvNUm8.png",
+    nigga = "https://i.imgur.com/VOtL40V.jpeg",
     flag_poland = "https://i.imgur.com/2l0Eq5L.png",
     custom = nil
 }
 
-local img = "hunta_rules"
+local img = "nigga"
 
-local maxh = 1000
+local maxh = 100
 
 local ParentAngle = true
 local VerticalAngle = true

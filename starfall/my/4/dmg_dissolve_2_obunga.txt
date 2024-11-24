@@ -78,7 +78,7 @@ if SERVER then
     function isValidFindPlayer(ent)
         local nvars = ent:getNWVarTable()
         return ent ~= nil and ent:isValid() and ent:isValidPhys()
-            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and (nvars == nil or !nvars["_Kyle_Buildmode"])
+            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and !ent:inVehicle() and (nvars == nil or !nvars["_Kyle_Buildmode"])
                 or ent:isNPC()) 
     end
     

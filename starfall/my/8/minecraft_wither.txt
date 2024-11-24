@@ -25,7 +25,7 @@ local ExplodeModels = {
     "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001_explosive.mdl",
 }
-local TargetHomingAccuracy = 0.5
+local TargetHomingAccuracy = 0.8 
 local PropDamageMode = true
 local Damage = 20
 local HeadFireVelocity = 20
