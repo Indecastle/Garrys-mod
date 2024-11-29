@@ -69,7 +69,7 @@ local Vars = {
     IsDoubleData=true,
     isHideTarget=false,
     
-    shadowIterations=20,
+    shadowIterations=5,
     shadowAlphaReverce=0,
     shadowOffset=1,
     --alphaGlobal=50,
