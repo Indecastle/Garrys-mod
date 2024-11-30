@@ -1,0 +1,73 @@
+--@name FootStep Fart
+--@author Markiz
+--@client
+
+local Target = owner()
+Target = find.playersByName("Markiz")[1]
+print(Target)
+
+local Volume = 0.4
+local Pitch = 1.0
+
+local SoundUrl1 = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/master/starfall/Resources/fart2-quick.mp3"
+local SoundUrl2 = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/master/starfall/Resources/fart2-quick.mp3"
+
+local Radius = 2000
+
+
+----------------------------------------------------------------
+
+local _sounds = {}
+
+function loadSound(url, startTime)
+    bass.loadURL(url, "3d noblock", function(Sound)
+        table.insert(_sounds, {Sound=Sound, StartTime=startTime})
+        --_sound:setLooping(true)
+        Sound:setPitch(Pitch)
+        Sound:setVolume(Volume)  
+    end)
+end
+
+loadSound(SoundUrl1, 0.2)
+loadSound(SoundUrl2, 0.2)
+
+local _index = 0
+
+function nextIndex()
+    if #_sounds == 0 then
+        return
+    end
+    
+    _index = (_index + 1) % #_sounds
+    return _index
+end
+
+function playSound(vec)
+    nextIndex()
+    local data = _sounds[_index+1]
+    
+    if not data then return end
+    
+    local snd = data.Sound
+    if isValid(snd) then
+        snd:pause()
+        snd:setTime(data.StartTime)
+        snd:play()
+        snd:setPos(vec)
+    end
+end
+
+
+hook.add("EntityEmitSound", "", function(data)
+    if not isValid(data.Entity) then return end
+    
+    local pos = data.Pos or data.Entity:getPos()
+    local ownerEnt = data.Entity:isPlayer() and data.Entity or data.Entity:getOwner()
+    if not isValid(ownerEnt) or ownerEnt != Target then return end
+
+    if pos:getDistance(owner():getPos()) < Radius && data.Channel == 4 then
+        --print(ownerEnt:getName() .. ' - ' .. data.SoundName)
+        playSound(Target:getPos())
+    end
+    --end
+end)

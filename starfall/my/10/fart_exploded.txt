@@ -1,0 +1,94 @@
+--@name Fart Exploded
+--@author Markiz
+--@shared
+
+local Volume = 5
+local Pitch = 1.0
+local SoundStartTime = 0
+
+local SoundUrl = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/master/starfall/Resources/fart1-quick2.mp3"
+
+local ExplodeModels = {
+    "models/props_c17/oildrum001_explosive.mdl",
+    "models/props_c17/oildrum001.mdl",
+    "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_phx/mk-82.mdl",
+}
+
+local Radius = 4000
+
+------------------------------------------------------------
+
+if SERVER then
+    
+    hook.add('EntityRemoved', '', function(ent, _)
+        if isValid(ent)
+            and ent:getHealth() <= 0
+            and table.hasValue(ExplodeModels, ent:getModel()) then
+            --print('' .. tostring(ent) .. ' - ' .. ent:getHealth())
+            sendFart(ent:getPos())
+        end
+    end)
+    
+    function sendFart(pos)
+        net.start("Fart")
+        net.writeVector(pos)
+        net.send()
+    end
+
+    return
+end
+
+------------------------------------------------------------
+
+net.receive("Fart", function(len)
+    local pos = net.readVector()
+    if pos:getDistance(owner():getPos()) < Radius then
+        playSound(pos)
+    end
+    
+end)
+
+
+local CopiesCount = 4
+
+local _sounds = {}
+
+function loadSound(url, startTime)
+    bass.loadURL(url, "3d noblock", function(Sound)
+        table.insert(_sounds, {Sound=Sound, StartTime=startTime})
+        Sound:setPitch(Pitch)
+        Sound:setVolume(Volume)
+        --Sound:setFade(1000, 10000)
+    end)
+end
+
+for i=1, CopiesCount do
+    loadSound(SoundUrl, SoundStartTime)
+end
+
+local _index = 0
+
+function nextIndex()
+    if #_sounds == 0 then
+        return
+    end
+    
+    _index = (_index + 1) % #_sounds
+    return _index
+end
+
+function playSound(vec)
+    nextIndex()
+    local data = _sounds[_index+1]
+    
+    if not data then return end
+    
+    local snd = data.Sound
+    if isValid(snd) then
+        snd:pause()
+        snd:setTime(data.StartTime)
+        snd:play()
+        snd:setPos(vec)
+    end
+end
