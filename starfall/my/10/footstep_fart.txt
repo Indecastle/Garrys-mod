@@ -3,10 +3,10 @@
 --@client
 
 local Target = owner()
-Target = find.playersByName("Markiz")[1]
+Target = find.playersByName("markiz")[1]
 print(Target)
 
-local Volume = 0.4
+local Volume = 0.15
 local Pitch = 1.0
 
 local SoundUrl1 = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/master/starfall/Resources/fart2-quick.mp3"

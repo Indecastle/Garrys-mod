@@ -10,9 +10,13 @@ local SoundUrl = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/master
 
 local ExplodeModels = {
     "models/props_c17/oildrum001_explosive.mdl",
+    "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001.mdl",
     "models/props_phx/misc/potato_launcher_explosive.mdl",
     "models/props_phx/mk-82.mdl",
+    "models/props_phx/torpedo.mdl",
+    "models/props_phx/ww2bomb.mdl",
+    "models/props_phx/misc/flakshell_big.mdl",
 }
 
 local Radius = 4000

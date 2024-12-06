@@ -3,8 +3,8 @@
 --@shared
 
 local Radius = 1500
-local Health = 500
-local HealthTriggerShield = 250
+local Health = 1000
+local HealthTriggerShield = 400
 local MaxTakeDamage = 200
 
 local AiFlyEnabled = true
@@ -25,7 +25,7 @@ local ExplodeModels = {
     "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001_explosive.mdl",
 }
-local TargetHomingAccuracy = 0.8 
+local TargetHomingAccuracy = 1.1
 local PropDamageMode = true
 local Damage = 20
 local HeadFireVelocity = 20
