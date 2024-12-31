@@ -1,0 +1,161 @@
+//--@name WH simple 22222
+--@name Generic
+
+--@shared
+
+local OnlyOwner = false
+
+
+O = owner()
+OO = player()
+local isOwner = O == OO
+
+if SERVER then
+    local conectingPlayers = {}
+    
+    net.receive("hud_connecting", function (len, ply)
+        local isCon = net.readBool()
+        if isCon then
+            table.insert(conectingPlayers, ply)
+        else
+            table.removeByValue(conectingPlayers, ply)
+        end
+    end)
+    
+    timer.create("check_players", 2, 0, function()
+        for i, v in ipairs(conectingPlayers) do
+            if not v:isValid() then
+                table.removeByValue(conectingPlayers, v)
+            end
+        end
+        table.removeByValue(conectingPlayers, O)
+        
+        net.start("conecting_players")
+        net.writeTable(conectingPlayers)
+        net.send(owner())
+    end)
+
+else
+    
+    local delta = 1/60
+    local frame = 0
+
+    setName("Generic")
+    local conectingPlayers = {}
+    
+    render.createRenderTarget("screen")
+    
+    local O = player()
+    
+    local font = render.createFont("Arial" // font
+                                    ,15 // size
+                                    ,2000 // weight
+                                    ,false // antialias
+                                    ,false // additive
+                                    ,true // shadow
+                                    ,true // outline
+                                    ,false // blur
+                                    ,false //extended
+                                    )
+                                    
+    local ON = 1
+            
+    function quota()
+        return math.max(quotaAverage(), quotaUsed()) / quotaMax()
+    end
+
+    function drawConectingPlayers()
+        render.setFont("DermaLarge")
+        render.setColor(Color())
+        render.drawText(10, 10, "WH players:")
+        
+        for i=1, #conectingPlayers do
+            if conectingPlayers[i]:isValid() then
+                render.setColor(team.getColor(conectingPlayers[i]:getTeam()))
+                render.drawText(10, 40 + 30*(i-1), conectingPlayers[i]:getName())
+            end
+        end
+    end
+
+    hook.add("drawhud","myshook",function()
+        if ON != 0 then
+            local w, h = render.getResolution()
+            scr = render.getScreenEntity()
+        
+            render.setRenderTargetTexture("screen")
+            render.drawTexturedRect(0, 0, w, h)
+        end
+        
+        if ON == 2 and (isOwner or !OnlyOwner) then
+            drawConectingPlayers()
+        end
+    end)
+
+    hook.add("renderoffscreen", "", function()
+        
+        if quota() > 0.5 then return end
+        local now = timer.systime()
+        if frame > now then return end
+        frame = now + delta
+    
+        render.selectRenderTarget("screen")
+        
+        render.clear(Color(0, 0, 0, 0))
+        
+        w, h = render.getResolution()
+        local wr, hr = w/1024, h/1024
+        
+        for i, p in ipairs(find.allPlayers()) do
+            if p ~= player() then
+                local obbhs = p:obbSize()
+                
+                local pos = (p:getPos() + Vector(0, 0, obbhs.z+10)):toScreen()
+                
+                render.setFont(font)
+                render.setColor(team.getColor(p:getTeam()))
+                render.drawSimpleText(pos.x/wr, pos.y/hr-10, p:getName(), 1, 1)
+            end
+        end
+    end)
+
+
+
+    function hudConnecting(isCon)
+        ON = isCon and 1 or 0
+        net.start("hud_connecting")
+        net.writeBool(isCon)
+        net.send()
+    end
+
+    hook.add("hudconnected", "", function ()
+        hudConnecting(true)
+    end)
+    hook.add("huddisconnected", "", function ()
+        hudConnecting(false)
+    end)
+    net.receive("conecting_players", function (len)
+        conectingPlayers = net.readTable()
+    end)
+    
+    if render.isHUDActive() then
+        hudConnecting(true)
+    end
+    
+    
+    hook.add("inputPressed", "", function(button)
+        if button == KEY.PAD_DIVIDE then 
+            if !OnlyOwner or isOwner then         
+                ON = (ON + 1) % 3
+            else
+                ON = (ON + 1) % 2
+            end
+        end
+    end)
+    
+    
+    if player() == owner() then
+        enableHud(nil, true)
+    end
+end
+
+

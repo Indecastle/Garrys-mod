@@ -42,7 +42,7 @@ local URLS = {
 local img = "kitten"
 
 local IsHaveProportions = false
-local HaveAlpha = true
+local HaveAlpha = false
 
 local RadiusMode = true
 local Radius = 300
@@ -96,10 +96,10 @@ if SERVER then
         {})
     
     hook.add("ClientInitialized", "cl_init", function(ply)
-        local target = wire.ports.Target
+        local target = RadiusMode and _NoEntity or wire.ports.Target
         local on = !WW:isWired('On') or wire.ports.On
         net.start("init")
-        net.writeEntity(target and isValid(target) and target or _NoEntity)
+        net.writeEntity(isValid(target) and target or _NoEntity)
         net.writeBool(on != 0)
         net.send(ply)
     end)

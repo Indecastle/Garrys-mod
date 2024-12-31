@@ -21,7 +21,9 @@ function func()
     target = tr.Entity 
     
     toPos = tr.HitPos + Vector(0,0,10)
-    bot:setGotoPos(toPos)
+    --bot:setGotoPos(toPos)
+    bot:setApproachPos(toPos)
+    bot:faceTowards(toPos)
 end
 
 

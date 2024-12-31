@@ -59,8 +59,8 @@ if SERVER then
         Hud:linkComponent(Seat)
     end
     
-    wire.ports.LocalPos = Vector(0,0,0.01)
-    wire.ports.Seat = Seat
+    //wire.ports.LocalPos = Vector(0,0,0.01)
+    //wire.ports.Seat = Seat
     
     Hud:setNocollideAll(true)
     Seat:setNocollideAll(true)
