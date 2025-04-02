@@ -1,0 +1,56 @@
+--@name Minecraft Ghast
+--@author Markiz
+--@shared
+
+
+
+local E = chip()
+
+if SERVER then
+    
+    local GhastClass = class("GhastClass")
+    
+    function GhastClass:initialize(pos)
+        self.model = "models/hunter/blocks/cube1x1x1.mdl"
+        
+        propBase = prop.create(E:localToWorld(Vector(0,0,50)), E:getAngles(), self.model, true)
+        if propBase:getOwner() == owner() then
+            propBase:setPos(E:localToWorld(Vector(0,0,50)))
+            propBase:setAngles(E:getAngles())
+            propBase:setColor(Color(0,0,0,100))
+            --propBase:setMaterial("Models/effects/vol_light001")
+        end
+    
+        self.propBase = propBase or nil
+        self.isAlive = false
+        
+        local _eyeSize = Vector(0.4,0.3,0.13)
+        self.forward = propBase:getForward()
+        self.head = hologram.create(pos, self.forward and self.forward:getAngle() or Angle(), "models/holograms/cube.mdl", Vector(1.0, 1.0, 0.9))
+        self.head_eye1 = holograms.create(self.head:localToWorld(Vector(3.65,4,0)), self.head:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+        self.head_eye2 = holograms.create(self.head:localToWorld(Vector(3.65,-4,0)), self.head:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+        self.head_mouth = holograms.create(self.head:localToWorld(Vector(3.65,0,-3)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.40,0.65,0.07))
+        
+        self.head_eye1:setParent(self.head)
+        self.head_eye2:setParent(self.head)
+        self.head_mouth:setParent(self.head)
+        
+        self.head:setColor(Color(35,35,35))
+        self.head_eye1:setColor(Color(150,150,150))
+        self.head_eye2:setColor(Color(150,150,150))
+        self.head_mouth:setColor(Color(150,150,150))
+    end
+    
+    
+    function GhastClass:hide()
+        self.head_eye1:setColor(Color(0,0,0,0))
+        self.head_eye2:setColor(Color(0,0,0,0))
+        self.head_mouth:setColor(Color(0,0,0,0))
+        self.head:setColor(Color(0,0,0,0))
+    end
+    
+    
+    local ghast1 = GhastClass:new(E:getPos() + Vector(0, 0, 100))
+    
+    return
+end

@@ -3,13 +3,15 @@
 --@shared
 
 local Radius = 1500
-local Health = 1000
+local Health = 800
 local HealthTriggerShield = 400
-local MaxTakeDamage = 200
+local MaxTakeDamage = 300
 
-local AiFlyEnabled = true
+local AiFlyEnabled = false
 local FlyVelocityMax = 10
 local FlyHomingAccuracy = 1
+
+local IgnorePlayers = false
 
 local AutoHealAfterTime = 5
 local AutoHealDelay = 1
@@ -25,11 +27,11 @@ local ExplodeModels = {
     "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001_explosive.mdl",
 }
-local TargetHomingAccuracy = 1.1
+local TargetHomingAccuracy = 0.7
 local PropDamageMode = true
 local Damage = 20
 local HeadFireVelocity = 20
-local MinRandomFire = 0.3
+local MinRandomFire = 0.9
 local MaxRandomFire = 2.5
 local HeadFireLifeTime = 10
 
@@ -337,7 +339,7 @@ if SERVER then
     
     function isValidPlayerOrNPC(ent)
         return ent ~= nil and ent:isValid()
-            and (ent:isNPC() or ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode())
+            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode())
     end
     
     
@@ -507,7 +509,7 @@ if SERVER then
     
     
     local _HeightStep1 = 500
-    local _HeightStep2 = 100
+    local _HeightStep2 = 150
     
     function getTargetPos(ent)
         local heightStep = _state == 1 and _HeightStep1 or _HeightStep2

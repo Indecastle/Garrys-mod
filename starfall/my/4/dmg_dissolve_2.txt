@@ -70,7 +70,8 @@ if SERVER then
     
     
     timer.create("findPlayer", 0.2, 0, function()
-        if _Killer ~= nil and _Killer:isValid() then
+        if _Killer ~= nil and isValid(_Killer) then
+            _Killer:setNocollideAll(false)
             local validPlayers = find.inSphere(_Killer:getPos(), Radius, function(e)
                 return isValidFindPlayer(e)
             end)

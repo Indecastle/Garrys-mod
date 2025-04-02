@@ -194,9 +194,9 @@ function void stoptimers_2() {
 
 if((~TP_ARRAY | clk("set Array"))) {
     if(TP_ARRAY:exists(1)) {
-        A11 = TP_ARRAY:entity(3)
-        A12 = TP_ARRAY:entity(4)
-        A13 = TP_ARRAY:entity(5)
+        A11 = TP_ARRAY[3, entity]
+        A12 = TP_ARRAY[4, entity]
+        A13 = TP_ARRAY[5, entity]
     }
     else {
         A11 = A12 = A13 = noentity()

@@ -16,8 +16,8 @@ function func()
     local tr = O:getEyeTrace()          
     target = tr.Entity 
     --target:setUnbreakable(true)
-    target:setMaxHealth(10000000000000000)
-    target:setHealth(10000000000000000000)
+    --target:setMaxHealth(10000000000000000)
+    --target:setHealth(10000000000000000000)
     print(target)
     //targetP = target:getPhysicsObject()
     

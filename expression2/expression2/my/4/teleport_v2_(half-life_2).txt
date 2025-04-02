@@ -75,13 +75,13 @@ if(first() | dupefinished()) {
 
 if((~TP_ARRAY | clk("set Array"))) {
     if(TP_ARRAY:exists(1)) {
-        A = TP_ARRAY:entity(1)
-        A1 = TP_ARRAY:entity(2)
-        A11 = TP_ARRAY:entity(3)
-        A12 = TP_ARRAY:entity(4)
-        A13 = TP_ARRAY:entity(5)
-        B1 = TP_ARRAY:entity(6)
-        ABlock = TP_ARRAY:entity(7)
+        A = TP_ARRAY[1, entity]
+        A1 = TP_ARRAY[2, entity]
+        A11 = TP_ARRAY[3, entity]
+        A12 = TP_ARRAY[4, entity]
+        A13 = TP_ARRAY[5, entity]
+        B1 = TP_ARRAY[6, entity]
+        ABlock = TP_ARRAY[7, entity]
     }
     else {
         A = A1 = A11 = A12 = A13 = Veh = B1 = ABlock = noentity()

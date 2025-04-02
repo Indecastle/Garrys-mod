@@ -1,0 +1,64 @@
+--@name Night-vision
+--@author
+--@shared
+
+local displayholo = true
+
+if CLIENT then
+    local OO = owner()
+    local light2 = light.create(Vector(), 300,5,Color(0,0,0))
+    local Power = 3
+    local head, head2
+    
+    hook.add("think", "", function()
+        --if player() != owner() then return end
+        light2:setPos(eyePos())
+        light2:setBrightness(Power)
+        light2:setSize(10000)
+        light2:setColor(Color(100,255,180))
+        light2:draw()
+    end)
+    
+    local _eyePos = Vector()
+    hook.add("renderscene", "", function(origin, angles, fov)
+        _eyePos = origin
+    end)
+    hook.add("think", "FirstPerson", function()
+        if not head then return end
+        if owner() == player() and eyePos():getDistance(_eyePos) < 10 then
+            head:setColor(Color(0,0,0,0))
+            head2:setColor(Color(0,0,0,0))
+        else
+            head:setColor(Color(255,255,255))
+            head2:setColor(Color(255,255,255))
+        end
+    end)
+    
+    net.receive("init", function(len)
+        head = net.readEntity()
+        head2 = net.readEntity()
+    end)
+end
+
+
+if SERVER then
+    if not displayholo then return end
+    local Vect,Angl = owner():getAttachment(owner():lookupAttachment("anim_attachment_head"))
+    local V,A = localToWorld(Vector(-0.1,3.2,-5.4),Angle(0,0,0),Vect,Angl)
+    local V2,A2 = localToWorld(Vector(0,3,-0.5),Angle(0,0,90),Vect,Angl)
+    head = holograms.create(V, A, 'models/holograms/hq_rcube.mdl')
+    head:setParent(owner(),"anim_attachment_head")
+    head:setScale(Vector(0.5,0.25,0.18))
+    head:setMaterial("models/gibs/metalgibs/metal_gibs")
+    head2 = holograms.create(V2, A2, 'models/holograms/hq_torus.mdl')
+    head2:setParent(owner(),"anim_attachment_head")
+    head2:setScale(Vector(0.7,0.7,0.7))
+    head2:setMaterial("models/gibs/metalgibs/metal_gibs")
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.writeEntity(head)
+        net.writeEntity(head2)
+        net.send(ply or nil)
+    end)
+end

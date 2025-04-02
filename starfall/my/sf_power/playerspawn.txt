@@ -5,7 +5,7 @@
 
 local H = holograms.create(chip():localToWorld(Vector(0,0,5)), chip():localToWorldAngles(Angle(90,0,0)), "models/holograms/cone.mdl", Vector(0.5))
 H:setParent(chip())
-H:setColor(Color(255,255,255,150))
+H:setColor(Color(0,255,0,150))
 
 hook.add("PlayerSpawn", "", function(ply)
     

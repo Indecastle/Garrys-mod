@@ -16,14 +16,14 @@ if(first() | dupefinished()) {
     function number table:indexEnt(Ent:entity) {
         local OK = 0
         for(I=1,This:count()) {
-            if(This[I, array]:entity(1) == Ent) { OK = I break}
+            if(This[I, array][1, entity] == Ent) { OK = I break}
         } 
         return OK
     }
     function number table:checkAr(Ent:entity) {
         local OK = 0
         for(I=1,This:count()) {
-            if(This[I, array]:entity(1) == Ent) { OK = 1 break }
+            if(This[I, array][1, entity] == Ent) { OK = 1 break }
         }
         return OK
     }
@@ -32,7 +32,7 @@ if(first() | dupefinished()) {
         if(!This:checkAr(Ent)) { This:pushArray(array(Ent, curtime() + ShockingTime)) OK=1 }
         else {
             for(I=1,This:count()) {
-                if(This[I, array]:entity(1) == Ent) { This[I, array][2, number] = curtime() + ShockingTime break }
+                if(This[I, array][1, entity] == Ent) { This[I, array][2, number] = curtime() + ShockingTime break }
             }
         }
         return OK
@@ -160,15 +160,15 @@ if(clk("shock")) {
     }
     if (Target != World & HitPos != vec()) {
         ShockingEnts:addEnt(Target)
-        #shockSlap(Target, 1)
-        #shockDamage(Target)
+        shockSlap(Target, 1)
+        shockDamage(Target)
     }
     
     local CurTime = curtime()
     for (I=1, ShockingEnts:count()) {
         local Ar = ShockingEnts[I, array]
-        if(Ar:number(2) < CurTime) {
-            ShockingEnts:removeEnt(Ar:entity(1))
+        if(Ar[2, number] < CurTime) {
+            ShockingEnts:removeEnt(Ar[1, entity])
         }
     }
 }
@@ -178,10 +178,10 @@ if(clk("shocking")) {
     
     for (I=1, ShockingEnts:count()) {
         local Ar = ShockingEnts[I, array]
-        local T = Ar:entity(1)
+        local T = Ar[1, entity]
         
         shockEffect(T, 10, 2)
-        #shockSlap(T, 2)
-        #shockDamage(T)
+        shockSlap(T, 2)
+        shockDamage(T)
     }
 }
