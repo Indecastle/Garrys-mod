@@ -47,7 +47,7 @@ if (first()) { E=entity() O=owner()
     findByClass("gmod_wire_digitalscreen")
     W = findClosest(O:pos()):wirelink()
     
-    #timer("render", 10)
+    timer("render", 10)
     
     W:initScreen()
     #Color=randvec(0,255)
@@ -59,9 +59,9 @@ if (first()) { E=entity() O=owner()
         H3 = holoCreate(3, H1:toWorld(vec(0, HalfSquare, HalfSquare)), vec(0.5), ang(), vec(255), "icosphere3")
     }
     
-    function number lerp(Frac, Min, Max) {
-        return Min + ( Max - Min ) * Frac
-    }
+    #function number lerp(Frac, Min, Max) {
+    #    return Min + ( Max - Min ) * Frac
+    #}
     
     function vector textureColor(Texture:string) {
         R = lerp(((1024-Res)/1024)*0.4,R,Ran)
@@ -84,9 +84,9 @@ if (first()) { E=entity() O=owner()
 
 interval(10)
 
-while(softQuota() < maxquota()*0.5 & perf()) {
-#if(clk("render")) {
-#    timer("render", 100)
+#while(softQuota() < maxquota()*0.5 & perf()) {
+if(clk("render")) {
+    timer("render", 10)
     
     for (I_ = 1, TickRenders) {
         local One = HalfSquare*2 / Res

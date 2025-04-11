@@ -168,4 +168,7 @@ else
         end
     end)
     
+    if player() == owner() then
+        enableHud(nil, true)
+    end
 end

@@ -128,7 +128,7 @@ else
         hook.add("renderoffscreen","",function()
             render.selectRenderTarget("myrendertarget")
             if  permissionSatisfied then
-                while quotaAverage() < quotaMax() * Performance_Cpu_Limit do
+                while math.max(quotaAverage(), quotaUsed()) < quotaMax() * Performance_Cpu_Limit do
                     if paint() then
                         if not Repeat then
                             hook.remove("renderoffscreen","")

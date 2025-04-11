@@ -36,7 +36,7 @@ local _urls = {
     stalker = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/stalker/stalker--muzyka-iz-stalkera-u-sidorovicha.mp3",
     witherStorm = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/wither/Wither_Storm.mp3",
     gangnamStyle = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/GangnamStyle.mp3",
-    putin = "https://cdn.discordapp.com/attachments/974678227362660395/1291456856421830696/gimn-rossii-gimn-rossii-so-slovam2.mp3?ex=672a5a6c&is=672908ec&hm=c9e6c2108e3a897929623fd9c352ec828ce087a6db266d21043d7080a9543029&",
+    augh = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/AUGH.mp3",
 }
 
 -- =================================================================================
