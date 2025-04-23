@@ -37,6 +37,8 @@ local _urls = {
     witherStorm = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/wither/Wither_Storm.mp3",
     gangnamStyle = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/GangnamStyle.mp3",
     augh = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/AUGH.mp3",
+    ghast_hurt = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/ghast_hurt.ogg",
+    ghast_cries = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/ghast_cries.ogg",
 }
 
 -- =================================================================================

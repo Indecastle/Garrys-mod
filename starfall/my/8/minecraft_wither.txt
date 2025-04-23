@@ -7,7 +7,7 @@ local Health = 800
 local HealthTriggerShield = 400
 local MaxTakeDamage = 300
 
-local AiFlyEnabled = false
+local AiFlyEnabled = true
 local FlyVelocityMax = 10
 local FlyHomingAccuracy = 1
 

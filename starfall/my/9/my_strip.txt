@@ -7,7 +7,7 @@ local Kill = true
 
 
 local Target = owner()
-Target = find.playersByName("Force")[1]
+Target = find.playersByName("dash")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -61,10 +61,6 @@ wire.ports.Seat = Seat
 
 wire.create(ExitPointer, chip(), 'Local Position', 'LocalPos')
 wire.create(ExitPointer, chip(), 'Entity', 'Seat')
-wire.create(Pod1, chip(), 'Entity', 'Seat')
-wire.create(Pod2, chip(), 'Entity', 'Seat')
-wire.create(Pod1, Pod1, 'Eject', 'Active')
-wire.create(Pod2, Pod2, 'Eject', 'Active')
 Seat:setNocollideAll(true)
 Seat:setNoDraw(true)
 ExitPointer:setNocollideAll(true)

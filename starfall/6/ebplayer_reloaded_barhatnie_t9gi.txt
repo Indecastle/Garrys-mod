@@ -1,0 +1,151 @@
+--@name ebplayer_reloaded barhatnie t9gi
+
+
+local Speed = 1
+local Radius = 2500
+local Volume = 1
+
+
+if SERVER then
+    local scr = chip():isWeldedTo()
+    scr:linkComponent(chip())
+    --chip():setColor(Color(255,255,255,0))
+end
+
+if CLIENT then
+    local song
+    
+    local function play(URL)
+        bass.loadURL(URL, "3d noblock", function( snd , err , errtext )
+            if snd then
+                song = snd
+                snd:setLooping(true)
+                snd:setPitch(Speed)
+                snd:play()
+            end    
+        end)
+    end
+    
+    local function drawFFTBar(x, y, w, h, angle)
+        local upX = -math.sin(math.rad(angle)) * h/2
+        local upY =  math.cos(math.rad(angle)) * h/2
+            
+        render.drawTexturedRectRotated(x + upX, y + upY, w, h, -angle)
+    end
+    
+    
+    --local maintex = "https://i.imgur.com/R1BUrVH.jpg"
+    local maintex = "https://i.imgur.com/L48W8qr.png"
+    local putin_uv_tex = "https://i.imgur.com/dDTs11r.png"
+    
+    if not hasPermission("material.urlcreate", maintex) then
+        --return
+    end     
+    
+    local tiles = 79 local gridSize = 9 local prikol = 0
+    
+    local texSize = {x = 104,y = 113}
+    
+    function uv(n)
+        return n/1023.75 
+    end
+    
+    //local Radio = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/GangnamStyle.mp3"
+    local Radio = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/GangnamStyle.mp3"
+    
+    local perms = {
+        "bass.loadURL",
+        --"material.urlcreate",
+    }
+    setupPermissionRequest(perms, "URL sounds from external sites", true)
+    function checkGrant()
+        return Radio and hasPermission("bass.loadURL", Radio) --and hasPermission("material.urlcreate")
+    end
+    
+    if checkGrant() then
+        play(Radio)
+    end
+    
+    hook.add("permissionrequest", "perms", function()
+        if checkGrant() then
+            hook.remove("permissionrequest", "perms")
+            play(Radio)
+        end
+    end)
+    
+    
+    local _eyePos = Vector()
+    hook.add("renderscene", "", function(origin, angles, fov)
+        _eyePos = origin
+    end)
+    
+    
+    local mat = Matrix()
+    mat:setTranslation(Vector(256,256,200))
+    
+    local frame = 1
+    
+    local mat2 = material.create("UnlitGeneric")
+    mat2:setTextureURL("$basetexture", maintex)
+    
+    local putinmat = material.create("UnlitGeneric")
+    putinmat:setTextureURL("$basetexture", putin_uv_tex)
+    
+    local mat3 = material.create("UnlitGeneric")
+    mat3:setTexture("$basetexture", "models/debug/debugwhite")
+    
+    hook.add("render","",function()
+        if song != nil then
+
+            local distance = chip():getPos():getDistance(_eyePos)
+            song:setVolume(math.min(1, ((Radius-distance) / Radius)) * Volume)
+            local dirSound = (chip():getPos() - _eyePos):getNormalized()
+            song:setPos(_eyePos + dirSound*100)
+            
+            FFT = song:getFFT()
+            
+            frame = frame + 0.1 + FFT[2]*4
+            mat:setAngles(Angle(frame, 0, 90))
+            render.pushMatrix(mat)
+            
+            render.setMaterial(mat2)
+            
+            render.draw3DSphere(Vector(0,0,0),150+FFT[2]*128,32,32)
+            
+            render.popMatrix()
+            render.setMaterial(mat3)
+            render.setColor(Color(255,225,0))
+            
+            for i = 1,20 do
+                drawFFTBar(128+i*18,440,5+FFT[i]*128,1,90)
+            end
+            
+            render.setColor(Color(255, 255, 255))
+        else
+            render.setColor(Color(29,0,255))
+            render.drawRect(0, 0, 512, 512)
+            render.setColor(Color(255))
+            render.setFont(render.createFont("Arial", 64, 300, true))
+            local time = timer.realtime()%3
+            render.drawText(128, 256, "Zagruska"..string.rep(".",time)) 
+        end
+    end)
+    hook.add("render","uv",function()
+        if song != nil then
+            render.setFilterMin(1)
+            render.setFilterMag(1)
+            
+            render.setMaterial(putinmat)
+            
+            FFT = song:getFFT()
+            
+            prikol = prikol+(0.1+FFT[1]*8*timer.frametime()*100)
+
+            local prikol2 = math.floor(prikol)%tiles
+            
+            local x,y = texSize.x*(prikol2%gridSize),texSize.y*math.floor(prikol2/gridSize)
+            
+            render.drawTexturedRectUV(-70, 256, 256, 256, uv(x), uv(y), uv(x + texSize.x), uv(y + texSize.y))
+        end
+    end)
+end

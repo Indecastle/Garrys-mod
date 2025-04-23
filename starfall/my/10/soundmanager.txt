@@ -1,0 +1,69 @@
+--@name SoundManagers
+--@author Markiz
+--@client
+
+local SoundManager = class("SoundManager")
+    
+function SoundManager:initialize(url, items)
+    /*schema: 
+    {
+        url: string,
+        items: dict[string: {Start: float, End: float}]
+    }*/
+    
+    self._timerKey = ''..math.random(10000)..'_'..math.random(10000)..'_'..math.random(10000)
+    
+    self.Url = url
+    self.Items = items
+    
+    bass.loadURL(url, "3d noblock noplay", function(Sound)
+        Sound:setLooping(false)
+        Sound:setPitch(1)
+        Sound:setVolume(1)
+        Sound:setFade(50, 500)
+        self.Sound = Sound
+        print(Sound:getLength())
+    end)
+    
+end
+
+function SoundManager:isLoaded()
+    return self.Sound != nil
+end
+
+function SoundManager:play(key, pos)
+    if !self:isLoaded() then return end
+    local data = self.Items[key]
+    self.Sound:pause()
+    self.Sound:setPos(pos)
+    timer.remove(self._timerKey)
+    timer.create(self._timerKey, data.End - data.Start, 1, function()
+        self.Sound:pause()
+    end)
+    self.Sound:setTime(data.Start)
+    self.Sound:play()
+end
+
+function SoundManager:playRandom(pos)
+    if !self:isLoaded() then return end
+    local v, k = table.random(self.Items)
+    self:play(k, pos)
+end
+
+local sounds1 = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/moan_all.mp3", {
+    [1] = {Start = 0.0, End = 0.65 },
+    [2] = {Start = 0.7, End = 1.45},
+    [3] = {Start = 1.45, End = 2.3 },
+    [4] = {Start = 2.3, End = 3.1 },
+    [5] = {Start = 3.1, End = 4.7 },
+    [6] = {Start = 4.7, End = 6.75 },
+    [7] = {Start = 6.75, End = 7.7 },
+})
+    
+
+--sounds1:play(1, chip():getPos())
+timer.create("test", 3.0, 0, function()
+
+    sounds1:playRandom(chip():getPos())
+    
+end)
