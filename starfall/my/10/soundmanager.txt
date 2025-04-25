@@ -4,7 +4,7 @@
 
 local SoundManager = class("SoundManager")
     
-function SoundManager:initialize(url, items)
+function SoundManager:initialize(url, items, fadeMax)
     /*schema: 
     {
         url: string,
@@ -15,14 +15,16 @@ function SoundManager:initialize(url, items)
     
     self.Url = url
     self.Items = items
+    self.IsPlaying = false
     
     bass.loadURL(url, "3d noblock noplay", function(Sound)
+        if not isValid(Sound) then return end
         Sound:setLooping(false)
         Sound:setPitch(1)
         Sound:setVolume(1)
-        Sound:setFade(50, 500)
+        Sound:setFade(50, fadeMax)
         self.Sound = Sound
-        print(Sound:getLength())
+        --print(Sound:getLength())
     end)
     
 end
@@ -39,9 +41,12 @@ function SoundManager:play(key, pos)
     timer.remove(self._timerKey)
     timer.create(self._timerKey, data.End - data.Start, 1, function()
         self.Sound:pause()
+        self.IsPlaying = false
     end)
     self.Sound:setTime(data.Start)
     self.Sound:play()
+    
+    self.IsPlaying = true
 end
 
 function SoundManager:playRandom(pos)
@@ -58,12 +63,26 @@ local sounds1 = SoundManager:new("https://raw.githubusercontent.com/Indecastle/G
     [5] = {Start = 3.1, End = 4.7 },
     [6] = {Start = 4.7, End = 6.75 },
     [7] = {Start = 6.75, End = 7.7 },
-})
+}, 500)
+
+local sounds2 = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/scream_all.mp3", {
+    [1] = {Start = 0.0, End = 1.0 },
+    [2] = {Start = 1.0, End = 2.3 },
+    [3] = {Start = 2.3, End = 2.9 },
+    [4] = {Start = 2.9, End = 4.2 },
+    [5] = {Start = 4.2, End = 5.32 },
+}, 500)
+
+local sounds3 = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/charge_fire.mp3", {
+    [1] = {Start = 0.0, End = 1.0 },
+    [2] = {Start = 1.0, End = 1.82 },
+}, 500)
     
 
 --sounds1:play(1, chip():getPos())
-timer.create("test", 3.0, 0, function()
+timer.create("test", 2.5, 0, function()
 
     sounds1:playRandom(chip():getPos())
+    --sounds1:play(1, chip():getPos())
     
 end)

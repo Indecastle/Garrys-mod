@@ -2,7 +2,7 @@
 --@author Markiz
 --@shared
 
-
+local TargetRadius = 500
 
 local E = chip()
 local _ghastActiveList = {}
@@ -133,14 +133,6 @@ if SERVER then
         end
     end
 
-    function GhastClass:think()
-        if self.isDisposed then return end
-        for i, data in ipairs(self.legConfigList) do
-            local x = (timer.curtime()*self.legSpeed + math.rad(data.TimeDegreeOffset)) % math.pi*2
-            data.HoloBone:setAngles(self.head:localToWorldAngles(Angle(110+math.sin(x)*15, 0, 0)))
-        end
-    end
-    
     function GhastClass:destruct()
         if self.isDisposed then throw("Ghast is already disposed") end
         _ghastActiveList[self.ID] = nil
@@ -171,9 +163,68 @@ if SERVER then
         end
     end
     
-    -----------------------------------------------------------------------------
+    function GhastClass:think()
+        if self.isDisposed then return end
+        self:thinkLegs()
+        
+        self:headAngleHandler()
+    end
     
-    local ghast1 = GhastClass:new(E:getPos() + Vector(0, 0, 140))
+    function GhastClass:think1sec()
+        if self.isDisposed then return end
+        self:findTarget()
+    end
+    
+    function GhastClass:think3sec()
+        if self.isDisposed then return end
+        self:attackTarget()
+    end
+    
+    function GhastClass:thinkLegs()
+        for i, data in ipairs(self.legConfigList) do
+            local x = (timer.curtime()*self.legSpeed + math.rad(data.TimeDegreeOffset)) % math.pi*2
+            data.HoloBone:setAngles(self.head:localToWorldAngles(Angle(110+math.sin(x)*15, 0, 0)))
+        end
+    end
+    
+    function GhastClass:findTarget()
+        local myPos = self.head:getPos()
+        local players = find.allPlayers(function(ent)
+            return ent:getPos():getDistance(myPos) < TargetRadius
+        end)
+        self._target = find.closest(players, myPos)
+    end
+    
+    function GhastClass:headAngleHandler()
+        if not isValid(self._target) then return end
+        local ang = (self._target:getPos() - self.propBase:getPos()):getAngle()
+        ang.p = 0
+        self.propBase:setAngles(ang)
+    end
+    
+    function GhastClass:attackTarget()
+        if not isValid(self._target) then return end
+        net.start("AttackTarget")
+        net.writeString(self.ID)
+        net.writeEntity(self._target)
+        net.send()
+        
+        self:setFireState(true)
+        timer.simple(1, function()
+            self:setFireState(false)
+        end)
+    end
+    
+    function GhastClass:entityTakeDamage(amount)
+        if self.isDisposed then return end
+        
+        net.start("EntityTakeDamage")
+        net.writeString(self.ID)
+        net.writeFloat(amount)
+        net.send()
+    end
+    
+    -----------------------------------------------------------------------------
     
     hook.add("think", "main", function()
         for k, ghast in pairs(_ghastActiveList) do
@@ -181,16 +232,24 @@ if SERVER then
         end
     end)
     
-    local a1 = true
-
-    ghast1:setFireState(false)
-    timer.create("", 0.5, 0, function()
-        a1 = !a1
-        ghast1:setFireState(a1)
+    hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
+        for k, ghast in pairs(_ghastActiveList) do
+            if ghast.propBase == target then
+                ghast:entityTakeDamage(amount)
+            end
+        end
     end)
     
-    timer.create("test", 0.5, 4, function()
-        GhastClass:new(E:getPos() + Vector(math.random(200), math.random(200), 140 + math.random(200)))
+    timer.create("1sec", 1, 0, function()
+        for k, ghast in pairs(_ghastActiveList) do
+            ghast:think1sec()
+        end
+    end)
+    
+    timer.create("3sec", 3, 0, function()
+        for k, ghast in pairs(_ghastActiveList) do
+            ghast:think3sec()
+        end
     end)
     
     hook.add("ClientInitialized", "cl_init", function(ply)
@@ -203,9 +262,27 @@ if SERVER then
         net.send(ply)
     end)
     
+    -----------------------------------------------------------------------------
+
+    
+    local ghast1 = GhastClass:new(E:getPos() + Vector(0, 0, 140))
+    
+    /*
+    local a1 = true
+
+    timer.create("", 0.5, 0, function()
+        a1 = !a1
+        ghast1:setFireState(a1)
+    end)
+    
+    timer.create("test", 0.5, 4, function()
+        GhastClass:new(E:getPos() + Vector(math.random(200), math.random(200), 140 + math.random(200)))
+    end)
+    
     timer.simple(4, function()
         ghast1:destruct()
     end)
+    */
     
     return
 end
@@ -243,6 +320,19 @@ function GhastClientClass:buildSounds()
         [6] = {Start = 4.7, End = 6.75 },
         [7] = {Start = 6.75, End = 7.7 },
     }, 4000)
+    
+    self.soundManagerScreams = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/scream_all.mp3", {
+        [1] = {Start = 0.0, End = 1.0 },
+        [2] = {Start = 1.0, End = 2.3 },
+        [3] = {Start = 2.3, End = 2.9 },
+        [4] = {Start = 2.9, End = 4.2 },
+        [5] = {Start = 4.2, End = 5.32 },
+    }, 4000)
+    
+    self.soundManagerChargeFire = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/charge_fire.mp3", {
+        charge = {Start = 0.0, End = 1.0 },
+        fire = {Start = 1.0, End = 1.82 },
+    }, 4000)
 end
 
 function GhastClientClass:think()
@@ -258,6 +348,20 @@ function GhastClientClass:playSoundMoan()
     self.soundManagerMoans:playRandom(self.propBase:getPos())
 end
 
+function GhastClientClass:attackTarget(target)
+    local pos = self.propBase:getPos()
+    self.soundManagerChargeFire:play("charge", pos)
+    timer.simple(1, function()
+        self.soundManagerChargeFire:play("fire", pos)
+    end)
+end
+
+function GhastClientClass:entityTakeDamage(amount)
+    if self.soundManagerScreams.IsPlaying then return end
+    local pos = self.propBase:getPos()
+    self.soundManagerScreams:playRandom(pos)
+end
+
 ---------------------------------------------------------------
     
 function SoundManager:initialize(url, items, fadeMax)
@@ -271,8 +375,10 @@ function SoundManager:initialize(url, items, fadeMax)
     
     self.Url = url
     self.Items = items
+    self.IsPlaying = false
     
     bass.loadURL(url, "3d noblock noplay", function(Sound)
+        if not isValid(Sound) then return end
         Sound:setLooping(false)
         Sound:setPitch(1)
         Sound:setVolume(1)
@@ -295,9 +401,12 @@ function SoundManager:play(key, pos)
     timer.remove(self._timerKey)
     timer.create(self._timerKey, data.End - data.Start, 1, function()
         self.Sound:pause()
+        self.IsPlaying = false
     end)
     self.Sound:setTime(data.Start)
     self.Sound:play()
+    
+    self.IsPlaying = true
 end
 
 function SoundManager:playRandom(pos)
@@ -359,5 +468,19 @@ timer.create("ghastSounds", 6, 0, function()
     end
     
     closestGhast:playSoundMoan()
+end)
+
+net.receive("AttackTarget", function(len)
+    local id = net.readString()
+    local propBase = net.readEntity(function(ent)
+        _ghastActiveList[id]:attackTarget(ent)
+    end)
+end)
+
+net.receive("EntityTakeDamage", function(len)
+    local id = net.readString()
+    local amount = net.readFloat()
+    if not _ghastActiveList[id] then return end
+    _ghastActiveList[id]:entityTakeDamage(amount)
 end)
 
