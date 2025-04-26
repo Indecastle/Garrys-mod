@@ -2,14 +2,39 @@
 --@author Markiz
 --@shared
 
-local TargetRadius = 500
+local Health = 800
+local MaxTakeDamage = 300
+
+local TargetRadius = 600
+local BulletVelocity = 15
+local PropDamageMode = true
+local BulletLifeTime = 10
+
+local LockDamageTime = 0.5
+local DeathTime = 8
+
+local ExplodeModels = {
+    "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_junk/propane_tank001a.mdl",
+    "models/props_phx/oildrum001_explosive.mdl",
+    "models/props_c17/oildrum001_explosive.mdl",
+}
+
+----------------------------------------------------------
 
 local E = chip()
 local _ghastActiveList = {}
+local _ghastBulletList = {}
+
+
+function getFrameTime()
+    return timer.frametime() * 30
+end
 
 if SERVER then
     
     local GhastClass = class("GhastClass")
+    local BulletClass = class("BulletClass")
     
     
     
@@ -55,6 +80,8 @@ if SERVER then
         self:buildLegs()
         
         _ghastActiveList[self.ID] = self
+        
+        self._lastTakeDamage = timer.systime()
         
         net.start("AddGhast")
         net.writeString(self.ID)
@@ -209,7 +236,12 @@ if SERVER then
         net.writeEntity(self._target)
         net.send()
         
+
         self:setFireState(true)
+        timer.simple(0.5, function()
+            local bulletStartPos = self.propBase:localToWorld(Vector(47,0,-24))
+            local bullet = BulletClass:new(bulletStartPos, self._target:obbCenterW(), self.propBase)
+        end)
         timer.simple(1, function()
             self:setFireState(false)
         end)
@@ -218,10 +250,104 @@ if SERVER then
     function GhastClass:entityTakeDamage(amount)
         if self.isDisposed then return end
         
+        amount = math.clamp(amount, 0, MaxTakeDamage)
+        self._health = math.max(0, self._health - amount)
+        
+        _lastTakeDamage = timer.systime()
+        
+        if self._health <= 0 then
+            self._isAlive = false
+            --killingScene()
+            timer.simple(DeathTime, function()
+                self.destruct()
+            end)
+        end
+        
         net.start("EntityTakeDamage")
         net.writeString(self.ID)
         net.writeFloat(amount)
+        net.writeFloat(self._health)
         net.send()
+    end
+    
+    -----------------------------------------------------------------------------
+    
+    function explodeTo(pos)
+        while #ExplodeModels > 0 do
+            local succeed = pcall(function()
+                local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p:setNoDraw(true)
+                p:breakEnt()
+            end)
+            
+            if succeed then return end
+            table.remove(ExplodeModels, 1)
+        end
+    end
+    
+    function BulletClass:initialize(pos, targetPos, propBase)
+        table.insert(_ghastBulletList, self)
+        self.propBase = propBase or nil
+        self.targetPos = targetPos or nil
+        self.damage = Damage or nil
+        self.isExploded = false
+        self.isDisposed = false
+        self.propDamageMode = PropDamageMode
+        self.lastLifeTime = timer.systime() + BulletLifeTime
+        self.forward = (targetPos-pos):getNormalized()
+        self.head = hologram.create(pos, self.forward and self.forward:getAngle() or Angle(), "models/XQM/Rails/gumball_1.mdl", Vector(1)*0.5)
+        self.head:setMaterial("models/props_lab/cornerunit_cloud")
+    end
+    
+    function BulletClass:hide()
+        self.head:setColor(Color(0,0,0,0))
+    end
+    
+    function BulletClass:destroy()
+        self.head:remove()
+        self.isDisposed = true
+        table.removeByValue(_ghastBulletList, self)
+    end
+    
+    function BulletClass:explode()
+        if self.propDamageMode then
+            explodeTo(self.head:getPos())
+            self:destroy()
+            return
+        else
+            local plys = find.inSphere(self.head:getPos(), 100, function(ent)
+                return ent:isPlayer()
+            end)
+            for i, ply in ipairs(plys) do
+                pcall(function()
+                    ply:applyDamage(self.damage, chip(), chip())
+                end)
+            end
+            self.head:emitSound('Plastic_Barrel.BulletImpact', 100, 100, 1)
+            self:hide()
+            timer.simple(2, function()
+                self:destroy()
+            end)
+        end
+        self.isExploded = true
+    end
+    
+    function BulletClass:think()
+        if self.lastLifeTime < timer.systime() then
+            self:destroy()
+            return
+        end
+        local pos = self.head:getPos()
+        local nextPos = pos + self.forward * BulletVelocity * getFrameTime()
+        
+        local tr = trace.trace(pos, nextPos, {self.propBase}, MASK.ALL, nil, false)
+        if isValid(tr.Entity) or tr.HitWorld then
+            self:explode()
+            return
+        end
+        
+        self.head:setPos(nextPos)
+        --self.head:setAngles(self.forward:getAngle())
     end
     
     -----------------------------------------------------------------------------
@@ -229,6 +355,10 @@ if SERVER then
     hook.add("think", "main", function()
         for k, ghast in pairs(_ghastActiveList) do
             ghast:think()
+        end
+        
+        for i , bullet in ipairs(_ghastBulletList) do
+            bullet:think()
         end
     end)
     
@@ -306,6 +436,7 @@ function GhastClientClass:initialize(id, propBase)
     self.ID = id
     self.propBase = propBase
     self.isDisposed = false
+    self._health = Health
 
     self:buildSounds()
 end
@@ -356,10 +487,21 @@ function GhastClientClass:attackTarget(target)
     end)
 end
 
-function GhastClientClass:entityTakeDamage(amount)
-    if self.soundManagerScreams.IsPlaying then return end
-    local pos = self.propBase:getPos()
-    self.soundManagerScreams:playRandom(pos)
+function GhastClientClass:entityTakeDamage(amount, newHealth)
+    if newHealth > 0 then
+        if newHealth < self._health then
+            if not self.soundManagerScreams.IsPlaying then
+                local pos = self.propBase:getPos()
+                self.soundManagerScreams:playRandom(pos)
+            end
+        end
+    else
+        self._isAlive = false
+        local sound = sounds_other.death
+        sound:setPos(Holo_Base:getPos())
+        sound:play()
+    end
+    self._health = newHealth
 end
 
 ---------------------------------------------------------------
@@ -480,7 +622,8 @@ end)
 net.receive("EntityTakeDamage", function(len)
     local id = net.readString()
     local amount = net.readFloat()
+    local newHealth = net.readFloat()
     if not _ghastActiveList[id] then return end
-    _ghastActiveList[id]:entityTakeDamage(amount)
+    _ghastActiveList[id]:entityTakeDamage(amount, newHealth)
 end)
 

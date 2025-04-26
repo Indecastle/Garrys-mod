@@ -70,13 +70,13 @@ elseif CLIENT then
         local totalCPU = 0
         
         render.drawSimpleText( 0, X, "E2:", 3 )
-        render.drawSimpleText( 380, X, "Owner:", 3 )
+        render.drawSimpleText( 280, X, "Owner:", 3 )
         render.drawSimpleText( 480, X, "Cpu:", 3 )
         X = X + distance
         
         for chipName, chipTab in pairs(e2ChipsTable) do
             render.drawSimpleText( 0, X, chipName, 3 )
-            render.drawSimpleText( 380, X, getOwnerName(chipTab.owner), 3 )
+            render.drawSimpleText( 280, X, getOwnerName(chipTab.owner), 3 )
             render.drawSimpleText( 480, X, tostring(chipTab.cpuUsage), 3 )
             X = X + distance
             totalCPU = totalCPU + chipTab.cpuUsage
@@ -87,7 +87,7 @@ elseif CLIENT then
         
         for chipName, chipTab in pairs(sfChipsTable) do
             render.drawSimpleText( 0, X, chipName, 3 )
-            render.drawSimpleText( 380, X, getOwnerName(chipTab.owner), 3 )
+            render.drawSimpleText( 280, X, getOwnerName(chipTab.owner), 3 )
             render.drawSimpleText( 480, X, tostring(chipTab.cpuUsage), 3 )
             X = X + distance
             totalCPU = totalCPU + chipTab.cpuUsage
