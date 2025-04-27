@@ -1,1 +1,0 @@
-print(entity():isWeldedTo():wirelink():readArray(-_INF,_INF))

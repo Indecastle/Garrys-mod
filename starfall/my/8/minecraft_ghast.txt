@@ -2,16 +2,23 @@
 --@author Markiz
 --@shared
 
-local Health = 800
-local MaxTakeDamage = 300
+local GhastSpawnCounts = 1 -- max 5
 
-local TargetRadius = 600
-local BulletVelocity = 15
+local Health = 200
+local MaxTakeDamage = 100
+
+
+local GhastVelocity = 3
+local MoveHeightMin = 150
+local MoveHeightMax = 300
+
+local TargetRadius = 1000
+local BulletVelocity = 20
 local PropDamageMode = true
 local BulletLifeTime = 10
 
-local LockDamageTime = 0.5
-local DeathTime = 8
+local LockDamageTime = 0
+local DeathAngleVelocity = 3
 
 local ExplodeModels = {
     "models/props_phx/misc/potato_launcher_explosive.mdl",
@@ -31,6 +38,10 @@ function getFrameTime()
     return timer.frametime() * 30
 end
 
+function getNewId()
+    return ''..math.random(10000)..'_'..math.random(10000)..'_'..math.random(10000)
+end
+
 if SERVER then
     
     local GhastClass = class("GhastClass")
@@ -39,8 +50,12 @@ if SERVER then
     
     
     function GhastClass:initialize(pos)
-        self.ID = ''..math.random(10000)..'_'..math.random(10000)..'_'..math.random(10000)
+        self.ID = getNewId()
+        _ghastActiveList[self.ID] = self
+        
         self.model = "models/hunter/blocks/cube2x2x2.mdl"
+        self._health = Health
+        self._isAlive = true
         
         propBase = prop.create(pos, E:getAngles(), self.model, true)
         propBase:setAngles(E:getAngles())
@@ -78,10 +93,14 @@ if SERVER then
             {TimeDegreeOffset = 200, X =  0, Y =  -40, Length = 40},
         }
         self:buildLegs()
+        self:setScreamState(false)
         
-        _ghastActiveList[self.ID] = self
-        
-        self._lastTakeDamage = timer.systime()
+        self._timerScreamingKey = self.ID .. "_timerScreamingKey"
+        self._currentPos = self.propBase:getPos()
+        self._killingHoloAngle = 0
+        self._oldLockDamageTime = timer.systime()
+        self._isStuck = false
+        self._moveForward = Vector(math.rand(-1,1), math.rand(-1,1), 0):getNormalized()
         
         net.start("AddGhast")
         net.writeString(self.ID)
@@ -157,6 +176,16 @@ if SERVER then
             legBone:setNoDraw(true)
             
             data.HoloBone = legBone
+            data.HoloLeg = leg
+        end
+    end
+    
+    function GhastClass:setScreamState(isScreaming)
+        if not self:isAlive() then return end
+        local color = isScreaming and Color(250, 170, 170) or Color(240,240,240)
+        self.head:setColor(color)
+        for i, h in ipairs(self.legConfigList) do
+            h.HoloLeg:setColor(color)
         end
     end
 
@@ -165,10 +194,15 @@ if SERVER then
         _ghastActiveList[self.ID] = nil
         self.propBase:remove()
         self.isDisposed = true
+        self._isAlive = false
         
         net.start("RemoveGhast")
         net.writeString(self.ID)
         net.send()
+    end
+    
+    function GhastClass:isAlive()
+        return self._isAlive and not self.isDisposed
     end
     
     function GhastClass:hide()
@@ -191,19 +225,22 @@ if SERVER then
     end
     
     function GhastClass:think()
-        if self.isDisposed then return end
+        if not self:isAlive() then return end
         self:thinkLegs()
         
         self:headAngleHandler()
+        self:calculateForwardAI()
+        self:move()
     end
     
     function GhastClass:think1sec()
-        if self.isDisposed then return end
+        if not self:isAlive() then return end
         self:findTarget()
+        
     end
     
     function GhastClass:think3sec()
-        if self.isDisposed then return end
+        if not self:isAlive() then return end
         self:attackTarget()
     end
     
@@ -223,10 +260,17 @@ if SERVER then
     end
     
     function GhastClass:headAngleHandler()
-        if not isValid(self._target) then return end
-        local ang = (self._target:getPos() - self.propBase:getPos()):getAngle()
+        local dir
+        if isValid(self._target) then 
+            dir = self._target:getPos() - self.propBase:getPos()
+        else
+            dir = self._moveForward
+        end
+        
+        local ang = dir:getAngle()
         ang.p = 0
-        self.propBase:setAngles(ang)
+        local result = math.lerpAngle(0.2, self.propBase:getAngles(), ang)
+        self.propBase:setAngles(result)
     end
     
     function GhastClass:attackTarget()
@@ -238,7 +282,7 @@ if SERVER then
         
 
         self:setFireState(true)
-        timer.simple(0.5, function()
+        timer.simple(0.8, function()
             local bulletStartPos = self.propBase:localToWorld(Vector(47,0,-24))
             local bullet = BulletClass:new(bulletStartPos, self._target:obbCenterW(), self.propBase)
         end)
@@ -248,18 +292,25 @@ if SERVER then
     end
     
     function GhastClass:entityTakeDamage(amount)
-        if self.isDisposed then return end
+        if not self._isAlive
+            or self.isDisposed
+            or timer.systime() < self._oldLockDamageTime 
+            then return end
+        
+        self._oldLockDamageTime = timer.systime() + LockDamageTime
         
         amount = math.clamp(amount, 0, MaxTakeDamage)
         self._health = math.max(0, self._health - amount)
         
-        _lastTakeDamage = timer.systime()
+        self:setScreamState(true)
         
         if self._health <= 0 then
             self._isAlive = false
-            --killingScene()
-            timer.simple(DeathTime, function()
-                self.destruct()
+            self:killingScene()
+            timer.remove(self._timerScreamingKey)
+        else
+            timer.create(self._timerScreamingKey, 0.5, 1, function()
+                self:setScreamState(false)
             end)
         end
         
@@ -268,6 +319,62 @@ if SERVER then
         net.writeFloat(amount)
         net.writeFloat(self._health)
         net.send()
+    end
+    
+    function GhastClass:killingScene()
+        local hookId = ""..self.ID.."killingScene"
+        hook.add("think", hookId, function()
+            if not isValid(self.propBase) or not isValid(self.head) then return end
+            
+            self.head:setAngles(self.propBase:localToWorldAngles(Angle(0, 0, self._killingHoloAngle)))
+            
+            self._killingHoloAngle = self._killingHoloAngle + DeathAngleVelocity
+            if self._killingHoloAngle > 90 then
+                hook.remove("think", hookId)
+                timer.simple(0.5, function()
+                    self:destruct()
+                end)
+            end
+        end)
+    end
+
+    function GhastClass:calculateForwardAI()
+        local pos = self._currentPos
+        local tr = trace.line(pos, pos + Vector(0, 0, -MoveHeightMax), {self.propBase}, MASK.ALL, nil, false)
+        local dist = tr.HitPos:getDistance(pos)
+        --print(dist)
+        local zForward
+        
+        if dist < MoveHeightMin then zForward = 1
+        elseif dist >= MoveHeightMax then zForward = -1
+        end
+        if zForward then
+            self._moveForward.z = zForward * math.random()
+            self._moveForward = self._moveForward:getNormalized()
+        else
+            zForward = math.rand(-0.2, 0.2)
+        end
+        
+        self._isStuck = false
+        local tr2 = trace.line(pos, pos + self._moveForward*50, {self.propBase}, MASK.ALL, nil, false)
+        if tr2.Hit then
+            self._isStuck = true
+            for i=1, 2 do
+                local newDir = Vector(math.rand(-1,1), math.rand(-1,1), zForward * math.random()):getNormalized()
+                tr2 = trace.line(pos, pos + newDir * 50, {self.propBase}, MASK.ALL, nil, false) 
+                if not tr2.Hit then
+                    self._moveForward = newDir
+                    self._isStuck = false
+                end
+            end
+        end
+    end
+    
+    function GhastClass:move()
+        if self._isStuck or not self._moveForward == nil then return end
+        self._currentPos = self._currentPos + self._moveForward * GhastVelocity
+        local dif = (self._currentPos - self.propBase:getPos()) / 20
+        self.propBase:getPhysicsObject():setPos(self.propBase:getPos() + dif)
     end
     
     -----------------------------------------------------------------------------
@@ -392,27 +499,16 @@ if SERVER then
         net.send(ply)
     end)
     
-    -----------------------------------------------------------------------------
+    --------------------------------- CUSTOM CODE -------------------------------------------
 
     
-    local ghast1 = GhastClass:new(E:getPos() + Vector(0, 0, 140))
+    local ghast1 = nil
     
-    /*
-    local a1 = true
-
     timer.create("", 0.5, 0, function()
-        a1 = !a1
-        ghast1:setFireState(a1)
+        if #table.getKeys(_ghastActiveList) < GhastSpawnCounts then
+            GhastClass:new(E:getPos() + Vector(math.random(-200, 200), math.random(-200, 200), 20 + math.random(200)))
+        end
     end)
-    
-    timer.create("test", 0.5, 4, function()
-        GhastClass:new(E:getPos() + Vector(math.random(200), math.random(200), 140 + math.random(200)))
-    end)
-    
-    timer.simple(4, function()
-        ghast1:destruct()
-    end)
-    */
     
     return
 end
@@ -437,33 +533,13 @@ function GhastClientClass:initialize(id, propBase)
     self.propBase = propBase
     self.isDisposed = false
     self._health = Health
+    self._isAlive = true
 
     self:buildSounds()
 end
 
 function GhastClientClass:buildSounds()
-    self.soundManagerMoans = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/moan_all.mp3", {
-        [1] = {Start = 0.0, End = 0.65 },
-        [2] = {Start = 0.7, End = 1.45},
-        [3] = {Start = 1.45, End = 2.3 },
-        [4] = {Start = 2.3, End = 3.1 },
-        [5] = {Start = 3.1, End = 4.7 },
-        [6] = {Start = 4.7, End = 6.75 },
-        [7] = {Start = 6.75, End = 7.7 },
-    }, 4000)
-    
-    self.soundManagerScreams = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/scream_all.mp3", {
-        [1] = {Start = 0.0, End = 1.0 },
-        [2] = {Start = 1.0, End = 2.3 },
-        [3] = {Start = 2.3, End = 2.9 },
-        [4] = {Start = 2.9, End = 4.2 },
-        [5] = {Start = 4.2, End = 5.32 },
-    }, 4000)
-    
-    self.soundManagerChargeFire = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/charge_fire.mp3", {
-        charge = {Start = 0.0, End = 1.0 },
-        fire = {Start = 1.0, End = 1.82 },
-    }, 4000)
+    self.soundManagerData = getSoundManagerData()
 end
 
 function GhastClientClass:think()
@@ -472,48 +548,94 @@ end
 function GhastClientClass:destruct()
     if self.isDisposed then throw("Ghast is already disposed") end
     self.isDisposed = true
+    self.soundManagerData.IsAvailable = true
+    _ghastActiveList[self.ID] = nil
 end
 
 function GhastClientClass:playSoundMoan()
     if self.isDisposed then return end
-    self.soundManagerMoans:playRandom(self.propBase:getPos())
+    self.soundManagerData.Managers.Moans:playRandom(self.propBase:getPos())
 end
 
 function GhastClientClass:attackTarget(target)
+    if not isValid(self.propBase) then return end
     local pos = self.propBase:getPos()
-    self.soundManagerChargeFire:play("charge", pos)
+    self.soundManagerData.Managers.Other:play("charge", pos)
     timer.simple(1, function()
-        self.soundManagerChargeFire:play("fire", pos)
+        self.soundManagerData.Managers.Other:play("fire", pos)
     end)
 end
 
 function GhastClientClass:entityTakeDamage(amount, newHealth)
+    --print(newHealth)
     if newHealth > 0 then
         if newHealth < self._health then
-            if not self.soundManagerScreams.IsPlaying then
+            if not self.soundManagerData.Managers.Screams.IsPlaying then
                 local pos = self.propBase:getPos()
-                self.soundManagerScreams:playRandom(pos)
+                self.soundManagerData.Managers.Screams:playRandom(pos)
             end
         end
     else
         self._isAlive = false
-        local sound = sounds_other.death
-        sound:setPos(Holo_Base:getPos())
-        sound:play()
+        local pos = self.propBase:getPos()
+        self.soundManagerData.Managers.Other:play("death", pos)
     end
     self._health = newHealth
 end
 
----------------------------------------------------------------
+-------------------- SoundManager -------------------------------------------
+
+local SoundManagers = {}
+
+function getSoundManagerData()
+    for i, v in ipairs(SoundManagers) do
+        if v.IsAvailable then
+            v.IsAvailable = false
+            return v
+        end
+    end
     
+    local moans = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/moan_all.mp3", {
+        [1] = {Start = 0.0, End = 0.65 },
+        [2] = {Start = 0.7, End = 1.45},
+        [3] = {Start = 1.45, End = 2.3 },
+        [4] = {Start = 2.3, End = 3.1 },
+        [5] = {Start = 3.1, End = 4.7 },
+        [6] = {Start = 4.7, End = 6.75 },
+        [7] = {Start = 6.75, End = 7.7 },
+    }, 3000)
+    
+    local screams = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/scream_all.mp3", {
+        [1] = {Start = 0.0, End = 1.0 },
+        [2] = {Start = 1.0, End = 2.3 },
+        [3] = {Start = 2.3, End = 2.9 },
+        [4] = {Start = 2.9, End = 4.2 },
+        [5] = {Start = 4.2, End = 5.32 },
+    }, 3000)
+    
+    local other = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/charge_fire_death.mp3", {
+        charge = {Start = 0.0, End = 1.0 },
+        fire   = {Start = 1.0, End = 1.75 },
+        death  = {Start = 1.8, End = 4.90, Volume = 3 },
+    }, 3000)
+    
+    local newManagerData = { 
+        Managers = { Moans=moans, Screams=screams, Other=other },
+        IsAvailable = false
+    }
+    table.insert(SoundManagers, newManagerData)
+    return newManagerData
+end
+
+
 function SoundManager:initialize(url, items, fadeMax)
     /*schema: 
     {
         url: string,
-        items: dict[string: {Start: float, End: float}]
+        items: dict[string: { Start: float, End: float, Volume: float? }]
     }*/
     
-    self._timerKey = ''..math.random(10000)..'_'..math.random(10000)..'_'..math.random(10000)
+    self._timerKey = getNewId()
     
     self.Url = url
     self.Items = items
@@ -523,7 +645,7 @@ function SoundManager:initialize(url, items, fadeMax)
         if not isValid(Sound) then return end
         Sound:setLooping(false)
         Sound:setPitch(1)
-        Sound:setVolume(1)
+        --Sound:setVolume(1)
         Sound:setFade(50, fadeMax)
         self.Sound = Sound
         --print(Sound:getLength())
@@ -540,6 +662,7 @@ function SoundManager:play(key, pos)
     local data = self.Items[key]
     self.Sound:pause()
     self.Sound:setPos(pos)
+    self.Sound:setVolume(data.Volume or 1)
     timer.remove(self._timerKey)
     timer.create(self._timerKey, data.End - data.Start, 1, function()
         self.Sound:pause()
@@ -578,8 +701,8 @@ end)
 
 net.receive("RemoveGhast", function(len)
     local id = net.readString()
+    if not _ghastActiveList[id] then return end
     _ghastActiveList[id]:destruct()
-    _ghastActiveList[id] = nil
 end)
 
 hook.add("think", "GhastClient", function()
@@ -598,6 +721,9 @@ timer.create("ghastSounds", 6, 0, function()
     
     for id, ghast in pairs(_ghastActiveList) do
         local newDist = ghast.propBase:getPos():getDistance(player():getPos())
+        if not ghast._isAlive then
+            continue
+        end
         if closestGhast == nil then
             closestGhast = ghast
             dist = newDist
@@ -609,12 +735,15 @@ timer.create("ghastSounds", 6, 0, function()
         end
     end
     
-    closestGhast:playSoundMoan()
+    if closestGhast then
+        closestGhast:playSoundMoan()
+    end
 end)
 
 net.receive("AttackTarget", function(len)
     local id = net.readString()
     local propBase = net.readEntity(function(ent)
+        if not _ghastActiveList[id] then return end
         _ghastActiveList[id]:attackTarget(ent)
     end)
 end)

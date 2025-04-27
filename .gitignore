@@ -8,12 +8,15 @@
 
 !/advdupe2/
 !/advdupe2/**
+/advdupe2/Private/
 
 !/starfall/
 !/starfall/**
+/starfall/Private/
 
 !/expression2/
 !/expression2/**
+/expression2/Private/
 
 /expression2/_autosave_.txt
 /expression2/_helloworld_.txt

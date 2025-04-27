@@ -8,7 +8,7 @@ function SoundManager:initialize(url, items, fadeMax)
     /*schema: 
     {
         url: string,
-        items: dict[string: {Start: float, End: float}]
+        items: dict[string: { Start: float, End: float, Volume: float? }]
     }*/
     
     self._timerKey = ''..math.random(10000)..'_'..math.random(10000)..'_'..math.random(10000)
@@ -21,10 +21,10 @@ function SoundManager:initialize(url, items, fadeMax)
         if not isValid(Sound) then return end
         Sound:setLooping(false)
         Sound:setPitch(1)
-        Sound:setVolume(1)
+        --Sound:setVolume(1)
         Sound:setFade(50, fadeMax)
         self.Sound = Sound
-        --print(Sound:getLength())
+        print(Sound:getLength())
     end)
     
 end
@@ -38,6 +38,7 @@ function SoundManager:play(key, pos)
     local data = self.Items[key]
     self.Sound:pause()
     self.Sound:setPos(pos)
+    self.Sound:setVolume(data.Volume or 1)
     timer.remove(self._timerKey)
     timer.create(self._timerKey, data.End - data.Start, 1, function()
         self.Sound:pause()
@@ -73,16 +74,17 @@ local sounds2 = SoundManager:new("https://raw.githubusercontent.com/Indecastle/G
     [5] = {Start = 4.2, End = 5.32 },
 }, 500)
 
-local sounds3 = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/charge_fire.mp3", {
+local sounds3 = SoundManager:new("https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/ghast/charge_fire_death.mp3", {
     [1] = {Start = 0.0, End = 1.0 },
-    [2] = {Start = 1.0, End = 1.82 },
+    [2] = {Start = 1.0, End = 1.75 },
+    [3] = {Start = 1.8, End = 4.90, Volume = 2 },
 }, 500)
     
 
 --sounds1:play(1, chip():getPos())
-timer.create("test", 2.5, 0, function()
+timer.create("test", 1.0, 0, function()
 
     sounds1:playRandom(chip():getPos())
-    --sounds1:play(1, chip():getPos())
+    --sounds3:play(3, chip():getPos())
     
 end)
