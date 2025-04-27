@@ -8,20 +8,26 @@ local Health = 200
 local MaxTakeDamage = 100
 
 
-local GhastVelocity = 3
+local GhastVelocity = 2
 local MoveHeightMin = 150
-local MoveHeightMax = 300
+local MoveHeightMax = 400
+local TriggerOnlyWord = false
+
+local InterpolationMove = false
+local InterpolationMoveRatio = 20
 
 local TargetRadius = 1000
 local BulletVelocity = 20
 local PropDamageMode = true
 local BulletLifeTime = 10
+local BulletObbSize = 30
 
 local LockDamageTime = 0
 local DeathAngleVelocity = 3
 
 local ExplodeModels = {
     "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_phx/ww2bomb.mdl",
     "models/props_junk/propane_tank001a.mdl",
     "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001_explosive.mdl",
@@ -95,12 +101,16 @@ if SERVER then
         self:buildLegs()
         self:setScreamState(false)
         
+        
         self._timerScreamingKey = self.ID .. "_timerScreamingKey"
         self._currentPos = self.propBase:getPos()
         self._killingHoloAngle = 0
         self._oldLockDamageTime = timer.systime()
         self._isStuck = false
-        self._moveForward = Vector(math.rand(-1,1), math.rand(-1,1), 0):getNormalized()
+        self._moveForward = Angle(5, math.rand(-180,180), 0):getForward()
+        self._traceMask = TriggerOnlyWord and 24737 or MASK.ALL
+        self._zForward = 0
+        self._zDir = nil
         
         net.start("AddGhast")
         net.writeString(self.ID)
@@ -109,9 +119,9 @@ if SERVER then
     end
     
     function GhastClass:buildHolosNotFireState()
-        self.head_eye1 = holograms.create(self.head:localToWorld(Vector(47,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
-        self.head_eye2 = holograms.create(self.head:localToWorld(Vector(47, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
-        self.head_mouth = holograms.create(self.head:localToWorld(Vector(47,0,-25)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        self.head_eye1 = hologram.create(self.head:localToWorld(Vector(47,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        self.head_eye2 = hologram.create(self.head:localToWorld(Vector(47, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        self.head_mouth = hologram.create(self.head:localToWorld(Vector(47,0,-25)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
         
         self.head_eye1:setParent(self.head)
         self.head_eye2:setParent(self.head)
@@ -125,17 +135,17 @@ if SERVER then
     end
     
     function GhastClass:buildHolosFireState()
-        local head_eye11 = holograms.create(self.head:localToWorld(Vector(47,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
-        local head_eye12 = holograms.create(self.head:localToWorld(Vector(47,-18,24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,0.6))
-        local head_eye13 = holograms.create(self.head:localToWorld(Vector(47.2,-15,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,0.5,0.45))
+        local head_eye11 = hologram.create(self.head:localToWorld(Vector(47,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        local head_eye12 = hologram.create(self.head:localToWorld(Vector(47,-18,24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,0.6))
+        local head_eye13 = hologram.create(self.head:localToWorld(Vector(47.2,-15,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,0.5,0.45))
         
-        local head_eye21 = holograms.create(self.head:localToWorld(Vector(47, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
-        local head_eye22 = holograms.create(self.head:localToWorld(Vector(47,18,24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,0.6))
-        local head_eye23 = holograms.create(self.head:localToWorld(Vector(47.2,15,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,0.5,0.45))
+        local head_eye21 = hologram.create(self.head:localToWorld(Vector(47, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        local head_eye22 = hologram.create(self.head:localToWorld(Vector(47,18,24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,0.6))
+        local head_eye23 = hologram.create(self.head:localToWorld(Vector(47.2,15,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,0.5,0.45))
         
-        local head_mouth1 = holograms.create(self.head:localToWorld(Vector(47,0,-24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,1.3))
-        local head_mouth2 = holograms.create(self.head:localToWorld(Vector(47,0,-25)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,2.3))
-        local head_mouth3 = holograms.create(self.head:localToWorld(Vector(47.2,0,-26)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,1.0))
+        local head_mouth1 = hologram.create(self.head:localToWorld(Vector(47,0,-24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,1.3))
+        local head_mouth2 = hologram.create(self.head:localToWorld(Vector(47,0,-25)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,2.3))
+        local head_mouth3 = hologram.create(self.head:localToWorld(Vector(47.2,0,-26)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,1.0))
         
         head_eye11:setParent(self.head)
         head_eye12:setParent(self.head)
@@ -245,6 +255,7 @@ if SERVER then
     end
     
     function GhastClass:thinkLegs()
+        if not self:isAlive() then return end
         for i, data in ipairs(self.legConfigList) do
             local x = (timer.curtime()*self.legSpeed + math.rad(data.TimeDegreeOffset)) % math.pi*2
             data.HoloBone:setAngles(self.head:localToWorldAngles(Angle(110+math.sin(x)*15, 0, 0)))
@@ -256,6 +267,10 @@ if SERVER then
         local players = find.allPlayers(function(ent)
             return ent:getPos():getDistance(myPos) < TargetRadius
         end)
+        local npc = find.byClass("npc*", function(ent)
+            return ent:getPos():getDistance(myPos) < TargetRadius
+        end)
+        table.add(players, npc)
         self._target = find.closest(players, myPos)
     end
     
@@ -270,7 +285,7 @@ if SERVER then
         local ang = dir:getAngle()
         ang.p = 0
         local result = math.lerpAngle(0.2, self.propBase:getAngles(), ang)
-        self.propBase:setAngles(result)
+        self.propBase:getPhysicsObject():setAngles(result)
     end
     
     function GhastClass:attackTarget()
@@ -339,45 +354,73 @@ if SERVER then
     end
 
     function GhastClass:calculateForwardAI()
-        local pos = self._currentPos
-        local tr = trace.line(pos, pos + Vector(0, 0, -MoveHeightMax), {self.propBase}, MASK.ALL, nil, false)
+        local pos = InterpolationMove and self._currentPos or self.propBase:getPhysicsObject():getPos()
+        local tr = trace.line(pos, pos + Vector(0, 0, -MoveHeightMax), {self.propBase}, self._traceMask, nil, false)
         local dist = tr.HitPos:getDistance(pos)
         --print(dist)
-        local zForward
+        local zDir, zForward
         
-        if dist < MoveHeightMin then zForward = 1
-        elseif dist >= MoveHeightMax then zForward = -1
+        if dist < MoveHeightMin then zDir = -1
+        elseif dist >= MoveHeightMax then zDir = 1
         end
+
+        if not self._zDir and zDir then
+            zForward = zDir * 70
+            self._zDir = zDir
+        elseif self._zDir and not zDir then
+            zForward = self._zDir * 5
+            self._zDir = nil
+        end
+        
         if zForward then
-            self._moveForward.z = zForward * math.random()
-            self._moveForward = self._moveForward:getNormalized()
-        else
-            zForward = math.rand(-0.2, 0.2)
+            --printConsole('zForward - '..zForward)
+            local ang = self._moveForward:getAngle()
+            ang.p = zForward
+            self._moveForward = ang:getForward()
+            self._zForward = zForward
         end
         
+
         self._isStuck = false
-        local tr2 = trace.line(pos, pos + self._moveForward*50, {self.propBase}, MASK.ALL, nil, false)
+        local step = math.max(GhastVelocity, 10)
+        local tr2 = trace.line(pos, pos + self._moveForward * step, {self.propBase}, self._traceMask, nil, false)
         if tr2.Hit then
             self._isStuck = true
-            for i=1, 2 do
-                local newDir = Vector(math.rand(-1,1), math.rand(-1,1), zForward * math.random()):getNormalized()
-                tr2 = trace.line(pos, pos + newDir * 50, {self.propBase}, MASK.ALL, nil, false) 
+            for i=1, 3 do
+                if i == 2 then self._zForward = -self._zForward end
+                if i > 2 then self._zForward = math.rand(-90,90) end
+                --printConsole(''..i..' - '..self._zForward)
+                local newDir = Angle(self._zForward, math.rand(-180,180), 0):getForward()
+                tr2 = trace.line(pos, pos + newDir * step, {self.propBase}, self._traceMask, nil, false) 
                 if not tr2.Hit then
                     self._moveForward = newDir
                     self._isStuck = false
+                    break
                 end
             end
         end
     end
     
     function GhastClass:move()
-        if self._isStuck or not self._moveForward == nil then return end
-        self._currentPos = self._currentPos + self._moveForward * GhastVelocity
-        local dif = (self._currentPos - self.propBase:getPos()) / 20
-        self.propBase:getPhysicsObject():setPos(self.propBase:getPos() + dif)
+        if self._isStuck or self._moveForward == nil then return end
+        local phys = self.propBase:getPhysicsObject()
+        phys:wake()
+        
+        if InterpolationMove then
+            self._currentPos = self._currentPos + self._moveForward * GhastVelocity
+            local dif = (self._currentPos - self.propBase:getPos()) / InterpolationMoveRatio
+            phys:setPos(phys:getPos() + dif)
+        else
+            self._currentPos = phys:getPos() + self._moveForward * GhastVelocity
+            phys:setPos(self._currentPos)
+        end
     end
     
-    -----------------------------------------------------------------------------
+    
+    
+    --########################## Bullet ##########################################################
+    
+    
     
     function explodeTo(pos)
         while #ExplodeModels > 0 do
@@ -404,6 +447,9 @@ if SERVER then
         self.forward = (targetPos-pos):getNormalized()
         self.head = hologram.create(pos, self.forward and self.forward:getAngle() or Angle(), "models/XQM/Rails/gumball_1.mdl", Vector(1)*0.5)
         self.head:setMaterial("models/props_lab/cornerunit_cloud")
+        
+        self._obbMins = Vector(-BulletObbSize)
+        self._obbMaxs = Vector(BulletObbSize)
     end
     
     function BulletClass:hide()
@@ -411,6 +457,7 @@ if SERVER then
     end
     
     function BulletClass:destroy()
+        if self.isDisposed then throw("Bullet is already disposed") end
         self.head:remove()
         self.isDisposed = true
         table.removeByValue(_ghastBulletList, self)
@@ -447,7 +494,7 @@ if SERVER then
         local pos = self.head:getPos()
         local nextPos = pos + self.forward * BulletVelocity * getFrameTime()
         
-        local tr = trace.trace(pos, nextPos, {self.propBase}, MASK.ALL, nil, false)
+        local tr = trace.hull(pos, nextPos, self._obbMins, self._obbMaxs, {self.propBase}, MASK.ALL, nil, false)
         if isValid(tr.Entity) or tr.HitWorld then
             self:explode()
             return
@@ -506,7 +553,7 @@ if SERVER then
     
     timer.create("", 0.5, 0, function()
         if #table.getKeys(_ghastActiveList) < GhastSpawnCounts then
-            GhastClass:new(E:getPos() + Vector(math.random(-200, 200), math.random(-200, 200), 20 + math.random(200)))
+            GhastClass:new(E:getPos() + Vector(math.random(-200, 200), math.random(-200, 200), 100))
         end
     end)
     
@@ -567,6 +614,7 @@ function GhastClientClass:attackTarget(target)
 end
 
 function GhastClientClass:entityTakeDamage(amount, newHealth)
+    if not self._isAlive then return end
     --print(newHealth)
     if newHealth > 0 then
         if newHealth < self._health then
@@ -720,6 +768,7 @@ timer.create("ghastSounds", 6, 0, function()
     local closestGhast, dist
     
     for id, ghast in pairs(_ghastActiveList) do
+        if not isValid(ghast.propBase) then continue end
         local newDist = ghast.propBase:getPos():getDistance(player():getPos())
         if not ghast._isAlive then
             continue

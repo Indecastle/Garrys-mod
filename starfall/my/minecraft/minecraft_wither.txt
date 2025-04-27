@@ -100,9 +100,9 @@ if SERVER then
         self.lastLifeTime = timer.systime() + HeadFireLifeTime
         self.forward = (self.target:obbCenterW()-pos):getNormalized()
         self.head = hologram.create(pos, self.forward and self.forward:getAngle() or Angle(), "models/holograms/cube.mdl", Vector(1.0, 1.0, 0.9))
-        self.head_eye1 = holograms.create(self.head:localToWorld(Vector(3.65,4,0)), self.head:getAngles(), "models/holograms/cube.mdl", _eyeSize)
-        self.head_eye2 = holograms.create(self.head:localToWorld(Vector(3.65,-4,0)), self.head:getAngles(), "models/holograms/cube.mdl", _eyeSize)
-        self.head_mouth = holograms.create(self.head:localToWorld(Vector(3.65,0,-3)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.40,0.65,0.07))
+        self.head_eye1 = hologram.create(self.head:localToWorld(Vector(3.65,4,0)), self.head:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+        self.head_eye2 = hologram.create(self.head:localToWorld(Vector(3.65,-4,0)), self.head:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+        self.head_mouth = hologram.create(self.head:localToWorld(Vector(3.65,0,-3)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.40,0.65,0.07))
         
         self.head_eye1:setParent(self.head)
         self.head_eye2:setParent(self.head)
@@ -177,7 +177,7 @@ if SERVER then
     function createShieldForBone(increasePercent, ...)
         local args = {...}
         for i, holo in ipairs(args) do
-            local holo_shield = holograms.create(holo:getPos(), holo:getAngles(), "models/holograms/cube.mdl", holo:getScale() * (1 + increasePercent/100))
+            local holo_shield = hologram.create(holo:getPos(), holo:getAngles(), "models/holograms/cube.mdl", holo:getScale() * (1 + increasePercent/100))
             holo_shield:setMaterial("models/effects/comball_sphere")
             holo_shield:setParent(holo)
             table.insert(_boneShields, holo_shield)
@@ -210,51 +210,51 @@ if SERVER then
     end
 
     
-    Holo_Base = holograms.create(Prop_Base:getPos(), Prop_Base:getAngles(), "models/holograms/cube.mdl")
+    Holo_Base = hologram.create(Prop_Base:getPos(), Prop_Base:getAngles(), "models/holograms/cube.mdl")
     Holo_Base:setColor(Color(0,0,0,0))
     Holo_Base:setParent(Prop_Base)
     
     
-    local Holo_Spine = holograms.create(Holo_Base:getPos(), Holo_Base:localToWorldAngles(Angle(20,0,0)), "models/holograms/cube.mdl", Vector(0.5, 0.5, 2))
-    local Holo_Spine_Rib1 = holograms.create(Holo_Spine:localToWorld(Vector(0,0,-7)), Holo_Spine:getAngles(), "models/holograms/cube.mdl", Vector(0.3, 2, 0.3))
-    local Holo_Spine_Rib2 = holograms.create(Holo_Spine:localToWorld(Vector(0,0,-1)), Holo_Spine:getAngles(), "models/holograms/cube.mdl", Vector(0.3, 2, 0.3))
-    local Holo_Spine_Rib3 = holograms.create(Holo_Spine:localToWorld(Vector(0,0,5)), Holo_Spine:getAngles(), "models/holograms/cube.mdl", Vector(0.3, 2, 0.3))
+    local Holo_Spine = hologram.create(Holo_Base:getPos(), Holo_Base:localToWorldAngles(Angle(20,0,0)), "models/holograms/cube.mdl", Vector(0.5, 0.5, 2))
+    local Holo_Spine_Rib1 = hologram.create(Holo_Spine:localToWorld(Vector(0,0,-7)), Holo_Spine:getAngles(), "models/holograms/cube.mdl", Vector(0.3, 2, 0.3))
+    local Holo_Spine_Rib2 = hologram.create(Holo_Spine:localToWorld(Vector(0,0,-1)), Holo_Spine:getAngles(), "models/holograms/cube.mdl", Vector(0.3, 2, 0.3))
+    local Holo_Spine_Rib3 = hologram.create(Holo_Spine:localToWorld(Vector(0,0,5)), Holo_Spine:getAngles(), "models/holograms/cube.mdl", Vector(0.3, 2, 0.3))
     Holo_Spine:setParent(Holo_Base)
     Holo_Spine_Rib1:setParent(Holo_Spine)
     Holo_Spine_Rib2:setParent(Holo_Spine)
     Holo_Spine_Rib3:setParent(Holo_Spine)
     
-    local Holo_Tail = holograms.create(Holo_Spine:localToWorld(Vector(-7,0,-16)), Holo_Spine:localToWorldAngles(Angle(50,0,0)), "models/holograms/cube.mdl", Vector(0.5, 0.49, 1.5))
-    local Holo_Tail_Bone = holograms.create(Holo_Tail:localToWorld(Vector(0,0,9)), Holo_Spine:getAngles(), "models/holograms/cube.mdl", Vector(0.2, 1, 0.2))
+    local Holo_Tail = hologram.create(Holo_Spine:localToWorld(Vector(-7,0,-16)), Holo_Spine:localToWorldAngles(Angle(50,0,0)), "models/holograms/cube.mdl", Vector(0.5, 0.49, 1.5))
+    local Holo_Tail_Bone = hologram.create(Holo_Tail:localToWorld(Vector(0,0,9)), Holo_Spine:getAngles(), "models/holograms/cube.mdl", Vector(0.2, 1, 0.2))
     Holo_Tail_Bone:setParent(Holo_Base)
     Holo_Tail_Bone:setColor(Color(0,0,0,0))
     Holo_Tail:setParent(Holo_Tail_Bone)
     
-    local Holo_Clavicle = holograms.create(Holo_Base:localToWorld(Vector(4,0,12)), Holo_Base:getAngles(), "models/holograms/cube.mdl", Vector(0.5, 4, 0.4))
+    local Holo_Clavicle = hologram.create(Holo_Base:localToWorld(Vector(4,0,12)), Holo_Base:getAngles(), "models/holograms/cube.mdl", Vector(0.5, 4, 0.4))
     Holo_Clavicle:setParent(Holo_Base)
     
-    local Holo_Head1 = holograms.create(Holo_Clavicle:localToWorld(Vector(2,0,9)), Holo_Clavicle:getAngles(), "models/holograms/cube.mdl", Vector(1.4,1.4,1.3))
-    local Holo_Head1_Eye1 = holograms.create(Holo_Head1:localToWorld(Vector(6.1,4,0)), Holo_Head1:getAngles(), "models/holograms/cube.mdl", _eyeSize)
-    local Holo_Head1_Eye2 = holograms.create(Holo_Head1:localToWorld(Vector(6.1,-4,0)), Holo_Head1:getAngles(), "models/holograms/cube.mdl", _eyeSize)
-    local Holo_Head1_Mouth = holograms.create(Holo_Head1:localToWorld(Vector(5.5,0,-3)), Holo_Head1:getAngles(), "models/holograms/cube.mdl", Vector(0.49,0.65,0.07))
+    local Holo_Head1 = hologram.create(Holo_Clavicle:localToWorld(Vector(2,0,9)), Holo_Clavicle:getAngles(), "models/holograms/cube.mdl", Vector(1.4,1.4,1.3))
+    local Holo_Head1_Eye1 = hologram.create(Holo_Head1:localToWorld(Vector(6.1,4,0)), Holo_Head1:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+    local Holo_Head1_Eye2 = hologram.create(Holo_Head1:localToWorld(Vector(6.1,-4,0)), Holo_Head1:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+    local Holo_Head1_Mouth = hologram.create(Holo_Head1:localToWorld(Vector(5.5,0,-3)), Holo_Head1:getAngles(), "models/holograms/cube.mdl", Vector(0.49,0.65,0.07))
     Holo_Head1:setParent(Holo_Base)
     Holo_Head1_Eye1:setParent(Holo_Head1)
     Holo_Head1_Eye2:setParent(Holo_Head1)
     Holo_Head1_Mouth:setParent(Holo_Head1)
     
-    local Holo_Head2 = holograms.create(Holo_Clavicle:localToWorld(Vector(2,21,5)), Holo_Clavicle:getAngles(), "models/holograms/cube.mdl", Vector(1.0,1.0,0.9))
-    local Holo_Head2_Eye1 = holograms.create(Holo_Head2:localToWorld(Vector(3.65,4,0)), Holo_Head2:getAngles(), "models/holograms/cube.mdl", _eyeSize)
-    local Holo_Head2_Eye2 = holograms.create(Holo_Head2:localToWorld(Vector(3.65,-4,0)), Holo_Head2:getAngles(), "models/holograms/cube.mdl", _eyeSize)
-    local Holo_Head2_Mouth = holograms.create(Holo_Head2:localToWorld(Vector(3.65,0,-3)), Holo_Head2:getAngles(), "models/holograms/cube.mdl", Vector(0.40,0.65,0.07))
+    local Holo_Head2 = hologram.create(Holo_Clavicle:localToWorld(Vector(2,21,5)), Holo_Clavicle:getAngles(), "models/holograms/cube.mdl", Vector(1.0,1.0,0.9))
+    local Holo_Head2_Eye1 = hologram.create(Holo_Head2:localToWorld(Vector(3.65,4,0)), Holo_Head2:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+    local Holo_Head2_Eye2 = hologram.create(Holo_Head2:localToWorld(Vector(3.65,-4,0)), Holo_Head2:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+    local Holo_Head2_Mouth = hologram.create(Holo_Head2:localToWorld(Vector(3.65,0,-3)), Holo_Head2:getAngles(), "models/holograms/cube.mdl", Vector(0.40,0.65,0.07))
     Holo_Head2:setParent(Holo_Base)
     Holo_Head2_Eye1:setParent(Holo_Head2)
     Holo_Head2_Eye2:setParent(Holo_Head2)
     Holo_Head2_Mouth:setParent(Holo_Head2)
     
-    local Holo_Head3 = holograms.create(Holo_Clavicle:localToWorld(Vector(2,-21,5)), Holo_Clavicle:getAngles(), "models/holograms/cube.mdl", Vector(1.0,1.0,0.9))
-    local Holo_Head3_Eye1 = holograms.create(Holo_Head3:localToWorld(Vector(3.65,4,0)), Holo_Head3:getAngles(), "models/holograms/cube.mdl", _eyeSize)
-    local Holo_Head3_Eye2 = holograms.create(Holo_Head3:localToWorld(Vector(3.65,-4,0)), Holo_Head3:getAngles(), "models/holograms/cube.mdl", _eyeSize)
-    local Holo_Head3_Mouth = holograms.create(Holo_Head3:localToWorld(Vector(3.65,0,-3)), Holo_Head3:getAngles(), "models/holograms/cube.mdl", Vector(0.40,0.65,0.07))
+    local Holo_Head3 = hologram.create(Holo_Clavicle:localToWorld(Vector(2,-21,5)), Holo_Clavicle:getAngles(), "models/holograms/cube.mdl", Vector(1.0,1.0,0.9))
+    local Holo_Head3_Eye1 = hologram.create(Holo_Head3:localToWorld(Vector(3.65,4,0)), Holo_Head3:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+    local Holo_Head3_Eye2 = hologram.create(Holo_Head3:localToWorld(Vector(3.65,-4,0)), Holo_Head3:getAngles(), "models/holograms/cube.mdl", _eyeSize)
+    local Holo_Head3_Mouth = hologram.create(Holo_Head3:localToWorld(Vector(3.65,0,-3)), Holo_Head3:getAngles(), "models/holograms/cube.mdl", Vector(0.40,0.65,0.07))
     Holo_Head3:setParent(Holo_Base)
     Holo_Head3_Eye1:setParent(Holo_Head3)
     Holo_Head3_Eye2:setParent(Holo_Head3)
@@ -759,7 +759,7 @@ end
 m:recompute()
 
 
-local holo = holograms.create(chip():getPos(), chip():getAngles(), "models/holograms/plane.mdl", Vector(1))
+local holo = hologram.create(chip():getPos(), chip():getAngles(), "models/holograms/plane.mdl", Vector(1))
 holo:setColor(Color(0,0,0,1))
 holo:setMaterial("!" .. m:getName())
 holo:suppressEngineLighting(true)

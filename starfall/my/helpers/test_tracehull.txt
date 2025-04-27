@@ -1,0 +1,70 @@
+--@name Test TraceHull
+--@author
+--@server
+
+local E = chip()
+local O = owner()
+
+local holoScale = Vector(60, 20, 20)
+
+--------------------------
+
+local obbMins = -holoScale
+local obbMaxs = holoScale
+
+local holo = hologram.create(E:localToWorld(Vector(0,0,holoScale.z)), Angle(), "models/holograms/cube.mdl", Vector())
+local holo2 = hologram.create(E:localToWorld(Vector(0,0,holoScale.z)), Angle(), "models/holograms/cube.mdl", Vector())
+holo:setSize(holoScale * 2)
+holo2:setSize(holoScale * 2)
+--holo:setParent(E)
+
+timer.create("", 1, 0, function()
+    --trace.hull(Vector start, Vector endpos, Vector minbox, Vector maxbox, Entity or table or function or nil filter, number or nil mask, number or nil colgroup, boolean or nil ignworld)
+    --local tr = trace.hull(E:getPos(), E:localToWorld(Vector(50,0,0)), Vector(-80, -20, -20), Vector(80, 20, 20), {E}, MASK.ALL, nil, false)
+    --print(tr.Entity)
+end)
+
+hook.add("think", "", function()
+    local tr = trace.hull(E:getPos(), E:localToWorld(Vector(0,0,100)), obbMins, obbMaxs, {E}, MASK.ALL, nil, false)
+    local color = tr.Hit and Color(0, 200, 0, 200) or Color(255, 255, 255, 200)
+    holo:setColor(color)
+    holo2:setColor(color)
+    holo:setPos(E:localToWorld(Vector(0,0,0)))
+    holo2:setPos(tr.HitPos)
+end)
+
+-------------------------------------------------------------------------
+/*
+
+local E = chip()
+local O = owner()
+
+local holoScale = Vector(80, 20, 20)
+
+--------------------------
+
+local obbMins = -holoScale + Vector(0,0,holoScale.z)
+local obbMaxs = holoScale
+
+local holo = hologram.create(E:localToWorld(Vector(0,0,holoScale.z)), Angle(), "models/holograms/cube.mdl", Vector())
+local holo2 = hologram.create(E:localToWorld(Vector(0,0,holoScale.z)), Angle(), "models/holograms/cube.mdl", Vector())
+holo:setSize(holoScale*2 - Vector(0,0,holoScale.z))
+holo2:setSize(holoScale*2 - Vector(0,0,holoScale.z))
+--holo:setParent(E)
+
+timer.create("", 1, 0, function()
+    --trace.hull(Vector start, Vector endpos, Vector minbox, Vector maxbox, Entity or table or function or nil filter, number or nil mask, number or nil colgroup, boolean or nil ignworld)
+    --local tr = trace.hull(E:getPos(), E:localToWorld(Vector(50,0,0)), Vector(-80, -20, -20), Vector(80, 20, 20), {E}, MASK.ALL, nil, false)
+    --print(tr.Entity)
+end)
+
+hook.add("think", "", function()
+    local tr = trace.hull(E:getPos(), E:localToWorld(Vector(0,0,100)), obbMins, obbMaxs, {E}, MASK.ALL, nil, false)
+    local color = tr.Hit and Color(0, 200, 0, 200) or Color(255, 255, 255, 200)
+    holo:setColor(color)
+    holo2:setColor(color)
+    holo:setPos(E:getPos() + Vector(0,0,holoScale.z)/2)
+    holo2:setPos(tr.HitPos + Vector(0,0,holoScale.z)/2)
+end)
+
+*/
