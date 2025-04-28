@@ -2,13 +2,15 @@
 --@author Markiz
 --@shared
 
+local Respawn = true
 local GhastSpawnCounts = 1 -- max 5
 
 local Health = 200
 local MaxTakeDamage = 100
 
 
-local GhastVelocity = 2
+local GhastVelocity = 3
+local MoveRadius = 2000
 local MoveHeightMin = 150
 local MoveHeightMax = 400
 local TriggerOnlyWord = false
@@ -53,7 +55,10 @@ if SERVER then
     local GhastClass = class("GhastClass")
     local BulletClass = class("BulletClass")
     
-    
+    function isValidPlayerOrNPC(ent)
+        return ent ~= nil and ent:isValid()
+            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode())
+    end
     
     function GhastClass:initialize(pos)
         self.ID = getNewId()
@@ -63,8 +68,7 @@ if SERVER then
         self._health = Health
         self._isAlive = true
         
-        propBase = prop.create(pos, E:getAngles(), self.model, true)
-        propBase:setAngles(E:getAngles())
+        propBase = prop.create(pos, Angle(), self.model, true)
         propBase:setColor(Color(0,0,0,0))
         propBase:setMaterial("models/debug/debugwhite")
     
@@ -243,7 +247,7 @@ if SERVER then
         self:move()
     end
     
-    function GhastClass:think1sec()
+    function GhastClass:think05sec()
         if not self:isAlive() then return end
         self:findTarget()
         
@@ -263,12 +267,13 @@ if SERVER then
     end
     
     function GhastClass:findTarget()
+        if not self:isAlive() then return end
         local myPos = self.head:getPos()
         local players = find.allPlayers(function(ent)
-            return ent:getPos():getDistance(myPos) < TargetRadius
+            return ent:getPos():getDistance(myPos) < TargetRadius and isValidPlayerOrNPC(ent)
         end)
         local npc = find.byClass("npc*", function(ent)
-            return ent:getPos():getDistance(myPos) < TargetRadius
+            return ent:getPos():getDistance(myPos) < TargetRadius and isValidPlayerOrNPC(ent)
         end)
         table.add(players, npc)
         self._target = find.closest(players, myPos)
@@ -298,6 +303,7 @@ if SERVER then
 
         self:setFireState(true)
         timer.simple(0.8, function()
+            if not isValid(self.propBase) or not isValid(self._target) then return end
             local bulletStartPos = self.propBase:localToWorld(Vector(47,0,-24))
             local bullet = BulletClass:new(bulletStartPos, self._target:obbCenterW(), self.propBase)
         end)
@@ -371,7 +377,7 @@ if SERVER then
             zForward = self._zDir * 5
             self._zDir = nil
         end
-        
+
         if zForward then
             --printConsole('zForward - '..zForward)
             local ang = self._moveForward:getAngle()
@@ -379,12 +385,11 @@ if SERVER then
             self._moveForward = ang:getForward()
             self._zForward = zForward
         end
-        
 
         self._isStuck = false
         local step = math.max(GhastVelocity, 10)
         local tr2 = trace.line(pos, pos + self._moveForward * step, {self.propBase}, self._traceMask, nil, false)
-        if tr2.Hit then
+        if tr2.Hit or not self:isInMoveValidRadius(tr2.HitPos) then
             self._isStuck = true
             for i=1, 3 do
                 if i == 2 then self._zForward = -self._zForward end
@@ -392,13 +397,23 @@ if SERVER then
                 --printConsole(''..i..' - '..self._zForward)
                 local newDir = Angle(self._zForward, math.rand(-180,180), 0):getForward()
                 tr2 = trace.line(pos, pos + newDir * step, {self.propBase}, self._traceMask, nil, false) 
-                if not tr2.Hit then
+                if not tr2.Hit and self:isInMoveValidRadius(tr2.HitPos) then
                     self._moveForward = newDir
                     self._isStuck = false
                     break
                 end
             end
         end
+    end
+    
+    function GhastClass:isInMoveValidRadius(pos)
+        local origin = chip():getPos()
+        --local obbMins = origin - Vector(MoveRadius)
+        --local obbMaxs = origin + Vector(MoveRadius)
+
+        return math.abs(origin.x - pos.x) <= MoveRadius
+            and math.abs(origin.y - pos.y) <= MoveRadius
+        --return origin - pos < obbMins and origin - pos < obbMins
     end
     
     function GhastClass:move()
@@ -524,9 +539,9 @@ if SERVER then
         end
     end)
     
-    timer.create("1sec", 1, 0, function()
+    timer.create("0.5sec", 0.5, 0, function()
         for k, ghast in pairs(_ghastActiveList) do
-            ghast:think1sec()
+            ghast:think05sec()
         end
     end)
     
@@ -547,15 +562,25 @@ if SERVER then
     end)
     
     --------------------------------- CUSTOM CODE -------------------------------------------
-
     
-    local ghast1 = nil
-    
-    timer.create("", 0.5, 0, function()
-        if #table.getKeys(_ghastActiveList) < GhastSpawnCounts then
-            GhastClass:new(E:getPos() + Vector(math.random(-200, 200), math.random(-200, 200), 100))
-        end
-    end)
+    if Respawn then
+        local ghast1 = nil
+        timer.create("", 0.5, 0, function()
+            if #table.getKeys(_ghastActiveList) < GhastSpawnCounts then
+                GhastClass:new(E:getPos() + Vector(math.random(-200, 200), math.random(-200, 200), 100))
+            end
+        end)
+    else
+        local ent = GhastClass:new(E:localToWorld(Vector(0,0,100)))
+        timer.create("test123", 0.5, 0, function()
+            if ent.isDisposed then
+                timer.remove("test123")
+                timer.simple(1.5, function()
+                    chip():remove()
+                end)
+            end
+        end)
+    end
     
     return
 end
