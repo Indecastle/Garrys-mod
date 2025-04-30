@@ -1,0 +1,516 @@
+--@name DMG_DISSOLVE 2 Skibidi
+--@author Markiz
+--@shared
+
+local Respawn = false
+local SpawnCounts = 1
+
+local Health = 60
+
+local Radius = 1000
+
+local Force = 40--65
+local ForceUp = 250
+local IsDissolving = true
+
+----- music ------
+local Volume = 2
+local MusicSpeed = 1
+local URL_Music = "skibidi"
+local IsLooping = true
+local FadeMin, FadeMax = 50, 600
+----- music ------
+
+
+ToiletData = {
+    [1] = { Model = "models/props_wasteland/prison_toilet01.mdl", OffsetToilet = 0, OffsetHead = 0 },
+    [2] = { Model = "models/props_c17/FurnitureToilet001a.mdl", OffsetToilet = 31, OffsetHead = 25 },
+}
+
+------------------------------------------------------------------------------------
+
+local _urls_music = {
+    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi.mp3",
+    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_slowed.mp3",
+    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_only.mp3",
+    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
+    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_starwars.mp3",
+}
+
+-- =================================================================================
+
+local ExplodeModels = {
+    "models/props_phx/ww2bomb.mdl",
+    "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_junk/propane_tank001a.mdl",
+    "models/props_phx/oildrum001_explosive.mdl",
+    "models/props_c17/oildrum001_explosive.mdl",
+}
+
+function getFrameTime()
+    return timer.frametime() * 30
+end
+
+function getNewId()
+    return ''..math.random(10000)..'_'..math.random(10000)..'_'..math.random(10000)
+end
+
+local E = chip()
+local _skibidiActiveList = {}
+
+if SERVER then
+    
+    local SkibidiClass = class("SkibidiClass")
+    
+    
+    local _health = Health
+    local _isAlive = true
+    
+    ToiletData = {
+        [1] = { Model = "models/props_wasteland/prison_toilet01.mdl", OffsetToilet = 0, OffsetHead = 0 },
+        [2] = { Model = "models/props_c17/FurnitureToilet001a.mdl", OffsetToilet = 31, OffsetHead = 25},
+    }
+    
+    function explodeTo(pos)
+        while #ExplodeModels > 0 do
+            local succeed = pcall(function()
+                local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p:setNoDraw(true)
+                p:breakEnt()
+            end)
+            
+            if succeed then return end
+            table.remove(ExplodeModels, 1)
+        end
+    end
+    
+    function isValidPlayerOrNPC(ent)
+        if not isValid(ent) then return false end
+        local nvars = ent:getNWVarTable()
+        return ent ~= nil and ent:isValid() and ent:isValidPhys()
+            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and !ent:inVehicle() and (nvars == nil or !nvars["_Kyle_Buildmode"])
+                or ent:isNPC()) 
+    end
+    
+    local players = find.allPlayers()
+    
+    function SkibidiClass:initialize(pos, toiletType)
+        self.ID = getNewId()
+        _skibidiActiveList[self.ID] = self
+        self._toiletDataItem = ToiletData[toiletType]
+        
+        self.model = "models/hunter/blocks/cube2x2x2.mdl"
+        self._health = Health
+        self._isAlive = true
+        self.isDisposed = false
+        
+        self._propBase = prop.create(pos, Angle(), "models/XQM/Rails/gumball_1.mdl", false)
+        self._propBase:setFrozen(false)
+        self._propBase:setColor(Color(0,0,0,0))
+        self._propBase:setPhysMaterial("gmod_silent")
+        --self._propBase:setUnbreakable(true)
+        self._physEnt = self._propBase:getPhysicsObject()
+        if IsDissolving then
+            self._physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
+        end
+        self._physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
+        --self._physEnt:enableGravity(false)
+        self._forceUp = Vector(0,0,self._propBase:getMass()*ForceUp)
+        
+        self._baseHolo = hologram.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
+        self._baseHolo:setNoDraw(true)
+        self._toiletHolo = hologram.create(self._baseHolo:getPos(), self._baseHolo:getAngles(), self._toiletDataItem.Model)
+        self._headHolo = hologram.create(self._toiletHolo:localToWorld(Vector(0, 0, -66 - self._toiletDataItem.OffsetHead)), self._baseHolo:getAngles(), "models/gman_high.mdl")
+        self._headHolo:setParent(self._toiletHolo)
+        --self._toiletHolo:setParent(Base)
+        self._headHolo:setClip(1, true, Vector(0, 0, -5 - self._toiletDataItem.OffsetHead), Vector(0,0,1), self._toiletHolo)
+            
+        self._baseHolo:setPos(self._propBase:getPos())
+        self._baseHolo:setParent(self._propBase)
+        
+        self._timerScreamingKey = self.ID .. "_timerScreamingKey"
+        self._closestPlayer = nil
+        
+        net.start("AddSkibidi")
+        net.writeString(self.ID)
+        net.writeEntity(self._propBase)
+        net.writeEntity(self._headHolo)
+        net.send()
+    end
+    
+    
+    function SkibidiClass:destruct()
+        if self.isDisposed then throw("Skibidi is already disposed") end
+        _skibidiActiveList[self.ID] = nil
+        self._propBase:remove()
+        self._toiletHolo:remove()
+        self.isDisposed = true
+        self._isAlive = false
+        
+        net.start("RemoveGhast")
+        net.writeString(self.ID)
+        net.send()
+    end
+    
+    
+    function SkibidiClass:isAlive()
+        return self._isAlive and not self.isDisposed and isValid(self._propBase)
+    end
+    
+    
+    function SkibidiClass:think02sec()
+        if not self:isAlive() then return end
+        self:findTarget()
+    end
+    
+    
+    function SkibidiClass:think2sec()
+        if self._propBase ~= nil and self._propBase:isValid() and self._propBase:isValidPhys()  and isValidPlayerOrNPC(self._closestPlayer) then
+            self._propBase:applyForceCenter(self._forceUp)
+        end
+    end
+    
+    
+    function SkibidiClass:think()
+        if not self:isAlive() then return end
+        if self._propBase ~= nil and self._propBase:isValid() and isValidPlayerOrNPC(self._closestPlayer) then
+            local targetPos = self._closestPlayer:obbCenterW()
+            local dir = (targetPos - self._propBase:getPos()):getNormalized()
+            dir = dir:setZ(0):getNormalized()
+            local xyVel = self._propBase:getVelocity()
+            xyVel.z = 0
+            self._physEnt:applyForceCenter(dir * self._propBase:getMass() * Force - xyVel*(self._propBase:getMass()/8))
+        end
+        
+        if isValid(self._propBase) then
+            self._toiletHolo:setPos(self._propBase:getPos() + Vector(0, 0, self._toiletDataItem.OffsetToilet))
+            local ang = self._propBase:getVelocity():getAngle()
+            ang:setP(0)
+            self._toiletHolo:setAngles(ang)
+        end
+    end
+    
+    
+    function SkibidiClass:findTarget()
+        if self._propBase ~= nil and self._propBase:isValid() then
+            self._propBase:setNocollideAll(false)
+            local validPlayers = find.inSphere(self._propBase:getPos(), Radius, isValidPlayerOrNPC)
+            validPlayers = find.sortByClosest(validPlayers, self._propBase:getPos())
+            self._closestPlayer = #validPlayers ~= nil and validPlayers[1] or nil
+        else
+            self._closestPlayer = nil
+        end
+    end
+    
+    
+    function SkibidiClass:entityTakeDamage(target, attacker, amount)
+        --print(amount)
+        if not self._isAlive or not isValid(self._propBase) then return end
+        if not isValid(attacker) or attacker:getModel() == "models/xqm/rails/gumball_1.mdl" then return end
+        
+        self._health = math.max(0, self._health - amount)
+        
+        self:setScreamState(true)
+        
+        if self._health <= 0 then
+            self._isAlive = false
+            local pos = self._propBase:getPos()
+            explodeTo(pos)
+            self:destruct()
+        else
+            timer.create(self._timerScreamingKey, 0.3, 1, function()
+                self:setScreamState(false)
+            end)
+        end
+    end
+    
+    function SkibidiClass:setScreamState(isScreaming)
+        if not self:isAlive() then return end
+        local color = isScreaming and Color(250, 170, 170) or Color(255)
+        self._toiletHolo:setColor(color)
+    end
+    
+    -------------------------------------------------------------------------
+    
+    timer.create("findPlayer", 0.2, 0, function()
+        for k, ent in pairs(_skibidiActiveList) do
+            ent:think02sec()
+        end
+    end)
+    
+    timer.create("jump", 2, 0, function()
+        for k, ent in pairs(_skibidiActiveList) do
+            ent:think2sec()
+        end
+    end)
+    
+    hook.add("think", "run", function()
+        for k, ent in pairs(_skibidiActiveList) do
+            ent:think()
+        end
+    end)
+    
+    hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
+        for k, ent in pairs(_skibidiActiveList) do
+            if ent._propBase == target then
+                ent:entityTakeDamage(target, attacker, amount)
+            end
+        end
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        local tab = {}
+        for k, ent in pairs(_skibidiActiveList) do
+            tab[k] = { PropBase = ent._propBase, HeadHolo = ent._headHolo }
+        end
+        net.start("ActiveEnts")
+        net.writeTable(tab)
+        net.send(ply)
+    end)
+    
+    
+    --================= CUSTOME CODE ================================================
+    
+    
+    if Respawn then
+        timer.create("", 0.5, 0, function()
+            if #table.getKeys(_skibidiActiveList) < SpawnCounts then
+                SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), math.random(1, #ToiletData))
+            end
+        end)
+    else
+        local ent = SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), math.random(1, #ToiletData))
+        timer.create("test123", 0.5, 0, function()
+            if ent.isDisposed then
+                timer.remove("test123")
+                timer.simple(1, function()
+                    chip():remove()
+                end)
+            end
+        end)
+    end
+    
+    return
+end
+
+--=================================================================
+
+
+
+---------- CLIENT ---------------------------------------------------------------
+
+local SkibidiClientClass = class("SkibidiClientClass")
+
+
+function SkibidiClientClass:initialize(id, propBase, headHolo)
+    self.ID = id
+    self._propBase = propBase
+    self._headHolo = headHolo
+    self.isDisposed = false
+    self._health = Health
+    self._isAlive = true
+
+    self._i1 = 0
+    self._i2 = 0
+    self._i3 = 0
+    self._maxI1 = 10
+    self._maxI3 = 1.0
+    self._move1 = 1.5
+    self._move2 = 20
+    self._move3 = 0.2
+    self._index1 = 0
+    self._index2 = 0
+    self._index3 = 0
+    
+    self._callbackState = self.PositionState
+    
+    self._headBone = self._headHolo:lookupBone("ValveBiped.Bip01_Head1")
+        
+    local spine4_bone = self._headHolo:lookupBone("ValveBiped.Bip01_Spine4")
+    local neck1_bone = self._headHolo:lookupBone("ValveBiped.Bip01_Neck1")
+    local rClavicle_bone = self._headHolo:lookupBone("ValveBiped.Bip01_R_Clavicle")
+    local lClavicle_bone = self._headHolo:lookupBone("ValveBiped.Bip01_L_Clavicle")
+    
+    self._headHolo:manipulateBoneScale(spine4_bone, Vector(0))
+    self._headHolo:manipulateBoneScale(neck1_bone, Vector(0))
+    self._headHolo:manipulateBoneScale(lClavicle_bone, Vector(0))
+    self._headHolo:manipulateBoneScale(lClavicle_bone, Vector(0))
+    
+    self._headHolo:manipulateBoneScale(self._headBone, Vector(3))
+    
+    self:buildSounds()
+end
+
+
+function SkibidiClientClass:buildSounds()
+    self.soundManagerData = getSoundManagerData()
+end
+
+
+function SkibidiClientClass:think()
+    self:processSounds()
+    self:manipulateBone()
+end
+
+function SkibidiClientClass:processSounds()
+    local snd = self.soundManagerData.Sounds.Sound
+    if not isValid(self._propBase) or self.isDisposed or not isValid(snd) then return end
+    snd:setPos(self._propBase:getPos())
+end
+
+function SkibidiClientClass:destruct()
+    if self.isDisposed then throw("Skibidi is already disposed") end
+    self.isDisposed = true
+    self.soundManagerData.IsAvailable = true
+    _skibidiActiveList[self.ID] = nil
+    
+    if isValid(self.soundManagerData.Sounds.Sound) then
+        self.soundManagerData.Sounds.Sound:pause()
+        self.soundManagerData.Sounds.Sound:setTime(0)
+    end
+end
+
+
+function SkibidiClientClass:playSound()
+    if self.isDisposed then return end
+
+end
+
+
+function SkibidiClientClass:manipulateBone()
+    if not isValid(self._headHolo) then return end
+    self:_callbackState()
+end
+    
+function SkibidiClientClass:PositionState()
+    self._i1 = self._i1 + self._move1 * getFrameTime()
+    if self._i1 > self._maxI1 then
+        self._i1 = self._maxI1
+        self._move1 = -self._move1
+        self._index1 = self._index1 + 1
+    end
+    if self._i1 < 0 then
+        self._i1 = 0
+        self._move1 = -self._move1
+    end
+    
+    if self._index1 == 2 then
+        self._index1 = 0
+        self._callbackState = math.random() < 0.75 and self.AngleState or self.ScaleState
+    end
+    
+    self._headHolo:manipulateBonePosition(self._headBone, Vector(self._i1, self._i1, 0))
+end
+    
+    
+function SkibidiClientClass:AngleState()
+    self._i2 = self._i2 + self._move2 * getFrameTime()
+    if self._i2 > 360 then
+        self._i2 = 0
+        self._callbackState = self.PositionState
+        self._index2 = math.random(0, 3)
+    end
+    
+    local ang
+    if self._index2 == 0 then ang = Angle(self._i2, 0, 0)
+    elseif self._index2 == 1 then ang = Angle(-self._i2, 0, 0)
+    elseif self._index2 == 2 then ang = Angle(0, 0, self._i2)
+    elseif self._index2 == 3 then ang = Angle(0, 0, -self._i2)
+    end
+    self._headHolo:manipulateBoneAngles(self._headBone, ang)
+end
+
+function SkibidiClientClass:ScaleState()
+    self._i3 = self._i3 + self._move3 * getFrameTime()
+    if self._i3 > self._maxI3 then
+        self._i3 = self._maxI3
+        self._move3 = -self._move3
+    end
+    if self._i3 < 0 then
+        self._i3 = 0
+        self._move3 = -self._move3
+        self._index3 = self._index3 + 1
+    end
+    
+    if self._index3 == 2 then
+        self._index3 = 0
+        self._callbackState = self.PositionState
+    end
+    
+    self._headHolo:manipulateBoneScale(self._headBone, Vector(3 + self._i3))
+end
+
+
+------------------ SoundManagers ---------------------------------------------------------
+
+local SoundManagers = {}
+
+function getSoundManagerData()
+    for i, v in ipairs(SoundManagers) do
+        if v.IsAvailable then
+            v.IsAvailable = false
+            v.Sounds.Sound:play()
+            return v
+        end
+    end
+    
+    local newManagerData = { 
+        Sounds = { },
+        IsAvailable = false
+    }
+    
+    bass.loadURL(table.random(_urls_music), "3d noblock noplay", function(Sound)
+        newManagerData.Sounds.Sound = Sound
+        Sound:setVolume(Volume)
+        Sound:setLooping(IsLooping)
+        Sound:setPitch(MusicSpeed)
+        Sound:setFade(FadeMin, FadeMax)
+        
+        Sound:play()
+    end)
+    
+    
+    table.insert(SoundManagers, newManagerData)
+    return newManagerData
+end
+
+---------------------------------------------------------------------------
+
+net.receive("ActiveEnts", function(len)
+    local tab = net.readTable()
+    for id, data in pairs(tab) do
+        if isValid(data.PropBase) and isValid(data.HeadHolo) then
+            _skibidiActiveList[id] = SkibidiClientClass:new(id, data.PropBase, data.HeadHolo)
+        end
+    end
+end)
+
+net.receive("AddSkibidi", function(len)
+    local id = net.readString()
+    local propBase, headHolo
+    local handle = function()
+        if propBase and headHolo then
+            _skibidiActiveList[id] = SkibidiClientClass:new(id, propBase, headHolo)
+        end
+    end
+    net.readEntity(function(ent)
+        propBase = ent
+        handle()
+    end)
+    net.readEntity(function(ent)
+        headHolo = ent
+        handle()
+    end)
+end)
+
+net.receive("RemoveGhast", function(len)
+    local id = net.readString()
+    if not _skibidiActiveList[id] then return end
+    _skibidiActiveList[id]:destruct()
+end)
+
+hook.add("think", "SkibidiClient", function()
+    for id, ent in pairs(_skibidiActiveList) do
+        ent:think()
+    end
+end)

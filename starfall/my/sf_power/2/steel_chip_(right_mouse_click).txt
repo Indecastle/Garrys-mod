@@ -1,0 +1,91 @@
+//@name Steel chip (right mouse click)
+--@name Generic
+--@author Markiz
+--@shared
+
+/*
+    Take the Starfall processor and click "right mouse button" nearby where the chip lies
+*/
+
+local O = owner()
+local Radius = 500
+
+function findChips(pl, pos, radius)
+    local chips = find.byClass("starfall_processor", function(ent)
+        return ent:getOwner() != pl and ent:getPos():getDistance(pos) < radius
+    end)
+    return chips
+end
+
+function findClosestChip(pl, pos, radius)
+    local chips = findChips(pl, pos, radius)
+    return find.closest(chips, pos)
+end
+
+if SERVER then
+    hook.add("KeyPress", "test", function(pl, key)
+        if pl != O then return end
+        
+        local aimPos = pl:getEyeTrace().HitPos
+        local closestChip = findClosestChip(pl, aimPos, Radius)
+        if not isValid(closestChip) then return end
+        local currentPos = closestChip:getPos()
+        
+        if pl:getActiveWeapon():getToolMode() == "starfall_processor" and key == IN_KEY.ATTACK2 then
+            closestChip:setSolid(true)
+            closestChip:setPos(pl:getShootPos())
+            print(closestChip:getOwner():getName() .. ' - ' .. tostring(closestChip))
+            timer.simple(0.1, function()
+                closestChip:setPos(currentPos)
+            end)
+        end
+        
+    end)
+    
+    return
+end
+
+
+------------ CLIENT -----------------------------
+
+if O != player() then return end
+
+local holo = hologram.create(chip():getPos(), chip():getAngles(), "models/holograms/hq_icosphere.mdl", Vector(1))
+local holo2 = hologram.create(chip():getPos(), chip():getAngles(), "models/holograms/hq_icosphere.mdl", Vector(1))
+holo:setSize(Vector(-Radius) * 2)
+holo2:setSize(Vector(-Radius) * 2)
+holo2:setParent(holo)
+
+
+hook.add("think", "", function()
+    local aimPos = O:getEyeTrace().HitPos
+    holo:setPos(aimPos)
+    
+    local closestChip = findClosestChip(O, aimPos, Radius)
+    
+    local color = isValid(closestChip) and Color(0, 250, 0, 100) or Color(255, 255, 255, 100)
+    
+    holo:setColor(color)
+    holo2:setColor(color)
+end)
+
+
+hook.add("drawhud","DrawChips",function()
+    local aimPos = O:getEyeTrace().HitPos
+    holo:setPos(aimPos)
+    
+    local chips = findChips(O, aimPos, Radius)
+    local closest = find.closest(chips, aimPos)
+    
+    for i, ent in ipairs(chips) do
+        local pos = ent:getPos():toScreen()
+        local text = ent:getOwner():getName() .. ' - ' .. ent:getChipName()
+        
+        render.setColor(ent == closest and Color(0, 250, 0) or Color(255))
+        render.drawText(pos.x, pos.y-10, text, 1)
+    end
+end)
+
+if player() == O then
+    enableHud(nil, true)
+end

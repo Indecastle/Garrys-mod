@@ -5,15 +5,15 @@
 local Respawn = true
 local GhastSpawnCounts = 1 -- max 5
 
-local Health = 200
-local MaxTakeDamage = 100
+local Health = 300
+local MaxTakeDamage = 300
 
 
-local GhastVelocity = 3
+local GhastVelocity = 2
 local MoveRadius = 2000
 local MoveHeightMin = 150
 local MoveHeightMax = 400
-local TriggerOnlyWord = false
+local TriggerOnlyWord = true
 
 local InterpolationMove = false
 local InterpolationMoveRatio = 20
@@ -22,7 +22,7 @@ local TargetRadius = 1000
 local BulletVelocity = 20
 local PropDamageMode = true
 local BulletLifeTime = 10
-local BulletObbSize = 30
+local BulletObbSize = 10
 
 local LockDamageTime = 0
 local DeathAngleVelocity = 3
@@ -289,6 +289,7 @@ if SERVER then
         
         local ang = dir:getAngle()
         ang.p = 0
+        --local result = math.lerpAngle(0.2 * getFrameTime(), self.propBase:getAngles(), ang)
         local result = math.lerpAngle(0.2, self.propBase:getAngles(), ang)
         self.propBase:getPhysicsObject():setAngles(result)
     end
@@ -422,11 +423,11 @@ if SERVER then
         phys:wake()
         
         if InterpolationMove then
-            self._currentPos = self._currentPos + self._moveForward * GhastVelocity
+            self._currentPos = self._currentPos + self._moveForward * GhastVelocity * getFrameTime()
             local dif = (self._currentPos - self.propBase:getPos()) / InterpolationMoveRatio
             phys:setPos(phys:getPos() + dif)
         else
-            self._currentPos = phys:getPos() + self._moveForward * GhastVelocity
+            self._currentPos = phys:getPos() + self._moveForward * GhastVelocity * getFrameTime()
             phys:setPos(self._currentPos)
         end
     end
@@ -564,7 +565,6 @@ if SERVER then
     --------------------------------- CUSTOM CODE -------------------------------------------
     
     if Respawn then
-        local ghast1 = nil
         timer.create("", 0.5, 0, function()
             if #table.getKeys(_ghastActiveList) < GhastSpawnCounts then
                 GhastClass:new(E:getPos() + Vector(math.random(-200, 200), math.random(-200, 200), 100))

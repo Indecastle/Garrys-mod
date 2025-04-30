@@ -38,9 +38,9 @@ timer.create("findEnts", Delay, 0, function()
     for i, ent in ipairs(hitedEnts) do
         if i == 199 then print("The holograms limit has been reached. (200)") break end
         if activeEnts[ent] == nil and isValidEnt(ent) then
-            local holo = holograms.create(chip():getPos(), Angle(), ent:getModel(), Vector(1))
+            local holo = hologram.create(chip():getPos(), Angle(), ent:getModel(), Vector(1))
             holo:setMaterial("debug/debugportals")
-            holo:setColor(Color(255,255,0, 150))
+            holo:setColor(Color(255,255,255, 150))
             holo:setParent( ent )
             holo:addEffects( 1 )
             activeEnts[ent] = holo

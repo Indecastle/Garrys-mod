@@ -151,6 +151,10 @@ if SERVER then
     return
 end
 
+
+
+---------- CLIENT ---------------------------------------------------------------
+
 local Base = nil
 
 net.receive("init", function(len)
