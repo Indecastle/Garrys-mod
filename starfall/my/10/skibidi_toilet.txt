@@ -1,4 +1,4 @@
---@name DMG_DISSOLVE 2 Skibidi
+--@name Skibidi DISSOLVE
 --@author Markiz
 --@shared
 
@@ -22,18 +22,21 @@ local FadeMin, FadeMax = 50, 600
 ----- music ------
 
 
-ToiletData = {
-    [1] = { Model = "models/props_wasteland/prison_toilet01.mdl", OffsetToilet = 0, OffsetHead = 0 },
-    [2] = { Model = "models/props_c17/FurnitureToilet001a.mdl", OffsetToilet = 31, OffsetHead = 25 },
+local HeadModels = {
+    "models/gman_high.mdl",
+    "models/Kleiner.mdl",
+    "models/Humans/Group03/Male_01.mdl",
+    "models/Humans/Group01/Male_05.mdl",
 }
 
 ------------------------------------------------------------------------------------
 
 local _urls_music = {
+    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
+    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
     "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi.mp3",
     "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_slowed.mp3",
     "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_only.mp3",
-    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
     "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_starwars.mp3",
 }
 
@@ -67,8 +70,8 @@ if SERVER then
     local _isAlive = true
     
     ToiletData = {
-        [1] = { Model = "models/props_wasteland/prison_toilet01.mdl", OffsetToilet = 0, OffsetHead = 0 },
-        [2] = { Model = "models/props_c17/FurnitureToilet001a.mdl", OffsetToilet = 31, OffsetHead = 25},
+        { Model = "models/props_wasteland/prison_toilet01.mdl", OffsetToilet = 0, OffsetHead = -19 },
+        { Model = "models/props_c17/FurnitureToilet001a.mdl", OffsetToilet = 31, OffsetHead = -47},
     }
     
     function explodeTo(pos)
@@ -120,10 +123,12 @@ if SERVER then
         self._baseHolo = hologram.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
         self._baseHolo:setNoDraw(true)
         self._toiletHolo = hologram.create(self._baseHolo:getPos(), self._baseHolo:getAngles(), self._toiletDataItem.Model)
-        self._headHolo = hologram.create(self._toiletHolo:localToWorld(Vector(0, 0, -66 - self._toiletDataItem.OffsetHead)), self._baseHolo:getAngles(), "models/gman_high.mdl")
+        local headModel, _ = table.random(HeadModels)
+        self._headHolo = hologram.create(self._toiletHolo:localToWorld(Vector(3, 0, self._toiletDataItem.OffsetHead)), self._baseHolo:getAngles(), headModel)
+        self._headHolo:setScale(Vector(0.2))
         self._headHolo:setParent(self._toiletHolo)
         --self._toiletHolo:setParent(Base)
-        self._headHolo:setClip(1, true, Vector(0, 0, -5 - self._toiletDataItem.OffsetHead), Vector(0,0,1), self._toiletHolo)
+        self._headHolo:setClip(1, true, Vector(0, 0, 5 + self._toiletDataItem.OffsetHead), Vector(0,0,1), self._toiletHolo)
             
         self._baseHolo:setPos(self._propBase:getPos())
         self._baseHolo:setParent(self._propBase)
@@ -309,15 +314,16 @@ function SkibidiClientClass:initialize(id, propBase, headHolo)
     self.isDisposed = false
     self._health = Health
     self._isAlive = true
+    self._headScale = 12
 
     self._i1 = 0
     self._i2 = 0
     self._i3 = 0
-    self._maxI1 = 10
-    self._maxI3 = 1.0
-    self._move1 = 1.5
+    self._maxI1 = 40
+    self._maxI3 = 5.0
+    self._move1 = 8
     self._move2 = 20
-    self._move3 = 0.2
+    self._move3 = 1.0
     self._index1 = 0
     self._index2 = 0
     self._index3 = 0
@@ -330,13 +336,24 @@ function SkibidiClientClass:initialize(id, propBase, headHolo)
     local neck1_bone = self._headHolo:lookupBone("ValveBiped.Bip01_Neck1")
     local rClavicle_bone = self._headHolo:lookupBone("ValveBiped.Bip01_R_Clavicle")
     local lClavicle_bone = self._headHolo:lookupBone("ValveBiped.Bip01_L_Clavicle")
+    local lUpperArm = self._headHolo:lookupBone("ValveBiped.Bip01_L_UpperArm")
+    local rUpperArm = self._headHolo:lookupBone("ValveBiped.Bip01_R_UpperArm")
     
     self._headHolo:manipulateBoneScale(spine4_bone, Vector(0))
     self._headHolo:manipulateBoneScale(neck1_bone, Vector(0))
     self._headHolo:manipulateBoneScale(lClavicle_bone, Vector(0))
     self._headHolo:manipulateBoneScale(lClavicle_bone, Vector(0))
-    
-    self._headHolo:manipulateBoneScale(self._headBone, Vector(3))
+    local bonesCount = self._headHolo:getBoneCount()
+    for i=1, bonesCount do
+        pcall(function()
+            local name = self._headHolo:getBoneName(i)
+            local bone = self._headHolo:lookupBone(name)
+            self._headHolo:manipulateBoneScale(bone, Vector(0))
+        end)
+    end
+    self._headHolo:manipulateBonePosition(lUpperArm, Vector(0,-100,0))
+    self._headHolo:manipulateBonePosition(rUpperArm, Vector(0,-100,0))
+    self._headHolo:manipulateBoneScale(self._headBone, Vector(self._headScale))
     
     self:buildSounds()
 end
@@ -399,7 +416,7 @@ function SkibidiClientClass:PositionState()
         self._callbackState = math.random() < 0.75 and self.AngleState or self.ScaleState
     end
     
-    self._headHolo:manipulateBonePosition(self._headBone, Vector(self._i1, self._i1, 0))
+    self._headHolo:manipulateBonePosition(self._headBone, Vector(30+self._i1, 30+self._i1, 0))
 end
     
     
@@ -437,7 +454,7 @@ function SkibidiClientClass:ScaleState()
         self._callbackState = self.PositionState
     end
     
-    self._headHolo:manipulateBoneScale(self._headBone, Vector(3 + self._i3))
+    self._headHolo:manipulateBoneScale(self._headBone, Vector(self._headScale + self._i3))
 end
 
 
@@ -459,7 +476,8 @@ function getSoundManagerData()
         IsAvailable = false
     }
     
-    bass.loadURL(table.random(_urls_music), "3d noblock noplay", function(Sound)
+    local urlMusic, _ = table.random(_urls_music)
+    bass.loadURL(urlMusic, "3d noblock noplay", function(Sound)
         newManagerData.Sounds.Sound = Sound
         Sound:setVolume(Volume)
         Sound:setLooping(IsLooping)

@@ -2,7 +2,7 @@
 --@author Markiz
 --@shared
 
-local Respawn = true
+local Respawn = false
 local GhastSpawnCounts = 1 -- max 5
 
 local Health = 300
@@ -15,7 +15,7 @@ local MoveHeightMin = 150
 local MoveHeightMax = 400
 local TriggerOnlyWord = true
 
-local InterpolationMove = false
+local InterpolationMove = true
 local InterpolationMoveRatio = 20
 
 local TargetRadius = 1000
@@ -266,6 +266,10 @@ if SERVER then
         end
     end
     
+    function GhastClass:onPhysgunDrop()
+        self._currentPos = self.propBase:getPos()
+    end
+    
     function GhastClass:findTarget()
         if not self:isAlive() then return end
         local myPos = self.head:getPos()
@@ -323,7 +327,7 @@ if SERVER then
         
         amount = math.clamp(amount, 0, MaxTakeDamage)
         self._health = math.max(0, self._health - amount)
-        
+        --print(amount)
         self:setScreamState(true)
         
         if self._health <= 0 then
@@ -550,6 +554,15 @@ if SERVER then
         for k, ghast in pairs(_ghastActiveList) do
             ghast:think3sec()
         end
+    end)
+    
+    hook.add("PhysgunDrop", "", function(ply, ent)
+        for k, ghast in pairs(_ghastActiveList) do
+            if ent == ghast.propBase then
+                ghast:onPhysgunDrop()
+                return
+            end
+        end 
     end)
     
     hook.add("ClientInitialized", "cl_init", function(ply)
