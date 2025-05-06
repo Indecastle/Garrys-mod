@@ -1,0 +1,61 @@
+--@name TV Man NPC
+--@author Markiz
+--@shared
+
+local O = owner()
+
+if SERVER then
+    function addHeadHolo(ent)
+        --local headBone = ent:lookupBone("ValveBiped.Bip01_Head1")
+        local headBone = ent:lookupAttachment("eyes")
+        if not headBone then return end
+        local vec, ang = ent:getAttachment(headBone)
+        --local vec, ang = ent:getBonePosition(headBone)
+        if not vec then return end
+        vec, ang = localToWorld(Vector(-2,0,0), Angle(0,0,-90), vec, ang)
+        local headHolo = hologram.create(vec, ang, "models/bull/various/speaker.mdl", Vector(1))
+        --headHolo:setParent(ent, nil, headBone)
+        headHolo:setParent(ent, "eyes", nil)
+        headHolo:setScale(Vector(1.0))
+    end
+    
+    function sendClientHolo(ent, ply)
+        if not isValid(ent) then return end
+        net.start("addHeadHolo")
+        net.writeEntity(ent)
+        net.send(ply)
+    end
+    
+    ----------------------------------------------------------
+    
+    local ents = find.byClass("npc*", function(ent) return ent:isNPC() and ent:getOwner() == O end)
+    for i, ent in ipairs(ents) do
+        addHeadHolo(ent)
+    end
+    
+    hook.add("OnEntityCreated", "", function(ent)
+        if not isValid(ent) or not ent:isNPC() or ent:getOwner() != O then return end
+        addHeadHolo(ent)
+        sendClientHolo(ent)
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        for i, ent in ipairs(ents) do
+            sendClientHolo(ent)
+        end
+    end)
+    
+    return
+end
+
+------------- CLIENT --------------------------------
+
+net.receive("addHeadHolo", function()
+    net.readEntity(function(ent)
+        pcall(function()
+            local headBone = ent:lookupBone("ValveBiped.Bip01_Head1")
+            if not headBone then return end
+            ent:manipulateBoneScale(headBone, Vector(0))
+        end)
+    end)
+end)

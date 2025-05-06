@@ -111,6 +111,13 @@ if SERVER then
         net.Broadcast()
         --net.Send(player.GetBySteamID( 'STEAM_0:1:54066003' ))
     end
+    
+    function LogToClient(obj, target)
+        net.Start(NET_LUA_LOG_TO_CLIENT)
+        WriteNetData(obj)
+        net.Send(target)
+        --net.Send(player.GetBySteamID( 'STEAM_0:1:54066003' ))
+    end
 
     net.Receive(NET_LUA_LOG_TO_SERVER_CLIENT, function(_, ply)
         local text = net.ReadString()

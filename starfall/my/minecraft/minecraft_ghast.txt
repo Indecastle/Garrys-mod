@@ -5,8 +5,8 @@
 local Respawn = false
 local GhastSpawnCounts = 1 -- max 5
 
-local Health = 300
-local MaxTakeDamage = 300
+local Health = 200
+local MaxTakeDamage = 200
 
 
 local GhastVelocity = 2
@@ -25,7 +25,7 @@ local BulletLifeTime = 10
 local BulletObbSize = 10
 
 local LockDamageTime = 0
-local DeathAngleVelocity = 3
+local DeathAngleVelocity = 4
 
 local ExplodeModels = {
     "models/props_phx/misc/potato_launcher_explosive.mdl",
@@ -204,7 +204,8 @@ if SERVER then
     end
 
     function GhastClass:destruct()
-        if self.isDisposed then throw("Ghast is already disposed") end
+        --if self.isDisposed then throw("Ghast is already disposed") end
+        if self.isDisposed then return end
         _ghastActiveList[self.ID] = nil
         self.propBase:remove()
         self.isDisposed = true
@@ -216,7 +217,7 @@ if SERVER then
     end
     
     function GhastClass:isAlive()
-        return self._isAlive and not self.isDisposed
+        return self._isAlive and not self.isDisposed and isValid(self.propBase)
     end
     
     function GhastClass:hide()
@@ -293,8 +294,8 @@ if SERVER then
         
         local ang = dir:getAngle()
         ang.p = 0
-        --local result = math.lerpAngle(0.2 * getFrameTime(), self.propBase:getAngles(), ang)
-        local result = math.lerpAngle(0.2, self.propBase:getAngles(), ang)
+        local result = math.lerpAngle(0.2 * getFrameTime(), self.propBase:getAngles(), ang)
+        --local result = math.lerpAngle(0.2, self.propBase:getAngles(), ang)
         self.propBase:getPhysicsObject():setAngles(result)
     end
     
@@ -317,8 +318,9 @@ if SERVER then
         end)
     end
     
-    function GhastClass:entityTakeDamage(amount)
+    function GhastClass:entityTakeDamage(amount, attacker)
         if not self._isAlive
+            or attacker._isMySF
             or self.isDisposed
             or timer.systime() < self._oldLockDamageTime 
             then return end
@@ -354,7 +356,7 @@ if SERVER then
             
             self.head:setAngles(self.propBase:localToWorldAngles(Angle(0, 0, self._killingHoloAngle)))
             
-            self._killingHoloAngle = self._killingHoloAngle + DeathAngleVelocity
+            self._killingHoloAngle = self._killingHoloAngle + DeathAngleVelocity*getFrameTime()
             if self._killingHoloAngle > 90 then
                 hook.remove("think", hookId)
                 timer.simple(0.5, function()
@@ -446,6 +448,7 @@ if SERVER then
         while #ExplodeModels > 0 do
             local succeed = pcall(function()
                 local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p._isMySF = true
                 p:setNoDraw(true)
                 p:breakEnt()
             end)
@@ -539,7 +542,7 @@ if SERVER then
     hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
         for k, ghast in pairs(_ghastActiveList) do
             if ghast.propBase == target then
-                ghast:entityTakeDamage(amount)
+                ghast:entityTakeDamage(amount, attacker)
             end
         end
     end)
@@ -565,6 +568,15 @@ if SERVER then
         end 
     end)
     
+    hook.add("EntityRemoved", "", function(ent)
+        for k, ghast in pairs(_ghastActiveList) do
+            if ent == ghast.propBase then
+                ghast:destruct()
+                return
+            end
+        end 
+    end)
+    
     hook.add("ClientInitialized", "cl_init", function(ply)
         local tab = {}
         for k, ghast in pairs(_ghastActiveList) do
@@ -577,16 +589,32 @@ if SERVER then
     
     --------------------------------- CUSTOM CODE -------------------------------------------
     
+    function testSpawnEnt()
+        return GhastClass:new(E:getPos() + Vector(math.random(-100, 100), math.random(-100, 100), 100))
+    end
+    
     if Respawn then
         timer.create("", 0.5, 0, function()
             if #table.getKeys(_ghastActiveList) < GhastSpawnCounts then
-                GhastClass:new(E:getPos() + Vector(math.random(-200, 200), math.random(-200, 200), 100))
+                testSpawnEnt()
             end
         end)
     else
-        local ent = GhastClass:new(E:localToWorld(Vector(0,0,100)))
+        local ents = { testSpawnEnt() }
+        local i = 1
         timer.create("test123", 0.5, 0, function()
-            if ent.isDisposed then
+            if i < GhastSpawnCounts then
+                i = i + 1
+                table.insert(ents, testSpawnEnt())
+            end
+            local allDisposed = true
+            for i, ent in ipairs(ents) do
+                if not ent.isDisposed then
+                    allDisposed = false
+                    break
+                end
+            end
+            if allDisposed then
                 timer.remove("test123")
                 timer.simple(1.5, function()
                     chip():remove()
@@ -627,23 +655,28 @@ function GhastClientClass:buildSounds()
     self.soundManagerData = getSoundManagerData()
 end
 
+function GhastClientClass:isAlive()
+    return self._isAlive and not self.isDisposed and isValid(self.propBase)
+end
+
 function GhastClientClass:think()
 end
 
 function GhastClientClass:destruct()
-    if self.isDisposed then throw("Ghast is already disposed") end
+    if self.isDisposed then return end
     self.isDisposed = true
+    self._isAlive = false
     self.soundManagerData.IsAvailable = true
     _ghastActiveList[self.ID] = nil
 end
 
 function GhastClientClass:playSoundMoan()
-    if self.isDisposed then return end
+    if not self:isAlive() then return end
     self.soundManagerData.Managers.Moans:playRandom(self.propBase:getPos())
 end
 
 function GhastClientClass:attackTarget(target)
-    if not isValid(self.propBase) then return end
+    if not self:isAlive() then return end
     local pos = self.propBase:getPos()
     self.soundManagerData.Managers.Other:play("charge", pos)
     timer.simple(1, function()
@@ -652,7 +685,7 @@ function GhastClientClass:attackTarget(target)
 end
 
 function GhastClientClass:entityTakeDamage(amount, newHealth)
-    if not self._isAlive then return end
+    if not self:isAlive() then return end
     --print(newHealth)
     if newHealth > 0 then
         if newHealth < self._health then

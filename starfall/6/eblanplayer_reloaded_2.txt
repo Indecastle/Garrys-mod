@@ -50,7 +50,7 @@ if CLIENT then
         return n/1023.75 
     end
     
-    local Radio = "https://cdn.discordapp.com/attachments/900794622878564362/1099408403551498250/ec491be52f7600a6.mp3"
+    local Radio = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/GangnamStyle.mp3"
     
     local perms = {
         "bass.loadURL",

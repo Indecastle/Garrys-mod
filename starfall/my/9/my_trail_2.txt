@@ -3,9 +3,9 @@
 --@shared
 
 
---local MaterialPath = "voice/icntlk_pl"
+local MaterialPath = "voice/icntlk_pl"
 local MaterialPath = "https://i.imgur.com/wEBb6mG.png"
-local MaterialPath = "https://cdn.discordapp.com/attachments/974678227362660395/1112447847711916112/penis.png?ex=65f736cb&is=65e4c1cb&hm=453d478d79b885bde7d880048eb9611eb734857b16cc4d5c61de1ee855c14e8d&"
+--local MaterialPath = "https://cdn.discordapp.com/attachments/974678227362660395/1112447847711916112/penis.png?ex=65f736cb&is=65e4c1cb&hm=453d478d79b885bde7d880048eb9611eb734857b16cc4d5c61de1ee855c14e8d&"
 
 local StartWidth = 20
 local EndWidth = 20
@@ -16,6 +16,8 @@ local EndAlpha = 0
 local LifeTime = 1
 
 local MinStep = 20
+
+local Is3D = true
 
 function getPos(ent)
     --throw(tostring(ent))
@@ -120,7 +122,8 @@ hook.add("tick", "MyTrail", function()
     
     local dir = (newPos - _lastPos ):getNormalized()
     
-    part = emit:add(mat, _lastPos ,StartWidth, EndWidth, distance,distance, StartAlpha,EndAlpha, LifeTime)
+    local particleDistance = Is3D and distance or 0
+    part = emit:add(mat, _lastPos ,StartWidth, EndWidth, particleDistance,particleDistance, StartAlpha,EndAlpha, LifeTime)
     if part then
         part:setVelocityScale(false)
         part:setVelocity(dir*0.001)

@@ -9,14 +9,13 @@ local Health = 60
 
 local Radius = 1000
 
-local Force = 40--65
+local Force = 35--65
 local ForceUp = 250
 local IsDissolving = true
 
 ----- music ------
 local Volume = 2
 local MusicSpeed = 1
-local URL_Music = "skibidi"
 local IsLooping = true
 local FadeMin, FadeMax = 50, 600
 ----- music ------
@@ -32,6 +31,7 @@ local HeadModels = {
 ------------------------------------------------------------------------------------
 
 local _urls_music = {
+    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
     "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
     "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
     "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi.mp3",
@@ -78,6 +78,7 @@ if SERVER then
         while #ExplodeModels > 0 do
             local succeed = pcall(function()
                 local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p._isMySF = true
                 p:setNoDraw(true)
                 p:breakEnt()
             end)
@@ -89,18 +90,18 @@ if SERVER then
     
     function isValidPlayerOrNPC(ent)
         if not isValid(ent) then return false end
-        local nvars = ent:getNWVarTable()
         return ent ~= nil and ent:isValid() and ent:isValidPhys()
-            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and !ent:inVehicle() and (nvars == nil or !nvars["_Kyle_Buildmode"])
+            and (ent:isPlayer() and ent:isAlive() and !ent:hasGodMode() and !ent:inVehicle()
                 or ent:isNPC()) 
     end
     
     local players = find.allPlayers()
     
-    function SkibidiClass:initialize(pos, toiletType)
+    function SkibidiClass:initialize(pos, toiletType, soundUrl)
         self.ID = getNewId()
         _skibidiActiveList[self.ID] = self
         self._toiletDataItem = ToiletData[toiletType]
+        self._soundUrl = soundUrl
         
         self.model = "models/hunter/blocks/cube2x2x2.mdl"
         self._health = Health
@@ -138,6 +139,7 @@ if SERVER then
         
         net.start("AddSkibidi")
         net.writeString(self.ID)
+        net.writeString(self._soundUrl)
         net.writeEntity(self._propBase)
         net.writeEntity(self._headHolo)
         net.send()
@@ -145,7 +147,8 @@ if SERVER then
     
     
     function SkibidiClass:destruct()
-        if self.isDisposed then throw("Skibidi is already disposed") end
+        --if self.isDisposed then throw("Skibidi is already disposed") end
+        if self.isDisposed then return end
         _skibidiActiveList[self.ID] = nil
         self._propBase:remove()
         self._toiletHolo:remove()
@@ -211,7 +214,7 @@ if SERVER then
     function SkibidiClass:entityTakeDamage(target, attacker, amount)
         --print(amount)
         if not self._isAlive or not isValid(self._propBase) then return end
-        if not isValid(attacker) or attacker:getModel() == "models/xqm/rails/gumball_1.mdl" then return end
+        if not isValid(attacker) or attacker._isMySF or attacker:getModel() == "models/xqm/rails/gumball_1.mdl" then return end
         
         self._health = math.max(0, self._health - amount)
         
@@ -263,10 +266,19 @@ if SERVER then
         end
     end)
     
+    hook.add("EntityRemoved", "", function(ent)
+        for k, skibidi in pairs(_skibidiActiveList) do
+            if ent == skibidi._propBase then
+                skibidi:destruct()
+                return
+            end
+        end 
+    end)
+    
     hook.add("ClientInitialized", "cl_init", function(ply)
         local tab = {}
         for k, ent in pairs(_skibidiActiveList) do
-            tab[k] = { PropBase = ent._propBase, HeadHolo = ent._headHolo }
+            tab[k] = { PropBase = ent._propBase, HeadHolo = ent._headHolo, SoundUrl = ent._soundUrl }
         end
         net.start("ActiveEnts")
         net.writeTable(tab)
@@ -276,19 +288,34 @@ if SERVER then
     
     --================= CUSTOME CODE ================================================
     
+    function testSpawnEnt()
+        return SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), math.random(1, #ToiletData), table.random(_urls_music))
+    end
     
     if Respawn then
         timer.create("", 0.5, 0, function()
             if #table.getKeys(_skibidiActiveList) < SpawnCounts then
-                SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), math.random(1, #ToiletData))
+                testSpawnEnt()
             end
         end)
     else
-        local ent = SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), math.random(1, #ToiletData))
+        local ents = { testSpawnEnt() }
+        local i = 1
         timer.create("test123", 0.5, 0, function()
-            if ent.isDisposed then
+            if i < SpawnCounts then
+                i = i + 1
+                table.insert(ents, testSpawnEnt())
+            end
+            local allDisposed = true
+            for i, ent in ipairs(ents) do
+                if not ent.isDisposed then
+                    allDisposed = false
+                    break
+                end
+            end
+            if allDisposed then
                 timer.remove("test123")
-                timer.simple(1, function()
+                timer.simple(1.5, function()
                     chip():remove()
                 end)
             end
@@ -307,8 +334,9 @@ end
 local SkibidiClientClass = class("SkibidiClientClass")
 
 
-function SkibidiClientClass:initialize(id, propBase, headHolo)
+function SkibidiClientClass:initialize(id, soundUrl, propBase, headHolo)
     self.ID = id
+    self._soundUrl = soundUrl
     self._propBase = propBase
     self._headHolo = headHolo
     self.isDisposed = false
@@ -360,7 +388,11 @@ end
 
 
 function SkibidiClientClass:buildSounds()
-    self.soundManagerData = getSoundManagerData()
+    self.soundManagerData = getSoundManagerData(self._soundUrl)
+end
+
+function SkibidiClientClass:isAlive()
+    return self._isAlive and not self.isDisposed and isValid(self._propBase) and isValid(self._headHolo)
 end
 
 
@@ -371,16 +403,18 @@ end
 
 function SkibidiClientClass:processSounds()
     local snd = self.soundManagerData.Sounds.Sound
-    if not isValid(self._propBase) or self.isDisposed or not isValid(snd) then return end
+    if not self:isAlive() or not isValid(snd) then return end
     snd:setPos(self._propBase:getPos())
 end
 
 function SkibidiClientClass:destruct()
-    if self.isDisposed then throw("Skibidi is already disposed") end
+    --if self.isDisposed then throw("Skibidi is already disposed") end
+    if self.isDisposed then return end
     self.isDisposed = true
+    self._isAlive = false
     self.soundManagerData.IsAvailable = true
     _skibidiActiveList[self.ID] = nil
-    
+
     if isValid(self.soundManagerData.Sounds.Sound) then
         self.soundManagerData.Sounds.Sound:pause()
         self.soundManagerData.Sounds.Sound:setTime(0)
@@ -462,9 +496,9 @@ end
 
 local SoundManagers = {}
 
-function getSoundManagerData()
+function getSoundManagerData(url)
     for i, v in ipairs(SoundManagers) do
-        if v.IsAvailable then
+        if v.IsAvailable and v.Url == url then
             v.IsAvailable = false
             v.Sounds.Sound:play()
             return v
@@ -473,11 +507,11 @@ function getSoundManagerData()
     
     local newManagerData = { 
         Sounds = { },
+        Url = url,
         IsAvailable = false
     }
     
-    local urlMusic, _ = table.random(_urls_music)
-    bass.loadURL(urlMusic, "3d noblock noplay", function(Sound)
+    bass.loadURL(url, "3d noblock noplay", function(Sound)
         newManagerData.Sounds.Sound = Sound
         Sound:setVolume(Volume)
         Sound:setLooping(IsLooping)
@@ -498,17 +532,18 @@ net.receive("ActiveEnts", function(len)
     local tab = net.readTable()
     for id, data in pairs(tab) do
         if isValid(data.PropBase) and isValid(data.HeadHolo) then
-            _skibidiActiveList[id] = SkibidiClientClass:new(id, data.PropBase, data.HeadHolo)
+            _skibidiActiveList[id] = SkibidiClientClass:new(id, data.SoundUrl, data.PropBase, data.HeadHolo)
         end
     end
 end)
 
 net.receive("AddSkibidi", function(len)
     local id = net.readString()
+    local soundUrl = net.readString()
     local propBase, headHolo
     local handle = function()
         if propBase and headHolo then
-            _skibidiActiveList[id] = SkibidiClientClass:new(id, propBase, headHolo)
+            _skibidiActiveList[id] = SkibidiClientClass:new(id, soundUrl, propBase, headHolo)
         end
     end
     net.readEntity(function(ent)

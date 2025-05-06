@@ -200,7 +200,7 @@ function findCardHandler(cx, cy)
         local ply = keys[i]
         local data = _IPData[ply]
         
-        local bx = i <= MaxRows  and  px  or  w/2-px-ow
+        local bx = i <= MaxRows  and  px  or  w-px-ow
         local by = py + (oh + padd) * (i - (i > MaxRows and MaxRows or 0) - 1)
         
         if cx > bx and cx < bx+ow
@@ -222,13 +222,12 @@ hook.add("renderoffscreen", "", function()
     render.selectRenderTarget("screen")
     
     w, h = render.getResolution()
-    local wr, hr = w/2, h/2
     
     render.clear(Color(14, 14, 14))
     
     render.setFont(font1)
     
-    render.drawText(wr / 2, 20, "Player regions", 1)
+    render.drawText(w / 2, 20, "Player regions", 1)
     
     local keys = table.getKeys(_IPData)
     
@@ -244,7 +243,7 @@ hook.add("renderoffscreen", "", function()
             continue
         end
         
-        local bx = i <= MaxRows  and  px  or  wr-px-ow
+        local bx = i <= MaxRows  and  px  or  w-px-ow
         local by = py + (oh + padd) * (i - (i > MaxRows and MaxRows or 0) - 1)
         if !_isDetailedInfo and findedData and findedData.ply == ply then
             render.setColor(Color(60,60,60))
@@ -266,7 +265,7 @@ hook.add("renderoffscreen", "", function()
     
     if _isDetailedInfo then
         render.setColor(Color(36,36,36))
-        render.drawRoundedBox(50, px + 100, py + 50, wr-250, hr-250)
+        render.drawRoundedBox(50, px + 100, py + 50, w-250, h-250)
         
         render.setFont(font3)
         render.setColor(Color(255,255,255))

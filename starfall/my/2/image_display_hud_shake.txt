@@ -47,9 +47,9 @@ if SERVER then
     local inputs = {
         On="number"
     }
-    if !RadiusMode then
+    --if !RadiusMode then
         inputs.Target = "entity"
-    end
+    --end
     
     local WW = chip():getWirelink()
     

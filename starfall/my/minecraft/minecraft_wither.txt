@@ -5,7 +5,7 @@
 local Radius = 1500
 local Health = 800
 local HealthTriggerShield = 400
-local MaxTakeDamage = 300
+local MaxTakeDamage = 350
 
 local AiFlyEnabled = true
 local FlyVelocityMax = 10
@@ -50,7 +50,7 @@ local RenderOffset = 8
 
 local Model = "models/hunter/blocks/cube1x1x1.mdl"
 local E = chip()
-local Prop_Base, Holo_Base
+local Prop_Base, Holo_Base, _propPhysObj
 
 local _health = 0
 local _isPreparating = true
@@ -78,6 +78,7 @@ if SERVER then
         while #ExplodeModels > 0 do
             local succeed = pcall(function()
                 local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p._isSF = true
                 p:setNoDraw(true)
                 p:breakEnt()
             end)
@@ -208,6 +209,7 @@ if SERVER then
         Prop_Base:setMaterial("Models/effects/vol_light001")
         --Prop_Base:setMass(35)
     end
+    _propPhysObj = Prop_Base:getPhysicsObject()
 
     
     Holo_Base = hologram.create(Prop_Base:getPos(), Prop_Base:getAngles(), "models/holograms/cube.mdl")
@@ -476,6 +478,7 @@ if SERVER then
     hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
         if not isValid(Prop_Base) 
                 or target != Prop_Base 
+                or attacker._isSF
                 or timer.systime() < _oldLockDamageTime 
                 or _isPreparating 
                 or not _isAlive
@@ -488,7 +491,7 @@ if SERVER then
         sendHealth()
         closeEyes()
         _lastTakeDamage = timer.systime() + AutoHealAfterTime
-        
+
         if _health <= 0 then
             _isAlive = false
             killingScene()
@@ -514,7 +517,7 @@ if SERVER then
     function getTargetPos(ent)
         local heightStep = _state == 1 and _HeightStep1 or _HeightStep2
         local obbCentre = ent:obbCenterW()
-        local tr = trace.trace(obbCentre, obbCentre + Vector(0,0,heightStep), nil, 24737, nil, false)
+        local tr = trace.line(obbCentre, obbCentre + Vector(0,0,heightStep), nil, 24737, nil, false)
         if tr.Hit then
             heightStep = (tr.HitPos):getDistance(obbCentre) - 50
         end
@@ -540,7 +543,7 @@ if SERVER then
             local target = isValidPlayerOrNPC(_targets[1]) and _targets[1] or chip()
             local targetPos = getTargetPos(target)
             local distance = targetPos:getDistance(Prop_Base:getPos())
-            if distance < 10 then return end
+            if distance < 20 then return end
             
             local currentDir = _oldDir
             local targetDir = (targetPos - Prop_Base:getPos()):getNormalized()
@@ -552,8 +555,9 @@ if SERVER then
             local nextAng = nextDir:getAngle()
             nextAng.p = 0
             
-            Prop_Base:setAngles(nextAng)
-            Prop_Base:setPos(Prop_Base:getPos() + nextDir * nextStepDistance * getFrameTime())
+            _propPhysObj:wake()
+            _propPhysObj:setAngles(nextAng)
+            _propPhysObj:setPos(Prop_Base:getPos() + nextDir * nextStepDistance * getFrameTime())
         end
         ----
     end)
