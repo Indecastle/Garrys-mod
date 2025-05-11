@@ -5,8 +5,6 @@
 local Respawn = false
 local SpawnCounts = 1
 
-local Health = 60
-
 local Radius = 1000
 
 local Force = 35--65
@@ -14,12 +12,11 @@ local ForceUp = 250
 local IsDissolving = true
 
 ----- music ------
-local Volume = 2
+local Volume = 1.5
 local MusicSpeed = 1
 local IsLooping = true
-local FadeMin, FadeMax = 50, 600
+local SoundFadeMax = 500
 ----- music ------
-
 
 local HeadModels = {
     "models/gman_high.mdl",
@@ -28,16 +25,22 @@ local HeadModels = {
     "models/Humans/Group01/Male_05.mdl",
 }
 
+local PropScaleData = {
+    { Model = "models/xqm/rails/gumball_1.mdl", PropRadius = 15, Scale = 1, Health = 60},
+    { Model = "models/hunter/misc/sphere1x1.mdl", PropRadius = 23.0, Scale = 2, Health = 100},
+    { Model = "models/hunter/misc/sphere2x2.mdl", PropRadius = 47.0, Scale = 4, Health = 200 },
+}
+
 ------------------------------------------------------------------------------------
 
-local _urls_music = {
-    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
-    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
-    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3",
-    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi.mp3",
-    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_slowed.mp3",
-    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_only.mp3",
-    "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_starwars.mp3",
+local SoundData = {
+    { Speed = 1, Url = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3" },
+    { Speed = 1, Url = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3" },
+    { Speed = 1, Url = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_remix.mp3" },
+    { Speed = 1, Url = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi.mp3" },
+    { Speed = 1, Url = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_only.mp3" },
+    { Speed = 0.65, Url = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_slowed.mp3" },
+    { Speed = 0.7, Url = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Skibidi/skibidi_starwars.mp3" },
 }
 
 -- =================================================================================
@@ -49,6 +52,7 @@ local ExplodeModels = {
     "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001_explosive.mdl",
 }
+
 
 function getFrameTime()
     return timer.frametime() * 30
@@ -65,13 +69,10 @@ if SERVER then
     
     local SkibidiClass = class("SkibidiClass")
     
-    
-    local _health = Health
-    local _isAlive = true
-    
     ToiletData = {
-        { Model = "models/props_wasteland/prison_toilet01.mdl", OffsetToilet = 0, OffsetHead = -19 },
-        { Model = "models/props_c17/FurnitureToilet001a.mdl", OffsetToilet = 31, OffsetHead = -47},
+        --{ Model = "models/hunter/plates/plate.mdl", OffsetToilet = 0, OffsetHead = 0 },
+        { Model = "models/props_wasteland/prison_toilet01.mdl", OffsetToilet = 14, OffsetHead = -19 },
+        { Model = "models/props_c17/FurnitureToilet001a.mdl", OffsetToilet = 47, OffsetHead = -47},
     }
     
     function explodeTo(pos)
@@ -97,18 +98,19 @@ if SERVER then
     
     local players = find.allPlayers()
     
-    function SkibidiClass:initialize(pos, toiletType, soundUrl)
+    function SkibidiClass:initialize(pos, toiletDataIndex, propScaleType, soundItemIndex)
         self.ID = getNewId()
         _skibidiActiveList[self.ID] = self
-        self._toiletDataItem = ToiletData[toiletType]
-        self._soundUrl = soundUrl
+        self._toiletDataItem = ToiletData[toiletDataIndex]
+        self._propScaleDataIndex = propScaleType
+        self._propScaleDataItem = PropScaleData[propScaleType]
+        self._soundItemIndex = soundItemIndex
         
-        self.model = "models/hunter/blocks/cube2x2x2.mdl"
-        self._health = Health
+        self._health = self._propScaleDataItem.Health
         self._isAlive = true
         self.isDisposed = false
         
-        self._propBase = prop.create(pos, Angle(), "models/XQM/Rails/gumball_1.mdl", false)
+        self._propBase = prop.create(pos, Angle(), self._propScaleDataItem.Model, false)
         self._propBase:setFrozen(false)
         self._propBase:setColor(Color(0,0,0,0))
         self._propBase:setPhysMaterial("gmod_silent")
@@ -123,13 +125,14 @@ if SERVER then
         
         self._baseHolo = hologram.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
         self._baseHolo:setNoDraw(true)
-        self._toiletHolo = hologram.create(self._baseHolo:getPos(), self._baseHolo:getAngles(), self._toiletDataItem.Model)
+        self._toiletHolo = hologram.create(self._baseHolo:getPos(), self._baseHolo:getAngles(), self._toiletDataItem.Model, Vector(self._propScaleDataItem.Scale))
         local headModel, _ = table.random(HeadModels)
-        self._headHolo = hologram.create(self._toiletHolo:localToWorld(Vector(3, 0, self._toiletDataItem.OffsetHead)), self._baseHolo:getAngles(), headModel)
-        self._headHolo:setScale(Vector(0.2))
+        self._headHolo = hologram.create(self._toiletHolo:localToWorld(Vector(3, 0, self._toiletDataItem.OffsetHead*self._propScaleDataItem.Scale)), self._baseHolo:getAngles(), headModel)
+        self._headHolo:setNoDraw(true)
+        self._headHolo:setScale(Vector(0.2 * self._propScaleDataItem.Scale))
         self._headHolo:setParent(self._toiletHolo)
         --self._toiletHolo:setParent(Base)
-        self._headHolo:setClip(1, true, Vector(0, 0, 5 + self._toiletDataItem.OffsetHead), Vector(0,0,1), self._toiletHolo)
+        self._headHolo:setClip(1, true, Vector(0, 0, 5 + self._toiletDataItem.OffsetHead) * self._propScaleDataItem.Scale, Vector(0,0,1), self._toiletHolo)
             
         self._baseHolo:setPos(self._propBase:getPos())
         self._baseHolo:setParent(self._propBase)
@@ -139,7 +142,8 @@ if SERVER then
         
         net.start("AddSkibidi")
         net.writeString(self.ID)
-        net.writeString(self._soundUrl)
+        net.writeInt(self._soundItemIndex, 8)
+        net.writeInt(self._propScaleDataIndex, 8)
         net.writeEntity(self._propBase)
         net.writeEntity(self._headHolo)
         net.send()
@@ -191,7 +195,9 @@ if SERVER then
         end
         
         if isValid(self._propBase) then
-            self._toiletHolo:setPos(self._propBase:getPos() + Vector(0, 0, self._toiletDataItem.OffsetToilet))
+            --local scale = 20 + math.sin(timer.systime()*0.5)*10
+            --self._toiletHolo:setScale(Vector(scale))
+            self._toiletHolo:setPos(self._propBase:getPos() + Vector(0, 0, -self._propScaleDataItem.PropRadius + self._toiletDataItem.OffsetToilet * self._propScaleDataItem.Scale))
             local ang = self._propBase:getVelocity():getAngle()
             ang:setP(0)
             self._toiletHolo:setAngles(ang)
@@ -211,10 +217,9 @@ if SERVER then
     end
     
     
-    function SkibidiClass:entityTakeDamage(target, attacker, amount)
-        --print(amount)
+    function SkibidiClass:entityTakeDamage(target, attacker, amount, type)
         if not self._isAlive or not isValid(self._propBase) then return end
-        if not isValid(attacker) or attacker._isMySF or attacker:getModel() == "models/xqm/rails/gumball_1.mdl" then return end
+        if not isValid(attacker) or attacker._isMySF or type == 67108865 or type == 134217792 then return end -- 67108865 (DMG_CRUSH + DMG_DISSOLVE), 134217792 (DMG_BLAST + DMG_BLAST_SURFACE)
         
         self._health = math.max(0, self._health - amount)
         
@@ -261,7 +266,7 @@ if SERVER then
     hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
         for k, ent in pairs(_skibidiActiveList) do
             if ent._propBase == target then
-                ent:entityTakeDamage(target, attacker, amount)
+                ent:entityTakeDamage(target, attacker, amount, type)
             end
         end
     end)
@@ -278,7 +283,12 @@ if SERVER then
     hook.add("ClientInitialized", "cl_init", function(ply)
         local tab = {}
         for k, ent in pairs(_skibidiActiveList) do
-            tab[k] = { PropBase = ent._propBase, HeadHolo = ent._headHolo, SoundUrl = ent._soundUrl }
+            tab[k] = {
+                PropBase = ent._propBase,
+                HeadHolo = ent._headHolo,
+                SoundItemIndex = ent._soundItemIndex,
+                PropScaleDataIndex = ent._propScaleDataIndex
+            }
         end
         net.start("ActiveEnts")
         net.writeTable(tab)
@@ -289,7 +299,7 @@ if SERVER then
     --================= CUSTOME CODE ================================================
     
     function testSpawnEnt()
-        return SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), math.random(1, #ToiletData), table.random(_urls_music))
+        return SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), math.random(1, #ToiletData), math.random(1, #PropScaleData), math.random(1, #SoundData))
     end
     
     if Respawn then
@@ -334,13 +344,19 @@ end
 local SkibidiClientClass = class("SkibidiClientClass")
 
 
-function SkibidiClientClass:initialize(id, soundUrl, propBase, headHolo)
+function SkibidiClientClass:initialize(id, soundItemIndex, propScaleDataIndex, propBase, headHolo)
     self.ID = id
-    self._soundUrl = soundUrl
+    self._soundDataItem = SoundData[soundItemIndex]
     self._propBase = propBase
     self._headHolo = headHolo
+    timer.simple(0.2, function()
+        if isValid(self._headHolo) then
+            self._headHolo:setNoDraw(false)
+        end
+    end)
+    self._propScaleDataItem = PropScaleData[propScaleDataIndex]
+    self._health = self._propScaleDataItem.Health
     self.isDisposed = false
-    self._health = Health
     self._isAlive = true
     self._headScale = 12
 
@@ -349,9 +365,9 @@ function SkibidiClientClass:initialize(id, soundUrl, propBase, headHolo)
     self._i3 = 0
     self._maxI1 = 40
     self._maxI3 = 5.0
-    self._move1 = 8
-    self._move2 = 20
-    self._move3 = 1.0
+    self._move1 = 8 * self._soundDataItem.Speed
+    self._move2 = 20 * self._soundDataItem.Speed
+    self._move3 = 1.0 * self._soundDataItem.Speed
     self._index1 = 0
     self._index2 = 0
     self._index3 = 0
@@ -388,7 +404,7 @@ end
 
 
 function SkibidiClientClass:buildSounds()
-    self.soundManagerData = getSoundManagerData(self._soundUrl)
+    self.soundManagerData = getSoundManagerData(self._soundDataItem.Url, self._propScaleDataItem.Scale)
 end
 
 function SkibidiClientClass:isAlive()
@@ -496,7 +512,7 @@ end
 
 local SoundManagers = {}
 
-function getSoundManagerData(url)
+function getSoundManagerData(url, scale)
     for i, v in ipairs(SoundManagers) do
         if v.IsAvailable and v.Url == url then
             v.IsAvailable = false
@@ -516,7 +532,7 @@ function getSoundManagerData(url)
         Sound:setVolume(Volume)
         Sound:setLooping(IsLooping)
         Sound:setPitch(MusicSpeed)
-        Sound:setFade(FadeMin, FadeMax)
+        Sound:setFade(50, SoundFadeMax + 50*scale)
         
         Sound:play()
     end)
@@ -532,18 +548,19 @@ net.receive("ActiveEnts", function(len)
     local tab = net.readTable()
     for id, data in pairs(tab) do
         if isValid(data.PropBase) and isValid(data.HeadHolo) then
-            _skibidiActiveList[id] = SkibidiClientClass:new(id, data.SoundUrl, data.PropBase, data.HeadHolo)
+            _skibidiActiveList[id] = SkibidiClientClass:new(id, data.SoundItemIndex, data.PropScaleDataIndex, data.PropBase, data.HeadHolo)
         end
     end
 end)
 
 net.receive("AddSkibidi", function(len)
     local id = net.readString()
-    local soundUrl = net.readString()
+    local soundItemIndex = net.readInt(8)
+    local propScaleDataIndex = net.readInt(8)
     local propBase, headHolo
     local handle = function()
         if propBase and headHolo then
-            _skibidiActiveList[id] = SkibidiClientClass:new(id, soundUrl, propBase, headHolo)
+            _skibidiActiveList[id] = SkibidiClientClass:new(id, soundItemIndex, propScaleDataIndex, propBase, headHolo)
         end
     end
     net.readEntity(function(ent)

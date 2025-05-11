@@ -1,0 +1,35 @@
+--@name Effect thruster_ring
+--@author Markiz
+--@client
+
+local Target = owner()
+
+
+local O = player()
+local OO = owner()
+local E = chip()
+
+local effectData = effect:create()
+
+local attachmentRHIndex = owner():lookupAttachment("anim_attachment_RH")
+
+timer.create("kek", 0.1, 0, function()
+--hook.add("think", "", function()
+    pcall(function()
+        local tr = OO:getEyeTrace()
+        local hitPos = tr.HitPos
+        
+        local pos, ang = owner():getAttachment(attachmentRHIndex)
+        
+        --local weapon = owner():getActiveWeapon()
+        
+        effectData:setOrigin(pos)
+        effectData:setNormal(ang:getForward())
+        --effectData:setEntity(weapon)
+        --effectData:setRadius(0.1)
+        --effectData:setScale(0.1)
+        --effectData:setMagnitude(0.08)
+    
+        effectData:play("thruster_ring")
+    end)
+end)

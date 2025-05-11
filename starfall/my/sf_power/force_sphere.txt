@@ -3,7 +3,7 @@
 --@shared
 
 
-local Radius = 500   
+local Radius = 300   
 local Speed = 200  -- 18 = no gravity
 
 local ToUp = false
@@ -24,7 +24,7 @@ local IsDeleteWorldProps = true
 
 
 local IsWorkByTimer = true
-local WorkTimerDelay = 0.2
+local WorkTimerDelay = 0.1
 
 local IsOnlyPlayers = false
 
@@ -191,7 +191,7 @@ function handleForce()
                 --p:applyForceCenter(dir*Speed*p:getMass()) 
                 
                 if IsDeleteProps then
-                    if IsDeleteWorldProps or p:getOwner() != nil then
+                    if IsDeleteWorldProps and not p:isWeapon() and p:getClass() != "predicted_viewmodel" or p:getOwner() != nil then
                         p:remove()
                     end
                 else
