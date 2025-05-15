@@ -96,7 +96,7 @@ else
     net.receive("init", function(len)
         net.start("hasPermission")
         net.writeBool(hasPermission(perm))
-        net.send(ply)
+        net.send()
     end)
     
 end

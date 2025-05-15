@@ -98,7 +98,7 @@ if SERVER then
     
     local players = find.allPlayers()
     
-    function SkibidiClass:initialize(pos, toiletDataIndex, propScaleType, soundItemIndex)
+    function SkibidiClass:initialize(pos, headModel, toiletDataIndex, propScaleType, soundItemIndex)
         self.ID = getNewId()
         _skibidiActiveList[self.ID] = self
         self._toiletDataItem = ToiletData[toiletDataIndex]
@@ -126,7 +126,6 @@ if SERVER then
         self._baseHolo = hologram.create(chip():getPos(), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
         self._baseHolo:setNoDraw(true)
         self._toiletHolo = hologram.create(self._baseHolo:getPos(), self._baseHolo:getAngles(), self._toiletDataItem.Model, Vector(self._propScaleDataItem.Scale))
-        local headModel, _ = table.random(HeadModels)
         self._headHolo = hologram.create(self._toiletHolo:localToWorld(Vector(3, 0, self._toiletDataItem.OffsetHead*self._propScaleDataItem.Scale)), self._baseHolo:getAngles(), headModel)
         self._headHolo:setNoDraw(true)
         self._headHolo:setScale(Vector(0.2 * self._propScaleDataItem.Scale))
@@ -299,7 +298,12 @@ if SERVER then
     --================= CUSTOME CODE ================================================
     
     function testSpawnEnt()
-        return SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), math.random(1, #ToiletData), math.random(1, #PropScaleData), math.random(1, #SoundData))
+        local headModel, _ = table.random(HeadModels)
+        local toiletDataindex, _ = math.random(1, #ToiletData)
+        local propScaleDataIndex, _ = math.random(1, #PropScaleData)
+        local soundDataIndex, _ = math.random(1, #SoundData)
+        return SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), headModel, toiletDataindex, propScaleDataIndex, soundDataIndex)
+        --return SkibidiClass:new(E:getPos() + Vector(math.random(-50, 50), math.random(-50, 50), 50), HeadModels[1], 2, 3, 6)
     end
     
     if Respawn then

@@ -17,7 +17,7 @@ local url1 = "http://radio.licen777.ru/chechnya"
 local url2 = "http://radio.licen777.ru/stream"
 local url3 = "https://play.sas-media.ru/play_256"
 local url4 = "http://sv.wargaming.fm:8051/128"
-local url5 = "https://cdn.discordapp.com/attachments/1272145125518217282/1283817257918791752/Butyrka_-_Attestat_48114686.mp3?ex=66ff663e&is=66fe14be&hm=dbf863c314067f2457ef7fd22b7ef01db0fbce0f47556fe495ed08191c394264&"
+local url5 = "https://raw.githubusercontent.com/1Boop1/sf-music-data/main/tracks/11315618.mp3"
 
 local url = url5
 

@@ -111,12 +111,12 @@ if (first()) {
         switch (Event) {
             case "more",
                 if (Scale < 10000) {
-                    Scale += 25
+                    Scale = Scale * 1.3
                 }
             break
             case "less",
                 if (Scale > 50) {
-                    Scale -= 25
+                    Scale = Scale / 1.3
                 }
             break
         }

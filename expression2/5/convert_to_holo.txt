@@ -1,0 +1,132 @@
+@name Convert to holo
+@inputs 
+@outputs 
+@persist Config_Range Chunk Counter Limit Data:table Base:entity Output:string
+@trigger 
+# Hell Fire - Prop To Holo Converter (+ Markiz)
+# V0.0.0
+# 12/12/14
+#Holos[1,array] = array(vec(-5.9834,-16.6904,-15.2705), vec(1,1,1), ang(0,-180,0), vec4(255,255,255,25), "models/hunter/blocks/cube025x150x025.mdl", "models/props_canal/metalwall005b", 0)
+ 
+if(first())
+{
+    
+    # Settings
+    Config_Range = 500
+    Config_Scale = 1
+    Config_Base = 0 # 1 - entity is welded to, 0 - entity 
+    
+    
+    # End
+    
+    
+    function string hpcCompression(E:entity, Base:entity)
+    {
+        local Pos = Base:toLocal(E:pos())
+        local Color = E:getColor()
+        local Angle = Base:toLocal(E:angles())
+        local Model = E:model()
+        local Material = E:getMaterial()
+        local Alpha = E:getAlpha()
+        
+        return "table(vec("+round(Pos:x(),3)+","+round(Pos:y(),3)+","+round(Pos:z(),3)+"), vec(1,1,1), ang("+Angle:pitch()+","+Angle:yaw()+","+Angle:roll()+"), vec4("+round(Color:x(),3)+","+round(Color:y(),3)+","+round(Color:z(),3)+","+Alpha+"), \""+Model+"\", \""+Material+"\", 0)"  
+    }
+    
+    function table findProps(Range)
+    {
+        findIncludeClass("prop_physics")
+        findInBox(entity():pos()-vec(Config_Range / 2), entity():pos()+vec(Config_Range / 2))
+        return findToTable()
+    }
+    
+    Output = "@persist E:entity Index HoloData:table
+if(first()|duped()) {
+    Index = 0
+    E = entity()
+    timer(\"step\", 10)
+    
+HoloData = table(\n"
+    Data = findProps(Config_Range)
+    if(Data:count()==0) {
+        hint("Error - No data to read", 5000)
+    }
+    else {
+        if(Config_Base) { Base = entity():isWeldedTo() }
+        else { Base = entity() }
+        #print(Base)
+        Chunk = 10
+        Limit = Data:count()
+        Counter = 1
+        timer("step", 100)
+    }
+    
+    holoCreate(1, vec(), vec(0), ang(), vec4(0, 255, 0, 0), "models/hunter/blocks/cube4x4x4.mdl")
+    holoCreate(2, vec(), vec(0), ang(), vec4(0, 255, 0, 0), "models/hunter/blocks/cube4x4x4.mdl")
+    holoVisible(1, players(), 0)
+    holoVisible(2, players(), 0)
+    holoVisible(1, owner(), 1)
+    holoVisible(2, owner(), 1)
+    
+    timer("init", 200)
+}
+
+if (clk("init")) {
+    holoPos(1, entity():pos())
+    holoPos(2, entity():pos())
+    holoScaleUnits(1, vec(Config_Range))
+    holoScaleUnits(2, vec(-Config_Range))
+    holoAlpha(1, 50)
+    holoAlpha(2, 150)
+}
+
+if (clk("step")){
+    local EndI = Counter + Chunk
+    for (I=Counter, EndI) {
+        Counter += 1
+        
+        if (Counter > Limit+1) {
+            if(fileCanWrite()) {
+                Output += ")\n}
+
+if (clk(\"step\")) {
+    if (Index != HoloData:count()) {
+        timer(\"step\", 1)
+        
+        if (holoCanCreate()) {
+            Index += 1
+            
+            local Item = HoloData[Index, table]
+            #holoCreate(number index,vector position,vector scale,angle ang,vector4 color,string model)
+            local H = holoCreate(Index, E:toWorld(Item[1, vector]), Item[2, vector], E:toWorld(Item[3, angle]), Item[4, vector4], Item[5, string])
+            holoMaterial(Index, Item[6, string])
+            holoParent(Index, E)
+        }
+    }
+    else {
+        hint(\"Complete\", 5000)
+    }
+}"
+                fileWrite(">e2shared/HPC.txt", Output)
+                hint("Complete", 5000)
+                print("Holo count: " + Data:count())
+            } else
+            {
+                hint("Error - File failed to write", 5000)    
+            }
+            break
+        }
+
+        Output += hpcCompression(Data[I,entity], Base)
+
+        if (Counter+1 <= Limit+1) {
+            Output += ",\n"
+        }
+    }
+    
+    if (Counter < Limit+1) {
+        timer("step", 100)
+    }
+}
+ 
+
+
