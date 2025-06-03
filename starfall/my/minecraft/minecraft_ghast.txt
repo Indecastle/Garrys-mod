@@ -2,7 +2,7 @@
 --@author Markiz
 --@shared
 
-local Respawn = true
+local Respawn = false
 local GhastSpawnCounts = 1 -- max 5
 
 local Health = 200
@@ -19,7 +19,7 @@ local InterpolationMove = true
 local InterpolationMoveRatio = 20
 
 local TargetRadius = 1500
-local BulletVelocity = 20
+local BulletVelocity = 25
 local PropDamageMode = true
 local BulletLifeTime = 10
 local BulletObbSize = 10
@@ -248,12 +248,12 @@ if SERVER then
         self:headAngleHandler()
         self:calculateForwardAI()
         self:move()
+        self:calculateTargetVelocity()
     end
     
     function GhastClass:think05sec()
         if not self:isAlive() then return end
         self:findTarget()
-        
     end
     
     function GhastClass:think3sec()
@@ -272,7 +272,7 @@ if SERVER then
     function GhastClass:onPhysgunDrop()
         self._currentPos = self.propBase:getPos()
     end
-    
+
     function GhastClass:findTarget()
         if not self:isAlive() then return end
         local myPos = self.head:getPos()
@@ -284,6 +284,25 @@ if SERVER then
         end)
         table.add(players, npc)
         self._target = find.closest(players, myPos)
+        if self._target != self._targetPrev then
+            self._targetVelocity = Vector()
+        end
+        self._targetPrev = self._target
+    end
+    
+    function GhastClass:calculateTargetVelocity()
+        if not isValid(self._target) then return end
+        
+        local velocity = self._target:getVelocity() * getFrameTime()
+        if (not self._target:isPlayer() or not self._target:isNoclipped()) and not self._target:isOnGround() then
+            velocity.z = 0
+        end
+
+        
+        self._targetVelocity = self._targetVelocity + (velocity - self._targetVelocity) / 4
+        --printConsole(self._targetVelocity:getDistance(Vector()))
+        --printConsole(velocity:getDistance(Vector()))
+        --printConsole("---")
     end
     
     function GhastClass:headAngleHandler()
@@ -301,19 +320,47 @@ if SERVER then
         self.propBase:getPhysicsObject():setAngles(result)
     end
     
+    function GhastClass:calculateAimDirection(shooterPos, targetPos, targetVel, projectileSpeed)
+        local relativePos = targetPos - shooterPos
+        local a = targetVel:dot(targetVel) - projectileSpeed * projectileSpeed
+        local b = 2 * relativePos:dot(targetVel)
+        local c = relativePos:dot(relativePos)
+        
+        local discriminant = b * b - 4 * a * c
+        if discriminant < 0 then
+            return nil -- No solution (the goal is too fast)
+        end
+        
+        local t1 = (-b + math.sqrt(discriminant)) / (2 * a)
+        local t2 = (-b - math.sqrt(discriminant)) / (2 * a)
+        local t = math.max(t1, t2) -- Choose a positive time 
+        
+        if t <= 0 then
+            return nil -- The goal is unattainable
+        end
+        
+        local interceptPoint = targetPos + targetVel * t
+        local aimDirection = (interceptPoint - shooterPos):getNormalized()
+        
+        return aimDirection
+    end
+    
     function GhastClass:attackTarget()
         if not isValid(self._target) then return end
+        
         net.start("AttackTarget")
         net.writeString(self.ID)
         net.writeEntity(self._target)
         net.send()
         
-
         self:setFireState(true)
         timer.simple(0.8, function()
             if not isValid(self.propBase) or not isValid(self._target) then return end
             local bulletStartPos = self.propBase:localToWorld(Vector(47,0,-24))
-            local bullet = BulletClass:new(bulletStartPos, self._target:obbCenterW(), self.propBase)
+            
+            local aimDir = self:calculateAimDirection(bulletStartPos, self._target:obbCenterW(), self._targetVelocity, BulletVelocity*27)
+            if not aimDir then aimDir = (self._target:obbCenterW() - bulletStartPos):getNormalized() end
+            local bullet = BulletClass:new(bulletStartPos, aimDir, self.propBase, BulletVelocity)
         end)
         timer.simple(1, function()
             self:setFireState(false)
@@ -474,18 +521,18 @@ if SERVER then
         return math.deg(math.acos(cosTheta))
     end
     
-    function BulletClass:initialize(pos, targetPos, propBase)
+    function BulletClass:initialize(pos, direction, propBase, bulletVelocity)
         table.insert(_ghastBulletList, self)
         self.propBase = propBase or nil
-        self.targetPos = targetPos or nil
+        self.direction = direction
+        self._bulletVelocity = bulletVelocity
         self.damage = Damage or nil
         self.isExploded = false
         self.isDisposed = false
         self._repulsed = false
         self.propDamageMode = PropDamageMode
         self.lastLifeTime = timer.systime() + BulletLifeTime
-        self.forward = (targetPos-pos):getNormalized()
-        self.head = hologram.create(pos, self.forward and self.forward:getAngle() or Angle(), "models/XQM/Rails/gumball_1.mdl", Vector(1)*0.5)
+        self.head = hologram.create(pos, self.direction and self.direction:getAngle() or Angle(), "models/XQM/Rails/gumball_1.mdl", Vector(1)*0.5)
         self.head:setMaterial("models/props_lab/cornerunit_cloud")
         
         self._obbMins = Vector(-BulletObbSize)
@@ -514,7 +561,7 @@ if SERVER then
             return
         end
         local pos = self.head:getPos()
-        local nextPos = pos + self.forward * BulletVelocity * getFrameTime()
+        local nextPos = pos + self.direction * self._bulletVelocity * getFrameTime()
         
         local ignoreEnts = self._repulsed and {} or { self.propBase }
         local tr = trace.hull(pos, nextPos, self._obbMins, self._obbMaxs, ignoreEnts, MASK.ALL, nil, false)
@@ -524,22 +571,22 @@ if SERVER then
         end
 
         self.head:setPos(nextPos)
-        --self.head:setAngles(self.forward:getAngle())
+        --self.head:setAngles(self.direction:getAngle())
     end
     
     function BulletClass:pressAttack(ply)
         if self._repulsed then return end
         
         local pos = self.head:getPos()
-        local nextPos = pos + self.forward * math.max(120, BulletVelocity * 5)
+        local nextPos = pos + self.direction * math.max(120, BulletVelocity * 5)
         
         local obbMaxs = Vector(BulletObbSize, BulletObbSize+50, BulletObbSize+50)
         local obbMins = -obbMaxs
         local tr = trace.hull(pos, nextPos, obbMins, obbMaxs, {}, MASK.ALL, nil, true)
         
-        if tr.Entity == ply and angleBetweenVectors(ply:getEyeAngles():getForward(), -self.forward) < 40 then
-            local ang = math.lerpAngle(0.5, (-self.forward):getAngle(), ply:getEyeAngles())
-            self.forward = ang:getForward()
+        if tr.Entity == ply and angleBetweenVectors(ply:getEyeAngles():getForward(), -self.direction) < 40 then
+            local ang = math.lerpAngle(0.6, (-self.direction):getAngle(), ply:getEyeAngles())
+            self.direction = ang:getForward()
             self._repulsed = true
         end
     end

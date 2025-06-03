@@ -19,15 +19,9 @@ local bone_L_Thigh = Target:lookupBone("ValveBiped.Bip01_L_Thigh")
 local bone_R_Thigh = Target:lookupBone("ValveBiped.Bip01_R_Thigh")
 
 
-for i = 0, Target:getBoneCount() - 1 do
-    Target:manipulateBoneAngles(i, Angle(0))
-    Target:manipulateBonePosition(i, Vector(0))
-    Target:manipulateBoneScale(i, Vector(1))
-end
-
 /*
 local i1 = 0
-local maxI1 = 10
+local maxI1 = 5
 local move1 = 0.1
 
 hook.add('think', '1', function()
@@ -62,3 +56,15 @@ hook.add('think', '3', function()
     --Target:manipulateBoneScale(head_bone, Vector(2))
 end)
 */
+
+
+
+hook.add("Removed", "", function()
+    for i = 0, Target:getBoneCount() - 1 do
+        pcall(function()
+            Target:manipulateBoneAngles(i, Angle(0))
+            Target:manipulateBonePosition(i, Vector(0))
+            Target:manipulateBoneScale(i, Vector(1))
+        end)
+    end
+end)
