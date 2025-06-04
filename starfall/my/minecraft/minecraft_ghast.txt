@@ -2,7 +2,7 @@
 --@author Markiz
 --@shared
 
-local Respawn = false
+local Respawn =  false
 local GhastSpawnCounts = 1 -- max 5
 
 local Health = 200
@@ -293,13 +293,13 @@ if SERVER then
     function GhastClass:calculateTargetVelocity()
         if not isValid(self._target) then return end
         
-        local velocity = self._target:getVelocity() * getFrameTime()
+        local velocity = self._target:isPlayer() and self._target:inVehicle() and self._target:getVehicle():getVelocity()
+                            or self._target:getVelocity()
         if (not self._target:isPlayer() or not self._target:isNoclipped()) and not self._target:isOnGround() then
             velocity.z = 0
         end
 
-        
-        self._targetVelocity = self._targetVelocity + (velocity - self._targetVelocity) / 4
+        self._targetVelocity = self._targetVelocity + (velocity*getFrameTime() - self._targetVelocity) / 3
         --printConsole(self._targetVelocity:getDistance(Vector()))
         --printConsole(velocity:getDistance(Vector()))
         --printConsole("---")
