@@ -1,0 +1,131 @@
+--@name Cannon Predictive
+--@author Markiz
+--model models/props_phx/cannon.mdl
+--@server
+
+local BulletForce = 3000
+local BulletModel = "models/props_phx/cannonball.mdl"
+
+
+local _e = chip()
+local _o = owner()
+local _cannon = hologram.create(_e:localToWorld(Vector(0,0,50)), _e:getAngles(), "models/props_phx/cannon.mdl", Vector(1))
+_cannon:setParent(_e)
+
+
+function isNaN(x)
+    return x ~= x
+end
+
+function isVectorNaN(v)
+    return v.x ~= v.x or v.y ~= v.y or v.z ~= v.z
+end
+
+-- Function for calculating the direction of the shot
+-- Returns the Vector direction and time or nil if the hit is impossible
+function calculateAimDirection(shooterPos, targetPos, targetVel, projectileSpeed, gravity)
+    --     
+    local relativeTargetPos = targetPos - shooterPos
+
+    -- We determine the temporary step and maximum amount of iterations
+    local maxIterations = 100
+    local tolerance = 0.001
+    local t = relativeTargetPos:getLength() / projectileSpeed -- Initial approximation of flight time
+
+    for i = 1, maxIterations do
+        -- The estimated position of the target after time t
+        local predictedTargetPos = targetPos + targetVel * t
+
+        -- Regarding the gun
+        local delta = predictedTargetPos - shooterPos
+
+        -- The height that the projectile will "lose" due to gravity during t
+        local drop = 0.5 * gravity * t * t
+
+        -- Raise the target point up to compensate for the fall
+        delta.z = delta.z + drop
+
+        -- A new assumption of flight time
+        local new_t = delta:getLength() / projectileSpeed
+
+        -- Check the correctness
+        if math.abs(new_t - t) < tolerance then
+            t = new_t
+            break
+        end
+
+        t = new_t
+    end
+
+    -- After being t, we calculate the target point taking into account gravity   
+    local finalTargetPos = targetPos + targetVel * t
+    local direction = (finalTargetPos - shooterPos)
+    
+    -- We adjust the height taking into account gravity
+    direction.z = direction.z + 0.5 * gravity * t * t
+
+    -- Check the validity of the vector
+    if not direction.x or not direction.y or not direction.z or isVectorNaN(direction) then
+        return nil, nill
+    end
+
+    -- Check if the projectile can really reach this point
+    local requiredSpeed = direction:getLength() / t
+    if isVectorNaN(direction:getNormalized()) then --or requiredSpeed > projectileSpeed + 0.2 then
+        return nil, nil -- The speed is insufficient to get
+    end
+
+    return direction:getNormalized(), t
+end
+
+
+function getTargetVelocity(target)
+    local velocity = target:isPlayer() and target:inVehicle() and target:getVehicle():getVelocity()
+                        or target:getVelocity()
+    if (not target:isPlayer() or not target:isNoclipped()) and not target:isOnGround() then
+        velocity.z = 0
+    end
+    
+    return velocity
+end
+
+local _target = prop.create(_o:getPos(), Angle(), "models/Gibs/HGIBS.mdl", true)
+--local _target = owner()
+
+timer.create("fire", 1.0, 0, function()
+    if not isValid(_target) then return end
+    
+    local targetVelocity = getTargetVelocity(_target)
+    local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce*1, 600)
+    if aimDir == nil then return end
+
+    local bullet = prop.create(_cannon:localToWorld(Vector(100,0,30)), _cannon:getAngles(), BulletModel, false)
+
+    bullet:getPhysicsObject():setDragCoefficient(-10000)
+    bullet:setMass(0)
+    bullet:setFrozen(false)
+
+    bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
+    
+    timer.simple(t, function()
+        pcall(function()
+            bullet:breakEnt()
+        end)
+    end)
+    bullet:addCollisionListener(function(data)
+        pcall(function()
+            bullet:breakEnt()
+        end)
+    end)
+end)
+
+
+
+hook.add("think", "aim", function()
+    local targetVelocity = getTargetVelocity(_target)
+    local aimDir, t = calculateAimDirection(_cannon:getPos(), _target:getPos(), targetVelocity, BulletForce*1, 600)
+    if aimDir == nil then return end
+    _cannon:setAngles(aimDir:getAngle())
+end)
+
+

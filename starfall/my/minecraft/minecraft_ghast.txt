@@ -2,7 +2,7 @@
 --@author Markiz
 --@shared
 
-local Respawn =  false
+local Respawn =  true
 local GhastSpawnCounts = 1 -- max 5
 
 local Health = 200
@@ -342,7 +342,7 @@ if SERVER then
         local interceptPoint = targetPos + targetVel * t
         local aimDirection = (interceptPoint - shooterPos):getNormalized()
         
-        return aimDirection
+        return aimDirection, t
     end
     
     function GhastClass:attackTarget()
@@ -358,7 +358,7 @@ if SERVER then
             if not isValid(self.propBase) or not isValid(self._target) then return end
             local bulletStartPos = self.propBase:localToWorld(Vector(47,0,-24))
             
-            local aimDir = self:calculateAimDirection(bulletStartPos, self._target:obbCenterW(), self._targetVelocity, BulletVelocity*27)
+            local aimDir, t = self:calculateAimDirection(bulletStartPos, self._target:obbCenterW(), self._targetVelocity, BulletVelocity*27)
             if not aimDir then aimDir = (self._target:obbCenterW() - bulletStartPos):getNormalized() end
             local bullet = BulletClass:new(bulletStartPos, aimDir, self.propBase, BulletVelocity)
         end)
