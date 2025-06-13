@@ -1,0 +1,83 @@
+--@name Spawn Blocking
+--@author Jacbo
+--@include libs/cor_wrap.txt
+--include https://raw.githubusercontent.com/Jacbo1/Public-Starfall/main/Spawn%20Blocking/spawn_blocking.lua as spawn_blocking
+--include https://raw.githubusercontent.com/Jacbo1/Public-Starfall/main/Coroutine%20Wrapper/cor_wrap.lua as CorWrap
+-- https://github.com/Jacbo1/Public-Starfall/tree/main/Spawn%20Blocking
+-- cor_wrap can be found here https://github.com/Jacbo1/Public-Starfall/tree/main/Coroutine%20Wrapper
+-- This library blocks execution until the prop/effect/hologram/sound/component/ragdoll/seat/sent can be created
+-- It overwrites the original functions
+require("libs/cor_wrap.txt")
+
+local coroutine_yield = function()
+    try(
+        coroutine.yield,
+        function(err)
+            error("You must wrap all of the code in corWrap(func)!\n" .. table.toString(err))
+        end
+    )
+end
+
+if SERVER then
+    local prop_create = prop.create
+    prop.create = function(pos, ang, model, frozen)
+        while not prop.canSpawn() do coroutine_yield() end
+        return prop_create(pos, ang, model, frozen)
+    end
+    
+    local prop_createComponent = prop.createComponent
+    prop.createComponent = function(pos, ang, class, model, frozen)
+        while not prop.canSpawn() do coroutine_yield() end
+        return prop_createComponent(pos, ang, class, model, frozen)
+    end
+    
+    local prop_createCustom = prop.createCustom
+    prop.createCustom = function(pos, ang, vertices, frozen)
+        while not prop.canSpawn() do coroutine_yield() end
+        return prop_createCustom(pos, ang, vertices, frozen)
+    end
+    
+    local prop_createRagdoll = prop.createRagdoll
+    prop.createRagdoll = function(model, frozen)
+        while not prop.canSpawn() do coroutine_yield() end
+        return prop_createRagdoll(model, frozen)
+    end
+    
+    local prop_createSeat = prop.createSeat
+    prop.createSeat = function(pos, ang, model, frozen)
+        while not prop.canSpawn() do coroutine_yield() end
+        return prop_createSeat(pos, ang, model, frozen)
+    end
+    
+    local prop_createSent = prop.createSent
+    prop.createSent = function(pos, ang, class, frozen, data)
+        while not prop.canSpawn() do coroutine_yield() end
+        return prop_createSent(pos, ang, class, frozen, data)
+    end
+    
+    if prop2mesh then
+        local prop2mesh_create = prop2mesh.create
+        prop2mesh.create = function(count, pos, ang, uvs, scale)
+            while not prop.canSpawn() do coroutine_yield() end
+            return prop2mesh_create(count, pos, ang, uvs, scale)
+        end
+    end
+end
+
+local effect_create = effect.create
+effect.create = function()
+    while not effect.canCreate() do coroutine_yield() end
+    return effect_create()
+end
+
+local holograms_create = holograms.create
+holograms.create = function(pos, ang, model, scale)
+    while not holograms.canSpawn() do coroutine_yield() end
+    return holograms_create(pos, ang, model, scale)
+end
+
+local sounds_create = sounds.create
+sounds.create = function(ent, path, nofilter)
+    while not sounds.canCreate() do coroutine_yield() end
+    return sounds_create(ent, path, nofilter)
+end

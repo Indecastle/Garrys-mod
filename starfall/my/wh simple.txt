@@ -113,7 +113,7 @@ else
     
     
     hook.add("inputPressed", "", function(button)
-        if button == KEY.PAD_DIVIDE then 
+        if button == 62 then 
             if !OnlyOwner or isOwner then         
                 ON = (ON + 1) % 3
             else

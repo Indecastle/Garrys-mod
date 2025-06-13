@@ -1,51 +1,31 @@
-//--@name WH In Vehicle
+//--@name WH Visible
 --@name Generic
 
 --@shared
 
-local Radius = 10000
-local OnlyMap = false
-local BoxSize = 5
+
+local OnlyMap = true
 
 -------------------------------------------
 
 local _o = owner()
 
 if SERVER then
-    
-    timer.create("check_players", 1, 0, function()
-        local players = find.allPlayers(function(ent)
-            return !ent:hasGodMode()
-        end)
-        
-        net.start("conecting_players")
-        net.writeTable(players)
-        net.send()
-    end)
-    
+
     return
 end
 
 setName("Generic")
 
-local _validPlayers = {}
-local _resultPlayers = {}
-
-net.receive("conecting_players", function (len)
-    _validPlayers = net.readTable()
-end)
+local conectingPlayers = {}
 
 local _p = player()
 --local _p = find.playersByName("freedom")[1]
 --print(_p)
 local _isOwner = _p == _o
 
-function isProp(ent)
-    return ent:getClass() == 'prop_physics'
-end
-
 local _mask = OnlyMap and MASK.VISIBLE or MASK.ALL
-local _ignoreEnts = !OnlyMap and isProp or nil
+local _ignoreEnts = OnlyMap and nil or _p
 
 
 local font = render.createFont("Arial" // font
@@ -59,34 +39,42 @@ local font = render.createFont("Arial" // font
                                 ,false //extended
                                 )
 
-function table.filter(t, func)
-    local maped = {}
-    local j = 1
-    for i=1, #t do
-        if func(t[i]) then
-            maped[j] = t[i]
-            j = j + 1
-        end
+function RayAABBIntersect(rayOrigin, rayDir, boxMin, boxMax)
+    local invDir = Vector(1 / rayDir.x, 1 / rayDir.y, 1 / rayDir.z)
+    local t1 = (boxMin - rayOrigin) * invDir
+    local t2 = (boxMax - rayOrigin) * invDir
+
+    local tmin = math.max(math.min(t1.x, t2.x), math.min(t1.y, t2.y), math.min(t1.z, t2.z))
+    local tmax = math.min(math.max(t1.x, t2.x), math.max(t1.y, t2.y), math.max(t1.z, t2.z))
+
+    --  tmax < 0,   
+    if tmax < 0 then
+        return false
     end
-    return maped
+
+    --  tmin > tmax,     
+    if tmin > tmax then
+        return false
+    end
+
+    return true --   
 end
 
-
+function filterTraceEntity(ent)
+    if ent == _p then return false end
+    local class = ent:getClass()
+    return class != 'prop_physics' and (class == 'player' or ent:isVehicle())--or string.find(class, 'vehicle') or string.find(class, 'gtav'))
+end
 
 function isEntityVisible(targetEnt)
     local eyePos = _p:getEyePos()
     local targetPos = targetEnt:obbCenterW()
     local dir = (targetPos - eyePos):getNormalized()
-    
-    
-    local tr = trace.line(eyePos, eyePos + dir*Radius, _ignoreEnts, _mask, nil, false)
+
+    local tr = trace.line(eyePos, eyePos + dir*10000, _ignoreEnts, _mask, nil, false)
     local dist = eyePos:getDistance(tr.HitPos)
     if isValid(tr.Entity) then
-        printConsole(tr.Entity)
-    end
-    
-    if tr.Entity == targetEnt then
-        return true
+        --printConsole(tr.Entity)
     end
     
     local pos2 = trace.intersectRayWithOBB(eyePos, dir*dist, targetPos, Angle(), Vector(-50,-50,-50), Vector(50,50,50))
@@ -94,13 +82,14 @@ function isEntityVisible(targetEnt)
     local boxMin = Vector(0, 0, 0)
     local boxMax = Vector(100, 100, 100)
 
+    --return true--tr.Entity == targetEnt
     return !!pos2
 end
 
-timer.create("", 0.4, 0, function()
-    if not render.isHUDActive() or not _p:inVehicle() then return end
+timer.create("", 0.3, 0, function()
+    if not render.isHUDActive() then return end
     
-    _resultPlayers = table.filter(_validPlayers, function(ent)
+    conectingPlayers = find.allPlayers(function(ent)
         if ent:inVehicle() then
             ent = ent:getVehicle()
         end
@@ -110,22 +99,21 @@ end)
 
 
 hook.add("drawhud","myshook",function()
-    if not _p:inVehicle() then return end
-    
-    for i, p in ipairs(_resultPlayers) do
+
+    for i, p in ipairs(conectingPlayers) do
         if isValid(p) and p ~= _p then
             local obbhs = p:obbSize()
             
             local pos = (p:obbCenterW()):toScreen()
             
-            local color = p:isPlayer() and p:inVehicle() and Color(255,100,100) or Color(255,255,100)
+            local color = p:isPlayer() and p:inVehicle() and Color(255,100,100) or Color(255,255,255)
             
             --render.setFont(font)
             --render.setColor(team.getColor(p:getTeam()))
             render.setColor(color)
             --render.drawText(pos.x, pos.y, p:inVehicle() and p:getVehicle():getClass() or "", 1)
             
-            render.drawRect(pos.x-BoxSize, pos.y-BoxSize, BoxSize*2, BoxSize*2)
+            render.drawRect(pos.x-10, pos.y-10, 20, 20)
         end
     end
 

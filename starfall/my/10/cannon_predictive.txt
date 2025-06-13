@@ -4,7 +4,8 @@
 --@server
 
 local BulletForce = 3000
-local BulletModel = "models/props_phx/cannonball.mdl"
+local PitchAngle = 45
+local BulletModel = "models/props_phx/misc/potato_launcher_explosive.mdl"
 
 
 local _e = chip()
@@ -12,6 +13,7 @@ local _o = owner()
 local _cannon = hologram.create(_e:localToWorld(Vector(0,0,50)), _e:getAngles(), "models/props_phx/cannon.mdl", Vector(1))
 _cannon:setParent(_e)
 
+local _gravity = physenv.getGravity().z
 
 function isNaN(x)
     return x ~= x
@@ -40,7 +42,7 @@ function calculateAimDirection(shooterPos, targetPos, targetVel, projectileSpeed
         local delta = predictedTargetPos - shooterPos
 
         -- The height that the projectile will "lose" due to gravity during t
-        local drop = 0.5 * gravity * t * t
+        local drop = 0.5 * -gravity * t * t
 
         -- Raise the target point up to compensate for the fall
         delta.z = delta.z + drop
@@ -62,7 +64,7 @@ function calculateAimDirection(shooterPos, targetPos, targetVel, projectileSpeed
     local direction = (finalTargetPos - shooterPos)
     
     -- We adjust the height taking into account gravity
-    direction.z = direction.z + 0.5 * gravity * t * t
+    direction.z = direction.z + 0.5 * -gravity * t * t
 
     -- Check the validity of the vector
     if not direction.x or not direction.y or not direction.z or isVectorNaN(direction) then
@@ -78,6 +80,109 @@ function calculateAimDirection(shooterPos, targetPos, targetVel, projectileSpeed
     return direction:getNormalized(), t
 end
 
+----------------------
+
+function CalculateAimDirectionAndSpeed(shooterPos, targetPos, targetVel, pitchAngle, gravity)
+    local theta = math.rad(pitchAngle)
+    local tan_theta = math.tan(theta)
+    local cos_theta = math.cos(theta)
+    local sin_theta = math.sin(theta)
+
+    --    (cos_theta   )
+    if cos_theta < 1e-5 then
+        local dx = targetPos.x - shooterPos.x
+        local dy = targetPos.y - shooterPos.y
+        if math.abs(dx) > 1e-5 or math.abs(dy) > 1e-5 then
+            return nil --    
+        end
+        return nil --     ,   
+    end
+
+    --    f(t)
+    local function compute_f(t)
+        local dx = targetPos.x - shooterPos.x + targetVel.x * t
+        local dy = targetPos.y - shooterPos.y + targetVel.y * t
+        local D_horiz = math.sqrt(dx * dx + dy * dy)
+        local left = D_horiz * tan_theta
+
+        local delta_z = targetPos.z - shooterPos.z + targetVel.z * t
+        local right = delta_z + 0.5 * -gravity * t * t
+        return left - right
+    end
+
+    --     
+    local t_low = 0.001
+    local t_high = 0.001
+    local max_iter = 100
+    local found = false
+
+    local f_low = compute_f(t_low)
+
+    for _ = 1, 100 do
+        local f_high = compute_f(t_high)
+        if f_high == 0 then
+            t = t_high
+            found = true
+            break
+        end
+        if f_low * f_high < 0 then
+            found = true
+            break
+        end
+        t_high = t_high * 2
+        if t_high > 1e6 then break end
+    end
+
+    if not found then
+        if math.abs(f_low) < 1e-3 then
+            t = t_low
+        else
+            return nil
+        end
+    else
+        --  
+        for _ = 1, 100 do
+            local t_mid = (t_low + t_high) / 2
+            local f_mid = compute_f(t_mid)
+            if f_mid == 0 then
+                t = t_mid
+                break
+            end
+            if f_low * f_mid < 0 then
+                t_high = t_mid
+            else
+                t_low = t_mid
+                f_low = f_mid
+            end
+        end
+        t = (t_low + t_high) / 2
+    end
+
+    if t <= 0 then return nil end
+
+    --  dx, dy  
+    local dx = targetPos.x - shooterPos.x + targetVel.x * t
+    local dy = targetPos.y - shooterPos.y + targetVel.y * t
+    local D_horiz = math.sqrt(dx * dx + dy * dy)
+
+    if D_horiz < 1e-5 and cos_theta > 1e-5 then
+        return nil
+    end
+
+    --   
+    local v0 = D_horiz / (t * cos_theta)
+
+    --  
+    local dir_x = dx / (v0 * t)
+    local dir_y = dy / (v0 * t)
+    local dir_z = sin_theta
+
+    local dir = Vector(dir_x, dir_y, dir_z)
+    dir:getNormalized()
+
+    return dir, v0, t
+end
+
 
 function getTargetVelocity(target)
     local velocity = target:isPlayer() and target:inVehicle() and target:getVehicle():getVelocity()
@@ -89,23 +194,58 @@ function getTargetVelocity(target)
     return velocity
 end
 
-local _target = prop.create(_o:getPos(), Angle(), "models/Gibs/HGIBS.mdl", true)
---local _target = owner()
+
+local trajectoryHolograms = {}
+
+
+function UpdateTrajectory(posCannon, dirCannon, speed, explodeTime, gravity)
+    local numPoints = 20
+    local dt = explodeTime / numPoints
+
+    if #trajectoryHolograms < numPoints then
+        for i = #trajectoryHolograms + 1, numPoints do
+            local holo = hologram.create(Vector(), Angle(), "models/holograms/hq_icosphere.mdl", Vector(1))
+            if isValid(holo) then
+                holo:setColor(Color(255, 0, 0))
+                table.insert(trajectoryHolograms, holo)
+            end
+        end
+    end
+
+    for i = 1, numPoints do
+        local t = i * dt
+        local velocity = dirCannon:getNormalized() * speed
+        local pos = posCannon + velocity * t + 0.5 * Vector(0,0,gravity) * t * t
+
+        trajectoryHolograms[i]:setPos(pos)
+        trajectoryHolograms[i]:setNoDraw(false) -- 
+    end
+
+    for i = numPoints + 1, #trajectoryHolograms do
+        trajectoryHolograms[i]:setNoDraw(true)
+    end
+end
+
+--local _target = prop.create(_o:getPos(), Angle(), "models/Gibs/HGIBS.mdl", true)
+local _target = owner()
+--local _target = find.playersByName("i_like")[1]
 
 timer.create("fire", 1.0, 0, function()
     if not isValid(_target) then return end
     
     local targetVelocity = getTargetVelocity(_target)
-    local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce*1, 600)
+    --local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
+    local aimDir, v0, t = CalculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, PitchAngle, _gravity)
     if aimDir == nil then return end
-
+    --print(v0)
     local bullet = prop.create(_cannon:localToWorld(Vector(100,0,30)), _cannon:getAngles(), BulletModel, false)
 
     bullet:getPhysicsObject():setDragCoefficient(-10000)
     bullet:setMass(0)
     bullet:setFrozen(false)
+    bullet:setMaterial("models/effects/splode_sheet")
 
-    bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
+    bullet:getPhysicsObject():setVelocity(aimDir*v0)
     
     timer.simple(t, function()
         pcall(function()
@@ -120,11 +260,13 @@ timer.create("fire", 1.0, 0, function()
 end)
 
 
-
-hook.add("think", "aim", function()
+--hook.add("think", "aim", function()
+timer.create('trajectory', 0.2, 0, function()
     local targetVelocity = getTargetVelocity(_target)
-    local aimDir, t = calculateAimDirection(_cannon:getPos(), _target:getPos(), targetVelocity, BulletForce*1, 600)
+    --local aimDir, t = calculateAimDirection(_cannon:getPos(), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
+    local aimDir, v0, t = CalculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(0,0,0)), _target:getPos(), targetVelocity, PitchAngle, _gravity)
     if aimDir == nil then return end
+    UpdateTrajectory(_cannon:localToWorld(Vector(0,0,0)), aimDir, v0, t, _gravity)
     _cannon:setAngles(aimDir:getAngle())
 end)
 

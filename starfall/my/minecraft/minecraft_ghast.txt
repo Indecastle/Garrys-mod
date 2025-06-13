@@ -106,8 +106,9 @@ if SERVER then
         }
         self:buildLegs()
         self:setScreamState(false)
-        
-        
+
+        self:initFilterTraceCallback()
+
         self._timerScreamingKey = self.ID .. "_timerScreamingKey"
         self._currentPos = self.propBase:getPos()
         self._killingHoloAngle = 0
@@ -117,13 +118,14 @@ if SERVER then
         self._traceMask = TriggerOnlyWord and 24737 or MASK.ALL
         self._zForward = 0
         self._zDir = nil
-        
+
+
         net.start("AddGhast")
         net.writeString(self.ID)
         net.writeEntity(self.propBase)
         net.send()
     end
-    
+
     function GhastClass:buildHolosNotFireState()
         self.head_eye1 = hologram.create(self.head:localToWorld(Vector(47,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
         self.head_eye2 = hologram.create(self.head:localToWorld(Vector(47, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
@@ -272,15 +274,42 @@ if SERVER then
     function GhastClass:onPhysgunDrop()
         self._currentPos = self.propBase:getPos()
     end
+    
+    function GhastClass:initFilterTraceCallback()
+        self.filterTraceEntity = function(ent)
+            local class = ent:getClass()
+            --printConsole('' .. tostring(class) .. ' - ' .. tostring(string.find(class, 'gtav')))
+            --if ent != self.propBase and class != 'prop_physics' and (ent:isPlayer() or ent:isVehicle() or ent:isNPC() ) then
+                --printConsole(ent)
+            --end
+            return ent != self.propBase and class != 'prop_physics' and (ent:isPlayer() or ent:isNPC() )--or string.find(class, 'vehicle') or string.find(class, 'gtav'))
+        end
+    end
+    
+    function GhastClass:isVisibleEnt(targetEnt)
+        if targetEnt:isPlayer() and targetEnt:inVehicle() then
+            --printConsole('inVehicle')
+            --targetEnt = targetEnt:getVehicle()
+            return true
+        end
+        local eyePos = self.propBase:obbCenterW()
+        local targetPos = targetEnt:obbCenterW()
+        --printConsole('start Trace')
+        --local tr = trace.line(eyePos, targetPos, function(ent) return ent == targetEnt end, MASK.ALL, nil, false)
+        local tr = trace.line(eyePos, targetPos, self.filterTraceEntity, MASK.ALL, nil, false)
+        --printConsole('end Trace')
+        --printConsole(tr.Entity)
+        return tr.Entity == targetEnt
+    end
 
     function GhastClass:findTarget()
         if not self:isAlive() then return end
         local myPos = self.head:getPos()
         local players = find.allPlayers(function(ent)
-            return ent:getPos():getDistance(myPos) < TargetRadius and isValidPlayerOrNPC(ent)
+            return ent:getPos():getDistance(myPos) < TargetRadius and isValidPlayerOrNPC(ent) and self:isVisibleEnt(ent)
         end)
         local npc = find.byClass("npc*", function(ent)
-            return ent:getPos():getDistance(myPos) < TargetRadius and isValidPlayerOrNPC(ent)
+            return ent:getPos():getDistance(myPos) < TargetRadius and isValidPlayerOrNPC(ent) and self:isVisibleEnt(ent)
         end)
         table.add(players, npc)
         self._target = find.closest(players, myPos)
@@ -293,15 +322,15 @@ if SERVER then
     function GhastClass:calculateTargetVelocity()
         if not isValid(self._target) then return end
         
-        local velocity = self._target:isPlayer() and self._target:inVehicle() and self._target:getVehicle():getVelocity()
+        local velocity = self._target:isPlayer() and self._target:inVehicle() and self._target:getPhysicsObject():getVelocity()
                             or self._target:getVelocity()
         if (not self._target:isPlayer() or not self._target:isNoclipped()) and not self._target:isOnGround() then
             velocity.z = 0
         end
 
         self._targetVelocity = self._targetVelocity + (velocity*getFrameTime() - self._targetVelocity) / 3
-        --printConsole(self._targetVelocity:getDistance(Vector()))
-        --printConsole(velocity:getDistance(Vector()))
+        --printConsole(self._targetVelocity:getLength())
+        printConsole(velocity:getLength())
         --printConsole("---")
     end
     
@@ -315,7 +344,7 @@ if SERVER then
         
         local ang = dir:getAngle()
         ang.p = 0
-        local result = math.lerpAngle(0.2 * getFrameTime(), self.propBase:getAngles(), ang)
+        local result = math.lerpAngle(0.1 * getFrameTime(), self.propBase:getAngles(), ang)
         --local result = math.lerpAngle(0.2, self.propBase:getAngles(), ang)
         self.propBase:getPhysicsObject():setAngles(result)
     end
@@ -358,7 +387,7 @@ if SERVER then
             if not isValid(self.propBase) or not isValid(self._target) then return end
             local bulletStartPos = self.propBase:localToWorld(Vector(47,0,-24))
             
-            local aimDir, t = self:calculateAimDirection(bulletStartPos, self._target:obbCenterW(), self._targetVelocity, BulletVelocity*27)
+            local aimDir, t = self:calculateAimDirection(bulletStartPos, self._target:obbCenterW(), self._targetVelocity, BulletVelocity * 30 * getFrameTime())
             if not aimDir then aimDir = (self._target:obbCenterW() - bulletStartPos):getNormalized() end
             local bullet = BulletClass:new(bulletStartPos, aimDir, self.propBase, BulletVelocity)
         end)
