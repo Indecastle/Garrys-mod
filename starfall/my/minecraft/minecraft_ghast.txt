@@ -2,7 +2,7 @@
 --@author Markiz
 --@shared
 
-local Respawn =  true
+local Respawn =  false
 local GhastSpawnCounts = 1 -- max 5
 
 local Health = 200
@@ -59,7 +59,7 @@ if SERVER then
     
     function isValidPlayerOrNPC(ent)
         return ent ~= nil and ent:isValid()
-            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode())
+            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() )--and !ent:hasGodMode())
     end
     
     function GhastClass:initialize(pos)
@@ -287,19 +287,23 @@ if SERVER then
     end
     
     function GhastClass:isVisibleEnt(targetEnt)
-        if targetEnt:isPlayer() and targetEnt:inVehicle() then
-            --printConsole('inVehicle')
-            --targetEnt = targetEnt:getVehicle()
+        local startPos = self.propBase:obbCenterW()
+        local targetPos = targetEnt:obbCenterW()
+        local dir = (targetPos - startPos):getNormalized()
+        
+        
+        local tr = trace.line(startPos, startPos + dir*100000, nil, MASK.VISIBLE, nil, false)
+        local dist = startPos:getDistance(tr.HitPos)
+        if tr.Entity == targetEnt then
             return true
         end
-        local eyePos = self.propBase:obbCenterW()
-        local targetPos = targetEnt:obbCenterW()
-        --printConsole('start Trace')
-        --local tr = trace.line(eyePos, targetPos, function(ent) return ent == targetEnt end, MASK.ALL, nil, false)
-        local tr = trace.line(eyePos, targetPos, self.filterTraceEntity, MASK.ALL, nil, false)
-        --printConsole('end Trace')
-        --printConsole(tr.Entity)
-        return tr.Entity == targetEnt
+    
+        local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-40), Vector(40))
+        
+        local boxMin = Vector(0, 0, 0)
+        local boxMax = Vector(100, 100, 100)
+    
+        return !!pos2
     end
 
     function GhastClass:findTarget()
@@ -330,7 +334,7 @@ if SERVER then
 
         self._targetVelocity = self._targetVelocity + (velocity*getFrameTime() - self._targetVelocity) / 3
         --printConsole(self._targetVelocity:getLength())
-        printConsole(velocity:getLength())
+        --printConsole(velocity:getLength())
         --printConsole("---")
     end
     

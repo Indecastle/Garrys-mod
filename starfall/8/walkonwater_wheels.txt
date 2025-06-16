@@ -1,0 +1,61 @@
+--@name WalkOnWater wheels
+--@author Markiz
+--@shared
+   
+local wheelData = {}
+   
+local function isTargetModel(ent)
+    return ent and isValid(ent)
+        and ent:getOwner() == owner()
+        and ent:getModel() == "models/sprops/trans/wheel_a/t_wheel40.mdl"
+end
+      
+hook.add("OnEntityWaterLevelChanged", "WheelWaterHook", function(ent, old, new)
+    if not isTargetModel(ent) then return end
+
+    local data = wheelData[ent] or {}
+    --print('' .. tostring(old) .. ', ' .. tostring(new))
+    if old == 0 and new != 0 then
+        data.height = ent:getPos().z - 30
+        data.inWater = true
+ 
+        if not data.circle then
+            local pos = ent:getPos() - Vector(0, 0, 10)
+            data.circle = prop.create(pos, Angle(), "models/hunter/tubes/circle4x4.mdl", true)
+            data.circle:setColor(Color(0, 0, 0, 0)) --  
+        end
+
+        wheelData[ent] = data
+    else
+       
+        data.inWater = false
+        data.height = nil
+
+        if data.circle then
+            data.circle:setPos(chip():getPos() - Vector(0, 0, 10))
+        end
+
+        wheelData[ent] = data
+    end
+    
+end)
+
+   
+hook.add("Tick", "UpdateWheelCircles", function()
+    for ent, data in pairs(wheelData) do
+        if not isValid(ent) then   
+            if data.circle and isValid(data.circle) then
+                data.circle:remove()
+            end
+            
+            wheelData[ent] = nil
+            continue
+        end
+
+        if data.inWater and data.height and data.circle and isValid(data.circle) then
+            local newPos = ent:getPos()
+            newPos.z = data.height
+            data.circle:setPos(newPos)
+        end
+    end
+end)

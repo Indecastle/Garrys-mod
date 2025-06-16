@@ -1,7 +1,7 @@
 @name Convert to holo
 @inputs 
 @outputs 
-@persist Config_Range Chunk Counter Limit Data:table Base:entity Output:string
+@persist OnlyOwnedProps Config_Range Chunk Counter Limit Data:table Base:entity Output:string
 @trigger 
 # Hell Fire - Prop To Holo Converter (+ Markiz)
 # V0.0.0
@@ -12,6 +12,7 @@ if(first())
 {
     
     # Settings
+    OnlyOwnedProps = 1
     Config_Range = 500
     Config_Scale = 1
     Config_Base = 0 # 1 - entity is welded to, 0 - entity 
@@ -34,13 +35,22 @@ if(first())
     
     function table findProps(Range)
     {
+        if (OnlyOwnedProps) {
+            foreach (I, P: entity = players()) {
+                findExcludePlayerProps(P)
+            }
+            findAllowPlayerProps(owner())
+        }
+        
         findIncludeClass("prop_physics")
         findInBox(entity():pos()-vec(Config_Range / 2), entity():pos()+vec(Config_Range / 2))
         return findToTable()
     }
     
-    Output = "@persist E:entity Index HoloData:table
+    Output = "@persist E:entity Scale Index HoloData:table
 if(first()|duped()) {
+    Scale = 1
+    
     Index = 0
     E = entity()
     timer(\"step\", 10)
@@ -97,7 +107,7 @@ if (clk(\"step\")) {
             
             local Item = HoloData[Index, table]
             #holoCreate(number index,vector position,vector scale,angle ang,vector4 color,string model)
-            local H = holoCreate(Index, E:toWorld(Item[1, vector]), Item[2, vector], E:toWorld(Item[3, angle]), Item[4, vector4], Item[5, string])
+            local H = holoCreate(Index, E:toWorld(Item[1, vector]*Scale), Item[2, vector]*Scale, E:toWorld(Item[3, angle]), Item[4, vector4], Item[5, string])
             holoMaterial(Index, Item[6, string])
             holoParent(Index, E)
         }

@@ -1,0 +1,155 @@
+--@name kolmar
+--@author 
+--@shared
+local col = 0
+
+if SERVER then
+    base = hologram.create(chip():getPos()+Vector(0,0,50), Angle(0,0,0), "models/holograms/hq_sphere.mdl", Vector(10,40,7))
+    head = hologram.create(base:getPos()+Vector(0,-210,0), Angle(0,90,0), "models/holograms/hq_sphere.mdl", Vector(5,20,5))
+    Seat = prop.createSeat(head:getPos(), Angle(0,180,0), "models/nova/jalopy_seat.mdl", false)
+    SeatPhys = Seat:getPhysicsObject()
+    spinemain = hologram.create(base:getPos()+Vector(0,-150,0), Angle(0,0,90), "models/holograms/hq_cone.mdl", Vector(5,10,10))
+    spine2 = hologram.create(base:getPos()+Vector(0,-100,0), Angle(0,0,90), "models/holograms/hq_cone.mdl", Vector(5,10,10))
+    spine3 = hologram.create(base:getPos()+Vector(0,-50,0), Angle(0,0,90), "models/holograms/hq_cone.mdl", Vector(5,10,10))
+    glow1 = hologram.create(base:getPos()+Vector(0,-50,0), Angle(0,90,0), "models/holograms/hq_icosphere.mdl", Vector(11,10,5))
+    glow2 = hologram.create(base:getPos()+Vector(0,-150,0), Angle(0,90,0), "models/holograms/hq_icosphere.mdl", Vector(11,10,5))
+    glow3 = hologram.create(base:getPos()+Vector(0,20,0), Angle(0,90,0), "models/holograms/hq_icosphere.mdl", Vector(11,12,5))
+    glow4 = hologram.create(base:getPos()+Vector(0,100,0), Angle(0,90,0), "models/holograms/hq_icosphere.mdl", Vector(11,10,5))
+    
+    base:setMaterial("phoenix_storms/concrete0")
+    base:setColor4Part(100,100,100,255)
+    
+    head:setMaterial("phoenix_storms/concrete0")
+    head:setColor4Part(100,100,100,255)
+    
+    spinemain:setMaterial("phoenix_storms/concrete0")
+    spine2:setMaterial("phoenix_storms/concrete0")
+    spine3:setMaterial("phoenix_storms/concrete0")
+    if isValid(base) then
+        timer.create("rgb", 0.01,0,function() 
+            if col < 255 then
+                col = col + 1
+                Col3 = Color(1 * 360 / 51 + (timer.curtime() * 49.998), 1, 1)
+                glow1:setColor(Col3:hsvToRGB())
+                glow2:setColor(Col3:hsvToRGB())
+                glow3:setColor(Col3:hsvToRGB())
+                glow4:setColor(Col3:hsvToRGB())
+            end
+            if col >= 255 then
+                col = 0
+            end
+        end)
+    end
+    if isValid(Seat) then
+        Seat:enableGravity(false)
+        base:setParent(Seat)
+        head:setParent(Seat)
+        spinemain:setParent(Seat)
+        spine2:setParent(Seat)
+        spine3:setParent(Seat)
+        glow1:setParent(Seat)
+        glow2:setParent(Seat)
+        glow3:setParent(Seat)
+        glow4:setParent(Seat)
+    end
+    
+    -------------------------------------------------------------
+    local _lastEyeAngles = Angle()
+    local _hud
+    
+    function identifyVehicle()
+        local li = chip():getLinkedComponents()
+        if #li > 0 and li[1]:getClass() == 'starfall_hud' then
+            _hud = li[1]
+        else
+            _hud = prop.createComponent(chip():localToWorld(Vector(0,8,0)), chip():getAngles(), 'starfall_hud', 'models/bull/dynamicbuttonsf.mdl', true)
+            _hud:linkComponent(chip())
+        end
+        
+        _hud:linkComponent(Seat)
+    end
+    
+    identifyVehicle()
+    
+    hook.add("think", "getMouseVelocityClient",  function()
+        Seat:setAngles(math.lerpAngle(0.1, Seat:getAngles(), _lastEyeAngles))
+    end)
+    
+    function sendData(ply)
+        net.start("init")
+        net.writeEntity(Seat)
+        net.send(ply or nil)
+    end
+
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        sendData(ply)
+    end)
+    
+    net.receive("send_angle", function(len)
+        local newAngle = net.readAngle()
+        _lastEyeAngles = newAngle
+    end)
+    -------------------------------------------------------------
+    
+    return
+end
+
+
+----------------- CLIENT -----------------------------------------------------------
+
+
+local O = owner()
+local OO = player()
+local _isActive = false
+
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get Entity(Vehicle) !!!") end
+        _vehicle = ent
+    end)
+end)
+
+hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
+    if not _isActive then return end
+    
+    local ang = _lastEyeAngles + Angle(0,90,0)
+    return {
+        origin= eyePos() - ang:getForward()*400 + ang:getUp()*100
+        ,angles= ang
+        ,fov=fov
+        ,znear=znear + 2
+        ,zfar=zfar,
+        drawviewer=false}
+end)
+
+hook.add("think", "getMouseVelocityClient",  function()
+    _isActive = isValid(_vehicle) and _vehicle:getDriver() == player()
+    if not _isActive then
+        _lastEyeAngles = isValid(_vehicle) and _vehicle:getAngles() or eyeAngles()
+        return
+    end
+    
+    if _lastEyeAngles == nil then 
+        _lastEyeAngles = eyeAngles()
+        return
+    end
+    local newEyeAngles = eyeAngles()
+    local x = math.angleDifference(_lastEyeAngles.y, newEyeAngles.y)
+    local y = math.angleDifference(_lastEyeAngles.p, newEyeAngles.p)
+    _lastEyeAngles = newEyeAngles
+    if (x == 0 and y == 0) then return end
+    handle(x, y)
+end)
+
+timer.create("send_angle", 0.1, 0, function()
+    if not _isActive then return end
+    net.start("send_angle")
+    local ang = Angle(0, _lastEyeAngles.y, -_lastEyeAngles.p)
+    net.writeAngle(ang)
+    net.send()
+end)
+
+function handle(x, y)
+    printMessage(4, 'x:' .. math.round(x) .. '  y: ' .. math.round(y))
+end

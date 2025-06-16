@@ -1,5 +1,4 @@
-//--@name WH In Vehicle
---@name Generic
+--@name ESP In Vehicle
 
 --@shared
 
@@ -25,8 +24,6 @@ if SERVER then
     
     return
 end
-
-setName("Generic")
 
 local _validPlayers = {}
 local _resultPlayers = {}

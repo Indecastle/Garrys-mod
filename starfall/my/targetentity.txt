@@ -16,13 +16,26 @@ function func()
     local tr = O:getEyeTrace()          
     target = tr.Entity 
     --target:setUnbreakable(true)
-    --target:setMaxHealth(10000000000000000)
-    --target:setHealth(10000000000000000000)
     print(target)
-    //targetP = target:getPhysicsObject()
-    
-    //local kek = target.Password 
-    
+    local props = find.inSphere(tr.HitPos, 1000, function(ent)
+        return ent:getOwner() == O
+    end)
+    print(#props)
+    for i, ent in ipairs(props) do
+        printConsole(#ent:getAllConstrained())
+        for i, constr in ipairs(ent:getAllConstrained({Parent= 1})) do
+            --constr:remove()
+        end
+        constraint.breakAll(ent)
+    end
+    for i, ent in ipairs(props) do
+        --pcall(function()
+            --ent:setParent(target)
+            --constraint.weld(ent, target)
+        --end)
+    end
+
+
     local tr2 = trace.trace(O:getShootPos(), O:getShootPos() + O:getEyeAngles():getForward()*100, {O}, MASK.ALL, nil, false)
     local dist = tr.HitPos:getDistance(O:getShootPos())
     local dist2 = tr2.HitPos:getDistance(O:getShootPos())
@@ -92,6 +105,8 @@ end)
     else        
         
         hook.add("inputPressed", "", function(button)
+            if player() != owner() then return end
+            
             net.start("keyHandler")
             net.writeInt(button, 8)
             net.send()

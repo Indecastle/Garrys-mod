@@ -15,6 +15,7 @@ end
 
 local Target = owner()
 Target = find.playersByName("Const")[1]
+print(Target)
 --throw(tostring(Target))
 
 
