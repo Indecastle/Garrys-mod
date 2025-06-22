@@ -369,7 +369,7 @@ timer.create("isHUDActive", 0.2, 0, function()
         oldIsHUDActive = newIsHUDActive
         if newIsHUDActive then
             printMessage(4, [[
-F12 - Turn on/off HUD
+F11 - Turn on/off HUD
 ALT - Change eye pos
 CTRL - Enable third person
 ArrowUp/ArrowDown - Switching to another player
@@ -441,7 +441,7 @@ end)
 
 local oldIsHUDActive = false
 hook.add("inputPressed", "cheat spectator", function(key)
-    if key == KEY.F12 and player() == owner() then
+    if key == KEY.F11 and player() == owner() then
         enableHud(owner(), not render.isHUDActive())
         reset_keys()
         sendOriginCumPos(Vector())

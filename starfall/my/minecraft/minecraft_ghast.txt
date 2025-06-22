@@ -59,7 +59,7 @@ if SERVER then
     
     function isValidPlayerOrNPC(ent)
         return ent ~= nil and ent:isValid()
-            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() )--and !ent:hasGodMode())
+            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode())
     end
     
     function GhastClass:initialize(pos)

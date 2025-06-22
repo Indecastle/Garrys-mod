@@ -1,375 +1,436 @@
 --@name Air defense Predictive
 --@author Markiz
 --model models/hunter/blocks/cube1x1x1.mdl
---@server
+--@shared
 
-local FireDelay = 4.0
+local FireReloadDelay = 5.0
+local FireReactionDelay = 1.0
 local BulletForce = 3000
 local MaxPitchAngle = 80
 local BulletModel = "models/props_phx/cannonball.mdl"
 local Health = 200
 
-local ExplodeDamage = 70
-local ExplodeRadius = 400
+local ExplodeDamage = 80
+local ExplodeRadius = 500
 
 --===========================================================
 
 local _e = chip()
 local _o = owner()
 local _health = Health
-local _cannonHeight = 20
-local _cannon = prop.create(_e:localToWorld(Vector(0,0,_cannonHeight)), _e:getAngles(), "models/props_phx/cannon.mdl", true)
-_cannon:setNocollideAll(true)
---local _cannon = hologram.create(_e:localToWorld(Vector(0,0,50)), _e:getAngles(), "models/props_phx/cannon.mdl", Vector(1))
---_cannon:setParent(_e)
-local _buildHolo = hologram.create(_e:localToWorld(Vector(-30,0,30)), _e:localToWorldAngles(Angle(0,90,0)), "models/hunter/blocks/cube4x6x2.mdl", Vector(1, 1.7, 1.5))
-_buildHolo:setMaterial("phoenix_storms/metalfence004a")
-_buildHolo:setParent(_e)
---_buildHolo:setClip(1, true, _e:getPos(), Vector(0,0,1), _e)
 
-local _gravity = physenv.getGravity().z
-local _isActive = false
-
-function isNaN(x)
-    return x ~= x
-end
-
-function isVectorNaN(v)
-    return v.x ~= v.x or v.y ~= v.y or v.z ~= v.z
-end
-
-function explodeWireTo(pos, damage, radius)
-    if !prop.canSpawn() then return end
-
-    local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
-        damage = damage,
-        radius = radius,
-        removeafter = true,
-        Model = "models/bull/gates/logic_nano.mdl"
-    })
-    ent:setSolid(false)
-    ent:setNoDraw(true)
-    ent:getWirelink()['Detonate'] = 1
-end
-
-function buildScene()
-    local _sceneState = 0
-    local _z = -100
-    local _buildHoloZ = 30
-    function setCannon()
-        _cannon:setPos(_e:localToWorld(Vector(0,0,_z)))
-        _cannon:setAngles(_e:getAngles())
+if SERVER then
+    local _cannonHeight = 10
+    local _lastFireTime, _lastReactionTime = 0, 0
+    local _cannon = prop.create(_e:localToWorld(Vector(0,0,_cannonHeight)), _e:getAngles(), "models/props_phx/cannon.mdl", true)
+    _cannon:setNocollideAll(true)
+    --local _cannon = hologram.create(_e:localToWorld(Vector(0,0,50)), _e:getAngles(), "models/props_phx/cannon.mdl", Vector(1))
+    --_cannon:setParent(_e)
+    local _buildHolo = hologram.create(_e:localToWorld(Vector(-30,0,30)), _e:localToWorldAngles(Angle(0,90,0)), "models/hunter/blocks/cube4x6x2.mdl", Vector(1, 1.7, 1.5))
+    _buildHolo:setMaterial("phoenix_storms/metalfence004a")
+    _buildHolo:setParent(_e)
+    --_buildHolo:setClip(1, true, _e:getPos(), Vector(0,0,1), _e)
+    
+    local _gravity = physenv.getGravity().z
+    local _isActive = false
+    
+    function isNaN(x)
+        return x ~= x
     end
     
-    hook.add("think", "buildScene", function()
-        if !isValid(_cannon) then
-            hook.remove("think", "buildScene")
+    function isVectorNaN(v)
+        return v.x ~= v.x or v.y ~= v.y or v.z ~= v.z
+    end
+    
+    function explodeWireTo(pos, damage, radius)
+        if !prop.canSpawn() then return end
+    
+        local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
+            damage = damage,
+            radius = radius,
+            removeafter = true,
+            Model = "models/bull/gates/logic_nano.mdl"
+        })
+        ent:setSolid(false)
+        ent:setNoDraw(true)
+        ent:getWirelink()['Detonate'] = 1
+    end
+    
+    function buildScene()
+        local _sceneState = 0
+        local _z = -100
+        local _buildHoloZ = 30
+        function setCannon()
+            _cannon:setPos(_e:localToWorld(Vector(0,0,_z)))
+            _cannon:setAngles(_e:getAngles())
+        end
+        
+        hook.add("think", "buildScene", function()
+            if !isValid(_cannon) then
+                hook.remove("think", "buildScene")
+                return
+            end
+            if _sceneState == 0 then
+                _sceneState = 1
+                _e:emitSound("d3_citadel.small_elevator_start")
+                _e:emitSound("eli_lab.elevator_move")
+            elseif _sceneState == 1 then
+                _z = math.min(_z + 0.4, _cannonHeight)
+                setCannon()
+                if _z == _cannonHeight then
+                    _sceneState = 2
+                    _e:stopSound("eli_lab.elevator_move")
+                    _e:emitSound("eli_lab.elevator_stop")
+                end
+            elseif _sceneState == 2 then
+                _buildHoloZ = math.max(_buildHoloZ-5, -110)
+                _buildHolo:setPos(_e:localToWorld(Vector(-30,0,_buildHoloZ)))
+                setCannon()
+                if _buildHoloZ == -110 then
+                    _sceneState = 3
+                end
+            end
+            if _sceneState == 3 then
+                setCannon()
+                --_cannon:setParent(_e)
+                _buildHolo:remove()
+                _isActive = true
+                hook.remove("think", "buildScene")
+            end
+            
+        end)
+    end
+    
+    buildScene()
+    
+    -- Function for calculating the direction of the shot
+    -- Returns the Vector direction and time or nil if the hit is impossible
+    function calculateAimDirection(shooterPos, targetPos, targetVel, projectileSpeed, gravity)
+        --     
+        local relativeTargetPos = targetPos - shooterPos
+    
+        -- We determine the temporary step and maximum amount of iterations
+        local maxIterations = 100
+        local tolerance = 0.001
+        local t = relativeTargetPos:getLength() / projectileSpeed -- Initial approximation of flight time
+    
+        for i = 1, maxIterations do
+            -- The estimated position of the target after time t
+            local predictedTargetPos = targetPos + targetVel * t
+    
+            -- Regarding the gun
+            local delta = predictedTargetPos - shooterPos
+    
+            -- The height that the projectile will "lose" due to gravity during t
+            local drop = 0.5 * -gravity * t * t
+    
+            -- Raise the target point up to compensate for the fall
+            delta.z = delta.z + drop
+    
+            -- A new assumption of flight time
+            local new_t = delta:getLength() / projectileSpeed
+    
+            -- Check the correctness
+            if math.abs(new_t - t) < tolerance then
+                t = new_t
+                break
+            end
+    
+            t = new_t
+        end
+    
+        -- After being t, we calculate the target point taking into account gravity   
+        local finalTargetPos = targetPos + targetVel * t
+        local direction = (finalTargetPos - shooterPos)
+        
+        -- We adjust the height taking into account gravity
+        direction.z = direction.z + 0.5 * -gravity * t * t
+    
+        -- Check the validity of the vector
+        if not direction.x or not direction.y or not direction.z or isVectorNaN(direction) then
+            return nil, nill
+        end
+    
+        -- Check if the projectile can really reach this point
+        local requiredSpeed = direction:getLength() / t
+        if isVectorNaN(direction:getNormalized()) then --or requiredSpeed > projectileSpeed + 0.2 then
+            return nil, nil -- The speed is insufficient to get
+        end
+    
+        return direction:getNormalized(), t
+    end
+    
+    -------------------------------------------
+    
+    function isVisibleEnt(startPos, targetEnt)
+        local targetPos = targetEnt:obbCenterW()
+        local dir = (targetPos - startPos):getNormalized()
+        
+        
+        local tr = trace.line(startPos, startPos + dir*100000, nil, MASK.VISIBLE, nil, false)
+        local dist = startPos:getDistance(tr.HitPos)
+        if isValid(tr.Entity) then
+            --printConsole(tr.Entity)
+        end
+        
+        if tr.Entity == targetEnt then
+            return true
+        end
+    
+        local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-40), Vector(40))
+        
+        local boxMin = Vector(0, 0, 0)
+        local boxMax = Vector(100, 100, 100)
+    
+        return !!pos2
+    end
+    
+    -------------------------------------------------
+    local _target, _prevTarget
+    local _lastPos = nil
+    local _lastTime = nil
+    local _targetVelocity = Vector()
+    
+    hook.add("think", "TargetSpeed", function()
+        if not isValid(_target) then
+            _targetVelocity = Vector()
             return
         end
-        if _sceneState == 0 then
-            _sceneState = 1
-            _e:emitSound("d3_citadel.small_elevator_start")
-            _e:emitSound("eli_lab.elevator_move")
-        elseif _sceneState == 1 then
-            _z = math.min(_z + 0.4, _cannonHeight)
-            setCannon()
-            if _z == _cannonHeight then
-                _sceneState = 2
-                _e:stopSound("eli_lab.elevator_move")
-                _e:emitSound("eli_lab.elevator_stop")
-            end
-        elseif _sceneState == 2 then
-            _buildHoloZ = math.max(_buildHoloZ-5, -110)
-            _buildHolo:setPos(_e:localToWorld(Vector(-30,0,_buildHoloZ)))
-            setCannon()
-            if _buildHoloZ == -110 then
-                _sceneState = 3
-            end
-        end
-        if _sceneState == 3 then
-            setCannon()
-            _cannon:setParent(_e)
-            _buildHolo:remove()
-            _isActive = true
-            hook.remove("think", "buildScene")
+        if _prevTarget != _target then
+            _prevTarget = _target
+            _targetVelocity = Vector()
         end
         
-    end)
-end
-
-buildScene()
-
--- Function for calculating the direction of the shot
--- Returns the Vector direction and time or nil if the hit is impossible
-function calculateAimDirection(shooterPos, targetPos, targetVel, projectileSpeed, gravity)
-    --     
-    local relativeTargetPos = targetPos - shooterPos
-
-    -- We determine the temporary step and maximum amount of iterations
-    local maxIterations = 100
-    local tolerance = 0.001
-    local t = relativeTargetPos:getLength() / projectileSpeed -- Initial approximation of flight time
-
-    for i = 1, maxIterations do
-        -- The estimated position of the target after time t
-        local predictedTargetPos = targetPos + targetVel * t
-
-        -- Regarding the gun
-        local delta = predictedTargetPos - shooterPos
-
-        -- The height that the projectile will "lose" due to gravity during t
-        local drop = 0.5 * -gravity * t * t
-
-        -- Raise the target point up to compensate for the fall
-        delta.z = delta.z + drop
-
-        -- A new assumption of flight time
-        local new_t = delta:getLength() / projectileSpeed
-
-        -- Check the correctness
-        if math.abs(new_t - t) < tolerance then
-            t = new_t
-            break
+        local pos = _target:getPos()
+        local curTime = timer.curtime()
+    
+        if _lastPos and _lastTime then
+            local dt = curTime - _lastTime
+            if dt > 0 then
+                local dif = pos - _lastPos
+                local speed = dif:getLength() / dt
+                _targetVelocity = speed > 0 and dif:getNormalized() * speed or Vector()
+            end
         end
-
-        t = new_t
-    end
-
-    -- After being t, we calculate the target point taking into account gravity   
-    local finalTargetPos = targetPos + targetVel * t
-    local direction = (finalTargetPos - shooterPos)
     
-    -- We adjust the height taking into account gravity
-    direction.z = direction.z + 0.5 * -gravity * t * t
-
-    -- Check the validity of the vector
-    if not direction.x or not direction.y or not direction.z or isVectorNaN(direction) then
-        return nil, nill
-    end
-
-    -- Check if the projectile can really reach this point
-    local requiredSpeed = direction:getLength() / t
-    if isVectorNaN(direction:getNormalized()) then --or requiredSpeed > projectileSpeed + 0.2 then
-        return nil, nil -- The speed is insufficient to get
-    end
-
-    return direction:getNormalized(), t
-end
-
--------------------------------------------
-
-function isVisibleEnt(startPos, targetEnt)
-    local targetPos = targetEnt:obbCenterW()
-    local dir = (targetPos - startPos):getNormalized()
-    
-    
-    local tr = trace.line(startPos, startPos + dir*100000, nil, MASK.VISIBLE, nil, false)
-    local dist = startPos:getDistance(tr.HitPos)
-    if isValid(tr.Entity) then
-        --printConsole(tr.Entity)
-    end
-    
-    if tr.Entity == targetEnt then
-        return true
-    end
-
-    local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-40), Vector(40))
-    
-    local boxMin = Vector(0, 0, 0)
-    local boxMax = Vector(100, 100, 100)
-
-    return !!pos2
-end
-
--------------------------------------------------
-local _target, _prevTarget
-local _lastPos = nil
-local _lastTime = nil
-local _targetVelocity = Vector()
-
-hook.add("think", "TargetSpeed", function()
-    if not isValid(_target) then
-        _targetVelocity = Vector()
-        return
-    end
-    if _prevTarget != _target then
-        _prevTarget = _target
-        _targetVelocity = Vector()
-    end
-    
-    local pos = _target:getPos()
-    local curTime = timer.curtime()
-
-    if _lastPos and _lastTime then
-        local dt = curTime - _lastTime
-        if dt > 0 then
-            local dif = pos - _lastPos
-            local speed = dif:getLength() / dt
-            _targetVelocity = speed > 0 and dif:getNormalized() * speed or Vector()
-        end
-    end
-
-    _lastPos = pos
-    _lastTime = curTime
-end)
----------------------------------------------------
-
-timer.create('find_target', 0.5, 0, function()
-    if !_isActive or !isValid(_cannon) then return end
-    
-    local startPos = _cannon:getPos()
-    local upDir = Vector(0,0,1)
-    local ents = find.inSphere(startPos, 100000, function(ent)
-        return isValid(ent)
-            and ent:isVehicle()
-            and angleBetweenVectors((ent:getPos() - _cannon:getPos()):getNormalized(), upDir) < MaxPitchAngle
-            and isVisibleEnt(startPos, ent)
+        _lastPos = pos
+        _lastTime = curTime
     end)
-    _target = find.closest(ents, startPos)
-    --print(#ents)
-    --if #ents > 0 and find.closest(ents, startPos) or nil 
-end)
-
-
-function getTargetVelocity(target)
-    local velocity = target:getVelocity()
-    if velocity:getLength() == 0 then
-        velocity = _targetVelocity
-    end
-    return velocity
-end
-
-function angleBetweenVectors(a, b)
-    local dot = a:dot(b)
-    local lenA = a:getLength()
-    local lenB = b:getLength()
-    local cosTheta = dot / (lenA * lenB)
-    return math.deg(math.acos(cosTheta))
-end
-
-local _sound = sound.create(_cannon, "weapons/mortar/mortar_fire1.wav", true)
-_sound:setVolume(1, 0)
---_sound:setDSP(1)
-_sound:setSoundLevel(90)
-
-function explodeBulletScene(bullet)
-    local holo = bullet._bulletHoloBase
-    holo:setParent(nil)
-    holo:emitSound("weapons/mortar/mortar_explode1.wav", 120, nil, 1)
-    timer.simple(2, function()
-        if !isValid(holo) then return end
-        holo:remove()
-    end)
-end
-
-timer.create("fire", FireDelay, 0, function()
-    if !_isActive or !isValid(_target) or !isValid(_cannon) then return end
+    ---------------------------------------------------
     
-    local targetVelocity = getTargetVelocity(_target)
-    --print(targetVelocity)
-    --print(_target)
-    local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
-    if aimDir == nil then return end
-    local bullet = prop.create(_cannon:localToWorld(Vector(100,0,30)), _cannon:getAngles(), BulletModel, false)
-    bullet._bulletHoloBase = hologram.create(bullet:getPos(), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
-    bullet._bulletHoloBase:setNoDraw(true)
-    --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
-    bullet._bulletHoloBase:setTrails(50, 0, 2, "trails/smoke", Color(255,255,255))
-    bullet._bulletHoloBase:setParent(bullet)
-    bullet:getPhysicsObject():setDragCoefficient(-10000)
-    bullet:setMass(0)
-    bullet:setFrozen(false)
-    --bullet:setMaterial("models/effects/splode_sheet")
-
-    bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
-    --bullet:emitSound("weapons/mortar/mortar_fire1.wav", soundLevel, 50, 10, channel)
-    _sound:stop()
-    _sound:play()
+    local _prevTarget
     
-    timer.simple(t, function()
-        pcall(function()
-            explodeBulletScene(bullet)
-            explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
-            bullet:remove()
-        end)
-    end)
-    bullet:addCollisionListener(function(data)
-        pcall(function()
-            explodeBulletScene(bullet)
-            explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
-            bullet:remove()
-        end)
-    end)
-end)
-
-
---hook.add("think", "aim", function()
-timer.create('trajectory', 0.2, 0, function()
-    if !_isActive or !isValid(_target) or !isValid(_cannon) then return end
-    
-    local targetVelocity = getTargetVelocity(_target)
-    local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(0,0,0)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
-    if aimDir == nil then return end
-    _cannon:setAngles(aimDir:getAngle())
-end)
-
---====================================
-
-// Obsolete
-local ExplodeModels = {
-    "models/props_phx/misc/potato_launcher_explosive.mdl",
-    "models/props_phx/ww2bomb.mdl",
-    "models/props_junk/propane_tank001a.mdl",
-    "models/props_phx/oildrum001_explosive.mdl",
-    "models/props_c17/oildrum001_explosive.mdl",
-}
-
-// Obsolete
-function explodeTo(pos)
-    while #ExplodeModels > 0 do
-        local succeed = pcall(function()
-            local p = prop.create(pos, Angle(), ExplodeModels[1])
-            p._isMySF = true
-            p:setNoDraw(true)
-            p:breakEnt()
-        end)
+    timer.create('find_target', 0.5, 0, function()
+        if !_isActive or !isValid(_cannon) then return end
         
-        if succeed then return end
-        table.remove(ExplodeModels, 1)
-    end
-end
-
-function setScreamState(isScreaming)
-    local color = isScreaming and Color(255, 0, 0) or Color(255,255,255)
-    _cannon:setColor(color)
-end
-
-function killingScene()
-    explodeWireTo(_cannon:obbCenterW(), ExplodeDamage, ExplodeRadius)
-    _cannon:remove()
-    timer.simple(1, function()
-        _e:remove()
+        local startPos = _cannon:getPos()
+        local upDir = Vector(0,0,1)
+        local ents = find.inSphere(startPos, 100000, function(ent)
+            return isValid(ent)
+                and ent:isVehicle()
+                and angleBetweenVectors((ent:getPos() - _cannon:getPos()):getNormalized(), upDir) < MaxPitchAngle
+                and isVisibleEnt(startPos, ent)
+        end)
+        _target = find.closest(ents, startPos)
+        --print(#ents)
+        --if #ents > 0 and find.closest(ents, startPos) or nil 
+        if _prevTarget != _target then
+            _prevTarget = _target
+            _lastReactionTime = timer.curtime() + FireReactionDelay
+        end
     end)
-end
     
-hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
-    if _cannon != target then return end
     
-    if not isValid(chip()) or _health <= 0 then return end
+    function getTargetVelocity(target)
+        local velocity = target:getVelocity()
+        if velocity:getLength() == 0 then
+            velocity = _targetVelocity
+        end
+        return velocity
+    end
     
-    --amount = math.clamp(amount, 0, MaxTakeDamage)
-    _health = math.max(0, _health - amount)
+    function angleBetweenVectors(a, b)
+        local dot = a:dot(b)
+        local lenA = a:getLength()
+        local lenB = b:getLength()
+        local cosTheta = dot / (lenA * lenB)
+        return math.deg(math.acos(cosTheta))
+    end
     
-    --print(amount)
-    setScreamState(true)
+    local _sound = sound.create(_cannon, "weapons/mortar/mortar_fire1.wav", true)
+    _sound:setVolume(1, 0)
+    --_sound:setDSP(1)
+    _sound:setSoundLevel(90)
     
-    if _health <= 0 then
-        killingScene()
-        timer.remove("timerScreamingKey")
-    else
-        timer.create("timerScreamingKey", 0.5, 1, function()
-            setScreamState(false)
+    function explodeBulletScene(bullet)
+        local holo = bullet._bulletHoloBase
+        holo:setParent(nil)
+        holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 120, nil, 1)
+        timer.simple(4, function()
+            if !isValid(holo) then return end
+            holo:remove()
+        end)
+        net.start("explodeBulletScene")
+        net.writeVector(holo:getPos())
+        net.send()
+    end
+    
+    --------------------------------------------------
+    
+    timer.create("fire", 0.2, 0, function()
+        if !_isActive or !isValid(_target) or !isValid(_cannon) then return end
+        
+        local targetVelocity = getTargetVelocity(_target)
+        local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
+        if aimDir == nil then return end
+        
+        local curtime = timer.curtime()
+        if curtime < _lastFireTime or curtime < _lastReactionTime then return end
+        _lastFireTime = curtime + FireReloadDelay
+        
+    
+        local bullet = prop.create(_cannon:localToWorld(Vector(100,0,30)), _cannon:getAngles(), BulletModel, false)
+        bullet._bulletHoloBase = hologram.create(bullet:getPos(), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
+        bullet._bulletHoloBase:setNoDraw(true)
+        --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
+        bullet._bulletHoloBase:setTrails(50, 0, 4, "trails/smoke", Color(255,255,255))
+        bullet._bulletHoloBase:setParent(bullet)
+        bullet:getPhysicsObject():setDragCoefficient(-10000)
+        bullet:setMass(0)
+        bullet:setFrozen(false)
+        --bullet:setMaterial("models/effects/splode_sheet")
+    
+        bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
+        --bullet:emitSound("weapons/mortar/mortar_fire1.wav", soundLevel, 50, 10, channel)
+        _sound:stop()
+        _sound:play()
+        
+        timer.simple(t, function()
+            pcall(function()
+                explodeBulletScene(bullet)
+                explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
+                bullet:remove()
+            end)
+        end)
+        bullet:addCollisionListener(function(data)
+            pcall(function()
+                explodeBulletScene(bullet)
+                explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
+                bullet:remove()
+            end)
+        end)
+    end)
+    
+    local _aimDir
+    --hook.add("think", "aim", function()
+    timer.create('trajectory', 0.2, 0, function()
+        if !_isActive or !isValid(_target) or !isValid(_cannon) then return end
+        
+        local targetVelocity = getTargetVelocity(_target)
+        local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(0,0,0)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
+        _aimDir = aimDir
+    end)
+    
+    hook.add("think", "setAngles", function()
+        if !_isActive or !isValid(_cannon) then return end
+        
+        local ang
+        if !isValid(_target) or _aimDir == nil then
+            ang = Angle(-30, (timer.curtime()*10)%360, 0)
+        else
+            ang = _aimDir:getAngle()
+        end
+        
+        _cannon:setAngles(math.lerpAngle(0.15, _cannon:getAngles(), ang))
+    end)
+    
+    --====================================
+    
+    // Obsolete
+    local ExplodeModels = {
+        "models/props_phx/misc/potato_launcher_explosive.mdl",
+        "models/props_phx/ww2bomb.mdl",
+        "models/props_junk/propane_tank001a.mdl",
+        "models/props_phx/oildrum001_explosive.mdl",
+        "models/props_c17/oildrum001_explosive.mdl",
+    }
+    
+    // Obsolete
+    function explodeTo(pos)
+        while #ExplodeModels > 0 do
+            local succeed = pcall(function()
+                local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p._isMySF = true
+                p:setNoDraw(true)
+                p:breakEnt()
+            end)
+            
+            if succeed then return end
+            table.remove(ExplodeModels, 1)
+        end
+    end
+    
+    function setScreamState(isScreaming)
+        local color = isScreaming and Color(255, 0, 0) or Color(255,255,255)
+        _cannon:setColor(color)
+    end
+    
+    function killingScene()
+        explodeWireTo(_cannon:obbCenterW(), ExplodeDamage, ExplodeRadius)
+        _cannon:remove()
+        timer.simple(1, function()
+            _e:remove()
         end)
     end
+        
+    hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
+        if _cannon != target then return end
+        
+        if not isValid(chip()) or _health <= 0 then return end
+        
+        --amount = math.clamp(amount, 0, MaxTakeDamage)
+        _health = math.max(0, _health - amount)
+        
+        --print(amount)
+        setScreamState(true)
+        
+        if _health <= 0 then
+            killingScene()
+            timer.remove("timerScreamingKey")
+        else
+            timer.create("timerScreamingKey", 0.5, 1, function()
+                setScreamState(false)
+            end)
+        end
+    end)
+    
+    return
+end
+
+-------------- CLIENT ----------------------
+
+local m = material.load("particle/smokesprites_0004")
+local m2 = material.load("particles/flamelet5")
+
+function createParticle(emitter, pos, mat)
+    local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1)):getNormalized()
+    local part = emitter:add( mat, pos + dir*math.random(0, 200), 100, 1000, 0, 0, 50, 0, 5 ) -- Create a new particle at pos
+    part:setCollide(true)
+    part:setBounce(0)
+    part:setVelocity( dir*70 )
+end
+
+net.receive("explodeBulletScene", function(len)
+    local explodePos = net.readVector()
+    local emitter = particle.create(Vector(), false)
+    
+    -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
+    for i=1, 3 do
+        createParticle(emitter, explodePos, m)
+    end
+    for i=1, 3 do
+        createParticle(emitter, explodePos, m2)
+    end
+    emitter:destroy()
 end)
 

@@ -3,7 +3,7 @@
 
 local Speed = 1
 local Radius = 2500
-local Volume = 10
+local Volume = 1
 
 
 if SERVER then

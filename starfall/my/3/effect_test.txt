@@ -1,0 +1,73 @@
+--@name Effect Test
+--@author Markiz
+--@client
+
+
+local O = player()
+local OO = owner()
+local E = chip()
+local worldE = game.getWorld()
+
+
+local effectData = effect:create()
+
+
+timer.create("kek", 1, 0, function()
+    --pcall(function()
+        local tr = OO:getEyeTrace()
+        local target = tr.Entity 
+        local hitPos = tr.HitPos
+        local hitNormal = tr.HitNormal
+        
+        effectData:setEntity(target)
+        effectData:setMagnitude(1)
+        effectData:setScale(1)
+        effectData:setRadius(4000)
+
+        effectData:setNormal(E:getForward())
+        
+        --effectData:setFlags(1+5+7)
+        --effectData:setSurfaceProp(-1)
+        --effectData:setDamageType(2^35 - 1)
+        
+        --effectData:setStart(hitPos)
+        effectData:setOrigin(E:getPos())  
+        effectData:setEntity(E)
+    
+        effectData:play("Explosion")
+    --end)
+end)
+
+/*
+## gunshotsplash
+## Explosion
+## WaterSurfaceExplosion
+## HunterDamage
+## HL1GaussReflect
+## HL1GaussWallPunchEnter
+## HL1GaussWallImpact2
+## HL1Gib
+## HL1ShellEject
+## cball_bounce
+## cball_explode
+## ManhackSparks
+## AntlionGib
+## RPGShotDown
+## BoltImpact
+## GunshipImpact
+##
+## balloon_pop
+
+
+## EjectBrass_9mm
+## EjectBrass_12Gauge
+## EjectBrass_57
+## EjectBrass_57
+
+
+## HL1GaussBeam_GMOD
+## StriderMuzzleFlash
+## AR2Tracer
+## PhyscannonImpact
+## ToolTracer
+*/

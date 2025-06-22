@@ -178,6 +178,28 @@ function table.first(t, func)
     return nil
 end
 
+function isVisibleEnt(startPos, targetPos)
+    local dir = (targetPos - startPos):getNormalized()
+    
+    
+    local tr = trace.line(startPos, startPos + dir*100000, nil, MASK.VISIBLE, nil, false)
+    local dist = startPos:getDistance(tr.HitPos)
+    if isValid(tr.Entity) then
+        --printConsole(tr.Entity)
+    end
+    
+    if tr.Entity == targetEnt then
+        return true
+    end
+
+    local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-10), Vector(10))
+    
+    local boxMin = Vector(0, 0, 0)
+    local boxMax = Vector(100, 100, 100)
+
+    return !!pos2
+end
+
 function wait(pos)
     if EnableSound and snd then
         --grenade:emitSound(SoundExplodePath, 75, 100, Volume, 0)
@@ -188,7 +210,7 @@ function wait(pos)
     
     createParticle(pos)
     
-    if pos:getDistance(player():getPos()) > Radius then return end
+    if pos:getDistance(player():getPos()) > Radius or !isVisibleEnt(eyePos(), pos) then return end
     
     hook.remove("think", "FlashBang")
     resetHolo()

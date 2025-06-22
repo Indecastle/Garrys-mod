@@ -3,7 +3,7 @@
 
 local Speed = 1
 local Radius = 1000
-local Volume = 3
+local Volume = 1
 
 
 if SERVER then
@@ -163,7 +163,7 @@ if CLIENT then
             _currentAnimSpeed = (_currentAnimSpeed < FFT[1]*timer.frametime()*1000) and FFT[1]*timer.frametime()*1000 or _currentAnimSpeed
 
             --printMessage(4, string.format("%f", math.round(_currentAnimSpeed, 7)))
-            owner():setAnimationRate(0.1 + _currentAnimSpeed)
+            owner():setAnimationRate(0.1 + math.clamp(_currentAnimSpeed, 0, 3))
         end
     end)
 end
