@@ -54,8 +54,9 @@ else
         for i=1, 50 do
             part = emit:add(mat,chip():obbCenterW(),255,400,0,0,255,0,10)
             local dir = Vector(math.rand(-1,1), math.rand(-1,1), math.rand(-1,1)):getNormalized()
-            part:setVelocity(dir*200)
-            part:setRoll(math.random(0,90))
+            part:setVelocity(dir*1000)
+            part:setAirResistance(70)
+            part:setRoll(math.random(0,50))
             part:setRollDelta(3)
             
             part:setCollide(true)

@@ -6,12 +6,14 @@ local StartHeight = 1000
 local StartPitchAngle = 45
 local BulletModel = "models/dynamite/dynamite.mdl"
 
-local MaxRadius = 7000
-local ReloadTime = 15
+local Health = 200
+local MaxRadius = 9000
+local ReloadTime = 10
 local ExplodeDamage = 100
 local ExplodeRadius = 500
 local IsRect = true
 
+local OnlyPvpUse = true
 local UsePVS = true
 local UseWH = true
 local TrailTime = 10
@@ -167,6 +169,7 @@ if SERVER then
     local _isReloading = false
     local _aimDir, _fireForce
     local _cannonAngle = Angle(45,0,0)
+    local _health = Health
     
     function identifyVehicle()
         local li = chip():getLinkedComponents()
@@ -181,7 +184,7 @@ if SERVER then
         if #li2 > 0 and li2[1]:getClass() == 'prop_vehicle_prisoner_pod' then
             _vehicle = li2[1]
         else
-            _vehicle = prop.createSeat(chip():localToWorld(Vector(-75,0,0)), chip():getAngles(), "models/nova/airboat_seat.mdl", true)
+            _vehicle = prop.createSeat(chip():localToWorld(Vector(-40,0,0)), chip():getAngles(), "models/nova/airboat_seat.mdl", true)
             _hud:linkComponent(_vehicle)
         end
         _vehicle:setNocollideAll(true)
@@ -214,7 +217,9 @@ if SERVER then
     end
     
     hook.add("think", "setPosAngle", function()
+        if !isValid(_cannon) then return end
         _cannon:setPos(_e:getPos())
+        _base:setAngles(_cannon:getAngles():setP(190))
         setCannonAngle(math.lerpAngle(0.1, _cannon:getAngles(), _cannonAngle))
     end)
 
@@ -350,24 +355,62 @@ if SERVER then
         net.send()
     end)
     
+    function setScreamState(isScreaming)
+        local color = isScreaming and Color(255, 0, 0) or Color(255,255,255)
+        _cannon:setColor(color)
+    end
+    
+    function killingScene()
+        explodeWireTo(_cannon:obbCenterW(), ExplodeDamage, ExplodeRadius)
+        _cannon:remove()
+        timer.simple(1, function()
+            _e:remove()
+        end)
+    end
+    
     hook.add("EntityTakeDamage", "", function(target, attacker, inflictor, amount, type, position, force)
+        if !isValid(_cannon) then return end
+        
         local driver = _vehicle:getDriver()
-        if !isValid(driver) then return end
-        --if !isValid(target) or !target:isPlayer() or !isValid(attacker) or attacker:getModel() != BulletModel then return end
-        if !isValid(inflictor)
-            or !inflictor._isSF
-            or !isValid(target)
-            or !target:isPlayer()
-            or !target:isAlive()
-            or target:hasGodMode()
-            then return end
-        net.start("entityTakeDamage")
-        net.writeVector(target:getPos())
-        net.writeInt(math.round(amount, 0), 32)
-        net.send(driver)
+        if isValid(driver)
+                and isValid(inflictor)
+                and inflictor._isSF
+                and isValid(target)
+                and target:isPlayer()
+                and target:isAlive()
+                and !target:hasGodMode() then
+            net.start("entityTakeDamage")
+            net.writeVector(target:getPos())
+            net.writeInt(math.round(amount, 0), 32)
+            net.send(driver)
+        end
+        
+        if target == _e and isValid(chip()) and _health > 0 then
+            _health = math.max(0, _health - amount)
+        
+            --print(amount)
+            setScreamState(true)
+            
+            if _health <= 0 then
+                killingScene()
+                timer.remove("timerScreamingKey")
+            else
+                timer.create("timerScreamingKey", 0.5, 1, function()
+                    setScreamState(false)
+                end)
+            end
+        end
+    end)
+    
+    hook.add("PlayerEnteredVehicle", "", function(ply, vehicle, num)
+        if !isValid(_cannon) then return end
+        if OnlyPvpUse and isValid(ply) and ply:hasGodMode() and vehicle == _vehicle then
+            _vehicle:ejectDriver()
+        end
     end)
 
     hook.add("ClientInitialized", "cl_init", function(ply)
+        if !isValid(_cannon) then return end
         net.start("init")
         net.writeEntity(_vehicle)
         net.writeEntity(_cannon)

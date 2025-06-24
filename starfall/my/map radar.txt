@@ -3,10 +3,11 @@
 --@shared
 
 local Detail = 10
-local SizeMap = 15000
+local SizeMap = 30000
 local Z = 3000
 local Zoom = 1
 local LevelDiff = 100
+local RadarScale = 128
 
 local Performance = 50 // Manage to perfomance
 local Performance_Cpu_Limit = 0.5 // Manage to perfomance
@@ -307,10 +308,10 @@ else
                   
                 --render.drawTexturedRect(0, 0, 256, 256)
                 --render.drawPoly(polyStructure)
-                texturedCircle(Vector(128,128),Vector(128,128),64)
+                texturedCircle(Vector(RadarScale,RadarScale),Vector(RadarScale,RadarScale),64)
                 
                 render.setColor(Color())
-                render.drawCircle(128, 128, 3)
+                render.drawCircle(RadarScale, RadarScale, 3)
             end
             
             if Mode == 2 and (isOwner or !OnlyOwner) then

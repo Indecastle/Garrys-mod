@@ -5,12 +5,12 @@
 
 local FireReloadDelay = 5.0
 local FireReactionDelay = 1.0
-local BulletForce = 3000
+local BulletForce = 3500
 local MaxPitchAngle = 80
 local BulletModel = "models/props_phx/cannonball.mdl"
 local Health = 200
 
-local ExplodeDamage = 80
+local ExplodeDamage = 90
 local ExplodeRadius = 500
 
 --===========================================================
@@ -414,17 +414,18 @@ local m2 = material.load("particles/flamelet5")
 
 function createParticle(emitter, pos, mat)
     local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1)):getNormalized()
-    local part = emitter:add( mat, pos + dir*math.random(0, 200), 100, 1000, 0, 0, 50, 0, 5 ) -- Create a new particle at pos
+    -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
+    local part = emitter:add( mat, pos + dir*math.random(0, 50), 100, 1000, 0, 0, 20, 0, 10 )
     part:setCollide(true)
     part:setBounce(0)
-    part:setVelocity( dir*70 )
+    part:setVelocity( dir*500 )
+    part:setAirResistance(100)
 end
 
 net.receive("explodeBulletScene", function(len)
     local explodePos = net.readVector()
     local emitter = particle.create(Vector(), false)
     
-    -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
     for i=1, 3 do
         createParticle(emitter, explodePos, m)
     end
