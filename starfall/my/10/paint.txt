@@ -1,0 +1,540 @@
+--@name Paint
+--@author Markiz
+--@shared
+--owneronly
+
+--@include https://raw.githubusercontent.com/Jacbo1/Public-Starfall/main/SafeNet/safeNet.lua as SafeNet
+--@include https://raw.githubusercontent.com/Jacbo1/Public-Starfall/refs/heads/main/Spawn%20Blocking/spawn_blocking.lua as SpawnBlocking
+local oldNet = net
+local net = require("SafeNet")
+require("SpawnBlocking")
+
+
+local IsAutoSyncScreen = false
+
+local RectSize = 20
+local LineThickness = 4
+local CleanColor = Color(220,220,220)
+
+----------------------------------------------------------------------------
+
+function checkQuota(maxQuota)
+    return math.max(quotaAverage(), quotaUsed()) < maxQuota
+end
+
+function checkQuotaP(maxQuota)
+    return math.max(quotaAverage(), quotaUsed()) < quotaMax() * maxQuota
+end
+
+function validQuota(maxQuota)
+    while !checkQuota(maxQuota) do
+        coroutine.yield()
+    end
+end
+
+function validQuotaP(maxQuota)
+    while !checkQuotaP(maxQuota) do
+        coroutine.yield()
+    end
+end
+
+
+corWrap(function()
+--------------------------------------------------
+
+local _screenSize = 512
+local _chunkCount = 8
+local _chunkSize = _screenSize / _chunkCount
+
+
+function compressColorData(colorData, startRow, rowCount)
+    local binaryData = {}
+    for y = startRow+1, startRow + rowCount do
+        for x = 1, _screenSize do
+            local color = colorData[y][x]
+            table.insert(binaryData, string.char(color.r, color.g, color.b))
+        end
+        validQuotaP(0.4)
+    end
+    
+    local result = table.concat(binaryData)
+    --printConsole('server - ' .. #result)
+    return result
+end
+
+
+function decompressColorData(compressedData, rowCount)
+    local binaryData = compressedData
+    --printConsole('client - ' .. #compressedData)
+    if not binaryData then return {} end
+       
+    local colorData = {}
+    local index = 1
+    
+    for y = 1, rowCount do
+        table.insert(colorData, {})
+        for x = 1, _screenSize do
+            if index + 2 <= #binaryData then
+                local r = binaryData:byte(index)
+                local g = binaryData:byte(index + 1)
+                local b = binaryData:byte(index + 2)
+                
+                table.insert(colorData[y], Color(r, g, b, 255))
+                index = index + 3
+            else
+                table.insert(colorData[y], Color(0,0,0))
+            end
+        end
+        validQuotaP(0.4)
+    end
+    return colorData
+end
+
+
+local function drawLine(x0, y0, x1, y1, thickness, color, drawCircleCallback)
+    local dx = math.abs(x1 - x0)
+    local dy = math.abs(y1 - y0)
+    local sx = x0 < x1 and 1 or -1
+    local sy = y0 < y1 and 1 or -1
+    local err = dx - dy
+
+    while true do
+        drawCircleCallback(x0, y0, thickness, color)
+
+        if x0 == x1 and y0 == y1 then break end
+
+        local e2 = 2 * err
+        if e2 > -dy then
+            err = err - dy
+            x0 = x0 + sx
+        end
+        if e2 < dx then
+            err = err + dx
+            y0 = y0 + sy
+        end
+    end
+end
+    
+    
+if SERVER then
+    
+    local screenData = {}
+    local maxCount = _screenSize*_screenSize
+    --for i=1, maxCount do
+    --    screenData[i] = 0
+        --for j=1, _screenSize do
+        --    screenData[i][j] = 0
+        --end
+    --end
+    
+    local _dataColor = {}
+    local _currentSendId = nil
+    local _chunkIndex = 0
+    
+    local WW = chip():getWirelink()
+    
+    wire.adjustPorts(
+        {
+            Reset="number"
+        },
+        {})
+
+
+    function initScreenData()
+        for y=1, _screenSize do
+            if #_dataColor == _screenSize then return end
+            table.insert(_dataColor, {})
+            for x=1, _screenSize do
+                table.insert(_dataColor[y], CleanColor)
+            end
+            validQuotaP(0.4)
+        end
+    end
+    
+    function isCleanScreen(dataColor)
+        for y=1, _screenSize do
+            for x=1, _screenSize do
+                if dataColor[y][x].r != CleanColor.r or dataColor[y][x].g != CleanColor.g or dataColor[y][x].b != CleanColor.b then
+                    return false
+                end
+            end
+        end
+        return true
+    end
+    
+    
+    function runSyncScreen()
+        _chunkIndex = 0
+        timer.create("syncScreen", 2.9, 0, function()
+            --if net.isSending() then return end
+            
+            --while !checkQuota(0.0005) do
+                --printConsole(math.round(quotaAverage() * 10^6, 0))
+                --coroutine.yield()
+            --end
+            
+            local startIndex = _chunkIndex * _chunkSize
+            local endIndex = startIndex + _chunkSize
+            _chunkIndex = (_chunkIndex + 1) % _chunkCount
+            
+            coroutine.yield()
+            
+            local compressedData = compressColorData(_dataColor, startIndex, _chunkSize)
+            --printConsole(#compressedData)
+            --net.cancel(_currentSendId)
+            net.start("syncRow")
+            net.writeInt32(startIndex)
+            net.writeInt32(_chunkSize)
+            net.writeData2(compressedData)
+            _currentSendId = net.send(nil, false, true)
+            
+            if !IsAutoSyncScreen and _chunkIndex == 0 then
+                timer.remove("syncScreen")
+            end
+        end)
+    end
+    
+    timer.create("saveDupe", 2, 0, function()
+        if #_dataColor != _screenSize then return end
+        local compressedData =  compressColorData(_dataColor, 0, _screenSize)
+        local compress = bit.compress(compressedData)
+        setUserdata(compress)
+        --printConsole(#compressedData)
+        --printConsole(#compress)
+    end)
+    
+    
+    hook.add("DupeFinished", "", function(entTbl)
+        corWrap(function()
+            --printConsole("DupeFinished Start")
+            local compressedData = bit.decompress(getUserdata())
+            if !compressedData then return end
+            
+            _dataColor = decompressColorData(compressedData, _screenSize)
+            if !IsAutoSyncScreen and !isCleanScreen(_dataColor) then
+                runSyncScreen()
+            end
+            --printConsole("DupeFinished End - " .. #compressedData)
+        end)
+    end)
+
+
+    initScreenData()
+    
+    
+    hook.add("input","",function(inp, value)
+        if inp == "Reset" and value != 0 then
+            for x=1, _screenSize do
+                for y=1, _screenSize do
+                    _dataColor[y][x] = CleanColor
+                end
+            end
+            timer.remove("syncScreen")
+            net.start("cleanScreen")
+            net.send()
+        end
+    end)
+    
+    
+    if IsAutoSyncScreen then
+        runSyncScreen()
+    end
+
+    ----------- Buffer Data Server --------
+    local _bufferNewData = {}
+    
+    
+    local function drawCircle(x, y, radius, color)
+        --printConsole("start Circle")
+        local r2 = radius*radius
+        
+        for dx = -radius, radius do
+            for dy = -radius, radius do
+                local px = x + dx - 0
+                local py = y + dy - 2
+                if px > 0 and px < _screenSize and py > 0 and py < _screenSize then
+                    local dx1 = dx <= 0 and dx+1 or dx
+                    local dy1 = dy > 0 and dy-0 or dy
+                    if dx1*dx1 + dy1*dy1 < r2 then
+                        _dataColor[py][px] = color
+                    end
+                end
+            end
+        end
+        --printConsole("end Circle")
+    end
+
+
+    local drawHandlers = {
+        Rect = function(data)
+            for y=data.Y - data.H/2, data.Y + data.H/2-1 do
+                for x=data.X - data.W/2, data.X + data.W/2-1 do
+                    if y < 1 or y > _screenSize or x < 1 or x > _screenSize then continue end
+                    _dataColor[y][x] = data.Color
+                end
+            end
+        end,
+        Line = function(data)
+            drawLine(data.X0, data.Y0, data.X1, data.Y1, data.Thickness, data.Color, drawCircle)
+        end,
+    }
+    
+    
+    net.receive("addNewClientData", function(size, ply)
+        local newBufferData = net.readTable()
+        --printTable(newBufferData)
+        for i, data in ipairs(newBufferData) do
+            drawHandlers[data.Type](data)
+            table.insert(_bufferNewData, data)
+        end
+    end)
+    
+    timer.create("addNewServerData", 0.5, 0, function()
+        if #_bufferNewData == 0 then return end
+        
+        net.start("addNewServerData")
+        net.writeTable(_bufferNewData)
+        net.send(nil, false, true)
+        _bufferNewData = {}
+    end)
+    ----------- Buffer Data Server -------- END
+    
+    return
+end
+
+
+-------------- CLIENT --------------------------------------
+
+local _p, _e = player(), chip()
+local _userId = _p:getUserID()
+
+local _mousePoly = {
+    { x=0, y=0 },
+    { x=3, y=2 },
+    { x=1.1, y=2 },
+    { x=2.1, y=3.9 },
+    { x=1.9, y=4 },
+    { x=0.9, y=2.1 },
+    { x=0.1, y=4 },
+}
+
+function getMouse(curX, curY, scale)
+    local copyMouse = table.copy(_mousePoly)
+    for i=1, #copyMouse do
+        copyMouse[i].x = copyMouse[i].x*scale + curX
+        copyMouse[i].y = copyMouse[i].y*scale + curY
+    end
+    return copyMouse
+end
+
+function drawMouse(curX, curY)
+    render.setRenderTargetTexture()
+
+    copyMouse = getMouse(curX, curY, 4)
+    render.setColor(Color(100, 100, 100))
+    render.drawPoly(copyMouse)
+end
+
+function filterImage()
+    render.setFilterMin(1)
+    render.setFilterMag(1)
+end
+
+------------------------------
+
+
+--local _dataColor = {}
+
+
+local _syncRenderId = 0
+local _rowIndex = 0
+
+local _bufferNewData = {}
+
+---------- Functions ----------------
+
+
+-------------------------- END
+
+----------- Buffer Data Client --------
+local _ownColor = Color(math.random(0, 360), 1, 0.8):hsvToRGB()
+
+local renderHandlers = {
+    Rect = {
+        build = function(x, y)
+            return {
+                Type = "Rect",
+                X = x*2,
+                Y = y*2,
+                W = RectSize,
+                H = RectSize,
+                Color = CleanColor
+            }
+        end,
+        draw = function(data)
+            render.setColor(data.Color)
+            render.drawRectFast(data.X - data.W/2, data.Y - data.H/2, data.W, data.H)
+            --render.drawFilledCircle(data.X, data.Y, 10)
+        end,
+    },
+    Line = {
+        build = function(x0, y0, x1, y1)
+            return {
+                Type = "Line",
+                X0 = x0*2,
+                Y0 = y0*2,
+                X1 = x1*2,
+                Y1 = y1*2,
+                Thickness = LineThickness / 2,
+                Color = _ownColor
+            }
+        end,
+        draw = function(data)
+            render.setColor(data.Color)
+            drawLine(data.X0, data.Y0, data.X1, data.Y1, data.Thickness, data.Color, function(x, y, radius, color)
+                render.drawFilledCircle(x, y, radius)
+            end)
+        end,
+    },
+}
+
+function renderBufferHandler(type, ...)
+    local newData = renderHandlers[type].build(...)
+    newData._userId = _userId
+    table.insert(_bufferNewData, newData)
+    render.selectRenderTarget("myrendertarget")
+    filterImage()
+    renderHandlers[type].draw(newData)
+    render.selectRenderTarget()
+end
+
+
+net.receive("addNewServerData", function(size, ply)
+    local newBufferData = net.readTable()
+    
+    _syncRenderId = (_syncRenderId + 1) % 1000
+    local hookName = 'draw_' .. tostring(_syncRenderId)
+    
+    hook.add("renderoffscreen", hookName, function()
+        render.selectRenderTarget("myrendertarget")
+        filterImage()
+        --printConsole(#newBufferData)
+        for i, data in ipairs(newBufferData) do
+            if data._userId == _userId then continue end
+            renderHandlers[data.Type].draw(data)
+        end
+        render.selectRenderTarget()
+        hook.remove("renderoffscreen", hookName)
+    end)
+end)
+    
+timer.create("addNewClientData", 0.5, 0, function()
+    if #_bufferNewData == 0 then return end
+    
+    net.start("addNewClientData")
+    net.writeTable(_bufferNewData)
+    net.send(nil, false, true)
+    _bufferNewData = {}
+end)
+----------- Buffer Data Client -------- END
+
+
+net.receive("syncRow", function()
+    local startRow = net.readInt32()
+    local rowCount = net.readInt32()
+    local binaryData = net.readData2()
+    local arColor = decompressColorData(binaryData, rowCount)
+    --print(#arColor)
+    
+    _syncRenderId = (_syncRenderId + 1) % 1000
+    local hookName = 'syncRow_' .. tostring(_syncRenderId)
+    --printConsole(hookName)
+    
+    hook.add("renderoffscreen", hookName, function()
+        filterImage()
+        local ar = arColor
+        for i = 1, #arColor do
+            --_dataColor[startRow + i] = arColor[i]
+            render.selectRenderTarget("myrendertarget")
+            for j = 1, _screenSize do
+                render.setViewPort(j, startRow + i, 1, 1)
+                render.clear(arColor[i][j])
+            end
+            validQuotaP(0.4)
+            --printConsole(hookName .. ' - ' .. (startRow + i))
+        end
+        --render.drawPixelsRGB(_y, _screenSize, dataR, dataG, dataB)
+        hook.remove("renderoffscreen", hookName)
+    end)
+end)
+
+
+function clearScreen()
+    hook.add("renderoffscreen", "init", function()
+        render.selectRenderTarget("myrendertarget")
+        filterImage()
+        --render.clear(Color(230, 230, 230, 230), false, false)
+        render.setColor(CleanColor)
+        render.drawRectFast(1, 1, _screenSize, _screenSize)
+        hook.remove("renderoffscreen","init")
+    end)
+end
+
+
+net.receive("cleanScreen", function()
+    clearScreen()
+end)
+
+
+render.createRenderTarget("myrendertarget")
+clearScreen()
+
+
+local _oldIsPressed_MOUSE1 = false
+local prevLinePoint = nil
+
+hook.add("render","",function()
+    filterImage()
+    render.setRenderTargetTexture("myrendertarget")
+    render.drawTexturedRect(0,0,1024,1024)
+    
+    local curx,cury = render.cursorPos()
+    local tr = _p:getEyeTrace()
+    
+        
+    if curx and tr.Entity == render.getScreenEntity() then
+        drawMouse(curx, cury)
+        
+        local newIsPressed_MOUSE1 = input.isMouseDown(MOUSE.MOUSE1)
+        local newIsPressed_MOUSE2 = input.isMouseDown(MOUSE.MOUSE2)
+        local newIsPressed_UP = input.isKeyDown(KEY.UP)
+        local newIsPressed_DOWN = input.isKeyDown(KEY.DOWN)
+        local newIsPressed_RIGHT = input.isKeyDown(KEY.RIGHT)
+        local newIsPressed_LEFT = input.isKeyDown(KEY.LEFT)
+        
+        local x, y = math.floor(curx), math.floor(cury)
+        
+        if !newIsPressed_MOUSE1 then
+            prevLinePoint = nil
+        end
+        
+        if newIsPressed_MOUSE2 then
+            renderBufferHandler("Rect", x/2, y/2)
+        elseif newIsPressed_MOUSE1 then
+            if !prevLinePoint then
+                prevLinePoint = { x, y }
+                return
+            end
+            --printConsole(math.floor(Vector(prevLinePoint[1], prevLinePoint[2], 0):getDistance(Vector(x,y,0))))
+            --printTable(prevLinePoint)
+            renderBufferHandler("Line", prevLinePoint[1]/2, prevLinePoint[2]/2, x/2, y/2)
+            prevLinePoint = { x, y }
+        end
+    end
+end)
+
+
+
+
+----------------------------------------------------------
+end) -- corWrap end

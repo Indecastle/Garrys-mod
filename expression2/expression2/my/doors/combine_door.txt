@@ -1,7 +1,7 @@
 @name Combine Door
 @inputs Fade [Shield D1 D2]:entity
 @outputs
-@persist [Material Sound]:string
+@persist [Material Sound]:string Holo:entity
 @trigger Fade Shield
 
 if(first() | duped() | dupefinished()) {
@@ -25,25 +25,38 @@ if(first() | duped() | dupefinished()) {
         D1:setSkin(State) D2:setSkin(State)
     }
     
+    function initShield () {
+        Holo = holoCreate(1, vec())
+        holoMaterial(1, Material)
+        holoModel(1, Shield:model())
+        Shield:setAlpha(0)
+        
+        Holo:setPos(Shield:pos())
+        Holo:setAng(Shield:angles())
+        Holo:parentTo(Shield)
+    }
+    
     Shield:setMaterial(Material)
+    initShield()
 }
 
-if (~Shield) {
-    Shield:setMaterial(Material)
-    print(Shield)
+if (~Shield & Shield) {
+    initShield()
 }
 
-if(Fade) {
-    soundStop("Shield")
-    Shield:setAlpha(0)
-    set_skin(1)
-    coll(1)
-}
-else {
-    Shield:soundPlay("Shield",100000,Sound) soundVolume("Shield",0.05)
-    Shield:setAlpha(255)
-    set_skin(0)
-    coll(0)
+if (~Fade) {
+    if(Fade) {
+        soundStop("Shield")
+        Holo:setAlpha(0)
+        set_skin(1)
+        coll(1)
+    }
+    else {
+        Holo:soundPlay("Shield",100000,Sound) soundVolume("Shield",0.05)
+        Holo:setAlpha(255)
+        set_skin(0)
+        coll(0)
+    }
 }
 
 

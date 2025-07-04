@@ -1,6 +1,6 @@
 --@name Gman
 --@author Markiz
---@server
+--@shared
 -- use client if prop not own
 
 
@@ -15,62 +15,98 @@ local gman_sounds = {
 }
 
 
-local base, prop1
-
-local li = find.inSphere(chip():getPos(), 100, function(ent)
-    return ent:getModel() == 'models/hunter/misc/lift2x2.mdl'
-end)
-if #li > 0 then
-    prop1 = find.closest(li, chip():getPos())
-else
-    prop1 = prop.create(chip():localToWorld(Vector(-0,0,0)), chip():getAngles(), "models/hunter/misc/lift2x2.mdl", true)
-    prop1:setDrawShadow(false)
-end
-
-if prop1:getOwner() == owner() then
-    prop1:setMaterial("engine/writez")
-    base = prop1
-else
-    holo0 = holograms.create(
-        prop1:localToWorld(Vector(0,0,0)),
+if SERVER then
+    local base, prop1
+    
+    local li = find.inSphere(chip():getPos(), 100, function(ent)
+        return ent:getModel() == 'models/hunter/misc/lift2x2.mdl'
+    end)
+    if #li > 0 then
+        prop1 = find.closest(li, chip():getPos())
+    else
+        prop1 = prop.create(chip():localToWorld(Vector(-0,0,0)), chip():getAngles(), "models/hunter/misc/lift2x2.mdl", true)
+        prop1:setDrawShadow(false)
+    end
+    
+    if prop1:getOwner() == owner() then
+        prop1:setMaterial("engine/writez")
+        base = prop1
+    else
+        holo0 = holograms.create(
+            prop1:localToWorld(Vector(0,0,0)),
+            prop1:getAngles(), 
+            "models/hunter/misc/lift2x2.mdl", 
+            Vector(1))
+        holo0:setMaterial("engine/writez")
+        --holo0:setColor(Color(255,255,255,0))
+        holo0:setParent(prop1)
+        base = holo0
+    end
+        
+    
+    holo = holograms.create(
+        prop1:localToWorld(Vector(0,0,0.2)),
         prop1:getAngles(), 
         "models/hunter/misc/lift2x2.mdl", 
-        Vector(1))
-    holo0:setMaterial("engine/writez")
-    --holo0:setColor(Color(255,255,255,0))
-    holo0:setParent(prop1)
-    base = holo0
-end
-    
-
-holo = holograms.create(
-    prop1:localToWorld(Vector(0,0,0.2)),
-    prop1:getAngles(), 
-    "models/hunter/misc/lift2x2.mdl", 
-    Vector(0.99))
-holo:setMaterial("debug/debugsolidmodelhulls")
---holo2:setColor(Color(255,255,255,0))
-holo:setParent(base)
-
-
-if IsGman then
-    
-    holo2 = holograms.create(
-        prop1:localToWorld(Vector(0,0,3)),
-        prop1:getAngles(), 
-        "models/gman_high.mdl", 
-        Vector(1))
-    holo2:setParent(base)
+        Vector(0.99))
+    holo:setMaterial("debug/debugsolidmodelhulls")
     --holo2:setColor(Color(255,255,255,0))
+    holo:setParent(base)
     
     
-    timer.create('gman', 10, 0, function()
-        -- tiefidget
-        holo2:setAnimation('tiefidget', nil, 0.6)
+    if IsGman then
+        
+        holo2 = holograms.create(
+            prop1:localToWorld(Vector(0,0,3)),
+            prop1:getAngles(), 
+            "models/gman_high.mdl", 
+            Vector(1))
+        holo2:setParent(base)
+        --holo2:setColor(Color(255,255,255,0))
+        
+        
+        timer.create('gman', 10, 0, function()
+            -- tiefidget
+            holo2:setAnimation('tiefidget', nil, 0.6)
+        end)
+    
+        timer.create('gman2', 20, 0, function()
+            holo2:emitSound(table.random(gman_sounds))
+        end)
+        
+    end
+    
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        if !isValid(_cannon) then return end
+        net.start("init")
+        net.writeEntity(prop1)
+        net.send(ply)
     end)
-
-    timer.create('gman2', 20, 0, function()
-        holo2:emitSound(table.random(gman_sounds))
-    end)
+    
+    
+    return
     
 end
+
+
+--------------------------------
+
+local prop1
+
+local init = function() end
+
+net.receive("init", function(len)
+    net.readEntity(function(ent)
+        if ent==nil then error("Failed to get prop1!") end
+        prop1 = ent
+        init()
+    end)
+end)
+
+
+
+function init()
+    
+end
+

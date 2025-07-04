@@ -42,7 +42,6 @@ end
 local offsetZ = 50
 
 function cloneMaterial(shader, path)
-    local mat0 = material.load(path)
     local mat = material.create(shader)
     
     local blockedVars = {
@@ -67,7 +66,7 @@ function cloneMaterial(shader, path)
         --log(mat0:getKeyValues())
     end
     
-    for k, v in pairs(mat0:getKeyValues()) do
+    for k, v in pairs(material.getKeyValues(path)) do
         if table.hasValue(blockedVars, k) then
             continue
         end

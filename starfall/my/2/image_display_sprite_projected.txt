@@ -1,0 +1,136 @@
+--@name Image Display Sprite Projected
+--@author Markiz
+--@model models/lamps/torch.mdl
+--@shared
+--@include libs/sprites1.txt
+--@include libs/sprites_data.txt
+
+dofile("libs/sprites_data.txt")
+local SpriteManager = require("libs/sprites1.txt")
+
+
+local img = "triangle"
+local maxh = 10*20
+local delay = 0.05
+
+
+local frameCount = SpritesData[img].frameCount
+
+
+if SERVER then
+    return
+end
+
+--------------------------------------------------------------
+
+local FPS = 5
+local frame = 0
+local delta = 1 / FPS
+
+
+render.createRenderTarget("cantload")
+
+local nonmat = material.create("UnlitGeneric")
+nonmat:setTextureRenderTarget("$basetexture", "cantload")
+nonmat:setInt("$flags", 0)
+
+local texture = nonmat:getTexture("$basetexture")
+local sprite_sheet;
+
+
+function setCustom(url)
+    SpritesData["c"] = url
+    img = "c"
+    loadImage()
+end
+
+function loadImage()
+    if img == nil then return end
+    if SpritesData[img] == nil then return end
+    
+    URL = SpritesData[img].urls[1]
+
+    if not hasPermission("material.urlcreate", URL) then
+        return
+    end
+    
+    hook.remove("renderoffscreen","sprite1")
+    sprite_sheet = SpriteManager.loadURL(SpritesData[img].urls[1], SpritesData[img].size[1], SpritesData[img].size[2], function(m, w, h, l)
+        if m == nil then return end
+    
+        local ratio = w / h
+
+        local sh = maxh
+        local sw = sh * ratio
+        --screen:setSize(Vector(sh, sw, 1))
+    end)
+    for i=2, #SpritesData[img].urls do
+        sprite_sheet:appendURL(SpritesData[img].urls[i])
+    end
+    
+    
+    sprite_sheet:setCallback(function()
+        hook.add("renderoffscreen","sprite1",function()
+            if quotaAverage() > quotaMax() * 0.2 then return end 
+            sprite_sheet:selectRenderTarget()
+            render.clear(Color(0,0,0,0))
+
+            local x,y,w,h;
+            if PosUp then x=256 y=0 w=512 h=512
+            else x=0 y=0 w=1024 h=1024 end
+            sprite_sheet:drawSprite2(
+                x, y, w, h,
+                math.floor(timer.systime() / delay) % frameCount + 1
+            )
+        end)
+    end)
+
+    texture = sprite_sheet.matRender:getTexture("$basetexture")
+    --print(texture)
+end
+
+loadImage()
+
+if not hasPermission("material.urlcreate", URL) then
+    setupPermissionRequest({"material.urlcreate"}, "Load images from external websites", true)
+
+    hook.add("permissionrequest", "perm", loadImage)
+    
+    hook.add("renderoffscreen", "cantload", function()
+        local now = timer.systime()
+        if frame > now then return end
+        frame = now + delta
+        
+        render.selectRenderTarget("cantload")
+        render.clear()
+        
+        local font = render.createFont("Arial", 50, 400, true, false, false, false, false, true)
+        render.setFont(font)
+        
+        render.drawText(512, 270, "Image source is not whitelisted!", 1)
+        render.drawText(512, 330, "Press E on the dot to allow loading!", 1)
+        
+        render.draw3DSphere(Vector(512, 512, 20), 30, 20, 20)
+        
+    end)
+end
+
+
+local flashlight = light.createProjected()
+
+hook.add("Think", "UpdateFlashlight", function()
+    
+    flashlight:setTexture(texture)
+    flashlight:setBrightness(20)
+    flashlight:setFarZ(5000)
+    flashlight:setFOV(70)
+    flashlight:setColor(Color(255, 255, 255))
+    flashlight:setEnableShadows(false)
+
+    flashlight:setPos(chip():localToWorld(Vector(6,0,0)))
+    flashlight:setAngles(chip():localToWorldAngles(Angle(0,0,0)))
+
+    flashlight:update()
+end)
+
+

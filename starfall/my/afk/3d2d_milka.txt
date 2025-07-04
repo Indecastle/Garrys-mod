@@ -1,12 +1,12 @@
---@name reklama xui
+--@name Label bad
 --@author Markiz
---@includedir libs
+--@include libs/3d2dtext.txt
 --@client
 
 dofile("libs/3d2dtext.txt")
 
 local Target = chip()
-//Target = find.playersByName("mark")[1]
+Target = find.playersByName("1999")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -15,38 +15,18 @@ end)[1]*/
 //print(Target)
 
 local Data = {
-    {   text={"Вернись ко мне"}, 
-        //font = "Courier New",
+    {   text={"Bastard",}, 
         fontSize=60, 
-        fontBold=1000, 
-        bold=true,
-        color=Color(0,255,0),
-        margin=60,
-        colorMode = 3,
-        rainbowSpace = 35,
-        rainbowColorSpace = 20,
-        rainbowReverse = false,
-        colorSpeed = 0.3,
-    },
-    {   text={"MILKA",}, 
-        fontSize=40, 
         fontBold=1000, 
         margin=60,
         bold=true,
         color=Color(255,180,50),
-        colorMode = 3,
+        colorMode = 2,
         rainbowSpace = 25,
         rainbowColorSpace = 20,
         rainbowReverse = true,
         colorSpeed = 1.3,
     },
-    {text={"----------------------------------------------"}, fontSize=40, fontBold=1000, marginUp=50},
-    {   text={"Я не могу",
-                "Без тебя"}, 
-        fontSize=40, 
-        fontBold=1000, 
-        marginUp=40,
-    }
 }
 
 local Vars = {
@@ -60,14 +40,14 @@ local Vars = {
     
     IsStaticVertical=true,
     IsDoubleData=true,
-    isHideTarget=true,
+    isHideTarget=false,
     
     shadowIterations=10,
     shadowAlphaReverce=0,
     shadowOffset=1,
     
     textSize=200,
-    DataOffsetZ=35,
+    DataOffsetZ=15,
     
     isParentPos=true,
     isParentAngle=true,

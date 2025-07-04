@@ -58,6 +58,7 @@ if SERVER then
             --_Killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_c17/doll01.mdl", false)
             _Killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_junk/watermelon01.mdl", false)
             _Killer:setPhysMaterial("gmod_silent")
+            _Killer._isSF = true
             physEnt = _Killer:getPhysicsObject()
             physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
             physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
@@ -99,6 +100,13 @@ if SERVER then
             xyVel.z = 0
             physEnt:applyForceCenter(dir * _Killer:getMass() * Force - xyVel*(_Killer:getMass()/8))
         end
+    end)
+    
+    net.receive("takeDmg", function(ply, len)
+        local ent = net.readEntity()
+        if ent==nil or !ent._isSF then return end
+        --print(ent)
+        ent:breakEnt()
     end)
     
     return
@@ -145,6 +153,22 @@ if ShockEffect then
     lightningHandle()
 end
 
-
+hook.add("EntityFireBullets", "test", function(ent, data)
+    return function(attacker, tr, dmginfo)
+        if tr.Hit and isValid(tr.Entity) and tr.Entity:getModel() == "models/props_junk/watermelon01.mdl" and !tr.Entity._used then
+            tr.Entity._used = true
+            net.start("takeDmg")
+            net.writeEntity(tr.Entity)
+            net.send()
+            
+            if effect.canCreate() then
+                local ef = effect.create()
+                ef:setOrigin(tr.HitPos)
+                ef:play("cball_explode")
+            end
+        end
+    end
+    --print(ent)
+end)
 
  

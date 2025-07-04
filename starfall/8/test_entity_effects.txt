@@ -1,0 +1,10 @@
+--@name Test Entity Effects
+--@author
+--@client
+
+
+local _e = chip()
+local holo = hologram.create(_e:getPos(), _e:getAngles(), "models/effects/splode.mdl", Vector(1, 0.4, 0.4)*0.3)
+holo:setParent(_e)
+
+holo:addEffects(2 + 256)

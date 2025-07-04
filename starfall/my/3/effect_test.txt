@@ -12,7 +12,7 @@ local worldE = game.getWorld()
 local effectData = effect:create()
 
 
-timer.create("kek", 1, 0, function()
+timer.create("kek", 0.2, 0, function()
     --pcall(function()
         local tr = OO:getEyeTrace()
         local target = tr.Entity 
@@ -20,25 +20,30 @@ timer.create("kek", 1, 0, function()
         local hitNormal = tr.HitNormal
         
         effectData:setEntity(target)
-        effectData:setMagnitude(1)
-        effectData:setScale(1)
-        effectData:setRadius(4000)
+        --effectData:setMagnitude(1)
+        effectData:setScale(2.0)
+        --effectData:setRadius(1)
 
-        effectData:setNormal(E:getForward())
-        
         --effectData:setFlags(1+5+7)
         --effectData:setSurfaceProp(-1)
         --effectData:setDamageType(2^35 - 1)
         
-        --effectData:setStart(hitPos)
+        --effectData:setStart(E:localToWorld(Vector(0,0,50)))
+        --effectData:setNormal(E:getForward())
         effectData:setOrigin(E:getPos())  
-        effectData:setEntity(E)
-    
-        effectData:play("Explosion")
+        --effectData:setEntity(E)
+        for i=1, 5 do
+            effectData:setOrigin(E:getPos() + Vector(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1)):getNormalized()*200) 
+            effectData:play("HelicopterMegaBomb") 
+        end
+        
     --end)
 end)
 
 /*
+HelicopterMegaBomb
+
+
 ## gunshotsplash
 ## Explosion
 ## WaterSurfaceExplosion

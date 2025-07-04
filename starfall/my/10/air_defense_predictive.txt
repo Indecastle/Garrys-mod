@@ -3,14 +3,14 @@
 --model models/hunter/blocks/cube1x1x1.mdl
 --@shared
 
-local FireReloadDelay = 5.0
+local FireReloadDelay = 4.0
 local FireReactionDelay = 1.0
 local BulletForce = 3500
 local MaxPitchAngle = 80
 local BulletModel = "models/props_phx/cannonball.mdl"
 local Health = 200
 
-local ExplodeDamage = 90
+local ExplodeDamage = 100
 local ExplodeRadius = 500
 
 --===========================================================
@@ -228,6 +228,8 @@ if SERVER then
         local ents = find.inSphere(startPos, 100000, function(ent)
             return isValid(ent)
                 and ent:isVehicle()
+                and isValid(ent:getDriver())
+                --and !ent:getDriver():hasGodMode()
                 and angleBetweenVectors((ent:getPos() - _cannon:getPos()):getNormalized(), upDir) < MaxPitchAngle
                 and isVisibleEnt(startPos, ent)
         end)
@@ -281,7 +283,7 @@ if SERVER then
         if !_isActive or !isValid(_target) or !isValid(_cannon) then return end
         
         local targetVelocity = getTargetVelocity(_target)
-        local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
+        local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,50)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
         if aimDir == nil then return end
         
         local curtime = timer.curtime()
@@ -289,7 +291,7 @@ if SERVER then
         _lastFireTime = curtime + FireReloadDelay
         
     
-        local bullet = prop.create(_cannon:localToWorld(Vector(100,0,30)), _cannon:getAngles(), BulletModel, false)
+        local bullet = prop.create(_cannon:localToWorld(Vector(100,0,50)), _cannon:getAngles(), BulletModel, false)
         bullet._bulletHoloBase = hologram.create(bullet:getPos(), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
         bullet._bulletHoloBase:setNoDraw(true)
         --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
@@ -327,7 +329,7 @@ if SERVER then
         if !_isActive or !isValid(_target) or !isValid(_cannon) then return end
         
         local targetVelocity = getTargetVelocity(_target)
-        local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(0,0,0)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
+        local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,50)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
         _aimDir = aimDir
     end)
     

@@ -2,21 +2,21 @@
 --@author Markiz
 --@shared
 
-local StartHeight = 1000
+local StartHeight = 500
 local StartPitchAngle = 45
 local BulletModel = "models/dynamite/dynamite.mdl"
 
 local Health = 200
-local MaxRadius = 9000
+local MaxRadius = 11000
 local ReloadTime = 10
-local ExplodeDamage = 100
+local ExplodeDamage = 110
 local ExplodeRadius = 500
 local IsRect = true
 
 local OnlyPvpUse = true
 local UsePVS = true
 local UseWH = true
-local TrailTime = 10
+local TrailTime = 5
 
 --------------------------------------------------
 
@@ -222,6 +222,12 @@ if SERVER then
         _base:setAngles(_cannon:getAngles():setP(190))
         setCannonAngle(math.lerpAngle(0.1, _cannon:getAngles(), _cannonAngle))
     end)
+    
+    function sendExplodeBulletScene(pos)
+        net.start("explodeBulletScene")
+        net.writeVector(pos)
+        net.send()
+    end
 
     function explodeBulletScene(bullet)
         local holo = bullet._bulletHoloBase
@@ -231,9 +237,7 @@ if SERVER then
             if !isValid(holo) then return end
             holo:remove()
         end)
-        net.start("explodeBulletScene")
-        net.writeVector(holo:getPos())
-        net.send()
+        sendExplodeBulletScene(holo:getPos())
     end
     
     function explodeWireTo(pos, damage, radius)
@@ -263,6 +267,8 @@ if SERVER then
         --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
         bullet._bulletHoloBase:setTrails(50, 0, TrailTime, "trails/smoke", Color(255,255,255))
         bullet._bulletHoloBase:setParent(bullet)
+        bullet._isBullet = true
+        bullet._health = 30
         bullet:getPhysicsObject():setDragCoefficient(-10000)
         bullet:setMass(0)
         bullet:setFrozen(false)
@@ -345,9 +351,17 @@ if SERVER then
         end)
     end)
     
+    function userHasGodMode(user)
+        if user:hasGodMode() then
+            return true
+        end
+        local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")
+        return isKyleBuilder != nil and isKyleBuilder
+    end
+    
     timer.create("check_players", 1, 0, function()
         local players = find.allPlayers(function(ent)
-            return !ent:hasGodMode()
+            return !userHasGodMode(ent)
         end)
         
         net.start("conecting_players")
@@ -361,11 +375,22 @@ if SERVER then
     end
     
     function killingScene()
-        explodeWireTo(_cannon:obbCenterW(), ExplodeDamage, ExplodeRadius)
+        local pos = _cannon:obbCenterW()
+        sendExplodeBulletScene(pos)
+        explodeWireTo(pos, ExplodeDamage, ExplodeRadius)
         _cannon:remove()
-        timer.simple(1, function()
+        timer.simple(10, function()
             _e:remove()
         end)
+    end
+    
+    function bulletTakeDamage(bullet, amount)
+        if not isValid(bullet) or not bullet._isBullet then return end
+        bullet._health = math.max(0, bullet._health - amount)
+        if bullet._health == 0 then
+            explodeBulletScene(bullet)
+            bullet:remove()
+        end
     end
     
     hook.add("EntityTakeDamage", "", function(target, attacker, inflictor, amount, type, position, force)
@@ -378,11 +403,15 @@ if SERVER then
                 and isValid(target)
                 and target:isPlayer()
                 and target:isAlive()
-                and !target:hasGodMode() then
+                and !userHasGodMode(target) then
             net.start("entityTakeDamage")
             net.writeVector(target:getPos())
             net.writeInt(math.round(amount, 0), 32)
             net.send(driver)
+        end
+        
+        if isValid(target) and target._isBullet then
+            bulletTakeDamage(target, amount)
         end
         
         if target == _e and isValid(chip()) and _health > 0 then
@@ -402,9 +431,16 @@ if SERVER then
         end
     end)
     
+    net.receive("bulletTakeDmg", function(ply, len)
+        local ent = net.readEntity()
+        local amount = net.readInt(32)
+        if ent==nil or !ent._isBullet then return end
+        bulletTakeDamage(ent, amount)
+    end)
+    
     hook.add("PlayerEnteredVehicle", "", function(ply, vehicle, num)
         if !isValid(_cannon) then return end
-        if OnlyPvpUse and isValid(ply) and ply:hasGodMode() and vehicle == _vehicle then
+        if OnlyPvpUse and isValid(ply) and userHasGodMode(ply) and vehicle == _vehicle then
             _vehicle:ejectDriver()
         end
     end)
@@ -420,7 +456,14 @@ if SERVER then
     return
 end
 
+
+
+
+
+
+
 ------------------- CLIENT ----------------------
+
 
 local _p = player()
 
@@ -444,13 +487,14 @@ net.receive("init", function(len)
     end)
 end)
 
-local _width, _height = 1920, 1080
+local _width, _height = render.getGameResolution()
 local _pitchAngle = StartPitchAngle
 local _cannonAngle = Angle(StartPitchAngle,0,0)
 local _isCanFire = false
 local _isReloading = false
 local _unreloadTime = 0
 local _flyTime = 0
+local _matBlur -- Material Glass
 local _damageInfo = {}
 local _validPlayers, _resultPlayers = {}, {}
 local _freeCumPos = _e:getPos() + Vector(0, 0, StartHeight)
@@ -492,6 +536,19 @@ net.receive("entityTakeDamage", function()
 end)
 
 
+hook.add("EntityFireBullets", "bullets", function(ent, data)
+    return function(attacker, tr, dmginfo)
+        if tr.Hit and isValid(tr.Entity) and tr.Entity:getModel() == BulletModel and !tr.Entity._used then
+            tr.Entity._used = true
+            net.start("bulletTakeDmg")
+            net.writeEntity(tr.Entity)
+            net.writeInt(data.Damage, 32)
+            net.send(data)
+        end
+    end
+end)
+
+
 function handleDamageInfo()
     local now = timer.curtime()
     for i, data in ipairs(_damageInfo) do
@@ -525,6 +582,7 @@ function createParticle(emitter, pos, mat)
     part:setAirResistance(100)
 end
 
+
 net.receive("explodeBulletScene", function(len)
     local explodePos = net.readVector()
     local emitter = particle.create(Vector(), false)
@@ -538,6 +596,7 @@ net.receive("explodeBulletScene", function(len)
     emitter:destroy()
 end)
 
+
 function sendData(pos, cannonAngle)
     net.start("SetData")
     net.writeVector(pos)
@@ -550,6 +609,7 @@ function filterImage()
     render.setFilterMin(1)
     render.setFilterMag(1)
 end
+
 
 function renderCameraRect(size, lineWidth, lineLength)
     local rectStartXY = 512-size
@@ -672,6 +732,7 @@ hook.add("HUDConnected", "Help", function(ent, ply)
     startTime = timer.systime()
     if ply != player() then return end
                 printMessage(4, [[
+ATTACK1 - Fire
 A / W / S / D / ALT / SPACE - camera movement
 CTRL - decrease movement
 SHIFT - increase movement
@@ -683,11 +744,22 @@ Mouse wheel - change pitch angle
 ]])
 end)
 
+function drawBlur()
+    if _matBlur == nil then
+        _matBlur = material.create("UnlitGeneric")
+        _matBlur:setTexture("$basetexture", "phoenix_storms/concrete0")
+        _matBlur:setFloat("$alpha", 0.3)
+    end
+    
+    render.setMaterial(_matBlur)
+    render.drawTexturedRect(0, 0, _width, _height)
+end
+
 function drawVisiblePlayers()
     if !UseWH then return end
     
     for i, p in ipairs(_resultPlayers) do
-        if isValid(p) and p ~= _p then
+        if isValid(p) and p ~= _p and p:isAlive() then
             local obbhs = p:obbSize()
             
             local pos = (p:obbCenterW()):toScreen()
@@ -714,17 +786,21 @@ function drawDamageInfo()
 end
 
 
-hook.add("drawhud", "", function()
+hook.add("DrawHUD", "", function()
     if !isActive() then return end
+    
+    drawBlur()
     
     render.setRenderTargetTexture("screen")
     filterImage()
     local kk = IsRect and (_height/_width) or 1
     render.drawTexturedRect(_width/2 - _width*kk/2, 0, _width*kk, _height)
+    
     drawVisiblePlayers()
     drawDamageInfo()
 end)
 
+--------------------------------------------------------
 
 local _height = StartHeight
 local FreeCumVelocity = 15
@@ -784,6 +860,21 @@ timer.create("calcPredictiveData", 0.2, 0, function()
     _isCanFire = aimDir != nil
     _flyTime = aimDir != nil and math.round(t,0) or 0
     --printMessage(4, tostring(_isCanFire))
+end)
+
+function resetKeys()
+    Key_W = false
+    Key_S = false
+    Key_A = false
+    Key_D = false
+    Key_Space = false
+    Key_Alt = false
+    Key_Shift = false
+    Key_Ctrl = false
+end
+
+hook.add("HUDDisconnected", "reset keys", function()
+    resetKeys()
 end)
 
 hook.add("inputPressed", "cheat spectator", function(key)
@@ -876,6 +967,3 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
         drawviewer = true
     }
 end)
-
-
-

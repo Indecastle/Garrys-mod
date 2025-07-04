@@ -87,6 +87,7 @@ if SERVER then
                 --_Killer = prop.create(chip():getPos()+Vector(0,0,20), Angle(), "models/props_c17/doll01.mdl", false)
                 _Killer = prop.create(chip():getPos() - chip():getRight()*50 + Vector(0,0,20), Angle(), "models/props_junk/watermelon01.mdl", false)
                 _Killer:setPhysMaterial("gmod_silent")
+                _Killer._isSF = true
                 physEnt = _Killer:getPhysicsObject()
                 physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
                 physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
@@ -137,11 +138,21 @@ if SERVER then
         end
     end)
     
+    
     hook.add("PlayerLeaveVehicle", "killer", function(ply, vehicle)
         if vehicle == Seat then
             _velocity = Vector()
         end
     end)
+    
+    
+    net.receive("takeDmg", function(ply, len)
+        local ent = net.readEntity()
+        if ent==nil or !ent._isSF then return end
+        --print(ent)
+        ent:breakEnt()
+    end)
+
 
     return
 end
@@ -257,6 +268,7 @@ hook.add("inputPressed", "cheat spectator", function(key)
     end
 end)
 
+
 hook.add("inputReleased", "cheat spectator", function(key)
     if render.isHUDActive() then    
         if key == KEY.W then Key_W = false end
@@ -297,4 +309,23 @@ end)
 
 hook.add("huddisconnected", "", function ()
     reset_keys()
+end)
+
+
+hook.add("EntityFireBullets", "takeDmg", function(ent, data)
+    return function(attacker, tr, dmginfo)
+        if tr.Hit and isValid(tr.Entity) and tr.Entity:getModel() == "models/props_junk/watermelon01.mdl" and !tr.Entity._used then
+            tr.Entity._used = true
+            net.start("takeDmg")
+            net.writeEntity(tr.Entity)
+            net.send()
+            
+            if effect.canCreate() then
+                local ef = effect.create()
+                ef:setOrigin(tr.HitPos)
+                ef:play("cball_explode")
+            end
+        end
+    end
+    --print(ent)
 end)

@@ -55,6 +55,7 @@ if CLIENT then
     --local Radio = "https://cdn.discordapp.com/attachments/974678227362660395/1291493272870715535/keftemix-cho-za-cho-za-tyagi-barhatnye-tyagi-mp3.mp3?ex=67004c57&is=66fefad7&hm=2eb59683e344d8de0e266b06f8c30b702faad51bb7835e52286131c3faf0555a&"
     local Radio = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/Maxwell%20the%20Cat%20Theme..mp3"
     local Radio = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo.mp3"
+    local Radio = "https://raw.githubusercontent.com/1Boop1/sf-music-data/main/tracks/11315618.mp3"
  
     local perms = {
         "bass.loadURL",
@@ -163,7 +164,7 @@ if CLIENT then
             _currentAnimSpeed = (_currentAnimSpeed < FFT[1]*timer.frametime()*1000) and FFT[1]*timer.frametime()*1000 or _currentAnimSpeed
 
             --printMessage(4, string.format("%f", math.round(_currentAnimSpeed, 7)))
-            owner():setAnimationRate(0.1 + math.clamp(_currentAnimSpeed, 0, 3))
+            owner():setAnimationRate(0.1 + math.clamp(_currentAnimSpeed, 0, 2))
         end
     end)
 end

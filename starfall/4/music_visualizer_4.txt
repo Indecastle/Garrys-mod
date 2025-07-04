@@ -1,0 +1,225 @@
+--@name Music Visualizer 4
+--@author
+--@client
+
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/sfui.lua as sfui.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/component.lua as components/component.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/window.lua as components/window.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/checkbox.lua as components/checkbox.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/button.lua as components/button.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/progress.lua as components/progress.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/slider.lua as components/slider.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/label.lua as components/label.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/list.lua as components/list.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/radio.lua as components/radio.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/textbox.lua as components/textbox.lua
+--@include https://raw.githubusercontent.com/itisluiz/SFUi/main/sfui/components/tabber.lua as components/tabber.lua
+
+-- Always Required
+require("sfui.lua")
+require("components/component.lua")
+-- Required only if used
+require("components/window.lua")
+require("components/button.lua")
+require("components/checkbox.lua")
+require("components/progress.lua")
+require("components/slider.lua")
+require("components/label.lua")
+require("components/list.lua")
+require("components/radio.lua")
+require("components/textbox.lua")
+require("components/tabber.lua")
+
+
+
+local settings = {
+    startVolume = 1,
+    maxVolume = 4,
+    mindist = 1000,
+    maxdist = 1200
+}
+
+------------------------------------
+
+local BackgroundImageUrl = "https://i.imgur.com/etDODQs.jpg"
+local BackAlpha = 200
+
+local url3 = "https://play.sas-media.ru/play_256"
+local url4 = "http://air.radiorecord.ru:8102/rock_128" -- not working
+local url5 = "http://radio-srv1.11one.ru/record192k.mp3"
+local url6 = "http://sv.wargaming.fm:8051/128"
+local url7 = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/army-nebo.mp3"
+local url8 = "https://cdn.discordapp.com/attachments/974678227362660395/1291493272870715535/keftemix-cho-za-cho-za-tyagi-barhatnye-tyagi-mp3.mp3?ex=672a7c57&is=67292ad7&hm=29137cfa0e02e1f8ec1b048ba6a3978cd5d4f89732211bfbcd6d78c1d227ceb6&"
+local url9 = "https://raw.githubusercontent.com/1Boop1/sf-music-data/main/tracks/11315618.mp3"
+
+local url = url7
+
+------------------------------------
+
+local centeredImage = class("centeredImage")
+
+function centeredImage:initialize(url)
+    self.dx, self.dy, self.dw, self.dy = 0, 0, 0, 0
+    self.mat = material.create("UnlitGeneric")
+    self:loadImage(url)
+end
+
+function centeredImage:loadImage(url)
+    self.mat:setTextureURL("$basetexture", url, function(_,_,w,h,resize)
+        if w then
+            self:layout(w,h,resize)
+        else
+            self:loadImage(url)
+        end
+    end)
+end
+
+function centeredImage:layout(w,h,resize)
+    if w>h then
+        h = h*1024/w
+        w = 1024
+    else
+        w = w*1024/h
+        h = 1024
+    end
+    self.imw = w*0.5
+    self.imh = h*0.5
+    self.aspect = self.imw/self.imh
+    resize(0, 0, w, h)
+    self.loaded = true
+end
+
+function centeredImage:draw()
+    if not self.loaded then return end
+
+    local scrw, scrh = render.getResolution()
+    local scale, size
+    if scrw/scrh>self.aspect then
+        scale = scrh/self.imh
+        size = scrh*scale
+    else
+        scale = scrw/self.imw
+        size = scrw*scale
+    end
+
+    render.setBackgroundColor(Color(69,75,72,255))
+    render.setColor(Color(255, 255, 255))
+    render.setMaterial(self.mat)
+    render.drawTexturedRect(scrw*0.5-self.imw*0.5*scale, scrh*0.5-self.imh*0.5*scale, size, size)
+end
+    
+------------------------------------
+
+local buffers = {"RT", "RT2"}
+local buffernum = 1
+render.createRenderTarget("RT")
+render.createRenderTarget("RT2")
+local centerTransform = Matrix()
+centerTransform:setTranslation(Vector(512, 512, 0))
+
+local backgroundImage = centeredImage:new(BackgroundImageUrl)
+
+
+local gui = SFUi:new()
+
+local _startVolume = settings.startVolume / settings.maxVolume * 100
+local _volume = 0
+
+local fontGui = render.createFont("Arial", 15, 300, true)
+
+local soundData
+
+function start() 
+    bass.loadURL(url,"3d noblock", function(snd)
+        soundData = snd
+        hook.add("render", "", function()
+            snd:setPos(render.getScreenEntity():getPos())
+            local n = 64
+            local fft = snd:getFFT(n)
+
+            local nextbuffer = (buffernum % #buffers) + 1
+            render.setRenderTargetTexture(buffers[buffernum])
+            render.selectRenderTarget(buffers[nextbuffer])
+            render.clear(Color(0, 0, 0, 255))
+            render.setColor(Color(255, 255, 255, 200))
+            
+            render.drawTexturedRect(-15, -15, 1054, 1054)
+            render.setColor(Color((timer.curtime() * 10 + 180) % 360 - 180, 1, 1):hsvToRGB())
+
+            render.pushMatrix(centerTransform)
+            local function fftToRadius(i) return 200-math.log10(i)*(fft[i] or 0)*1000 end
+            local startr = fftToRadius(2)
+            local lx, ly = startr, 0
+            for i = 3, n do
+                local r = fftToRadius(i)
+                local theta = (i - 2) * 2 * math.pi / (n - 1)
+                local x, y = r * math.cos(theta), r * math.sin(theta)
+                render.drawLine(x, y, lx, ly)
+                lx = x
+                ly = y
+            end
+            render.drawLine(startr, 0, lx, ly)
+
+            render.popMatrix()
+            render.selectRenderTarget()
+
+            backgroundImage:draw()
+            
+            render.setColor(Color(255, 255, 255, BackAlpha))
+            render.setRenderTargetTexture(buffers[nextbuffer])
+            render.drawTexturedRect(0, 0, 512, 512)
+            buffernum = nextbuffer
+            
+            render.setFont(fontGui)
+            
+            gui:render()
+            
+            soundData:setVolume(_volume)
+        end)
+    end) 
+end
+
+function changeVolumeHandler(val)
+    _volume = val / 100 * settings.maxVolume
+end
+
+changeVolumeHandler(_startVolume)
+
+do
+    --local window = SFUi.window(Vector(10, 10), Vector(300, 200), "My Window")
+    local slider = SFUi.slider(window, Vector(5, 483), Vector(500, 10), _startVolume, 1, 100, 1, changeVolumeHandler)
+    gui:addComponent(slider)
+end
+
+
+local perms = {
+    "bass.loadURL",
+    "render.screen",
+}
+
+setupPermissionRequest(perms, "URL sounds from external sites", true)
+
+
+function checkGrant()
+    return url and hasPermission("bass.loadURL", url)
+end
+
+local _isStarget = false
+
+if checkGrant() then
+    _isStarget = true
+    start(url)
+else
+    hook.add("render", "perms", function()
+        render.drawSimpleText(256, 256, "Press e to listen to epic songs", 1, 1)
+    end)
+end
+
+hook.add("permissionrequest", "perms", function()
+    if not _isStarget and checkGrant() and hasPermission("render.screen") then
+        hook.remove("permissionrequest", "perms")
+        hook.remove("render", "perms")
+        
+        start()
+    end
+end)

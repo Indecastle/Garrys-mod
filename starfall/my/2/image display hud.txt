@@ -37,6 +37,7 @@ local URLS = {
     built_background = "matsys_regressiontest/background",
     built_tpeye = "effects/tp_eyefx/tpeye",
     core_sheet = "models/props_combine/core_sheet",
+    fisheyelens = "models/props_c17/fisheyelens",
 }
 
 local img = "kitten"
@@ -45,7 +46,7 @@ local IsHaveProportions = false
 local HaveAlpha = false
 
 local RadiusMode = true
-local Radius = 300
+local Radius = 600
 local MaxAlpha = 0.9 -- if RadiusMode == false
 
 local Target = owner() -- if RadiusMode = false

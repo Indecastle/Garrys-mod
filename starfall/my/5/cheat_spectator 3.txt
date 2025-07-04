@@ -507,8 +507,9 @@ end)
 
 
 hook.add("mouseWheeled", "", function(delta)
-    ThPersDist = ThPersDist-ThPersDistAddValue*delta
+    if !ON or !render.isHUDActive() then return end
     
+    ThPersDist = ThPersDist-ThPersDistAddValue*delta
     if ThPersDist < 50 then ThPersDist = 50 end
     if ThPersDist > 1000 then ThPersDist = 1000 end
 end)

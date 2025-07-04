@@ -1,0 +1,32 @@
+ --@name WalkOnWater
+--@author BORIK
+--@server
+
+local circle = prop.create(chip():getPos() - Vector(0, 0, 10), Angle(), "models/hunter/tubes/circle4x4.mdl", true)
+circle:setColor(Color(0, 0, 0, 0))
+
+local height = nil
+
+local ownerInWater = false
+
+hook.add("OnEntityWaterLevelChanged", "", function(ent, old, new)
+    if ent != owner() then return end
+    
+    if old == 0 and new == 1 and height == nil then
+        height = owner():getPos().z - 20
+        ownerInWater = true
+    else
+        height = nil
+        ownerInWater = false
+        circle:setPos(chip():getPos() - Vector(0, 0, 10))
+    end
+end)
+
+hook.add("Tick", "ChangePosCircle", function()
+    if not ownerInWater then return end
+    
+    local newPos = owner():getPos()
+    newPos.z = height
+    circle:setPos(newPos)
+    
+end)
