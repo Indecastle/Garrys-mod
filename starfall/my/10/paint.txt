@@ -12,8 +12,10 @@ require("SpawnBlocking")
 
 local IsAutoSyncScreen = false
 
-local RectSize = 20
+local RectSize = 24
 local LineThickness = 4
+local EraserBigSize = 24
+local EraserSmallSize = 8
 local CleanColor = Color(220,220,220)
 
 ----------------------------------------------------------------------------
@@ -43,7 +45,7 @@ corWrap(function()
 --------------------------------------------------
 
 local _screenSize = 512
-local _chunkCount = 8
+local _chunkCount = 4
 local _chunkSize = _screenSize / _chunkCount
 
 
@@ -163,6 +165,11 @@ if SERVER then
     end
     
     
+    function stopSyncScreen()
+        timer.remove("syncScreen")
+    end
+    
+    
     function runSyncScreen()
         _chunkIndex = 0
         timer.create("syncScreen", 2.9, 0, function()
@@ -189,18 +196,23 @@ if SERVER then
             _currentSendId = net.send(nil, false, true)
             
             if !IsAutoSyncScreen and _chunkIndex == 0 then
-                timer.remove("syncScreen")
+                stopSyncScreen()
             end
         end)
     end
     
-    timer.create("saveDupe", 2, 0, function()
+    local _saveDupeLastTime = 0
+    hook.add("think", "saveDupe", function()
+        if timer.curtime() < _saveDupeLastTime then return end
+        
+        --printConsole("START saveDupe")
         if #_dataColor != _screenSize then return end
         local compressedData =  compressColorData(_dataColor, 0, _screenSize)
         local compress = bit.compress(compressedData)
         setUserdata(compress)
         --printConsole(#compressedData)
         --printConsole(#compress)
+        _saveDupeLastTime = timer.curtime() + 3
     end)
     
     
@@ -229,7 +241,7 @@ if SERVER then
                     _dataColor[y][x] = CleanColor
                 end
             end
-            timer.remove("syncScreen")
+            stopSyncScreen()
             net.start("cleanScreen")
             net.send()
         end
@@ -244,18 +256,19 @@ if SERVER then
     local _bufferNewData = {}
     
     
-    local function drawCircle(x, y, radius, color)
+    function drawCircle(x, y, radius, color)
         --printConsole("start Circle")
         local r2 = radius*radius
         
         for dx = -radius, radius do
             for dy = -radius, radius do
                 local px = x + dx - 0
-                local py = y + dy - 2
+                local py = y + dy - 0
                 if px > 0 and px < _screenSize and py > 0 and py < _screenSize then
-                    local dx1 = dx <= 0 and dx+1 or dx
-                    local dy1 = dy > 0 and dy-0 or dy
-                    if dx1*dx1 + dy1*dy1 < r2 then
+                    local dx1 = dx >= 0 and dx+1 or dx
+                    local dy1 = dy --< 0 and dy-1 or dy
+                    --dy1 = dy < 0 and dy1+1 or dy1
+                    if dx1*dx1 + dy1*dy1 <= r2 then
                         _dataColor[py][px] = color
                     end
                 end
@@ -264,17 +277,31 @@ if SERVER then
         --printConsole("end Circle")
     end
 
-
+    
+    function drawRect(x0, y0, w, h, color)
+        local hw = math.ceil(w / 2)
+        local hh = math.ceil(h / 2)
+        for y=y0 - hh, y0 + hh-1 do
+            for x=x0 - hw, x0 + hw-1 do
+                if y < 1 or y > _screenSize or x < 1 or x > _screenSize then continue end
+                _dataColor[y][x] = color
+            end
+        end
+    end
+    
+    function drawRect2(x, y, size, color)
+        drawRect(x, y, size, size, color)
+    end
+    
+    
     local drawHandlers = {
         Rect = function(data)
-            for y=data.Y - data.H/2, data.Y + data.H/2-1 do
-                for x=data.X - data.W/2, data.X + data.W/2-1 do
-                    if y < 1 or y > _screenSize or x < 1 or x > _screenSize then continue end
-                    _dataColor[y][x] = data.Color
-                end
-            end
+            drawRect(data.X, data.Y, data.W, data.H, data.Color)
         end,
-        Line = function(data)
+        LineRect = function(data)
+            drawLine(data.X0, data.Y0, data.X1, data.Y1, data.Thickness, data.Color, drawRect2)
+        end,
+        LineCircle = function(data)
             drawLine(data.X0, data.Y0, data.X1, data.Y1, data.Thickness, data.Color, drawCircle)
         end,
     }
@@ -289,7 +316,7 @@ if SERVER then
         end
     end)
     
-    timer.create("addNewServerData", 0.5, 0, function()
+    timer.create("addNewServerData", 1.0, 0, function()
         if #_bufferNewData == 0 then return end
         
         net.start("addNewServerData")
@@ -327,11 +354,17 @@ function getMouse(curX, curY, scale)
     return copyMouse
 end
 
-function drawMouse(curX, curY)
+function drawMouse(curX, curY, fillColor, scale)
+    scale = scale or 4
+    local c = scale/4
     render.setRenderTargetTexture()
 
-    copyMouse = getMouse(curX, curY, 4)
-    render.setColor(Color(100, 100, 100))
+    local copyMouse = getMouse(curX, curY, scale)
+    render.setColor(Color(50, 50, 50))
+    render.drawPoly(copyMouse)
+    
+    copyMouse = getMouse(curX + 1.15*c, curY + 2.5*c, scale/2)
+    render.setColor(fillColor)
     render.drawPoly(copyMouse)
 end
 
@@ -350,6 +383,7 @@ local _syncRenderId = 0
 local _rowIndex = 0
 
 local _bufferNewData = {}
+local _syncRowIndex = nil
 
 ---------- Functions ----------------
 
@@ -361,32 +395,53 @@ local _ownColor = Color(math.random(0, 360), 1, 0.8):hsvToRGB()
 
 local renderHandlers = {
     Rect = {
-        build = function(x, y)
+        build = function(x, y, scale, color)
             return {
                 Type = "Rect",
                 X = x*2,
                 Y = y*2,
-                W = RectSize,
-                H = RectSize,
-                Color = CleanColor
+                W = scale,
+                H = scale,
+                Color = color
             }
         end,
         draw = function(data)
             render.setColor(data.Color)
             render.drawRectFast(data.X - data.W/2, data.Y - data.H/2, data.W, data.H)
-            --render.drawFilledCircle(data.X, data.Y, 10)
         end,
     },
-    Line = {
-        build = function(x0, y0, x1, y1)
+    LineRect = {
+        build = function(x0, y0, x1, y1, thickness, color)
+            if thickness % 2 == 1 then
+                thickness = thickness + 1
+            end
             return {
-                Type = "Line",
+                Type = "LineRect",
                 X0 = x0*2,
                 Y0 = y0*2,
                 X1 = x1*2,
                 Y1 = y1*2,
-                Thickness = LineThickness / 2,
-                Color = _ownColor
+                Thickness = thickness,
+                Color = color
+            }
+        end,
+        draw = function(data)
+            render.setColor(data.Color)
+            drawLine(data.X0, data.Y0, data.X1, data.Y1, data.Thickness, data.Color, function(x, y, radius, color)
+                render.drawRectFast(x - radius/2, y - radius/2, radius, radius)
+            end)
+        end,
+    },
+    LineCircle = {
+        build = function(x0, y0, x1, y1, color)
+            return {
+                Type = "LineCircle",
+                X0 = x0*2,
+                Y0 = y0*2,
+                X1 = x1*2,
+                Y1 = y1*2,
+                Thickness = LineThickness,
+                Color = color
             }
         end,
         draw = function(data)
@@ -460,6 +515,7 @@ net.receive("syncRow", function()
                 render.setViewPort(j, startRow + i, 1, 1)
                 render.clear(arColor[i][j])
             end
+            _syncRowIndex = startRow + i
             validQuotaP(0.4)
             --printConsole(hookName .. ' - ' .. (startRow + i))
         end
@@ -475,51 +531,124 @@ function clearScreen()
         filterImage()
         --render.clear(Color(230, 230, 230, 230), false, false)
         render.setColor(CleanColor)
-        render.drawRectFast(1, 1, _screenSize, _screenSize)
+        render.drawRectFast(0, 0, _screenSize, _screenSize)
+        
         hook.remove("renderoffscreen","init")
     end)
 end
 
 
+local _toolbarButtonsData = {
+    RainBow = {
+        X = 0,
+        Y = 0,
+        W = 256,
+        H = 20,
+        InitRender = function()
+            for i=0, 255 do
+                render.setColor(Color(i/255*360, 1, 1):hsvToRGB())
+                render.drawRectFast(i, 0, 1, 20)
+            end
+        end,
+        Handler = function(self, x, y)
+            if input.isMouseDown(MOUSE.MOUSE1) then
+                render.capturePixels()
+                _ownColor = render.readPixel( x or 0, y or 0 )
+                printConsole('' .. x .. ' - ' .. y)
+            end
+        end,
+    }
+}
+
+
+function toolbarHandler(curx, cury)
+    for name, data in pairs(_toolbarButtonsData) do
+        if curx < data.X or curx > data.X+data.W  or  cury < data.Y or cury > data.Y+data.H then
+            continue
+        end
+        render.selectRenderTarget("toolBar")
+        data.Handler(data, curx, cury)
+        render.selectRenderTarget()
+        return true
+    end
+    
+    return false
+end
+
+
+function initToolBar()
+    hook.add("renderoffscreen", "initToolBar", function()
+        render.selectRenderTarget("toolBar")
+        render.clear(Color(0,0,0, 0))
+        for name, data in pairs(_toolbarButtonsData) do
+            data.InitRender()
+        end
+
+        hook.remove("renderoffscreen","initToolBar")
+    end)
+end
+
+
 net.receive("cleanScreen", function()
+    _syncRowIndex = nil
     clearScreen()
 end)
 
 
 render.createRenderTarget("myrendertarget")
+render.createRenderTarget("toolBar")
 clearScreen()
+initToolBar()
 
 
 local _oldIsPressed_MOUSE1 = false
 local prevLinePoint = nil
+
+function drawSyncRow()
+    --printConsole(_syncRowIndex)
+    if _syncRowIndex ~= nil then
+        render.selectRenderTarget()
+        render.setColor(Color(255,0,0, 150))
+        render.drawRectFast(0, _syncRowIndex, 512, 2)
+    end
+end
+
 
 hook.add("render","",function()
     filterImage()
     render.setRenderTargetTexture("myrendertarget")
     render.drawTexturedRect(0,0,1024,1024)
     
-    local curx,cury = render.cursorPos()
+    filterImage()
+    render.setRenderTargetTexture("toolBar")
+    render.drawTexturedRect(0,0,1024,1024)
+    
+    drawSyncRow()
+    
+    local curx, cury = render.cursorPos()
     local tr = _p:getEyeTrace()
     
         
     if curx and tr.Entity == render.getScreenEntity() then
-        drawMouse(curx, cury)
+        drawMouse(curx, cury, _ownColor, 4)
+        
+        local x, y = math.floor(curx), math.floor(cury)
+        local isToolbar = toolbarHandler(x, y)
+        if isToolbar then
+            return
+        end
         
         local newIsPressed_MOUSE1 = input.isMouseDown(MOUSE.MOUSE1)
         local newIsPressed_MOUSE2 = input.isMouseDown(MOUSE.MOUSE2)
-        local newIsPressed_UP = input.isKeyDown(KEY.UP)
-        local newIsPressed_DOWN = input.isKeyDown(KEY.DOWN)
-        local newIsPressed_RIGHT = input.isKeyDown(KEY.RIGHT)
-        local newIsPressed_LEFT = input.isKeyDown(KEY.LEFT)
-        
-        local x, y = math.floor(curx), math.floor(cury)
+        local newIsPressed_ALT = input.isKeyDown(KEY.LALT)
         
         if !newIsPressed_MOUSE1 then
             prevLinePoint = nil
         end
         
         if newIsPressed_MOUSE2 then
-            renderBufferHandler("Rect", x/2, y/2)
+            local scale = newIsPressed_ALT and EraserBigSize or EraserSmallSize
+            renderBufferHandler("Rect", x/2, y/2, scale, CleanColor)
         elseif newIsPressed_MOUSE1 then
             if !prevLinePoint then
                 prevLinePoint = { x, y }
@@ -527,7 +656,7 @@ hook.add("render","",function()
             end
             --printConsole(math.floor(Vector(prevLinePoint[1], prevLinePoint[2], 0):getDistance(Vector(x,y,0))))
             --printTable(prevLinePoint)
-            renderBufferHandler("Line", prevLinePoint[1]/2, prevLinePoint[2]/2, x/2, y/2)
+            renderBufferHandler("LineRect", prevLinePoint[1]/2, prevLinePoint[2]/2, x/2, y/2, LineThickness, _ownColor)
             prevLinePoint = { x, y }
         end
     end
