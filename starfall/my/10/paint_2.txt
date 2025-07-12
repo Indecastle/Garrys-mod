@@ -1,4 +1,4 @@
---@name Paint
+--@name Paint 2
 --@author Markiz
 --@shared
 --owneronly
