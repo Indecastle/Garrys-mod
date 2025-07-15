@@ -1,0 +1,82 @@
+--@name Vehicle Stable Angle
+--@author Markiz
+--@shared
+--include libs/criticalpd.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/master/starfall/libs/criticalpd.txt as Criticalpd
+-- https://raw.githubusercontent.com/thegrb93/MyStarfallScripts/master/libs/CriticalPD.txt
+
+local TriggerAngleMin = 80
+local TriggetSpeedMax = 200
+local StableTime = 2
+
+
+if SERVER then
+    local EntityCriticalPD = require("Criticalpd")
+    
+    local baseProp = chip():isWeldedTo()
+    local critialPD = EntityCriticalPD:new(baseProp, 1, 50)
+    critialPD:setTargetAng(Angle(0,0,0))
+    
+    local _times = 0
+    local _dirUp = Vector(0,0,1)
+    local _isStableAngle = false
+    
+    function angleBetweenVectors(a, b)
+        local dot = a:dot(b)
+        local lenA = a:getLength()
+        local lenB = b:getLength()
+        local cosTheta = dot / (lenA * lenB)
+        return math.deg(math.acos(cosTheta))
+    end
+    
+    function isAngleTrigger(maxAng)
+        return angleBetweenVectors(baseProp:getUp(), _dirUp) > maxAng
+    end
+    
+    function stopStable()
+        hook.remove("think", "stableAngle")
+         _isStableAngle = false
+    end
+    
+    timer.create("trigger", 0.2, 0, function()
+        if _isStableAngle then return end
+        
+        if isAngleTrigger(TriggerAngleMin) and baseProp:getVelocity():getLength() < TriggetSpeedMax then
+            --printConsole(baseProp:getVelocity():getLength())
+            _times = _times + 1
+            --printConsole(_times)
+            
+            if _times == 10 then
+                _isStableAngle = true
+                _times = 0
+                critialPD:setTargetAng(baseProp:getForward():getAngle():setP(0))
+                timer.create("removeHook", StableTime, 1, function()
+                    stopStable()
+                end)
+                
+                local isRemovingHook = false
+                
+                hook.add("think", "stableAngle", function()
+                    critialPD:simulateAngForce()
+                    
+                    if !isAngleTrigger(10) and !isRemovingHook then
+                        isRemovingHook = true
+                        timer.create("removeHook", 0.5, 1, function()
+                            stopStable()
+                        end)
+                    end
+                end)
+            end
+        else
+            _times = 0
+        end
+    end)
+    
+    return
+end
+
+
+
+------------------ CLIIENT ----------------------
+
+

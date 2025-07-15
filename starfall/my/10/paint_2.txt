@@ -10,13 +10,11 @@ local net = require("SafeNet")
 require("SpawnBlocking")
 
 
-local IsAutoSyncScreen = false
-
 local MouseScale = 3
 local WorkRadius = 1000
 local LineThickness = 1
-local EraserBigSize = 30
-local EraserSmallSize = 8
+local EraserBigSize = 15
+local EraserSmallSize = 4
 local CleanColor = Color(220,220,220)
 local ToolbarBackgroundColor = Color(200,200,200, 255)
 
@@ -67,13 +65,10 @@ corWrap(function()
 --------------------------------------------------
 
 local _o, _e = owner(), chip()
-
 local _screenSize = 512
-local _chunkCount = 1
-local _chunkSize = _screenSize / _chunkCount
 
 
-function compressColorData(colorData, startRow, rowCount)
+function getBinaryColorData(colorData, startRow, rowCount)
     local binaryData = {}
     for y = startRow+1, startRow + rowCount do
         for x = 1, _screenSize do
@@ -89,14 +84,32 @@ function compressColorData(colorData, startRow, rowCount)
 end
 
 
-function decompressColorData(compressedData, rowCount, maxQuotaP)
-    local binaryData = compressedData
+function getCompressedScreenData(progressCallback)
+    local binaryData = {}
+    for y = 0, _screenSize-1 do
+        progressCallback(math.clamp(y/_screenSize, 0, 100))
+        render.selectRenderTarget("myrendertarget")
+        render.capturePixels()
+        for x = 0, _screenSize-1 do
+            local color = render.readPixel(x, y)
+            table.insert(binaryData, string.char(color.r, color.g, color.b))
+        end
+        validQuotaP(ServerQuotaP)
+    end
+    
+    local result = table.concat(binaryData)
+    --printConsole('server - ' .. #result)
+    return bit.compress(result)
+end
+
+
+function decompressColorData(binaryData, rowCount, maxQuotaP)
     --printConsole('client - ' .. #compressedData)
     if not binaryData then return {} end
        
     local colorData = {}
     local index = 1
-    
+
     for y = 1, rowCount do
         table.insert(colorData, {})
         for x = 1, _screenSize do
@@ -104,7 +117,6 @@ function decompressColorData(compressedData, rowCount, maxQuotaP)
                 local r = binaryData:byte(index)
                 local g = binaryData:byte(index + 1)
                 local b = binaryData:byte(index + 2)
-                
                 table.insert(colorData[y], Color(r, g, b, 255))
                 index = index + 3
             else
@@ -144,19 +156,9 @@ end
     
 if SERVER then
     
-    local screenData = {}
-    local maxCount = _screenSize*_screenSize
-    --for i=1, maxCount do
-    --    screenData[i] = 0
-        --for j=1, _screenSize do
-        --    screenData[i][j] = 0
-        --end
-    --end
-    
-    local _dataColor = {}
-    local _currentSendId = nil
-    local _chunkIndex = 0
-    
+    local _compressedScreenData = getUserdata()
+    --local _dataColor = {}
+
     local WW = chip():getWirelink()
     
     wire.adjustPorts(
@@ -167,17 +169,6 @@ if SERVER then
         {})
 
 
-    function initScreenData()
-        for y=1, _screenSize do
-            if #_dataColor == _screenSize then return end
-            table.insert(_dataColor, {})
-            for x=1, _screenSize do
-                table.insert(_dataColor[y], CleanColor)
-            end
-            validQuotaP(ServerQuotaP)
-        end
-    end
-    
     function isCleanScreen(dataColor)
         for y=1, _screenSize do
             for x=1, _screenSize do
@@ -188,42 +179,17 @@ if SERVER then
         end
         return true
     end
-    
+
     
     function stopSyncScreen()
         timer.remove("syncScreen")
     end
     
     
-    function runSyncScreen()
-        _chunkIndex = 0
-        timer.create("syncScreen", 2.9, 0, function()
-            --if net.isSending() then return end
-            
-            --while !checkQuota(0.0005) do
-                --printConsole(math.round(quotaAverage() * 10^6, 0))
-                --coroutine.yield()
-            --end
-            
-            local startIndex = _chunkIndex * _chunkSize
-            local endIndex = startIndex + _chunkSize
-            _chunkIndex = (_chunkIndex + 1) % _chunkCount
-            
-            coroutine.yield()
-            
-            local compressedData = compressColorData(_dataColor, startIndex, _chunkSize)
-            --printConsole(#compressedData)
-            --net.cancel(_currentSendId)
-            net.start("syncRow")
-            net.writeInt32(startIndex)
-            net.writeInt32(_chunkSize)
-            net.writeData2(compressedData)
-            _currentSendId = net.send(nil, false, true)
-            
-            if !IsAutoSyncScreen and _chunkIndex == 0 then
-                stopSyncScreen()
-            end
-        end)
+    function runSyncScreen(ply)
+        net.start("syncScreen")
+        net.writeData2(_compressedScreenData)
+        net.send(ply)
     end
     
     
@@ -231,50 +197,46 @@ if SERVER then
     function cleanScreen()
         if isLockEvent('cleanScreen', 1) then return end
         
-        for x=1, _screenSize do
-            for y=1, _screenSize do
-                _dataColor[y][x] = CleanColor
-            end
-        end
         stopSyncScreen()
         net.start("cleanScreen")
         net.send()
     end
-    
-    
-    hook.add("think", "saveDupe", function()
-        if isLockEvent('saveDupe') then return end
-        
-        --printConsole("START saveDupe")
-        if #_dataColor != _screenSize then return end
-        local compressedData =  compressColorData(_dataColor, 0, _screenSize)
-        local compress = bit.compress(compressedData)
-        setUserdata(compress)
-        --printConsole(#compressedData)
-        --printConsole(#compress)
-        setLockEvent('saveDupe', 4)
-    end)
-    
-    
+
+
     hook.add("DupeFinished", "", function(entTbl)
         corWrap(function()
             --printConsole("DupeFinished Start")
-            local compressedData = bit.decompress(getUserdata())
-            if !compressedData then return end
+            local binaryStr = getUserdata()
+            if binaryStr == "" then return end
+            net.syncVars.hasSavedDupe = true
             
-            _dataColor = decompressColorData(compressedData, _screenSize, ServerQuotaP)
-            if !IsAutoSyncScreen and !isCleanScreen(_dataColor) then
-                runSyncScreen()
-            end
+            _compressedScreenData = binaryStr
+            binaryData = bit.decompress(binaryStr)
+            --local dataColor = decompressColorData(binaryData, _screenSize, ServerQuotaP)
+            --if !isCleanScreen(dataColor) then
+            --    runSyncScreen()
+            --end
             --printConsole("DupeFinished End - " .. #compressedData)
         end)
     end)
-
-
-    initScreenData()
     
+    
+    net.receive("saveScreenForDupeClient", function(size, ply)
+        _compressedScreenData = net.readData2()
+        setUserdata(_compressedScreenData)
+        net.syncVars.hasSavedDupe = true
+    end)
+    
+    
+    net.receive("syncScreenFromDupe", function(size, ply)
+        runSyncScreen()
+    end)
+    
+    
+    net.syncVars.hasSavedDupe = _compressedScreenData != ""
     net.syncVars.Admins = wire.ports.Admins
-    
+
+
     hook.add("input","",function(inp, value)
         if inp == "Reset" and value != 0 then
             cleanScreen()
@@ -290,70 +252,33 @@ if SERVER then
     end)
     
     
-    if IsAutoSyncScreen then
+    net.receive("cleanDupeData", function(size, ply)
+        _compressedScreenData = ""
+        net.syncVars.hasSavedDupe = nil
+        setUserdata('')
+    end)
+    
+    
+    net.receive("drawFromDupe", function(size, ply)
+        if _compressedScreenData == '' or isLockEvent("drawFromDupe", 3) then return end
         runSyncScreen()
-    end
+    end)
+    
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        if _compressedScreenData == '' then return end
+        runSyncScreen(ply)
+    end)
+    
 
     ----------- Buffer Data Server --------
     local _bufferNewData = {}
-    
-    
-    function drawCircle(x, y, radius, color)
-        --printConsole("start Circle")
-        local r2 = radius*radius
-        
-        for dx = -radius, radius do
-            for dy = -radius, radius do
-                local px = x + dx - 0
-                local py = y + dy - 0
-                if px > 0 and px < _screenSize and py > 0 and py < _screenSize then
-                    local dx1 = dx >= 0 and dx+1 or dx
-                    local dy1 = dy --< 0 and dy-1 or dy
-                    --dy1 = dy < 0 and dy1+1 or dy1
-                    if dx1*dx1 + dy1*dy1 <= r2 then
-                        _dataColor[py][px] = color
-                    end
-                end
-            end
-        end
-        --printConsole("end Circle")
-    end
 
-    
-    function drawRect(x0, y0, w, h, color)
-        local hw = w / 2
-        local hh = h / 2
-        for y=math.floor(y0 - hh), math.floor(y0 + hh-1) do
-            for x=math.floor(x0 - hw), math.floor(x0 + hw-1) do
-                if y < 1 or y > _screenSize or x < 1 or x > _screenSize then continue end
-                _dataColor[y][x] = color
-            end
-        end
-    end
-    
-    function drawRect2(x, y, size, color)
-        drawRect(x, y, size, size, color)
-    end
-    
-    
-    local drawHandlers = {
-        Rect = function(data)
-            drawRect(data.X, data.Y, data.W, data.H, data.Color)
-        end,
-        LineRect = function(data)
-            drawLine(data.X0, data.Y0, data.X1, data.Y1, data.Thickness, data.Color, drawRect2)
-        end,
-        LineCircle = function(data)
-            drawLine(data.X0, data.Y0, data.X1, data.Y1, data.Thickness, data.Color, drawCircle)
-        end,
-    }
-    
     
     net.receive("addNewClientData", function(size, ply)
         local newBufferData = net.readTable()
         --printTable(newBufferData)
         for i, data in ipairs(newBufferData) do
-            drawHandlers[data.Type](data)
             validQuotaP(ServerQuotaP)
             table.insert(_bufferNewData, data)
         end
@@ -418,12 +343,10 @@ end
 
 ------------------------------
 
-
 --local _dataColor = {}
-
-
 local _syncRenderId = 0
-local _rowIndex = 0
+local _isSavingForDupe = false
+local _savingProgress = 0
 
 local _bufferNewData = {}
 local _syncRowIndex = nil
@@ -433,9 +356,6 @@ local _rainbowBrightness = 1
 local _toolbarCogMaterial = material.createFromImage("icon16/cog.png","")
 local font1 = render.createFont("Roboto", 16, 900, true)
 
----------- Functions ----------------
-
--------------------------- END
 
 ----------- Buffer Data Client --------
 local _ownColor = Color(math.random(0, 360), 1, 0.8):hsvToRGB()
@@ -457,11 +377,23 @@ local renderHandlers = {
             render.drawRectFast(data.X - data.W/2, data.Y - data.H/2, data.W, data.H)
         end,
     },
+    Circle = {
+        build = function(x, y, thickness, color)
+            return {
+                Type = "Circle",
+                X = x*2,
+                Y = y*2,
+                Thickness = thickness,
+                Color = color
+            }
+        end,
+        draw = function(data)
+            render.setColor(data.Color)
+            render.drawFilledCircle(data.X, data.Y, data.Thickness)
+        end,
+    },
     LineRect = {
         build = function(x0, y0, x1, y1, thickness, color)
-            if thickness % 2 == 1 then
-                --thickness = thickness + 1
-            end
             return {
                 Type = "LineRect",
                 X0 = math.ceil(x0*2),
@@ -480,14 +412,14 @@ local renderHandlers = {
         end,
     },
     LineCircle = {
-        build = function(x0, y0, x1, y1, color)
+        build = function(x0, y0, x1, y1, thickness, color)
             return {
                 Type = "LineCircle",
-                X0 = x0*2,
-                Y0 = y0*2,
-                X1 = x1*2,
-                Y1 = y1*2,
-                Thickness = LineThickness,
+                X0 = math.round(x0*2, 0),
+                Y0 = math.round(y0*2, 0),
+                X1 = math.round(x1*2, 0),
+                Y1 = math.round(y1*2, 0),
+                Thickness = thickness,
                 Color = color
             }
         end,
@@ -509,19 +441,41 @@ local _keyPressedData = {
 
 -- ================================================================================
 
-function getTextButton(x, y, w, h, text, adminOnly, callback)
+
+function saveScreenForDupeClient()
+    if !_isSavingForDupe and isLockEvent("saveScreenForDupeClient", 2) then return end
+    _isSavingForDupe = true
+
+    hook.add("renderoffscreen", "saveScreenForDupeClient", function()
+        local compressedData = getCompressedScreenData(function(value)
+            _savingProgress = value
+        end)
+
+        net.start("saveScreenForDupeClient")
+        net.writeData2(compressedData)
+        net.send()
+        hook.remove("renderoffscreen", "saveScreenForDupeClient")
+        _isSavingForDupe = false
+    end)
+end
+
+
+function getTextButton(x, y, w, h, text, adminOnly, callback, callbackInitRender)
     return {
         X = x,
         Y = y,
         W = w,
         H = h,
-        InitRender = function(self, isPressed)
+        InitRender = function(self, isPressed, noCallback)
             render.setColor(Color(255,255,255))
             render.drawRectFast(self.X, self.Y, self.W, self.H)
             render.setColor(isPressed and Color(100,100,100) or Color(0, 0, 0))
             render.drawRectOutline(self.X, self.Y, self.W, self.H)
             render.setFont(font1)
             render.drawText(self.X+3, self.Y, text)
+            if !noCallback and callbackInitRender then
+                callbackInitRender(self, isPressed)
+            end
         end,
         AdminOnly = adminOnly,
         Handler = function(self, cur, keyPressedData)
@@ -621,12 +575,8 @@ _toolbarButtonsData = {
     LineThickness2 = getLineThicknessData(51, 87, 20, 18, "X2", 5),
     LineThickness3 = getLineThicknessData(72, 87, 20, 18, "X3", 10),
     LineThickness4 = getLineThicknessData(93, 87, 20, 18, "X4", 20),
-    CleanScreen = getTextButton(30, 356, 81, 18, "Clear Screen", true, function(self, cur, keyPressedData)
-        net.start("cleanScreen")
-        net.send()
-    end),
     SwitchOnlyAdminDraw = {
-        X = 30, Y = 375, W = 142, H = 18,
+        X = 30, Y = 355, W = 142, H = 18,
         InitRender = function(self, isPressed)
             local text = net.syncVars.OnlyAdminDraw and "Only Admin Draw (On)" or "Only Admin Draw (Off)"
             render.setColor(Color(255,255,255))
@@ -648,6 +598,31 @@ _toolbarButtonsData = {
             end
         end,
     },
+    CleanScreen = getTextButton(30, 375, 81, 18, "Clear Screen", true, function(self, cur, keyPressedData)
+        net.start("cleanScreen")
+        net.send()
+    end),
+    SaveScreenToDupe = getTextButton(30, 395, 90, 18, "Save for dupe", true, function(self, cur, keyPressedData)
+        saveScreenForDupeClient()
+    end),
+    CleanDupe = getTextButton(30, 415, 72, 18, "Clear Dupe", true, function(self, cur, keyPressedData)
+        net.start("cleanDupeData")
+        net.send()
+    end),
+    DrawFromDupe = getTextButton(122, 395, 106, 18, "Draw From Dupe", true, function(self, cur, keyPressedData)
+        if !net.syncVars.hasSavedDupe or isLockEvent("drawFromDupe", 3) then return end
+        net.start("drawFromDupe")
+        net.send()
+    end,
+        function(self, isPressed)
+            local text = net.syncVars.hasSavedDupe and "Duped" or "Not duped"
+            if net.syncVars.hasSavedDupe then
+                self.InitRender(self, isPressed, true)
+            else
+                render.setColor(ToolbarBackgroundColor)
+                render.drawRectFast(self.X, self.Y, self.W, self.H)
+            end
+    end),
 }
 -- ================================================================================
 
@@ -658,6 +633,16 @@ net.addSyncVarCallback("OnlyAdminDraw", function(value)
         filterImage()
         _toolbarButtonsData.SwitchOnlyAdminDraw.InitRender(_toolbarButtonsData.SwitchOnlyAdminDraw)
         hook.remove("renderoffscreen","OnlyAdminDraw")
+    end)
+end)
+
+
+net.addSyncVarCallback("hasSavedDupe", function(value)
+    hook.add("renderoffscreen", "HasSavedDupe", function()
+        render.selectRenderTarget("toolBar")
+        filterImage()
+        _toolbarButtonsData.DrawFromDupe.InitRender(_toolbarButtonsData.DrawFromDupe)
+        hook.remove("renderoffscreen","HasSavedDupe")
     end)
 end)
 
@@ -692,6 +677,7 @@ net.receive("addNewServerData", function(size, ply)
     end)
 end)
     
+    
 timer.create("addNewClientData", 0.5, 0, function()
     if #_bufferNewData == 0 then return end
     
@@ -703,34 +689,26 @@ end)
 ----------- Buffer Data Client -------- END
 
 
-net.receive("syncRow", function()
-    local startRow = net.readInt32()
-    local rowCount = net.readInt32()
+net.receive("syncScreen", function()
     local binaryData = net.readData2()
-    local arColor = decompressColorData(binaryData, rowCount, ClientQuotaP)
+    local compressedData = bit.decompress(binaryData)
+    local arColor = decompressColorData(compressedData, _screenSize, ClientQuotaP)
     --print(#arColor)
-    
-    _syncRenderId = (_syncRenderId + 1) % 1000
-    local hookName = 'syncRow_' .. tostring(_syncRenderId)
-    --printConsole(hookName)
-    
-    hook.add("renderoffscreen", hookName, function()
+
+    hook.add("renderoffscreen", "syncScreen", function()
         filterImage()
-        local ar = arColor
-        for i = 1, #arColor do
-            --_dataColor[startRow + i] = arColor[i]
+        for i = 1, _screenSize do
             render.selectRenderTarget("myrendertarget")
             for j = 1, _screenSize do
-                render.setViewPort(j, startRow + i, 1, 1)
+                render.setViewPort(j-1, i-1, 1, 1)
                 render.clear(arColor[i][j])
             end
-            _syncRowIndex = startRow + i
+            _syncRowIndex = i
             validQuotaP(ClientQuotaP)
-            _syncRowIndex = nil
-            --printConsole(hookName .. ' - ' .. (startRow + i))
+            --printConsole(hookName .. ' - ' .. (i))
         end
-        --render.drawPixelsRGB(_y, _screenSize, dataR, dataG, dataB)
-        hook.remove("renderoffscreen", hookName)
+        _syncRowIndex = nil
+        hook.remove("renderoffscreen", "syncScreen")
     end)
 end)
 
@@ -849,8 +827,8 @@ function renderMainHandler(curx, cury)
     end
     
     if keyPressedData[MOUSE.MOUSE2].Pressed then
-        local scale = keyPressedData[KEY.LALT].Pressed and EraserBigSize or EraserSmallSize
-        renderBufferHandler("Rect", x/2, y/2, scale, CleanColor)
+        local thickness = keyPressedData[KEY.LALT].Pressed and EraserBigSize or EraserSmallSize
+        renderBufferHandler("Circle", x/2, y/2, thickness, CleanColor)
     elseif keyPressedData[MOUSE.MOUSE1].Pressed then
         if !prevLinePoint then
             prevLinePoint = { x, y }
@@ -858,7 +836,8 @@ function renderMainHandler(curx, cury)
         end
         --printConsole(math.floor(Vector(prevLinePoint[1], prevLinePoint[2], 0):getDistance(Vector(x,y,0))))
         --printTable(prevLinePoint)
-        renderBufferHandler("LineRect", prevLinePoint[1]/2, prevLinePoint[2]/2, x/2, y/2, LineThickness, _ownColor)
+        local renderType = LineThickness == 1 and "LineRect" or "LineCircle"
+        renderBufferHandler(renderType, prevLinePoint[1]/2, prevLinePoint[2]/2, x/2, y/2, LineThickness, _ownColor)
         prevLinePoint = { x, y }
     end
 end
@@ -880,13 +859,17 @@ hook.add("render","",function()
         render.drawTexturedRect(0,0,1023,1023)
     end
     
-    --render.setColor(Color(0,0,0,255))
-    --render.drawRectOutline(0, 0, 20, 20)
-    --render.setColor(Color(0,0,0,255))
-    --render.drawRectOutline(0, 0, 20, 20)
     render.setMaterial(_toolbarCogMaterial)
     render.setColor(Color(150,150,150, 255))
     render.drawTexturedRect(0,0,20,20)
+    
+    if _isSavingForDupe then
+        render.setColor(Color(100,100,100,255))
+        render.drawRectFast(40,256,432,20)
+        render.setColor(Color(240,50,50,255))
+        render.drawRectFast(44,260,_savingProgress*424,12)
+        return
+    end
     
     local curx, cury = render.cursorPos()
     local tr = _p:getEyeTrace()
