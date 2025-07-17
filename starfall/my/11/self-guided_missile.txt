@@ -1,0 +1,683 @@
+--@name Self-guided missile
+--@author Markiz
+--@shared
+
+
+local RocketVelocity = 2500
+local RocketLerpRatio = 0.07
+local TrailTime = 2
+local RockeForceTime = 10
+local RocketAutoRemoveTime = 20
+
+local AutoExplodeMaxDistance = 100
+local MarkIsCloseTargetMaxDistance = 240
+
+local ExplodeDamage = 110
+local ExplodeRadius = 500
+
+local FireDelay = 2
+local FindInBoxSize = 300
+
+
+-----------------------------------------------------------------------
+
+
+function table.filter(t, func)
+    local maped = {}
+    local j = 1
+    for i=1, #t do
+        if func(t[i]) then
+            maped[j] = t[i]
+            j = j + 1
+        end
+    end
+    return maped
+end
+
+
+function isValidTarget_(ent)
+    return ent != player() and (ent:getClass() == 'prop_physics' or ent:isPlayer())
+end
+
+
+function isEntityVisible(startPos, targetEnt)
+    local targetPos = targetEnt:obbCenterW()
+    local dir = (targetPos - startPos):getNormalized()
+    
+    
+    local tr = trace.line(startPos, startPos + dir*10000, isValidTarget_, MASK.ALL, nil, false)
+    local dist = startPos:getDistance(tr.HitPos)
+    if isValid(tr.Entity) then
+        --printConsole(tr.Entity)
+    end
+    
+    if tr.Entity == targetEnt then
+        return true
+    end
+    
+    local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-50,-50,-50), Vector(50,50,50))
+    
+    --local boxMin = Vector(0, 0, 0)
+    --local boxMax = Vector(100, 100, 100)
+
+    return !!pos2
+end
+
+
+function angleBetweenVectors(a, b)
+    local dot = a:dot(b)
+    local lenA = a:getLength()
+    local lenB = b:getLength()
+    local cosTheta = dot / (lenA * lenB)
+    return math.deg(math.acos(cosTheta))
+end
+
+
+---------------------------------------------------
+
+local _locks = {}
+function isLockEvent(name, sec)
+    local curtime = timer.curtime()
+    _locks[name] = _locks[name] or curtime
+    local isLock = curtime < _locks[name]
+    if sec ~= nil and !isLock then
+        _locks[name] = curtime + sec
+    end
+
+    return isLock
+end
+
+function setLockEvent(name, sec)
+    _locks[name] = timer.curtime() + sec
+end
+
+---------------------------------------------------
+
+
+if SERVER then
+    
+    local _o, _e = owner(), chip()
+    
+    
+    wire.adjustPorts(
+        {
+            Seat = "entity",
+        },
+        {}
+    )
+    
+    local _rockets = {}
+    
+    function sendExplodeBulletScene(pos)
+        net.start("explodeBulletScene")
+        net.writeVector(pos)
+        net.send()
+    end
+    
+    
+    function explodeWireTo(pos, damage, radius)
+        if !prop.canSpawn() then return end
+    
+        local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
+            damage = damage,
+            radius = radius,
+            removeafter = true,
+            Model = "models/bull/gates/logic_nano.mdl",
+        })
+        ent._isSF = true
+        ent:setSolid(false)
+        ent:setNoDraw(true)
+        ent:getWirelink()['Detonate'] = 1
+    end
+    
+    
+    function explodeRocketScene(rocket)
+        local holo = rocket._rocketHoloBase
+        holo:setParent(nil)
+        holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 120, nil, 1)
+        timer.simple(TrailTime, function()
+            if !isValid(holo) then return end
+            holo:remove()
+        end)
+        sendExplodeBulletScene(holo:getPos())
+    end
+    
+    
+    function tryExplodeRocket(rocket)
+        pcall(function()
+            if !isValid(rocket) then return end
+            explodeRocketScene(rocket)
+            --explodeWireTo(rocket:getPos(), ExplodeDamage, ExplodeRadius)
+            --game.blastDamage(rocket:getPos(), ExplodeRadius, ExplodeDamage)
+            rocket:remove()
+        end)
+    end
+    
+    
+    function getBaseHolo(pos)
+        local holo =  hologram.create(pos, Angle(), "models/holograms/cube.mdl", Vector(1))
+        holo:setNoDraw(true)
+        return holo
+    end
+    
+    
+    --function notifyTarget(target)
+    --    local holo = getBaseHolo(target:getPos())
+    --    holo:setParent(target)
+    --    timer.simple(2, function()
+    --        if isValid(holo) then
+    --            holo:remove()
+    --        end
+    --    end)
+    --    -- vehicles/junker/radar_ping_friendly1.wav
+    --    holo:emitSound("vehicles/junker/radar_ping_friendly1.wav", 75, 100, 1)
+    --end
+    
+    
+    function fireRocket(startPos, startAng, target)
+        local rocket = prop.create(startPos, startAng, "models/weapons/w_missile_closed.mdl", false) -- models/weapons/w_missile_closed.mdl     models/props_phx/misc/smallcannonball.mdl
+        rocket:enableGravity(false)
+        rocket:getPhysicsObject():setVelocity(rocket:getForward() * RocketVelocity)
+        rocket._rocketHoloBase = getBaseHolo(rocket:getPos())
+        rocket._rocketHoloBase:setNoDraw(true)
+        --rocket._rocketHoloBase:setTrails(50, 0, TrailTime, "trails/smoke", Color(255,255,255))
+        rocket._rocketHoloBase:setParent(rocket)
+        rocket._target = target
+        rocket._isForce = true
+        rocket._lastLifeTime = timer.curtime() + RockeForceTime
+        rocket:emitSound("weapons/rpg/rocket1.wav", 75, 100, 1)
+        _e:emitSound("weapons/rpg/rocketfire2.wav", 75, 100, 1)
+        --rocket_isRocket = true
+        rocket:addCollisionListener(function(data)
+            tryExplodeRocket(rocket)
+        end)
+        timer.simple(RocketAutoRemoveTime, function()
+            if isValid(rocket) then
+                tryExplodeRocket(rocket)
+            end
+        end)
+        
+        --notifyTarget(target)
+        table.insert(_rockets, rocket)
+        
+        net.start("sendRocketToClient")
+        net.writeEntity(target)
+        net.writeEntity(rocket)
+        net.send()
+    end
+    
+    
+    --timer.create("fire", 2, 0, function()
+    --    fireRocket(chip():localToWorld(Vector(0,0,50)), chip():localToWorldAngles(Angle(-90, 00, 0)), _target)
+    --end)
+    
+    
+    hook.add("think", "ForceRockets", function()
+        local curtime = timer.curtime()
+        
+        for i, rocket in ipairs(_rockets) do
+            if !isValid(rocket) then
+                table.removeByValue(_rockets, rocket)
+                continue
+            end
+            
+            if rocket._isForce and rocket._lastLifeTime < curtime then
+                rocket:enableGravity(true)
+                rocket._isForce = false
+                net.start("setRocketNoForce")
+                net.writeEntity(rocket)
+                net.send()
+            end
+            
+            local targetPos = rocket._target and rocket._target:obbCenterW() or (rocket:getPos() + rocket:getForward())
+            
+            local phys = rocket:getPhysicsObject()
+            
+            local diff = targetPos - rocket:getPos()
+            local distance = diff:getLength()
+            local dirTarget = diff:getNormalized()
+            
+            local rocketVelocity = phys:getVelocity()
+            local rocketVelDir = rocketVelocity:getAngle()
+            local mass = phys:getMass()
+            
+            local resultAngle = math.lerpAngle(RocketLerpRatio, rocketVelDir, dirTarget:getAngle())
+            
+            if rocket._isForce then
+                phys:setVelocity(resultAngle:getForward() * RocketVelocity)
+                phys:setAngleVelocity(Vector())
+                phys:setAngles(resultAngle)
+            end
+            
+            if rocket._target then
+                if distance < AutoExplodeMaxDistance then
+                    tryExplodeRocket(rocket)
+                end
+                
+                if distance < MarkIsCloseTargetMaxDistance then
+                    rocket._isTargetClose = true
+                end
+
+                if rocket._isTargetClose and distance >= MarkIsCloseTargetMaxDistance then
+                    rocket._target = nil
+                    --print(rocket)
+                end
+            end
+            
+        end
+    end)
+    
+    
+    net.receive("fire", function(len, ply)
+        local target = net.readEntity()
+        if !isValid(target) or isLockEvent("canFire", FireDelay) then return end
+        
+        fireRocket(chip():localToWorld(Vector(0,0,50)), chip():localToWorldAngles(Angle(-90, 00, 0)), target)
+    end)
+        
+    -------------------------------------------------
+    
+    function userHasGodMode(user)
+        if user:hasGodMode() then
+            return true
+        end
+        local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")
+        return isKyleBuilder != nil and isKyleBuilder
+    end
+    
+    
+    timer.create("check_players", 1, 0, function()
+        local players = find.allPlayers(function(ent)
+            return true --!userHasGodMode(ent)
+        end)
+        
+        net.start("conecting_players")
+        net.writeTable(players)
+        net.send()
+    end)
+    
+    
+    hook.add("EntityTakeDamage", "", function(target, attacker, inflictor, amount, type, position, force)
+        --local driver = _vehicle:getDriver()
+        if isValid(inflictor)
+                and inflictor._isSF
+                and isValid(target)
+                and target:isPlayer()
+                and target:isAlive() then
+                --and !userHasGodMode(target) then
+            net.start("entityTakeDamage")
+            net.writeVector(target:getPos())
+            net.writeInt(math.round(amount, 0), 32)
+            net.send()
+        end
+    end)
+    
+    ---------------------------------------------------------
+    
+    function syncInitData(ply)
+        --if !isValid(wire.ports.Seat) then return end
+        
+        net.start("init")
+        net.writeEntity(isValid(wire.ports.Seat) and wire.ports.Seat or entity(0))
+        net.send(ply)
+    end
+    
+    
+    hook.add("input","",function(inp, value)
+        if inp == "Seat" then
+            syncInitData()
+        end
+    end)
+    
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        syncInitData(ply)
+    end)
+    
+    ---------------------------------------------------------
+        
+    return
+end
+
+
+-- =================== CLIENT =============================
+
+local _p = player()
+
+local m = material.load("particle/smokesprites_0004")
+local m2 = material.load("particles/flamelet5")
+local _smallFont = render.createFont("Arial", 21, 400, true)
+
+local _damageInfo = {}
+local _validPlayers, _resultPlayers = {}, {}
+local _rockets = {}
+local _vehicle = nil
+local _inited = false
+
+local _width, _height = render.getGameResolution()
+local _centerPos = Vector(_width/2, _height/2, 0)
+local _closestPlayer = nil
+render.createRenderTarget("template")
+
+
+local _keyPressedData = {
+    [MOUSE.MOUSE1] = {IsMouse = true},
+    [MOUSE.MOUSE2] = {IsMouse = true},
+}
+
+
+function getNewButtonsPressedData()
+    for k, v in pairs(_keyPressedData) do
+        local newPressed = v.IsMouse and input.isMouseDown(k) or input.isKeyDown(k)
+        v.IsFirst = v.Pressed != newPressed and newPressed
+        v.Pressed = newPressed
+    end
+    return _keyPressedData
+end
+
+
+function isActive()
+    return _inited and render.isHUDActive() and (!isValid(_vehicle) or _vehicle:getDriver() == _p)
+end
+
+
+net.receive("init", function(len)
+    _inited = true
+    _vehicle = net.readEntity()
+end)
+
+
+----------------------------------------------------
+
+function handleDamageInfo()
+    local now = timer.curtime()
+    for i, data in ipairs(_damageInfo) do
+        if data.DieTime < now then
+            table.removeByValue(_damageInfo, data)
+        end
+    end
+end
+
+
+net.receive("entityTakeDamage", function()
+    local pos = net.readVector()
+    local amount = net.readInt(32)
+    table.insert(_damageInfo, 1, {
+        Pos = pos,
+        Amount = amount,
+        DieTime = timer.curtime() + 2
+    })
+end)
+
+
+timer.create("200 ms", 0.2, 0, function()
+    handleDamageInfo()
+end)
+
+----------------------------------------------------------
+
+net.receive("conecting_players", function (len)
+    _validPlayers = net.readTable()
+end)
+
+
+timer.create("findVisiblePlayers", 0.4, 0, function()
+    if !isActive() then return end
+    
+    _resultPlayers = table.filter(_validPlayers, function(ent)
+        if !isValid(ent) then return false end
+        if !ent:inVehicle() then
+            return false
+        end
+        return isEntityVisible(eyePos(), ent)
+    end)
+    --rintConsole(#_resultPlayers)
+end) 
+
+----------------------------------------------------------
+local _notifySound = sound.create(_p, "vehicles/junker/radar_ping_friendly1.wav")
+
+function notifyTarget(target)
+    if target != _p then return end
+    -- vehicles/junker/radar_ping_friendly1.wav
+    _notifySound:stop()
+    _notifySound:play()
+end
+
+    
+function createParticle(emitter, pos, mat, lifeTime)
+    local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1)):getNormalized()
+    -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
+    local part = emitter:add( mat, pos + dir*math.random(0, 50), 100, 1000, 0, 0, 50, 0, lifeTime )
+    part:setCollide(true)
+    part:setBounce(0)
+    part:setVelocity( dir*500 )
+    part:setAirResistance(100)
+end
+
+
+net.receive("explodeBulletScene", function(len)
+    local explodePos = net.readVector()
+    local emitter = particle.create(Vector(), false)
+    
+    for i=1, 5 do
+        createParticle(emitter, explodePos, m, 10)
+    end
+    for i=1, 5 do
+        createParticle(emitter, explodePos, m2, 5)
+    end
+    emitter:destroy()
+end)
+
+
+net.receive("sendRocketToClient", function(len)
+    local target = net.readEntity()
+    net.readEntity(function(rocket)
+        if !isValid(rocket) then return end
+        rocket._isForce = true
+        rocket._target = target
+        table.insert(_rockets, rocket)
+    end)
+    
+    notifyTarget(target)
+end)
+
+
+net.receive("setRocketNoForce", function(len)
+    net.readEntity(function(rocket)
+        if !isValid(rocket) then return end
+        rocket._isForce = false
+    end)
+end)
+
+
+hook.add("think", "particleRockets", function()
+    local emitter = particle.create(Vector(), false)
+    local curtime = timer.curtime()
+    
+    for i, rocket in ipairs(_rockets) do
+        if !isValid(rocket) then
+            table.removeByValue(_rockets, rocket)
+            continue
+        end
+        if not rocket._isForce then
+            continue
+        end
+        
+        local maxSize = 100
+        local startAlpha = 100
+        local part = emitter:add( m, rocket:getPos(), 5, maxSize, 0, 0, startAlpha, 0, TrailTime )
+        part:setColor(Color(100,100,100))
+        part:setRollDelta(2)
+    end
+    emitter:destroy()
+end)
+
+
+--------------------------------------------------------------------------------------------
+
+function renderCameraRect(x, y, size, lineWidth, lineLength)
+    offset = offset or 0
+    local rectStartX, rectStartY = x-size, y-size
+    local rectEndX, rectEndY = x+size, y+size
+    
+    render.drawRect(rectStartX, rectStartY, lineWidth, lineLength) -- top-left
+    render.drawRect(rectStartX, rectStartY, lineLength, lineWidth)
+
+    render.drawRect(rectEndX-lineWidth, rectEndY-lineLength, lineWidth, lineLength) -- bottom-right
+    render.drawRect(rectEndX-lineLength, rectEndY-lineWidth, lineLength, lineWidth)
+    
+    render.drawRect(rectEndX-lineWidth, rectStartY, lineWidth, lineLength) -- top-right
+    render.drawRect(rectEndX-lineLength, rectStartY, lineLength, lineWidth)
+    
+    render.drawRect(rectStartX, rectEndY-lineLength, lineWidth, lineLength) -- bottom-left
+    render.drawRect(rectStartX, rectEndY-lineWidth, lineLength, lineWidth)
+end
+
+
+hook.add("renderoffscreen", "InitTemplate", function()
+    hook.remove("renderoffscreen", "InitTemplate")
+    
+    render.selectRenderTarget("template")
+    render.setLightingMode(0)
+    
+    render.clear(Color(0,0,0,0))
+    render.setColor(Color(0,0,0))
+    renderCameraRect(514, 514, FindInBoxSize, 2, 40)
+    render.setColor(Color(255,255,255))
+    renderCameraRect(512, 512, FindInBoxSize, 2, 40)
+    --renderCameraRect(60, 2, 30)
+end)
+
+--------------------------------------------------------------------------------------------
+
+
+function filterImage()
+    render.setFilterMin(1)
+    render.setFilterMag(1)
+end
+
+
+function inBox(pos)
+    return math.abs(pos.x - _centerPos.x) < FindInBoxSize and math.abs(pos.y - _centerPos.y) < FindInBoxSize
+end
+
+
+function findClosestTarget(keyPressedData)
+    --angleBetweenVectors(a, b)
+    
+    if !keyPressedData[MOUSE.MOUSE2].Pressed then
+        _closestPlayer = nil
+        return
+    end
+    
+    
+    if isLockEvent("isFindTarget", 0.5) then
+        if isValid(_closestPlayer) and table.hasValue(_resultPlayers, _closestPlayer) then
+            local pos = _closestPlayer:obbCenterW():toScreen()
+            if inBox(pos) then
+                return
+            end
+        end
+        
+        
+        local closestPly, closestDist = nil, 999999999
+        
+        for i, p in ipairs(_resultPlayers) do
+            if p == _p or !isValid(p) then continue end
+            
+            local pos = p:obbCenterW():toScreen()
+            if !pos.visible or !inBox(pos) then continue end
+            
+            --printConsole(pos.x, pos.y, pos.visible)
+            local dist = _centerPos:getDistance(Vector(pos.x, pos.y, 0))
+            if dist < closestDist then
+                closestPly, closestDist = p, dist
+            end
+        end
+        _closestPlayer = closestPly
+    end
+end
+
+
+function drawRect(keyPressedData)
+    if !keyPressedData[MOUSE.MOUSE2].Pressed then
+        return
+    end
+    
+    render.setRenderTargetTexture("template")
+    --filterImage()
+    local IsRect = true
+    local kk = IsRect and (_height/_width) or 1
+    render.drawTexturedRect(_width/2 - _width*kk/2, 0, _width*kk, _height)
+end
+
+
+function drawVisiblePlayers(keyPressedData)
+    if !keyPressedData[MOUSE.MOUSE2].Pressed then
+        return
+    end
+    
+    for i, p in ipairs(_resultPlayers) do
+        if isValid(p) and p ~= _p and p:isAlive() then
+            local pos = p:obbCenterW():toScreen()
+            if !inBox(pos) then continue end
+            
+            --local color = p:isPlayer() and p:inVehicle() and Color(255,100,100) or Color(255,255,100)
+            local color = _closestPlayer == p and Color(255,100,100) or Color(255,255,100)
+            
+            --render.setFont(font)
+            --render.setColor(team.getColor(p:getTeam()))
+            render.setColor(color)
+            --render.drawText(pos.x, pos.y, p:inVehicle() and p:getVehicle():getClass() or "", 1)
+            local BoxSize = 5
+            render.drawRect(pos.x-BoxSize, pos.y-BoxSize, BoxSize*2, BoxSize*2)
+        end
+    end
+end
+
+
+function drawClosestPlayer()
+    if !isValid(_closestPlayer) or !isValid(_closestPlayer:getVehicle()) then return end
+    
+    local pos = _closestPlayer:getVehicle():obbCenterW():toScreen()
+    render.setColor(Color(0,0,0))
+    renderCameraRect(pos.x+2, pos.y+2, 33, 2, 10)
+    render.setColor(Color(255,255,255))
+    renderCameraRect(pos.x, pos.y, 33, 2, 10)
+end
+
+
+function drawDamageInfo()
+    render.setColor(Color(255,255,0, 150))
+    --render.setFont(_smallFont)
+    for i, data in ipairs(_damageInfo) do
+        local pos = data.Pos:toScreen()
+        render.drawSimpleText(pos.x, pos.y, '-' .. data.Amount)
+    end
+end
+
+
+function eventMouseHandler(keyPressedData)
+    local target = _closestPlayer
+    local target = owner()
+    if keyPressedData[MOUSE.MOUSE2].Pressed and keyPressedData[MOUSE.MOUSE1].IsFirst and isValid(target) then
+        net.start("fire")
+        net.writeEntity(target)
+        net.send()
+    end
+end
+
+
+hook.add("DrawHUD", "", function()
+    if !isActive() then return end
+    
+    local keyPressedData = getNewButtonsPressedData()
+    drawRect(keyPressedData)
+    findClosestTarget(keyPressedData)
+    --drawVisiblePlayers(keyPressedData)
+    drawClosestPlayer()
+    drawDamageInfo()
+    eventMouseHandler(keyPressedData)
+end)
+

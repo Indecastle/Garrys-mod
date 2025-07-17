@@ -15,6 +15,7 @@ function quota()
 end
 
 local clr;
+local cc
 
 local mouse = {
     { x=0, y=0 },
@@ -63,6 +64,8 @@ hook.add("render","",function()
     
     render.drawText(cx/2 + 10, cy/2 - 40, "cx: "..cx..", cy: "..cy)
     render.drawText(cx/2 + 10, cy/2 - 20, "pixel color - "..tostring(clr))
+    render.drawText(cx/2 + 10, cy/2 - 00, "orig  color - "..tostring(cc))
+    render.drawText(cx/2 + 10, cy/2 + 20, "dif - "..tostring(clr - cc))
     
     render.setColor(clr)
     render.drawRect(cx/2 + 5, cy/2 + 10, 5, 5)
@@ -72,6 +75,7 @@ end)
 
 
 local IsInit = true
+local _initCurTime = timer.curtime()
 
 hook.add("renderoffscreen","",function()
     if quota() > 0.2 then return end
@@ -80,19 +84,23 @@ hook.add("renderoffscreen","",function()
 
     local w, h = render.getResolution()
     
+    cc = Color(0, math.floor(((timer.curtime()-_initCurTime)*30) % 255), 0)
+    --printConsole(string.fromColor(cc))
     if IsInit then
-        IsInit = false
+        --IsInit = false
         render.clear(bgColor)
         
         render.setColor(Color(255,123,75))
         render.drawRoundedBox(0,0,0,512,512)
         
-        render.setColor(Color(100,200,75))
+        render.setColor(cc)
         render.drawRoundedBox(100,400,600,200,200)
     end
-    
+
     render.capturePixels()
     clr = render.readPixel( cx or 0, cy or 0 )
 
     --hook.remove("renderoffscreen","")
 end)
+
+-- 110 - 244 = +1

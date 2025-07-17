@@ -18,26 +18,22 @@ local EraserSmallSize = 4
 local CleanColor = Color(220,220,220)
 local ToolbarBackgroundColor = Color(200,200,200, 255)
 
-local ServerQuotaP, ClientQuotaP = 0.4, 0.4
+local ServerQuotaP, ServerQuota = 0.4, 0.010
+local ClientQuotaP, ClientQuota = 0.4, 0.010
 
 ----------------------------------------------------------------------------
 
-function checkQuota(maxQuota)
-    return math.max(quotaAverage(), quotaUsed()) < maxQuota
+local _screenSize = 512
+
+
+local _maxQuota = SERVER and math.min(ServerQuota, quotaMax() * ServerQuotaP) or math.min(ClientQuota, quotaMax() * ClientQuotaP)
+
+function checkQuota()
+    return math.max(quotaAverage(), quotaUsed()) < _maxQuota
 end
 
-function checkQuotaP(maxQuota)
-    return math.max(quotaAverage(), quotaUsed()) < quotaMax() * maxQuota
-end
-
-function validQuota(maxQuota)
-    while !checkQuota(maxQuota) do
-        coroutine.yield()
-    end
-end
-
-function validQuotaP(maxQuota)
-    while !checkQuotaP(maxQuota) do
+function validQuota()
+    while !checkQuota() do
         coroutine.yield()
     end
 end
@@ -60,12 +56,10 @@ function setLockEvent(name, sec)
 end
 
 
-
 corWrap(function()
 --------------------------------------------------
 
 local _o, _e = owner(), chip()
-local _screenSize = 512
 
 
 function getBinaryColorData(colorData, startRow, rowCount)
@@ -75,7 +69,7 @@ function getBinaryColorData(colorData, startRow, rowCount)
             local color = colorData[y][x]
             table.insert(binaryData, string.char(color.r, color.g, color.b))
         end
-        validQuotaP(ServerQuotaP)
+        validQuota()
     end
     
     local result = table.concat(binaryData)
@@ -94,7 +88,7 @@ function getCompressedScreenData(progressCallback)
             local color = render.readPixel(x, y)
             table.insert(binaryData, string.char(color.r, color.g, color.b))
         end
-        validQuotaP(ServerQuotaP)
+        validQuota()
     end
     
     local result = table.concat(binaryData)
@@ -103,7 +97,7 @@ function getCompressedScreenData(progressCallback)
 end
 
 
-function decompressColorData(binaryData, rowCount, maxQuotaP)
+function decompressColorData(binaryData, rowCount)
     --printConsole('client - ' .. #compressedData)
     if not binaryData then return {} end
        
@@ -123,7 +117,7 @@ function decompressColorData(binaryData, rowCount, maxQuotaP)
                 table.insert(colorData[y], Color(0,0,0))
             end
         end
-        validQuotaP(maxQuotaP)
+        validQuota()
     end
     return colorData
 end
@@ -201,24 +195,6 @@ if SERVER then
         net.start("cleanScreen")
         net.send()
     end
-
-
-    hook.add("DupeFinished", "", function(entTbl)
-        corWrap(function()
-            --printConsole("DupeFinished Start")
-            local binaryStr = getUserdata()
-            if binaryStr == "" then return end
-            net.syncVars.hasSavedDupe = true
-            
-            _compressedScreenData = binaryStr
-            binaryData = bit.decompress(binaryStr)
-            --local dataColor = decompressColorData(binaryData, _screenSize, ServerQuotaP)
-            --if !isCleanScreen(dataColor) then
-            --    runSyncScreen()
-            --end
-            --printConsole("DupeFinished End - " .. #compressedData)
-        end)
-    end)
     
     
     net.receive("saveScreenForDupeClient", function(size, ply)
@@ -265,11 +241,18 @@ if SERVER then
     end)
     
     
-    hook.add("ClientInitialized", "cl_init", function(ply)
-        if _compressedScreenData == '' then return end
-        runSyncScreen(ply)
+    hook.add("DupeFinished", "", function(entTbl)
+        timer.simple(1, function()
+            if _compressedScreenData == '' then return end
+            runSyncScreen()
+        end)
     end)
     
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        --if _compressedScreenData == '' then return end
+        --runSyncScreen(ply)
+    end)
 
     ----------- Buffer Data Server --------
     local _bufferNewData = {}
@@ -279,7 +262,7 @@ if SERVER then
         local newBufferData = net.readTable()
         --printTable(newBufferData)
         for i, data in ipairs(newBufferData) do
-            validQuotaP(ServerQuotaP)
+            validQuota()
             table.insert(_bufferNewData, data)
         end
     end)
@@ -303,46 +286,6 @@ end
 local _p = player()
 local _userId = _p:getUserID()
 
-local _mousePoly = {
-    { x=0, y=0 },
-    { x=3, y=2 },
-    { x=1.1, y=2 },
-    { x=2.1, y=3.9 },
-    { x=1.9, y=4 },
-    { x=0.9, y=2.1 },
-    { x=0.1, y=4 },
-}
-
-function getMouse(curX, curY, scale)
-    local copyMouse = table.copy(_mousePoly)
-    for i=1, #copyMouse do
-        copyMouse[i].x = copyMouse[i].x*scale + curX
-        copyMouse[i].y = copyMouse[i].y*scale + curY
-    end
-    return copyMouse
-end
-
-function drawMouse(curX, curY, fillColor, scale)
-    scale = scale or 4
-    local c = scale/4
-    render.setRenderTargetTexture()
-
-    local copyMouse = getMouse(curX, curY, scale)
-    render.setColor(Color(50, 50, 50))
-    render.drawPoly(copyMouse)
-    
-    copyMouse = getMouse(curX + 1.15*c, curY + 2.5*c, scale/2)
-    render.setColor(fillColor)
-    render.drawPoly(copyMouse)
-end
-
-function filterImage()
-    render.setFilterMin(1)
-    render.setFilterMag(1)
-end
-
-------------------------------
-
 --local _dataColor = {}
 local _syncRenderId = 0
 local _isSavingForDupe = false
@@ -354,7 +297,69 @@ local _syncRowIndex = nil
 local _rainbowSaturation = 1
 local _rainbowBrightness = 1
 local _toolbarCogMaterial = material.createFromImage("icon16/cog.png","")
+local _pipetteMouseMaterial = material.createFromImage("icon16/paintbrush.png","")
 local font1 = render.createFont("Roboto", 16, 900, true)
+local _prevLinePoint = nil
+local _isOpenToolbar = false
+local _isLockPressed = false
+
+local drawMouseCallback = function(curX, curY, fillColor, scale) end
+local drawMainMouseHandler, drawPalleteMouseHandler
+
+local eventMouseCallback = function(x, y, keyPressedData) end
+local eventMainMouseHandler, eventMousePalleteHandler
+
+local _mousePoly = {
+    { x=0, y=0 },
+    { x=3, y=2 },
+    { x=1.1, y=2 },
+    { x=2.1, y=3.9 },
+    { x=1.9, y=4 },
+    { x=0.9, y=2.1 },
+    { x=0.1, y=4 },
+}
+
+
+
+
+function getMouse(x, y, scale)
+    local copyMouse = table.copy(_mousePoly)
+    for i=1, #copyMouse do
+        copyMouse[i].x = copyMouse[i].x*scale + x
+        copyMouse[i].y = copyMouse[i].y*scale + y
+    end
+    return copyMouse
+end
+
+
+function drawMainMouseHandler(x, y, fillColor, scale)
+    scale = scale or 4
+    local c = scale/4
+    render.setRenderTargetTexture()
+
+    local copyMouse = getMouse(x, y, scale)
+    render.setColor(Color(50, 50, 50))
+    render.drawPoly(copyMouse)
+    
+    copyMouse = getMouse(x + 1.15*c, y + 2.5*c, scale/2)
+    render.setColor(fillColor)
+    render.drawPoly(copyMouse)
+end
+
+
+function drawPalleteMouseHandler(x, y, fillColor, scale)
+    render.setColor(Color(255,255,255))
+    render.setMaterial(_pipetteMouseMaterial)
+    render.drawTexturedRect(x, y-12, 4*scale, 4*scale)
+end
+
+
+function filterImage()
+    render.setFilterMin(1)
+    render.setFilterMag(1)
+end
+
+------------------------------
 
 
 ----------- Buffer Data Client --------
@@ -381,8 +386,8 @@ local renderHandlers = {
         build = function(x, y, thickness, color)
             return {
                 Type = "Circle",
-                X = x*2,
-                Y = y*2,
+                X = math.round(x*2, 0),
+                Y = math.round(y*2, 0),
                 Thickness = thickness,
                 Color = color
             }
@@ -437,6 +442,7 @@ local _keyPressedData = {
     [MOUSE.MOUSE1] = { Pressed = false, IsFirst = false, IsMouse = true },
     [MOUSE.MOUSE2] = { Pressed = false, IsFirst = false, IsMouse = true },
     [KEY.LALT] = { Pressed = false, IsFirst = false },
+    [KEY.E] = { Pressed = false, IsFirst = false },
 }
 
 -- ================================================================================
@@ -450,7 +456,6 @@ function saveScreenForDupeClient()
         local compressedData = getCompressedScreenData(function(value)
             _savingProgress = value
         end)
-
         net.start("saveScreenForDupeClient")
         net.writeData2(compressedData)
         net.send()
@@ -493,6 +498,7 @@ end
 function getLineThicknessData(x, y, w, h, text, thickness)
     return getTextButton(x, y, w, h, text, false, function(self, cur, keyPressedData)
         LineThickness = thickness
+        _isOpenToolbar = false
     end)
 end
 
@@ -519,7 +525,7 @@ _toolbarButtonsData = {
                 render.drawRectFast(30+i, 30, 1, 18)
             end
             render.setColor(ToolbarBackgroundColor)
-            render.drawRectFast(self.X + self.W + 5, self.Y, 70, self.H)
+            render.drawRectFast(self.X + self.W + 5, self.Y, 80, self.H)
             render.setColor(Color(230,230,230, 255))
             render.drawText(self.X + self.W + 5, self.Y, '' .. _ownColor.r .. ' ' .. _ownColor.g .. ' ' .. _ownColor.b)
         end,
@@ -572,9 +578,26 @@ _toolbarButtonsData = {
         end,
     },
     LineThickness1 = getLineThicknessData(30, 87, 20, 18, "X1", 1),
-    LineThickness2 = getLineThicknessData(51, 87, 20, 18, "X2", 5),
-    LineThickness3 = getLineThicknessData(72, 87, 20, 18, "X3", 10),
-    LineThickness4 = getLineThicknessData(93, 87, 20, 18, "X4", 20),
+    LineThickness2 = getLineThicknessData(51, 87, 20, 18, "X2", 3),
+    LineThickness3 = getLineThicknessData(72, 87, 20, 18, "X3", 6),
+    LineThickness4 = getLineThicknessData(93, 87, 20, 18, "X4", 10),
+    LineThickness5 = getLineThicknessData(114, 87, 20, 18, "X5", 20),
+    SetPalleteMouse = {
+        X = 30, Y = 106, W = 18, H = 18,
+        InitRender = function(self, isPressed)
+            render.setColor(Color(255,255,255))
+            render.setMaterial(_pipetteMouseMaterial)
+            render.drawTexturedRect(self.X, self.Y, self.W, self.H)
+        end,
+        AdminOnly = false,
+        Handler = function(self, cur, keyPressedData)
+            if keyPressedData[MOUSE.MOUSE1].IsFirst then
+                drawMouseCallback = drawPalleteMouseHandler
+                eventMouseCallback = eventPalleteMouseHandler
+                _isOpenToolbar = false
+            end
+        end,
+    },
     SwitchOnlyAdminDraw = {
         X = 30, Y = 355, W = 142, H = 18,
         InitRender = function(self, isPressed)
@@ -692,7 +715,7 @@ end)
 net.receive("syncScreen", function()
     local binaryData = net.readData2()
     local compressedData = bit.decompress(binaryData)
-    local arColor = decompressColorData(compressedData, _screenSize, ClientQuotaP)
+    local arColor = decompressColorData(compressedData, _screenSize)
     --print(#arColor)
 
     hook.add("renderoffscreen", "syncScreen", function()
@@ -704,7 +727,7 @@ net.receive("syncScreen", function()
                 render.clear(arColor[i][j])
             end
             _syncRowIndex = i
-            validQuotaP(ClientQuotaP)
+            validQuota()
             --printConsole(hookName .. ' - ' .. (i))
         end
         _syncRowIndex = nil
@@ -741,6 +764,7 @@ function toolbarHandler(cur, keyPressedData)
         render.selectRenderTarget("toolBar")
         data.Handler(data, cur, keyPressedData)
         render.selectRenderTarget()
+        _isLockPressed = true
         
         return true
     end
@@ -785,22 +809,136 @@ function getNewButtonsPressedData()
         v.IsFirst = v.Pressed != newPressed and newPressed
         v.Pressed = newPressed
     end
+    _keyPressedData[MOUSE.MOUSE1].Pressed = _keyPressedData[MOUSE.MOUSE1].Pressed or _keyPressedData[KEY.E].Pressed
+    _keyPressedData[MOUSE.MOUSE1].IsFirst = _keyPressedData[MOUSE.MOUSE1].IsFirst or _keyPressedData[KEY.E].IsFirst
     return _keyPressedData
 end
 
-
-local prevLinePoint = nil
-local _isOpenToolbar = false
 
 function drawSyncRow()
     --printConsole(_syncRowIndex)
     if _syncRowIndex ~= nil then
         render.selectRenderTarget()
         render.setColor(Color(255,0,0, 150))
-        render.drawRectFast(0, _syncRowIndex, 512, 2)
+        render.drawRectFast(0, _syncRowIndex * 512/_screenSize, 512, 2)
     end
 end
 
+
+function eventMainMouseHandler(x, y, keyPressedData)
+    if !keyPressedData[MOUSE.MOUSE1].Pressed then
+        _prevLinePoint = nil
+        _isLockPressed = false
+    end
+    
+    if _isLockPressed then return end
+    
+    if keyPressedData[MOUSE.MOUSE2].Pressed then
+        local thickness = keyPressedData[KEY.LALT].Pressed and EraserBigSize or EraserSmallSize
+        renderBufferHandler("Circle", x/2, y/2, thickness, CleanColor)
+    elseif keyPressedData[MOUSE.MOUSE1].Pressed then
+        if !_prevLinePoint then
+            _prevLinePoint = { x, y }
+            return
+        end
+        --printConsole(math.floor(Vector(_prevLinePoint[1], _prevLinePoint[2], 0):getDistance(Vector(x,y,0))))
+        --printTable(_prevLinePoint)
+        local renderType = LineThickness == 1 and "LineRect" or "LineCircle"
+        renderBufferHandler(renderType, _prevLinePoint[1]/2, _prevLinePoint[2]/2, x/2, y/2, LineThickness, _ownColor)
+        _prevLinePoint = { x, y }
+    end
+end
+
+
+local function colorEqual(c1, c2)
+    return c1.r == c2.r and c1.g == c2.g and c1.b == c2.b and c1.a == c2.a
+end
+
+
+function screenFloodFill(startX, startY, newColor)
+    render.capturePixels() --   
+
+    local width, height = _screenSize, _screenSize
+
+    --    
+    local targetColor = render.readPixel(startX, startY)
+
+    --      
+    if colorEqual(targetColor, newColor) then return end
+
+    -- BFS 
+    local queue = {{x = startX, y = startY}}
+    local visited = {} --   
+
+    --      
+    local function getKey(x, y)
+        return x .. "," .. y
+    end
+
+    render.setColor(newColor)
+
+    while #queue > 0 do
+        local point = table.remove(queue, 1)
+        local x, y = point.x, point.y
+
+        --  
+        if x < 0 or y < 0 or x >= width or y >= height then continue end
+
+        -- ,     
+        local key = getKey(x, y)
+        if visited[key] then continue end
+
+        --   
+        local currentColor = render.readPixel(x, y)
+        if not colorEqual(currentColor, targetColor) then continue end
+
+        --   
+        visited[key] = true
+
+        --  
+        render.drawRectFast(x, y, 1, 1)
+
+        --  
+        table.insert(queue, {x = x + 1, y = y})
+        table.insert(queue, {x = x - 1, y = y})
+        table.insert(queue, {x = x, y = y + 1})
+        table.insert(queue, {x = x, y = y - 1})
+    end
+end
+
+
+function eventPalleteMouseHandler(x, y, keyPressedData)
+    if keyPressedData[MOUSE.MOUSE1].IsFirst then
+        render.selectRenderTarget("myrendertarget")
+        
+        --screenFloodFill(x, y, _ownColor)
+        
+        render.capturePixels()
+        local color = render.readPixel(x, y)
+        _ownColor = color
+        --print(string.fromColor(_ownColor))
+        
+        local hsvColor = color:rgbToHSV()
+        _rainbowSaturation = hsvColor.g
+        _rainbowBrightness = hsvColor.b
+        
+        render.selectRenderTarget("toolBar")
+        _toolbarButtonsData.RainBow.InitRender(_toolbarButtonsData.RainBow)
+        _toolbarButtonsData.SetRainBowS.InitRender(_toolbarButtonsData.SetRainBowS)
+        _toolbarButtonsData.SetRainBowV.InitRender(_toolbarButtonsData.SetRainBowV)
+        
+        drawMouseCallback = drawMainMouseHandler
+        eventMouseCallback = eventMainMouseHandler
+        render.selectRenderTarget()
+    end
+end
+
+
+drawMouseCallback = drawMainMouseHandler
+eventMouseCallback = eventMainMouseHandler
+
+local _c = _screenSize / 512
+local _w1 = 1024 / _c
 
 function renderMainHandler(curx, cury)
     local x, y = curx, cury
@@ -822,31 +960,15 @@ function renderMainHandler(curx, cury)
         return
     end
     
-    if !keyPressedData[MOUSE.MOUSE1].Pressed then
-        prevLinePoint = nil
-    end
-    
-    if keyPressedData[MOUSE.MOUSE2].Pressed then
-        local thickness = keyPressedData[KEY.LALT].Pressed and EraserBigSize or EraserSmallSize
-        renderBufferHandler("Circle", x/2, y/2, thickness, CleanColor)
-    elseif keyPressedData[MOUSE.MOUSE1].Pressed then
-        if !prevLinePoint then
-            prevLinePoint = { x, y }
-            return
-        end
-        --printConsole(math.floor(Vector(prevLinePoint[1], prevLinePoint[2], 0):getDistance(Vector(x,y,0))))
-        --printTable(prevLinePoint)
-        local renderType = LineThickness == 1 and "LineRect" or "LineCircle"
-        renderBufferHandler(renderType, prevLinePoint[1]/2, prevLinePoint[2]/2, x/2, y/2, LineThickness, _ownColor)
-        prevLinePoint = { x, y }
-    end
+    eventMouseCallback(x * _c, y * _c, keyPressedData)
 end
 
 
 hook.add("render","",function()
     filterImage()
     render.setRenderTargetTexture("myrendertarget")
-    render.drawTexturedRect(0,0,1024,1024)
+    
+    render.drawTexturedRect(0, 0, _w1, _w1)
     
     drawSyncRow()
     
@@ -877,7 +999,7 @@ hook.add("render","",function()
     if curx and tr.Entity == render.getScreenEntity() and tr.Entity:getPos():getDistance(eyePos()) < WorkRadius then
         --render.drawText(curx, cury, "" .. math.round(curx, 1) .. ', ' .. math.round(cury, 1))
         renderMainHandler(curx, cury)
-        drawMouse(curx, cury, _ownColor, MouseScale)
+        drawMouseCallback(curx, cury, _ownColor, MouseScale)
     end
 end)
 
