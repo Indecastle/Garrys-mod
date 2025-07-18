@@ -1,6 +1,8 @@
 --@name Mortar Predictive
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@shared
+-- version 1.1.10
 
 local StartHeight = 500
 local StartPitchAngle = 45

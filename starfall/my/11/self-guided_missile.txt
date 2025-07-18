@@ -1,9 +1,12 @@
 --@name Self-guided missile
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@shared
+-- version 1.1.10
 
+local FindRadius = 10000
 
-local RocketVelocity = 2500
+local RocketVelocity = 3000
 local RocketLerpRatio = 0.07
 local TrailTime = 2
 local RockeForceTime = 10
@@ -15,8 +18,25 @@ local MarkIsCloseTargetMaxDistance = 240
 local ExplodeDamage = 110
 local ExplodeRadius = 500
 
-local FireDelay = 2
+local FireDelay = 5
 local FindInBoxSize = 300
+
+local OnlyVehicle = false
+local OnlyUngod = true
+
+local WaitFindingTarget = true
+local EyeFromChip = false
+
+local RocketModel = "models/props_phx/amraam.mdl" -- "models/weapons/w_missile_closed.mdl"
+local RocketStartOffset = Vector(0,0,100)
+
+local RocketStartForcingSoundUrl = "weapons/rpg/rocketfire2.wav"
+local RocketForcingSoundUrl = "thrusters/rocket04.wav"
+
+local KeyBindData = { -- The value can be both the number and the list from the numbers
+    Fire = MOUSE.MOUSE1,
+    ChooseTarget = MOUSE.MOUSE2,
+}
 
 
 -----------------------------------------------------------------------
@@ -45,7 +65,7 @@ function isEntityVisible(startPos, targetEnt)
     local dir = (targetPos - startPos):getNormalized()
     
     
-    local tr = trace.line(startPos, startPos + dir*10000, isValidTarget_, MASK.ALL, nil, false)
+    local tr = trace.line(startPos, startPos + dir*FindRadius, isValidTarget_, MASK.ALL, nil, false)
     local dist = startPos:getDistance(tr.HitPos)
     if isValid(tr.Entity) then
         --printConsole(tr.Entity)
@@ -55,7 +75,7 @@ function isEntityVisible(startPos, targetEnt)
         return true
     end
     
-    local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-50,-50,-50), Vector(50,50,50))
+    local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-40,-40,-40), Vector(40,40,40))
     
     --local boxMin = Vector(0, 0, 0)
     --local boxMax = Vector(100, 100, 100)
@@ -92,12 +112,9 @@ function setLockEvent(name, sec)
 end
 
 ---------------------------------------------------
-
+local _o, _e = owner(), chip()
 
 if SERVER then
-    
-    local _o, _e = owner(), chip()
-    
     
     wire.adjustPorts(
         {
@@ -147,10 +164,10 @@ if SERVER then
         pcall(function()
             if !isValid(rocket) then return end
             explodeRocketScene(rocket)
-            --explodeWireTo(rocket:getPos(), ExplodeDamage, ExplodeRadius)
+            explodeWireTo(rocket:getPos(), ExplodeDamage, ExplodeRadius)
             --game.blastDamage(rocket:getPos(), ExplodeRadius, ExplodeDamage)
-            rocket:remove()
         end)
+        rocket:remove()
     end
     
     
@@ -175,8 +192,11 @@ if SERVER then
     
     
     function fireRocket(startPos, startAng, target)
-        local rocket = prop.create(startPos, startAng, "models/weapons/w_missile_closed.mdl", false) -- models/weapons/w_missile_closed.mdl     models/props_phx/misc/smallcannonball.mdl
+        local rocket = prop.create(startPos, startAng, RocketModel, false)
         rocket:enableGravity(false)
+        rocket:setHealth(10000000)
+        --rocket:setMass(0)
+        rocket:getPhysicsObject():setDragCoefficient(-10000)
         rocket:getPhysicsObject():setVelocity(rocket:getForward() * RocketVelocity)
         rocket._rocketHoloBase = getBaseHolo(rocket:getPos())
         rocket._rocketHoloBase:setNoDraw(true)
@@ -185,8 +205,8 @@ if SERVER then
         rocket._target = target
         rocket._isForce = true
         rocket._lastLifeTime = timer.curtime() + RockeForceTime
-        rocket:emitSound("weapons/rpg/rocket1.wav", 75, 100, 1)
-        _e:emitSound("weapons/rpg/rocketfire2.wav", 75, 100, 1)
+        rocket:emitSound(RocketForcingSoundUrl, 150, 100, 1)
+        _e:emitSound(RocketStartForcingSoundUrl, 75, 100, 1)
         --rocket_isRocket = true
         rocket:addCollisionListener(function(data)
             tryExplodeRocket(rocket)
@@ -201,7 +221,8 @@ if SERVER then
         table.insert(_rockets, rocket)
         
         net.start("sendRocketToClient")
-        net.writeEntity(target)
+        net.writeBool(!!target)
+        if target then net.writeEntity(target) end
         net.writeEntity(rocket)
         net.send()
     end
@@ -269,10 +290,11 @@ if SERVER then
     
     
     net.receive("fire", function(len, ply)
-        local target = net.readEntity()
-        if !isValid(target) or isLockEvent("canFire", FireDelay) then return end
+        local hasTarget = net.readBool()
+        local target = hasTarget and net.readEntity() or nil
+        if (target != nil and !isValid(target)) or isLockEvent("canFire", FireDelay) then return end
         
-        fireRocket(chip():localToWorld(Vector(0,0,50)), chip():localToWorldAngles(Angle(-90, 00, 0)), target)
+        fireRocket(chip():localToWorld(RocketStartOffset), chip():localToWorldAngles(Angle(-90, 00, 0)), target)
     end)
         
     -------------------------------------------------
@@ -288,7 +310,7 @@ if SERVER then
     
     timer.create("check_players", 1, 0, function()
         local players = find.allPlayers(function(ent)
-            return true --!userHasGodMode(ent)
+            return !OnlyUngod or !userHasGodMode(ent)
         end)
         
         net.start("conecting_players")
@@ -303,8 +325,8 @@ if SERVER then
                 and inflictor._isSF
                 and isValid(target)
                 and target:isPlayer()
-                and target:isAlive() then
-                --and !userHasGodMode(target) then
+                and target:isAlive()
+                and (!OnlyUngod or !userHasGodMode(target)) then
             net.start("entityTakeDamage")
             net.writeVector(target:getPos())
             net.writeInt(math.round(amount, 0), 32)
@@ -326,6 +348,12 @@ if SERVER then
     hook.add("input","",function(inp, value)
         if inp == "Seat" then
             syncInitData()
+            if isValid(value) then
+                local hud = chip():getLinkedComponents()[1]
+                if isValid(hud) then
+                    hud:linkComponent(value)
+                end
+            end
         end
     end)
     
@@ -340,13 +368,16 @@ if SERVER then
 end
 
 
--- =================== CLIENT =============================
+-- =================== CLIENT ====================================================================================================================
 
 local _p = player()
 
+render.createRenderTarget("template")
 local m = material.load("particle/smokesprites_0004")
 local m2 = material.load("particles/flamelet5")
 local _smallFont = render.createFont("Arial", 21, 400, true)
+local _notifySound = sound.create(_p, "vehicles/junker/radar_ping_friendly1.wav")
+local _triSound --= sound.create(_p, "synth/tri.wav")
 
 local _damageInfo = {}
 local _validPlayers, _resultPlayers = {}, {}
@@ -356,23 +387,68 @@ local _inited = false
 
 local _width, _height = render.getGameResolution()
 local _centerPos = Vector(_width/2, _height/2, 0)
-local _closestPlayer = nil
-render.createRenderTarget("template")
+local _target, _waitingTarget = nil, nil
+
+------------------ Mouse
+local mouseKeys = {}
+for k, v in pairs(MOUSE) do
+    mouseKeys[v] = true
+end
+
+local _keyPressedData = {}
+for _, keys in pairs(KeyBindData) do
+    if type(keys) == 'table' then
+        for _, key in pairs(keys) do
+            if _keyPressedData[key] == nil then
+                _keyPressedData[key] = {}
+            end
+        end
+    else
+        if _keyPressedData[keys] == nil then
+            _keyPressedData[keys] = {}
+        end
+    end
+end
+for k, data in pairs(_keyPressedData) do
+    data.IsMouse = mouseKeys[k]
+end
+------------------
+
+bass.loadFile("sound/synth/tri.wav", "3d mono noblock noplay", function(snd, errorCode, errorName)
+    _triSound = snd
+    snd:setLooping(true)
+    snd:setPitch(1.6)
+    snd:setVolume(0.2)
+    snd:setFade(0, 10000, true)
+    --print(errorCode, errorName)
+end)
 
 
-local _keyPressedData = {
-    [MOUSE.MOUSE1] = {IsMouse = true},
-    [MOUSE.MOUSE2] = {IsMouse = true},
-}
+function getBindCb_(bindKey)
+    if type(KeyBindData[bindKey]) == 'table' then
+        result = {Pressed = false, IsFirst = false}
+        for i, key in ipairs(KeyBindData[bindKey]) do
+            result.IsFirst = result.IsFirst or _keyPressedData[key].IsFirst
+            result.Pressed = result.Pressed or _keyPressedData[key].Pressed
+            if result.IsFirst and result.Pressed then
+                break
+            end
+        end
+        return result
+    else
+        return _keyPressedData[KeyBindData[bindKey]]
+    end
+end
 
 
-function getNewButtonsPressedData()
+function getBindCbHandler()
     for k, v in pairs(_keyPressedData) do
         local newPressed = v.IsMouse and input.isMouseDown(k) or input.isKeyDown(k)
         v.IsFirst = v.Pressed != newPressed and newPressed
         v.Pressed = newPressed
     end
-    return _keyPressedData
+    
+    return getBindCb_
 end
 
 
@@ -423,19 +499,18 @@ end)
 
 timer.create("findVisiblePlayers", 0.4, 0, function()
     if !isActive() then return end
-    
+    local startPos = EyeFromChip and (chip():getPos() + chip():getForward()*42) or eyePos()
     _resultPlayers = table.filter(_validPlayers, function(ent)
         if !isValid(ent) then return false end
-        if !ent:inVehicle() then
+        if OnlyVehicle and !ent:inVehicle() then
             return false
         end
-        return isEntityVisible(eyePos(), ent)
+        return isEntityVisible(startPos, ent)
     end)
     --rintConsole(#_resultPlayers)
 end) 
 
 ----------------------------------------------------------
-local _notifySound = sound.create(_p, "vehicles/junker/radar_ping_friendly1.wav")
 
 function notifyTarget(target)
     if target != _p then return end
@@ -461,7 +536,7 @@ net.receive("explodeBulletScene", function(len)
     local emitter = particle.create(Vector(), false)
     
     for i=1, 5 do
-        createParticle(emitter, explodePos, m, 10)
+        createParticle(emitter, explodePos, m, 5)
     end
     for i=1, 5 do
         createParticle(emitter, explodePos, m2, 5)
@@ -471,7 +546,8 @@ end)
 
 
 net.receive("sendRocketToClient", function(len)
-    local target = net.readEntity()
+    local hasTarget = net.readBool()
+    local target = hasTarget and net.readEntity() or nil
     net.readEntity(function(rocket)
         if !isValid(rocket) then return end
         rocket._isForce = true
@@ -506,9 +582,10 @@ hook.add("think", "particleRockets", function()
         
         local maxSize = 100
         local startAlpha = 100
-        local part = emitter:add( m, rocket:getPos(), 5, maxSize, 0, 0, startAlpha, 0, TrailTime )
+        local part = emitter:add( m, rocket:getPos() - rocket:getForward()*50, 5, maxSize, 0, 0, startAlpha, 0, TrailTime )
         part:setColor(Color(100,100,100))
         part:setRollDelta(2)
+        part:setVelocity(-rocket:getForward():rotateAroundAxis(Vector(1,0,0), math.random(-20, 20))*100)
     end
     emitter:destroy()
 end)
@@ -563,18 +640,110 @@ function inBox(pos)
 end
 
 
-function findClosestTarget(keyPressedData)
-    --angleBetweenVectors(a, b)
+local _waitingState, _state, _nextStateTime = 0, 0, 0
+
+function waitingTargetToResultTarget()
+    local curtime = timer.curtime()
+    _triSound:setPos(eyePos() + Vector(0,0,1000))
     
-    if !keyPressedData[MOUSE.MOUSE2].Pressed then
-        _closestPlayer = nil
+    if curtime < _nextStateTime then return end
+    _state = _state + 1
+    
+    --printConsole(_state)
+    if _state == 1 then
+        _nextStateTime = curtime + 0.3
+    elseif _state == 2 then
+        _nextStateTime = curtime + 0.05
+        _triSound:play()
+    elseif _state == 3 then
+        _nextStateTime = curtime + 0.2
+        _triSound:pause()
+    elseif _state == 4 then
+        _nextStateTime = curtime + 0.05
+        _triSound:play()
+    elseif _state == 5 then
+        _nextStateTime = curtime + 0.2
+        _triSound:pause()
+    elseif _state == 6 then
+        _waitingState = 1
+        _nextStateTime = curtime + 0.05
+        _triSound:play()
+    elseif _state == 7 then
+        _nextStateTime = curtime + 0.1
+        _triSound:pause()
+    elseif _state == 8 then
+        _nextStateTime = curtime + 0.05
+        _triSound:play()
+    elseif _state == 9 then
+        _nextStateTime = curtime + 0.1
+        _triSound:pause()
+    elseif _state == 10 then
+        _nextStateTime = curtime + 0.05
+        _triSound:play()
+    elseif _state == 11 then
+        _nextStateTime = curtime + 0.1
+        _triSound:pause()
+    elseif _state == 12 then
+        _nextStateTime = curtime + 0.05
+        _triSound:play()
+    elseif _state == 13 then
+        _nextStateTime = curtime + 0.1
+        _triSound:pause()
+    elseif _state == 14 then
+        _nextStateTime = curtime + 0.05
+        _triSound:play()
+    elseif _state == 15 then
+        _nextStateTime = curtime + 0.1
+        _triSound:pause()
+    elseif _state == 16 then
+        _nextStateTime = curtime + 0.05
+        _triSound:play()
+    elseif _state == 17 then
+        _nextStateTime = curtime + 0.1
+        _triSound:pause()
+    elseif _state == 18 then
+        _waitingState = 2
+        _nextStateTime = curtime + 0.8
+        _target = _waitingTarget
+        _triSound:play()
+    else
+        _state = -1
+        _triSound:pause()
+    end
+    
+end
+
+local prevWaitingTarget
+hook.add("think", "waitState", function()
+    if _waitingTarget and isValid(_triSound) and _state >= 0 then
+        waitingTargetToResultTarget()
+    end
+end)
+
+
+function resetWaitingData()
+    _nextStateTime = 0
+    _state = 0
+    _waitingState = 0
+    if isValid(_triSound) then
+        _triSound:pause()
+    end
+    
+    _waitingTarget = nil
+    _target = nil
+end
+
+
+function findClosestTarget(bindCb)
+    if !bindCb('ChooseTarget').Pressed then
+        resetWaitingData()
         return
     end
     
     
     if isLockEvent("isFindTarget", 0.5) then
-        if isValid(_closestPlayer) and table.hasValue(_resultPlayers, _closestPlayer) then
-            local pos = _closestPlayer:obbCenterW():toScreen()
+        if isValid(_waitingTarget) and table.hasValue(_resultPlayers, _waitingTarget) then
+            local pos = _waitingTarget:obbCenterW():toScreen()
             if inBox(pos) then
                 return
             end
@@ -584,7 +753,7 @@ function findClosestTarget(keyPressedData)
         local closestPly, closestDist = nil, 999999999
         
         for i, p in ipairs(_resultPlayers) do
-            if p == _p or !isValid(p) then continue end
+            if p == _p or !isValid(p) or !p:isAlive() then continue end
             
             local pos = p:obbCenterW():toScreen()
             if !pos.visible or !inBox(pos) then continue end
@@ -595,13 +764,18 @@ function findClosestTarget(keyPressedData)
                 closestPly, closestDist = p, dist
             end
         end
-        _closestPlayer = closestPly
+        _waitingTarget = closestPly
+        
+        if prevWaitingTarget != _waitingTarget then
+            prevWaitingTarget = _waitingTarget
+            resetWaitingData()
+        end
     end
 end
 
 
-function drawRect(keyPressedData)
-    if !keyPressedData[MOUSE.MOUSE2].Pressed then
+function drawRect(bindCb)
+    if !bindCb('ChooseTarget').Pressed then
         return
     end
     
@@ -613,8 +787,8 @@ function drawRect(keyPressedData)
 end
 
 
-function drawVisiblePlayers(keyPressedData)
-    if !keyPressedData[MOUSE.MOUSE2].Pressed then
+function drawVisiblePlayers(bindCb)
+    if !bindCb('ChooseTarget').Pressed then
         return
     end
     
@@ -624,7 +798,7 @@ function drawVisiblePlayers(keyPressedData)
             if !inBox(pos) then continue end
             
             --local color = p:isPlayer() and p:inVehicle() and Color(255,100,100) or Color(255,255,100)
-            local color = _closestPlayer == p and Color(255,100,100) or Color(255,255,100)
+            local color = _waitingTarget == p and Color(255,100,100) or Color(255,255,100)
             
             --render.setFont(font)
             --render.setColor(team.getColor(p:getTeam()))
@@ -637,13 +811,21 @@ function drawVisiblePlayers(keyPressedData)
 end
 
 
+function getWaitingTargetColor()
+    if _waitingState == 0 then return Color(255,255,255) end
+    if _waitingState == 1 then return Color(0,255,0) end
+    if _waitingState == 2 then return Color(255,0,0) end
+end
+
+
 function drawClosestPlayer()
-    if !isValid(_closestPlayer) or !isValid(_closestPlayer:getVehicle()) then return end
+    if !isValid(_waitingTarget) then return end
+    if OnlyVehicle and !isValid(_waitingTarget:getVehicle()) then return end
     
-    local pos = _closestPlayer:getVehicle():obbCenterW():toScreen()
+    local pos = (OnlyVehicle and _waitingTarget:getVehicle() or _waitingTarget):obbCenterW():toScreen()
     render.setColor(Color(0,0,0))
     renderCameraRect(pos.x+2, pos.y+2, 33, 2, 10)
-    render.setColor(Color(255,255,255))
+    render.setColor(getWaitingTargetColor())
     renderCameraRect(pos.x, pos.y, 33, 2, 10)
 end
 
@@ -658,12 +840,15 @@ function drawDamageInfo()
 end
 
 
-function eventMouseHandler(keyPressedData)
-    local target = _closestPlayer
-    local target = owner()
-    if keyPressedData[MOUSE.MOUSE2].Pressed and keyPressedData[MOUSE.MOUSE1].IsFirst and isValid(target) then
+function eventMouseHandler(bindCb)
+    local target = _target
+    --local target = owner()
+    if bindCb('ChooseTarget').Pressed and bindCb('Fire').IsFirst and (!WaitFindingTarget and target == nil or isValid(target)) then
         net.start("fire")
-        net.writeEntity(target)
+        net.writeBool(!!target)
+        if target then
+            net.writeEntity(target)
+        end
         net.send()
     end
 end
@@ -672,12 +857,12 @@ end
 hook.add("DrawHUD", "", function()
     if !isActive() then return end
     
-    local keyPressedData = getNewButtonsPressedData()
-    drawRect(keyPressedData)
-    findClosestTarget(keyPressedData)
-    --drawVisiblePlayers(keyPressedData)
+    local bindCb = getBindCbHandler()
+    drawRect(bindCb)
+    findClosestTarget(bindCb)
+    --drawVisiblePlayers(bindCb)
     drawClosestPlayer()
     drawDamageInfo()
-    eventMouseHandler(keyPressedData)
+    eventMouseHandler(bindCb)
 end)
 
