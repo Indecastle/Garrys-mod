@@ -1,6 +1,7 @@
 --@name Skibidi DISSOLVE
 --@author Markiz
 --@shared
+-- version 1.1.11
 
 local Respawn = false
 local SpawnCounts = 1
@@ -73,6 +74,7 @@ if SERVER then
         --{ Model = "models/hunter/plates/plate.mdl", OffsetToilet = 0, OffsetHead = 0 },
         { Model = "models/props_wasteland/prison_toilet01.mdl", OffsetToilet = 14, OffsetHead = -19 },
         { Model = "models/props_c17/FurnitureToilet001a.mdl", OffsetToilet = 47, OffsetHead = -47},
+        { Model = "models/props/CS_militia/toilet.mdl", OffsetToilet = 0, OffsetHead = 1},
     }
     
     function explodeTo(pos)

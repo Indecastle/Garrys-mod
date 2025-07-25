@@ -1,6 +1,7 @@
 --@name Player's regions
 --@author Markiz
 --@shared
+--superuser
 
 
 local MaxRows = 15

@@ -2,7 +2,7 @@
 --@author
 --@server
 
-local ToiletModel = 1
+local ToiletModel = 6
 local AutoFlushDown = true
 
 local AdditionalLocalPos = Vector(0,0,0)

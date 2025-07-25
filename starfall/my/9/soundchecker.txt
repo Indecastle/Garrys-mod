@@ -3,7 +3,7 @@
 --@shared
 
 local Target = owner()
-local Radius = 1000000
+local Radius = 1000
 
 hook.add("EntityEmitSound", "", function(data)
     if not isValid(data.Entity) then return end
@@ -11,11 +11,12 @@ hook.add("EntityEmitSound", "", function(data)
     local pos = data.Pos or data.Entity:getPos()
     local ownerEnt = data.Entity:isPlayer() and data.Entity or data.Entity:getOwner()
     if not isValid(ownerEnt) then return end
+    --if ownerEnt != Target then return end
     --if (data.Entity == Target or data.Entity:getOwner() == Target) then
     --printTable(data)
     --print(pos:getDistance(owner():getPos()))
-    if pos:getDistance(owner():getPos()) < Radius && data.Channel != 4 && data.Channel != 1 then
-        printConsole(ownerEnt:getName() .. ' - ' .. data.Channel .. ' - ' .. data.SoundName)
+    if pos:getDistance(owner():getPos()) < Radius and data.Channel != 4 and data.Channel != 1 then
+        printConsole(ownerEnt:getName() .. ' - ' .. data.Channel .. ' - ' .. data.SoundLevel .. ' - ' .. data.SoundName)
     end
     --end
 end)

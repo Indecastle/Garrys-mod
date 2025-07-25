@@ -2,36 +2,40 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.1.10
+-- version 1.1.15
 
-local FindRadius = 10000
+local FindRadiusMin = 500
+local FindRadiusMax = 10000
 
-local RocketVelocity = 3000
-local RocketLerpRatio = 0.07
+local RocketVelocity = 4000
+local RocketLerpRatio = 0.11
 local TrailTime = 2
 local RockeForceTime = 10
 local RocketAutoRemoveTime = 20
 
-local AutoExplodeMaxDistance = 100
-local MarkIsCloseTargetMaxDistance = 240
+local AutoExplodeMaxDistance = 150
+local MarkIsCloseTargetMaxDistance = 700
+local CounterMeasureTriggerRadius = 500
 
 local ExplodeDamage = 110
 local ExplodeRadius = 500
 
 local FireDelay = 5
-local FindInBoxSize = 300
+local FindInBoxSize = 240
 
 local OnlyVehicle = false
 local OnlyUngod = true
 
-local WaitFindingTarget = true
-local EyeFromChip = false
+local EyeFromChip = true
+local WaitFindingTarget = false
+local HasCenterDot = true
 
-local RocketModel = "models/props_phx/amraam.mdl" -- "models/weapons/w_missile_closed.mdl"
-local RocketStartOffset = Vector(0,0,100)
+local RocketModel = "models/weapons/w_missile_closed.mdl" -- "models/weapons/w_missile_closed.mdl"
+local RocketStartOffset = Vector(0,0,50)
+local TrailRocketStartOffset = 15
 
-local RocketStartForcingSoundUrl = "weapons/rpg/rocketfire2.wav"
-local RocketForcingSoundUrl = "thrusters/rocket04.wav"
+local RocketStartForcingSoundUrl = "weapons/rpg/rocketfire1.wav"
+local RocketForcingSoundUrl = "weapons/rpg/rocket1.wav" -- "thrusters/rocket04.wav"
 
 local KeyBindData = { -- The value can be both the number and the list from the numbers
     Fire = MOUSE.MOUSE1,
@@ -54,9 +58,21 @@ function table.filter(t, func)
     return maped
 end
 
+function table.map(t, func, ExcludeNil)
+    local maped = {}
+    if ExcludeNil == nil then ExcludeNil = false end
+    for i=1, #t do
+        local result = func(i, t[i])
+        if !ExcludeNil or result ~= nil then
+            maped[#maped + 1] = func(i, t[i])
+        end
+    end
+    return maped
+end
+
 
 function isValidTarget_(ent)
-    return ent != player() and (ent:getClass() == 'prop_physics' or ent:isPlayer())
+    return ent != player() and !ent._isRocket and (ent:getClass() == 'prop_physics' or ent:isPlayer())
 end
 
 
@@ -65,7 +81,7 @@ function isEntityVisible(startPos, targetEnt)
     local dir = (targetPos - startPos):getNormalized()
     
     
-    local tr = trace.line(startPos, startPos + dir*FindRadius, isValidTarget_, MASK.ALL, nil, false)
+    local tr = trace.line(startPos, startPos + dir*FindRadiusMax, isValidTarget_, MASK.ALL, nil, false)
     local dist = startPos:getDistance(tr.HitPos)
     if isValid(tr.Entity) then
         --printConsole(tr.Entity)
@@ -75,7 +91,7 @@ function isEntityVisible(startPos, targetEnt)
         return true
     end
     
-    local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-40,-40,-40), Vector(40,40,40))
+    local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-100,-100,-100), Vector(100,100,100))
     
     --local boxMin = Vector(0, 0, 0)
     --local boxMax = Vector(100, 100, 100)
@@ -92,6 +108,12 @@ function angleBetweenVectors(a, b)
     return math.deg(math.acos(cosTheta))
 end
 
+
+function getBaseHolo(pos)
+    local holo =  hologram.create(pos, Angle(), "models/holograms/cube.mdl", Vector(1))
+    holo:setNoDraw(true)
+    return holo
+end
 
 ---------------------------------------------------
 
@@ -171,13 +193,6 @@ if SERVER then
     end
     
     
-    function getBaseHolo(pos)
-        local holo =  hologram.create(pos, Angle(), "models/holograms/cube.mdl", Vector(1))
-        holo:setNoDraw(true)
-        return holo
-    end
-    
-    
     --function notifyTarget(target)
     --    local holo = getBaseHolo(target:getPos())
     --    holo:setParent(target)
@@ -202,11 +217,12 @@ if SERVER then
         rocket._rocketHoloBase:setNoDraw(true)
         --rocket._rocketHoloBase:setTrails(50, 0, TrailTime, "trails/smoke", Color(255,255,255))
         rocket._rocketHoloBase:setParent(rocket)
+        rocket._isRocket = true
         rocket._target = target
         rocket._isForce = true
         rocket._lastLifeTime = timer.curtime() + RockeForceTime
-        rocket:emitSound(RocketForcingSoundUrl, 150, 100, 1)
-        _e:emitSound(RocketStartForcingSoundUrl, 75, 100, 1)
+        --rocket:emitSound(RocketForcingSoundUrl, 85, 100, 1, 0)
+        _e:emitSound(RocketStartForcingSoundUrl, 85, 100, 1, 0)
         --rocket_isRocket = true
         rocket:addCollisionListener(function(data)
             tryExplodeRocket(rocket)
@@ -229,7 +245,7 @@ if SERVER then
     
     
     --timer.create("fire", 2, 0, function()
-    --    fireRocket(chip():localToWorld(Vector(0,0,50)), chip():localToWorldAngles(Angle(-90, 00, 0)), _target)
+    --    fireRocket(chip():localToWorld(Vector(0,0,50)), chip():localToWorldAngles(Angle(-90, 00, 0)), owner())
     --end)
     
     
@@ -285,6 +301,19 @@ if SERVER then
                 end
             end
             
+        end
+    end)
+    
+    timer.create("trigger_counter_measures", 0.1, 0, function()
+        local countermeasurePosList = table.map(find.byClass("glide_flare"), function(i, ent)
+            return ent:getPos()
+        end)
+        for _, rocket in ipairs(_rockets) do
+            for _, mPos in ipairs(countermeasurePosList) do
+                if rocket:getPos():getDistance(mPos) < CounterMeasureTriggerRadius then
+                    tryExplodeRocket(rocket)
+                end
+            end
         end
     end)
     
@@ -501,7 +530,7 @@ timer.create("findVisiblePlayers", 0.4, 0, function()
     if !isActive() then return end
     local startPos = EyeFromChip and (chip():getPos() + chip():getForward()*42) or eyePos()
     _resultPlayers = table.filter(_validPlayers, function(ent)
-        if !isValid(ent) then return false end
+        if !isValid(ent) or ent:getPos():getDistance(startPos) < FindRadiusMin then return false end
         if OnlyVehicle and !ent:inVehicle() then
             return false
         end
@@ -550,12 +579,22 @@ net.receive("sendRocketToClient", function(len)
     local target = hasTarget and net.readEntity() or nil
     net.readEntity(function(rocket)
         if !isValid(rocket) then return end
+        rocket._isRocket = true
         rocket._isForce = true
         rocket._target = target
+        rocket._holo = getBaseHolo(rocket:getPos())
+        rocket._holo:setParent(rocket)
+        rocket._holo:emitSound(RocketForcingSoundUrl, 85, 100, 1, 0)
         table.insert(_rockets, rocket)
     end)
     
     notifyTarget(target)
+end)
+
+hook.add("EntityRemoved", "removeHolo", function(ent)
+    if isValid(ent) and isValid(ent._holo) then
+        ent._holo:remove()
+    end
 end)
 
 
@@ -580,12 +619,13 @@ hook.add("think", "particleRockets", function()
             continue
         end
         
-        local maxSize = 100
-        local startAlpha = 100
-        local part = emitter:add( m, rocket:getPos() - rocket:getForward()*50, 5, maxSize, 0, 0, startAlpha, 0, TrailTime )
+        local maxSize = 150
+        local startAlpha = 200
+        local part = emitter:add( m, rocket:getPos() - rocket:getForward()*TrailRocketStartOffset, 5, maxSize, 0, 0, startAlpha, 0, TrailTime )
         part:setColor(Color(100,100,100))
         part:setRollDelta(2)
-        part:setVelocity(-rocket:getForward():rotateAroundAxis(Vector(1,0,0), math.random(-20, 20))*100)
+        part:setAirResistance(30)
+        part:setVelocity(-rocket:getForward():rotateAroundAxis(Vector(1,0,0), math.random(-20, 20))*400)
     end
     emitter:destroy()
 end)
@@ -787,6 +827,17 @@ function drawRect(bindCb)
 end
 
 
+function drawCenterDot(bindCb)
+    if !HasCenterDot or !bindCb('ChooseTarget').Pressed or isValid(_target) then return end
+    
+    local startPos = _e:getPos()
+    local tr = trace.line(startPos, startPos + _e:getUp()*9999999999, isValidTarget_, MASK.ALL, nil, false)
+    local pos = tr.HitPos:toScreen()
+    render.setColor(Color(255,255,255, 150))
+    render.drawRectFast(pos.x, pos.y, 5, 5)
+end
+
+
 function drawVisiblePlayers(bindCb)
     if !bindCb('ChooseTarget').Pressed then
         return
@@ -859,6 +910,7 @@ hook.add("DrawHUD", "", function()
     
     local bindCb = getBindCbHandler()
     drawRect(bindCb)
+    drawCenterDot(bindCb)
     findClosestTarget(bindCb)
     --drawVisiblePlayers(bindCb)
     drawClosestPlayer()

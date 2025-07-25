@@ -21,6 +21,7 @@ local FreeCumVelocityCtrl = 2
 local WH = true
 local IsOnlyOwnerViewEntity = true
 
+local MenuKey = KEY.F11
 
 
 local CumHolo
@@ -182,12 +183,17 @@ local Key_Shift = false;
 local Key_Ctrl = false;
 local FreeCumPos = eyePos();
 
-local _flashlight = light.create(Vector(), 300,5,Color(255,255,255))
-_flashlight:setBrightness(1)
-_flashlight:setSize(20000)
+local _flashlight = light.createProjected()
+_flashlight:setTexture("effects/flashlight/soft")
+_flashlight:setBrightness(0)
+_flashlight:setFarZ(2000)
+_flashlight:setFOV(70)
+_flashlight:setColor(Color(255, 255, 255))
+
 local IsFlashlighning = false
 
 local OriginCumPos = Vector()
+local _calcviewAngles = Angle()
 
 
 net.receive("init", function(len)
@@ -270,11 +276,11 @@ end)
 function flashlightHandle()
     if IsFlashlighning then
         --local tr = trace.trace(FreeCumPos, FreeCumPos + eyeAngles():getForward()*10000000, nil, MASK.ALL, nil, false)
-        _flashlight:setPos(OriginCumPos)
-        _flashlight:draw()
+        _flashlight:setPos(FreeCumPos)
+        _flashlight:setAngles(_calcviewAngles)
+        _flashlight:update()
     end
 end
-
 
 --calcview(Vector pos, Angle ang, number fov, number znear, number zfar)
 hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
@@ -335,6 +341,7 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
     end
     
     OriginCumPos = originResult
+    _calcviewAngles = anglesResult
     
     flashlightHandle()
     
@@ -441,7 +448,7 @@ end)
 
 local oldIsHUDActive = false
 hook.add("inputPressed", "cheat spectator", function(key)
-    if key == KEY.F11 and player() == owner() then
+    if key == MenuKey and player() == owner() then
         enableHud(owner(), not render.isHUDActive())
         reset_keys()
         sendOriginCumPos(Vector())
@@ -499,10 +506,24 @@ hook.add("inputPressed", "cheat spectator", function(key)
         if key == KEY.CTRL then Key_Ctrl = true end
         
         if key == KEY.F then 
-            IsFlashlighning = !IsFlashlighning 
+            IsFlashlighning = !IsFlashlighning
+            _flashlight:setBrightness(IsFlashlighning and 3 or 0)
+            _flashlight:update()
             CumHolo:emitSound("items/flashlight1.wav")
         end
     end
+end)
+
+
+local _prevActiveState = false
+
+timer.create("updateActiveState", 0.1, 0, function()
+    local newActiveState = ON and render.isHUDActive()
+    if _prevActiveState == newActiveState then return end
+    _prevActiveState = newActiveState
+    
+    _flashlight:setBrightness(newActiveState and IsFlashlighning and 3 or 0)
+    _flashlight:update()
 end)
 
 

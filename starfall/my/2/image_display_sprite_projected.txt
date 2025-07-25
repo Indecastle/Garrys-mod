@@ -9,7 +9,7 @@ dofile("libs/sprites_data.txt")
 local SpriteManager = require("libs/sprites1.txt")
 
 
-local img = "triangle"
+local img = "ricardo1"
 local maxh = 10*20
 local delay = 0.05
 
@@ -121,7 +121,7 @@ local flashlight = light.createProjected()
 hook.add("Think", "UpdateFlashlight", function()
     
     flashlight:setTexture(texture)
-    flashlight:setBrightness(20)
+    flashlight:setBrightness(10)
     flashlight:setFarZ(5000)
     flashlight:setFOV(70)
     flashlight:setColor(Color(255, 255, 255))
