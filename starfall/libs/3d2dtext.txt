@@ -1,5 +1,6 @@
 --@name 3D2D text
 --@author Markiz
+-- version 0.5.0
 
 Text3D2D = class("Text3D2D")
 
@@ -54,10 +55,11 @@ function table.filter(t, func)
 end
 
 
-function Text3D2D:initialize(data, vars)
+function Text3D2D:initialize(data, vars, enabled)
     self.Data = data
     self.Vars = vars
     
+    self.enabled = enabled == nil or (enabled and true or false)
     
     // ======================================================================
     if vars.Target == nil then vars.Target = chip() end // 1, 2, 3, 4
@@ -86,6 +88,8 @@ function Text3D2D:initialize(data, vars)
     
     vars.isPlayer = vars.Target:isPlayer()
     
+    self.isStaticMove = !vars.isParentPos and !vars.isParentAngle
+    
     local keys = table.getKeys(vars)
     
     for i, k in ipairs(keys) do
@@ -93,6 +97,13 @@ function Text3D2D:initialize(data, vars)
     end
     
 
+end
+
+
+function Text3D2D:setEnabled(value)
+    self.enabled = value and true or false
+    self.holoText:setNoDraw(!self.enabled)
+    self.holoText2:setNoDraw(!self.enabled)
 end
 
 
@@ -146,17 +157,21 @@ function Text3D2D:run()
     mat:setInt("$flags", 2^21) // translucent  -->  2097152
     mat:setTextureRenderTarget("$basetexture", "afkscreen")
     
-    local holoText = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
+    local holoText = hologram.create(pos(), Angle(), "models/holograms/plane.mdl")
+    self.holoText = holoText
     holoText:setMaterial("!" .. mat:getName())
     holoText:setSize(Vector(self.textSize, self.textSize, 1))
     
     
-    local holoText2 = holograms.create(pos(), Angle(), "models/holograms/plane.mdl")
+    local holoText2 = hologram.create(pos(), Angle(), "models/holograms/plane.mdl")
+    self.holoText2 = holoText2
     holoText2:setMaterial("!" .. mat:getName())
     holoText2:setSize(Vector(self.textSize, self.textSize, 1))
     if not self.IsDoubleData then
         holoText2:setColor(Color(0,0,0,0))
     end
+    
+    self:setEnabled(self.enabled)
     
     function getUChar(text, index)
         local a = string.byte(text, index, index)
@@ -223,7 +238,7 @@ function Text3D2D:run()
 
     end
     
-    local isStatic = table.all(self.Data, function(V) return V.colorMode == 1 end)
+    self.isStaticRender = table.all(self.Data, function(V) return V.colorMode == 1 end)
     
     function initRender()
         for i, V in ipairs(self.Data) do
@@ -284,6 +299,9 @@ function Text3D2D:run()
     
     
     function renderBold()
+        render.selectRenderTarget("afkscreen")
+        render.clear(Color(0, 0, 0, 0))
+        
         render.selectRenderTarget("afkscreen0")
         render.clear(Color(0, 0, 0, 0))
         for i = 1, self.shadowIterations do
@@ -357,18 +375,18 @@ function Text3D2D:run()
     
     
     hook.add("renderoffscreen", "", function()
-        initRender()
-        
         if !isCreated then
+            isCreated = true
+            initRender()
             renderBold()
-        end
-        
-        if !isStatic or !isCreated then
             renderText()
         end
         
-        isCreated = true
+        if self.enabled and !self.isStaticRender then
+            renderText()
+        end
     end)
+    
     
     hook.add("renderscene", "", function(origin, angles, fov)
         _eyePos = origin
@@ -377,7 +395,11 @@ function Text3D2D:run()
     
     
     --hook.add("hologrammatrix", "3d2dText", function()
+    local _isFirstHandled = false
     hook.add("think", "3d2dText", function()
+        if !self.enabled or (self.isStaticMove and _isFirstHandled) then return end
+        _isFirstHandled = true
+        
         local eyeAngle;
         if self.Mode == 1 then
             local d = -_eyeAngles:getForward()
@@ -396,7 +418,7 @@ function Text3D2D:run()
         
         //print(d)
         
-        if (self.Mode==1 or self.Mode==2) and self.IsStaticVertical then
+        if (self.Mode==1 or self.Mode==2) and self.isStaticVertical then
             eyeAngle:setP(90)
         end
         

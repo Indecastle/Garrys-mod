@@ -2,22 +2,21 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.1.15
+-- version 1.1.17
 
 local FindRadiusMin = 500
 local FindRadiusMax = 10000
 
 local RocketVelocity = 4000
 local RocketLerpRatio = 0.11
-local TrailTime = 2
+local TrailTime = 1
 local RockeForceTime = 10
 local RocketAutoRemoveTime = 20
 
 local AutoExplodeMaxDistance = 150
-local MarkIsCloseTargetMaxDistance = 700
-local CounterMeasureTriggerRadius = 500
+local CounterMeasureTriggerRadius = 1500
 
-local ExplodeDamage = 110
+local ExplodeDamage = 510
 local ExplodeRadius = 500
 
 local FireDelay = 5
@@ -37,7 +36,7 @@ local TrailRocketStartOffset = 15
 local RocketStartForcingSoundUrl = "weapons/rpg/rocketfire1.wav"
 local RocketForcingSoundUrl = "weapons/rpg/rocket1.wav" -- "thrusters/rocket04.wav"
 
-local KeyBindData = { -- The value can be both the number and the list from the numbers
+local KeyBindData = { -- The value can be both the key and the list from the keys
     Fire = MOUSE.MOUSE1,
     ChooseTarget = MOUSE.MOUSE2,
 }
@@ -72,7 +71,11 @@ end
 
 
 function isValidTarget_(ent)
-    return ent != player() and !ent._isRocket and (ent:getClass() == 'prop_physics' or ent:isPlayer())
+    return ent != player()
+        and !ent._isRocket
+        and (ent:getClass() == 'prop_physics' or ent:isPlayer())
+        and ent:getModel() != RocketModel
+        --and ent:getPos():getDistance(chip():getPos()) > FindRadiusMin
 end
 
 
@@ -266,7 +269,7 @@ if SERVER then
                 net.send()
             end
             
-            local targetPos = rocket._target and rocket._target:obbCenterW() or (rocket:getPos() + rocket:getForward())
+            local targetPos = isValid(rocket._target) and rocket._target:obbCenterW() or (rocket:getPos() + rocket:getForward())
             
             local phys = rocket:getPhysicsObject()
             
@@ -286,18 +289,21 @@ if SERVER then
                 phys:setAngles(resultAngle)
             end
             
-            if rocket._target then
+            if isValid(rocket._target) then
                 if distance < AutoExplodeMaxDistance then
                     tryExplodeRocket(rocket)
                 end
                 
-                if distance < MarkIsCloseTargetMaxDistance then
+                if distance < 1000 then
                     rocket._isTargetClose = true
                 end
-
-                if rocket._isTargetClose and distance >= MarkIsCloseTargetMaxDistance then
-                    rocket._target = nil
-                    --print(rocket)
+                
+                if rocket._isTargetClose then
+                    local targetDir = (rocket._target:getPos() - rocket:getPos()):getNormalized()
+                    if angleBetweenVectors(rocket:getForward(), targetDir) > 70 then
+                        rocket._target = nil
+                        --print(rocket)
+                    end
                 end
             end
             
@@ -305,13 +311,21 @@ if SERVER then
     end)
     
     timer.create("trigger_counter_measures", 0.1, 0, function()
-        local countermeasurePosList = table.map(find.byClass("glide_flare"), function(i, ent)
-            return ent:getPos()
-        end)
+        local countermeasurePosList = {}
+        for i, ent in ipairs(find.byClass("glide_flare")) do
+            countermeasurePosList[ent] = ent:getPos()
+        end
+        --local countermeasurePosList = table.map(find.byClass("glide_flare"), function(i, ent)
+        --    return { ent, ent:getPos() }
+        --end)
         for _, rocket in ipairs(_rockets) do
-            for _, mPos in ipairs(countermeasurePosList) do
+            if rocket._isFlareTarget and isValid(rocket._target) then continue end
+            
+            for flare, mPos in pairs(countermeasurePosList) do
                 if rocket:getPos():getDistance(mPos) < CounterMeasureTriggerRadius then
-                    tryExplodeRocket(rocket)
+                    rocket._target = flare
+                    rocket._isFlareTarget = true
+                    --tryExplodeRocket(rocket)
                 end
             end
         end

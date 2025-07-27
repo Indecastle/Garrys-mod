@@ -171,6 +171,7 @@ local holo = holograms.create(chip():getPos(), chip():getAngles(), "models/holog
 holo:setColor(Color(0,0,0,1))
 holo:setMaterial("!" .. m:getName())
 holo:suppressEngineLighting(true)
+holo:addEffects(8192)
 
 
 local _isImageErrored = false

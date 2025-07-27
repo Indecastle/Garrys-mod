@@ -1,6 +1,6 @@
 --@name Flag cloth_4
---@author
---@client
+--@author Markiz
+--@shared
 
 local HasGravity = false
 
@@ -17,13 +17,38 @@ local _flag_lgbt = "https://cdn.discordapp.com/attachments/885840722786418711/10
 
 
 
-local URL = _flag_trollface
+local URL = _flag_russia
+
+local EnableWeldMaterial = false
+local WeldSubMaterialIndex = 0
 
 local BoneScale = Vector(4,0.0001,0.0001)
 local Degree = 0
 local BoneHeight = 1
 
 local FlagModel = 'models/pac/jiggle/base_cloth_4'..(HasGravity and '_gravity' or '')..'.mdl'
+
+
+------------------------------------------------
+
+
+local _weldedEnt
+
+if SERVER then
+    _weldedEnt = chip():isWeldedTo()
+
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        if EnableWeldMaterial and isValid(_weldedEnt) then
+            net.start("init")
+            net.writeEntity(_weldedEnt)
+            net.send(ply)
+        end
+    end)
+    
+    return
+end
+
+-----------------------------
 
 
 local HPole = holograms.create(chip():localToWorld(Vector(0,0,42.231)), chip():getAngles(), "models/sprops/cylinders/size_1/cylinder_1_5x54.mdl", Vector(0.6,0.6,1.6))
@@ -64,7 +89,14 @@ mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
 end)
 
 
+net.receive("init", function(len)
+    _weldedEnt = net.readEntity()
+    _weldedEnt:setSubMaterial(WeldSubMaterialIndex, '!' .. mat:getName())
+end)
 
+hook.add("Removed", "", function() 
+    _weldedEnt:setSubMaterial(WeldSubMaterialIndex, '')
+end)
 
 hook.add("drawhud","myshook",function()
     for i = 0, math.min(25, HFlag:getBoneCount() - 1) do

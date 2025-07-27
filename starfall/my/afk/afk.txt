@@ -1,0 +1,103 @@
+--@name AFK
+--@author Markiz
+--include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
+--@include libs/3d2dtext.txt
+--@shared
+--Version 1.0.1
+
+local ActiveSec = 1
+
+
+------------------------------------------
+
+
+if SERVER then
+    
+    net.receive("afk", function()
+        net.start("afk2")
+        net.writeBool(net.readBool())
+        net.send()
+    end)
+    
+    return
+end
+
+
+dofile("libs/3d2dtext.txt")
+
+
+local _target = owner()
+
+local Data = {
+    {   text={"AFK"}, 
+        //font = "Courier New",
+        fontSize=60, 
+        fontBold=1000, 
+        bold=true,
+        color=Color(0,255,0),
+        margin=60,
+        colorMode = 2,
+        rainbowSpace = 35,
+        rainbowColorSpace = 20,
+        rainbowReverse = false,
+        colorSpeed = 0.2,
+    },
+}
+
+local Vars = {
+    Target= _target,
+
+    Mode=2,
+    isRotate=false,
+    rotateSpeed=100,
+    swaySpeed=2,
+    swayDegreesMax=5,
+    
+    IsStaticVertical=false,
+    IsDoubleData=true,
+    isHideTarget=false,
+    
+    shadowIterations=5,
+    shadowAlphaReverce=0,
+    shadowOffset=1,
+    
+    textSize=300,
+    DataOffsetZ=15,
+    
+    isParentPos=true,
+    isParentAngle=true,
+}
+
+
+afkScreen = Text3D2D:new(Data, Vars, false)
+afkScreen:run()
+
+if owner() == player() then
+    local _lastActiveTime = timer.curtime() + ActiveSec
+    
+    hook.add("MouseMoved", "", function(x, y)
+        _lastActiveTime = timer.curtime() + ActiveSec
+    end)
+    
+    
+    hook.add("InputPressed", "", function(ply, key)
+        _lastActiveTime = timer.curtime() + ActiveSec
+    end)
+    
+    
+    local _lastActiveState = false
+    timer.create("afk", 0.1, 0, function()
+        local newActiveState = _lastActiveTime < timer.curtime()
+        if newActiveState != _lastActiveState then
+            _lastActiveState = newActiveState
+            
+            net.start("afk")
+            net.writeBool(newActiveState)
+            net.send()
+        end
+    end)
+end
+
+net.receive("afk2", function()
+    afkScreen:setEnabled(net.readBool())
+end)
