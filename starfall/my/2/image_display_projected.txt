@@ -33,7 +33,7 @@ local URLS = {
     custom = nil
 }
 
-local img = "soldierMeme"
+local img = "putin"
 
 local maxh = 100
 
@@ -193,7 +193,7 @@ local flashlight = light.createProjected()
 
 hook.add("Think", "UpdateFlashlight", function()
     flashlight:setTexture(texture)
-    flashlight:setBrightness(5)
+    flashlight:setBrightness(10)
     flashlight:setFarZ(9000)
     flashlight:setFOV(90)
     flashlight:setColor(Color(255, 255, 255))

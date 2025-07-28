@@ -1,6 +1,7 @@
 --@name Reklama classic
 --@author Markiz
---@include libs/3d2dtext.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
+--include libs/3d2dtext.txt
 --@client
 
 dofile("libs/3d2dtext.txt")
@@ -40,7 +41,7 @@ local Data = {
     },
     {text={"----------------------------------------------"}, fontSize=40, fontBold=1000, marginUp=50},
     {   text={"правила: !motd",
-                "сервер  1.1.1.1:24215",}, 
+                "сервер  194.147.90.27:24215",}, 
         fontSize=40, 
         fontBold=1000, 
         marginUp=40,
@@ -69,8 +70,8 @@ local Vars = {
     textSize=200,
     DataOffsetZ=50,
     
-    isParentPos=true,
-    isParentAngle=true,
+    isParentPos=false,
+    isParentAngle=false,
 }
 
 

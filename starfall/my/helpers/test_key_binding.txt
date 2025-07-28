@@ -1,0 +1,112 @@
+--@name Test Key Binding
+--@author
+--@shared
+
+
+local KeyBindData = { -- The value can be both the key and the list from the keys
+    Fire = MOUSE.MOUSE1,
+    Snd = { MOUSE.MOUSE2, KEY.E },
+}
+
+
+
+
+---------------------------------------------------
+
+local _locks = {}
+function isLockEvent(name, sec)
+    local curtime = timer.curtime()
+    _locks[name] = _locks[name] or curtime
+    local isLock = curtime < _locks[name]
+    if sec ~= nil and !isLock then
+        _locks[name] = curtime + sec
+    end
+
+    return isLock
+end
+
+function setLockEvent(name, sec)
+    _locks[name] = timer.curtime() + sec
+end
+
+---------------------------------------------------
+
+
+local _o, _e = owner(), chip()
+
+if SERVER then
+    
+    return
+end
+
+
+---------------------------- CLIENT --------------------------------------
+
+
+------------------ Mouse Start
+local mouseKeys = {}
+for k, v in pairs(MOUSE) do
+    mouseKeys[v] = true
+end
+
+local _keyPressedData = {}
+for _, keys in pairs(KeyBindData) do
+    if type(keys) == 'table' then
+        for _, key in pairs(keys) do
+            if _keyPressedData[key] == nil then
+                _keyPressedData[key] = {}
+            end
+        end
+    else
+        if _keyPressedData[keys] == nil then
+            _keyPressedData[keys] = {}
+        end
+    end
+end
+for k, data in pairs(_keyPressedData) do
+    data.IsMouse = mouseKeys[k]
+end
+
+function getBindCb_(bindKey)
+    if type(KeyBindData[bindKey]) == 'table' then
+        result = {Pressed = false, IsFirst = false}
+        for i, key in ipairs(KeyBindData[bindKey]) do
+            result.IsFirst = result.IsFirst or _keyPressedData[key].IsFirst
+            result.Pressed = result.Pressed or _keyPressedData[key].Pressed
+            if result.IsFirst and result.Pressed then
+                break
+            end
+        end
+        return result
+    else
+        return _keyPressedData[KeyBindData[bindKey]]
+    end
+end
+
+
+function getBindCbHandler()
+    for k, v in pairs(_keyPressedData) do
+        local newPressed = v.IsMouse and input.isMouseDown(k) or input.isKeyDown(k)
+        v.IsFirst = v.Pressed != newPressed and newPressed
+        v.Pressed = newPressed
+    end
+    
+    return getBindCb_
+end
+------------------ Mouse End
+
+
+hook.add("Think", "", function()
+    local bindCb = getBindCbHandler()
+    
+    if bindCb('Fire').IsFirst then
+        print("Fire")
+    end
+    
+    
+    if bindCb('Snd').Pressed then
+        if !isLockEvent("testLock", 0.5) then
+            print("Foo!")
+        end
+    end
+end)

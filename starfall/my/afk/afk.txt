@@ -1,11 +1,11 @@
 --@name AFK
 --@author Markiz
---include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
---@include libs/3d2dtext.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
+--include libs/3d2dtext.txt
 --@shared
 --Version 1.0.1
 
-local ActiveSec = 1
+local ActiveSec = 30
 
 
 ------------------------------------------
@@ -62,7 +62,7 @@ local Vars = {
     shadowOffset=1,
     
     textSize=300,
-    DataOffsetZ=15,
+    DataOffsetZ=5,
     
     isParentPos=true,
     isParentAngle=true,
