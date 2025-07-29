@@ -1,0 +1,69 @@
+--@name Custom Material
+--@author Markiz
+--@shared
+
+local _flag1 = "https://i.imgur.com/zzN3yB7.png"
+local _flag_belarus = "https://i.imgur.com/XUxgnEu.png"
+local _flag_ukraine = "https://i.imgur.com/xegOERy.png"
+local _flag_russia = "https://i.imgur.com/jR2vDAC.png"
+local _flag_usa = "https://i.imgur.com/lIfVWWm.png"
+local _flag_anime = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg"
+local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
+local _flag_poland = "https://i.imgur.com/2l0Eq5L.png"
+local _flag_trollface = "https://i.imgur.com/lLIw3Im.png"
+local _flag_lgbt = "https://cdn.discordapp.com/attachments/885840722786418711/1096202070861819924/image.png"
+
+
+
+local _url = _flag_trollface
+
+local WeldSubMaterialIndex = 0
+
+local FixResolution = true
+
+------------------------------------------------
+
+
+local _weldedEnt
+
+if SERVER then
+    _weldedEnt = chip():isWeldedTo()
+
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        if isValid(_weldedEnt) then
+            net.start("init")
+            net.writeEntity(_weldedEnt)
+            net.send(ply)
+        end
+    end)
+    
+    return
+end
+
+-----------------------------
+
+
+local mat = material.create("UnlitGeneric")
+
+mat:setInt("$flags", 256)
+
+mat:setTextureURL("$basetexture", _url, function(m, u, w, h, l)
+    if m == nil then return end
+    
+    if FixResolution then
+        l(0, 0, m:getWidth(), m:getHeight())
+    end
+end)
+
+
+net.receive("init", function(len)
+    _weldedEnt = net.readEntity()
+    _weldedEnt:setSubMaterial(WeldSubMaterialIndex, '!' .. mat:getName())
+end)
+
+
+hook.add("Removed", "", function() 
+    _weldedEnt:setSubMaterial(WeldSubMaterialIndex, '')
+end)
+
+

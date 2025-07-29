@@ -1,6 +1,7 @@
 --@name cheat spectator 3
 --@author Markiz
 --@shared
+-- version 1.1.1
 
 --local Target = owner()
 --Target = find.playersByName("owner")[1]
@@ -22,6 +23,9 @@ local WH = true
 local IsOnlyOwnerViewEntity = true
 
 local MenuKey = KEY.F11
+
+local TeleportToPointEnabled = true
+local TeleportToPointKey = KEY.H
 
 
 local CumHolo
@@ -452,6 +456,16 @@ hook.add("inputPressed", "cheat spectator", function(key)
         enableHud(owner(), not render.isHUDActive())
         reset_keys()
         sendOriginCumPos(Vector())
+    end
+    
+    if TeleportToPointEnabled and player() == owner() and key == TeleportToPointKey then
+        net.start("teleport")
+        local startPos = eyePos() --OriginCumPos
+        local dir = eyeVector() --_calcviewAngles:getForward()
+        local tr = trace.line(startPos, startPos + dir*100000, owner(), MASK.ALL)
+        net.writeBool(false)
+        net.writeVector(tr.HitPos)
+        net.send()
     end
     
     if ON and render.isHUDActive() then

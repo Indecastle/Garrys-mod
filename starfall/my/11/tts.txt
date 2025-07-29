@@ -1,0 +1,57 @@
+--@name TTS
+--@author Markiz
+--@shared
+-- version 0.2.0
+
+local Volume = 2
+local Pitch = 1.2
+
+local HideMessage = false
+
+
+---------------------------------------------------------
+
+if SERVER then
+    
+    hook.add("PlayerSay", "", function(ply, text, teamChat)
+        if ply != owner() then return end
+        
+        net.start("PlayerSay")
+        net.writeString(text)
+        net.send()
+        
+        if HideMessage then
+            return true
+        end
+    end)
+    
+    return
+end
+
+local _snd
+
+net.receive("PlayerSay", function()
+    local text = net.readString()
+    
+    local url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ru&q=" .. http.urlEncode(text)
+    bass.loadURL(url, "3d noblock noplay", function(Sound)
+        if isValid(_snd) then
+            _snd:stop() 
+        end
+        _snd = Sound
+        _snd:setVolume(Volume)
+        _snd:setFade(0, 1000)
+        _snd:setPitch(Pitch)
+        _snd:play()
+    end)
+end)
+
+timer.create("basPos", 0.1, 0, function()
+    if isValid(_snd) then
+        _snd:setPos(owner():getPos())
+    end
+end)
+
+--https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ru&q=%D1%81%D1%83%D0%BA%D0%B0
+
+

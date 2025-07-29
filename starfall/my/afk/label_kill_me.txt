@@ -1,4 +1,4 @@
---@name Label Cheater
+--@name Label Kill Me
 --@author Markiz
 --@include libs/3d2dtext.txt
 --@shared
@@ -27,7 +27,7 @@ end
 --if Target == player() then return end
 
 local Data = {
-    {   text={"Cheater"}, 
+    {   text={"Kill me"}, 
         fontSize=200, 
         fontBold=600, 
         bold=true,
@@ -85,7 +85,7 @@ hook.add("think", "holo", function()
     if not isValid(holo) and isValidEnt(Target) then
         holo = holograms.create(chip():getPos(), Angle(), Target:getModel(), Vector(1))
         holo:setMaterial("debug/debugportals")
-        holo:setColor(Color(100,50,0, 150))
+        holo:setColor(Color(255,100,0, 100))
         holo:setParent( Target )
         holo:addEffects( 1 )
     end

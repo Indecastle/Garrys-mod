@@ -17,9 +17,9 @@ local _flag_lgbt = "https://cdn.discordapp.com/attachments/885840722786418711/10
 
 
 
-local URL = _flag_russia
+local URL = _flag_trollface
 
-local EnableWeldMaterial = false
+local EnableWeldMaterial = true
 local WeldSubMaterialIndex = 0
 
 local BoneScale = Vector(4,0.0001,0.0001)

@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.3.3
+-- version 1.4.1
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -17,10 +17,11 @@ local AutoExplodeMaxDistance = 150
 local CounterMeasureTriggerRadius = 1500
 local NotifyTargetComingRocket = true
 
-local ExplodeDamage = 110
+local ExplodeDamage = 50
 local ExplodeRadius = 400
 
 local FireDelay = 2
+local FindTargetSpeed = 1 -- 1-3
 local FindInBoxSize = 240
 
 local OnlyVehicle = false
@@ -212,6 +213,7 @@ if SERVER then
     
     
     function fireRocket(startPos, startAng, target)
+        if !prop.canSpawn() then return end
         local rocket = prop.create(startPos, startAng, RocketModel, false)
         rocket:enableGravity(false)
         rocket:setHealth(10000000)
@@ -708,6 +710,7 @@ end
 
 
 local _waitingState, _state, _nextStateTime = 0, 0, 0
+local _waitSpeedRatio = 1 / math.clamp(FindTargetSpeed, 1, 3)
 
 function waitingTargetToResultTarget()
     local curtime = timer.curtime()
@@ -720,53 +723,53 @@ function waitingTargetToResultTarget()
     if _state == 1 then
         _nextStateTime = curtime + 0.3
     elseif _state == 2 then
-        _nextStateTime = curtime + 0.05
+        _nextStateTime = curtime + _waitSpeedRatio * 0.05
         _triSound:play()
     elseif _state == 3 then
-        _nextStateTime = curtime + 0.2
+        _nextStateTime = curtime + _waitSpeedRatio * 0.2
         _triSound:pause()
     elseif _state == 4 then
-        _nextStateTime = curtime + 0.05
+        _nextStateTime = curtime + _waitSpeedRatio * 0.05
         _triSound:play()
     elseif _state == 5 then
-        _nextStateTime = curtime + 0.2
+        _nextStateTime = curtime + _waitSpeedRatio * 0.2
         _triSound:pause()
     elseif _state == 6 then
         _waitingState = 1
-        _nextStateTime = curtime + 0.05
+        _nextStateTime = curtime + _waitSpeedRatio * 0.05
         _triSound:play()
     elseif _state == 7 then
-        _nextStateTime = curtime + 0.1
+        _nextStateTime = curtime + _waitSpeedRatio * 0.1
         _triSound:pause()
     elseif _state == 8 then
-        _nextStateTime = curtime + 0.05
+        _nextStateTime = curtime + _waitSpeedRatio * 0.05
         _triSound:play()
     elseif _state == 9 then
-        _nextStateTime = curtime + 0.1
+        _nextStateTime = curtime + _waitSpeedRatio * 0.1
         _triSound:pause()
     elseif _state == 10 then
-        _nextStateTime = curtime + 0.05
+        _nextStateTime = curtime + _waitSpeedRatio * 0.05
         _triSound:play()
     elseif _state == 11 then
-        _nextStateTime = curtime + 0.1
+        _nextStateTime = curtime + _waitSpeedRatio * 0.1
         _triSound:pause()
     elseif _state == 12 then
-        _nextStateTime = curtime + 0.05
+        _nextStateTime = curtime + _waitSpeedRatio * 0.05
         _triSound:play()
     elseif _state == 13 then
-        _nextStateTime = curtime + 0.1
+        _nextStateTime = curtime + _waitSpeedRatio * 0.1
         _triSound:pause()
     elseif _state == 14 then
-        _nextStateTime = curtime + 0.05
+        _nextStateTime = curtime + _waitSpeedRatio * 0.05
         _triSound:play()
     elseif _state == 15 then
-        _nextStateTime = curtime + 0.1
+        _nextStateTime = curtime + _waitSpeedRatio * 0.1
         _triSound:pause()
     elseif _state == 16 then
-        _nextStateTime = curtime + 0.05
+        _nextStateTime = curtime + _waitSpeedRatio * 0.05
         _triSound:play()
     elseif _state == 17 then
-        _nextStateTime = curtime + 0.1
+        _nextStateTime = curtime + _waitSpeedRatio * 0.1
         _triSound:pause()
     elseif _state == 18 then
         _waitingState = 2
