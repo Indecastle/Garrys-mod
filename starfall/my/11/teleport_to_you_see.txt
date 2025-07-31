@@ -1,0 +1,95 @@
+--@name Teleport to you see
+--@author Markiz
+--@shared
+-- version 0.1.0
+
+local TeleportKey = KEY.H
+
+
+
+----------------------------------------------------------------
+
+local _e, _o = chip(), owner()
+
+
+if SERVER then
+    local _seat, _exitPointer
+    
+    wire.adjustPorts(
+        {
+        },
+        {
+            LocalPos="vector",
+            Angle="angle",
+            Seat="entity",
+        }
+    )
+    
+    local li2 = find.inSphere(_e:getPos(), 10, function(ent)
+        return ent:getClass() == 'prop_vehicle_prisoner_pod'
+    end)
+    if #li2 > 0 then
+        _seat = find.closest(li2, _e:getPos())
+    else
+        _seat = prop.createSeat(_e:getPos(), _e:getAngles(), "models/nova/chair_plastic01.mdl", true)
+    end
+    
+    local li3 = find.inSphere(_e:getPos(), 10, function(ent)
+        return ent:getClass() == 'gmod_wire_exit_point'
+    end)
+    if #li3 > 0 then
+        _exitPointer = find.closest(li3, _e:getPos())
+    else
+        _exitPointer = prop.createSent(_e:localToWorld(Vector(8,0,0)), _e:getAngles(), 'gmod_wire_exit_point', true, {
+            Model = 'models/jaanus/wiretool/wiretool_range.mdl'
+        })
+    end
+    
+    wire.ports.LocalPos = Vector(0,0,0.01)
+    wire.ports.Seat = _seat
+    
+    wire.create(_exitPointer, _e, 'Local Position', 'LocalPos')
+    wire.create(_exitPointer, _e, 'Angle', 'Angle')
+    wire.create(_exitPointer, _e, 'Entity', 'Seat')
+    _seat:setNocollideAll(true)
+    _exitPointer:setNocollideAll(true)
+    _e:setNocollideAll(true)
+    
+    
+    hook.add("tick", "update_ang", function()
+        wire.ports.Angle = _o:getEyeAngles()
+    end)
+    
+    
+    net.receive("teleport", function (len, ply)
+        local pos = net.readVector()
+        local driver = isValid(_seat:getDriver()) and _seat:getDriver() or _o
+        local offset = driver:getEyePos().z - driver:getPos().z
+
+        _seat:use()
+        _seat:setPos(pos + Vector(0, 0, 0))
+        _seat:ejectDriver()
+        _seat:setPos(chip():getPos())
+    end)
+
+    return
+end
+
+------------------------------------------------------
+
+local _p = player()
+
+
+hook.add("inputPressed", "cheat spectator", function(key)
+    if key == TeleportKey and _o == _p then
+        net.start("teleport")
+        local startPos = eyePos() --OriginCumPos
+        local dir = eyeVector() --_calcviewAngles:getForward()
+        local tr = trace.line(startPos, startPos + dir*100000, _o, MASK.ALL)
+        net.writeVector(tr.HitPos)
+        net.send()
+    end
+end)
+
+
+

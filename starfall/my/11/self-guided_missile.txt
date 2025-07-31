@@ -17,7 +17,7 @@ local AutoExplodeMaxDistance = 150
 local CounterMeasureTriggerRadius = 1500
 local NotifyTargetComingRocket = true
 
-local ExplodeDamage = 50
+local ExplodeDamage = 110
 local ExplodeRadius = 400
 
 local FireDelay = 2

@@ -1,12 +1,14 @@
 --@name Label Cheater
 --@author Markiz
---@include libs/3d2dtext.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
+--include libs/3d2dtext.txt
 --@shared
 
 dofile("libs/3d2dtext.txt")
 
 local Target = chip()
-Target = find.playersByName("markiz")[1]
+Target = owner()
+--Target = find.playersByName("markiz")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true
@@ -69,6 +71,11 @@ local Vars = {
 obj = Text3D2D:new(Data, Vars)
 obj:run()
 
+local enabled = false
+timer.create("aa", 0.5, 0, function()
+    enabled = !enabled
+    obj:setEnabled(enabled)
+end)
 
 local holo
 

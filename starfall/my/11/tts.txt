@@ -1,15 +1,18 @@
 --@name TTS
 --@author Markiz
 --@shared
--- version 0.2.0
+-- version 0.3.0
 
 local Volume = 2
 local Pitch = 1.2
+local Fade = 1000
 
 local HideMessage = false
 
 
 ---------------------------------------------------------
+
+local _target = owner()
 
 if SERVER then
     
@@ -33,22 +36,24 @@ local _snd
 net.receive("PlayerSay", function()
     local text = net.readString()
     
-    local url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ru&q=" .. http.urlEncode(text)
-    bass.loadURL(url, "3d noblock noplay", function(Sound)
-        if isValid(_snd) then
-            _snd:stop() 
-        end
-        _snd = Sound
-        _snd:setVolume(Volume)
-        _snd:setFade(0, 1000)
-        _snd:setPitch(Pitch)
-        _snd:play()
-    end)
+    if _target:getPos():getDistance(player():getPos()) < Fade then
+        local url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ru&q=" .. http.urlEncode(text)
+        bass.loadURL(url, "3d noblock noplay", function(Sound)
+            if isValid(_snd) then
+                _snd:stop() 
+            end
+            _snd = Sound
+            _snd:setVolume(Volume)
+            _snd:setFade(0, Fade)
+            _snd:setPitch(Pitch)
+            _snd:play()
+        end)
+    end
 end)
 
 timer.create("basPos", 0.1, 0, function()
     if isValid(_snd) then
-        _snd:setPos(owner():getPos())
+        _snd:setPos(_target:getPos())
     end
 end)
 
