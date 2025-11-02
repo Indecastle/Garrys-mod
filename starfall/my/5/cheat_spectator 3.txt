@@ -90,9 +90,11 @@ if SERVER then
     
     
     hook.add("ClientInitialized", "cl_init", function(ply)
-        net.start("init")
-        net.writeEntity(CumHolo)
-        net.send(ply)
+        pcall(function()
+            net.start("init")
+            net.writeEntity(CumHolo)
+            net.send(ply)
+        end)
     end)
     
     

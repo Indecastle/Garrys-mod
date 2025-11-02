@@ -96,14 +96,32 @@ function Text3D2D:initialize(data, vars, enabled)
         self[k] = vars[k]
     end
     
-
+    -----
+    self._eyePos = Vector()
+    self._eyeAngles = Angle()
 end
 
 
 function Text3D2D:setEnabled(value)
     self.enabled = value and true or false
+    self:thinkHandler()
     self.holoText:setNoDraw(!self.enabled)
     self.holoText2:setNoDraw(!self.enabled)
+end
+
+
+function Text3D2D:getTargetPos()
+    local obbhs = self.Target:obbSize()
+    if self.isPlayer then
+        --return gethead(self.Target) + Vector(0,0,1)*(self.DataOffsetZ)
+        return self.Target:getPos() + Vector(0,0,1)*(obbhs.z + self.DataOffsetZ)
+    else
+        local direction =
+            ((self.Mode==1 or self.Mode==2) and self.Target:getUp() or 
+            self.Mode==3 and -self.Target:getForward() or
+            self.Mode==4 and self.Target:getUp())
+        return self.Target:getPos() + direction*self.DataOffsetZ
+    end
 end
 
 
@@ -116,20 +134,6 @@ function Text3D2D:run()
             return pos
         end
         return ent:localToWorld(ent:obbCenter())
-    end
-
-    function pos()
-        local obbhs = self.Target:obbSize()
-        if self.isPlayer then
-            --return gethead(self.Target) + Vector(0,0,1)*(self.DataOffsetZ)
-            return self.Target:getPos() + Vector(0,0,1)*(obbhs.z + self.DataOffsetZ)
-        else
-            local direction =
-                ((self.Mode==1 or self.Mode==2) and self.Target:getUp() or 
-                self.Mode==3 and -self.Target:getForward() or
-                self.Mode==4 and self.Target:getUp())
-            return self.Target:getPos() + direction*self.DataOffsetZ
-        end
     end
     
     self.DataOffsetZ = self.DataOffsetZ + 
@@ -157,13 +161,13 @@ function Text3D2D:run()
     mat:setInt("$flags", 2^21) // translucent  -->  2097152
     mat:setTextureRenderTarget("$basetexture", "afkscreen")
     
-    local holoText = hologram.create(pos(), Angle(), "models/holograms/plane.mdl")
+    local holoText = hologram.create(self:getTargetPos(), Angle(), "models/holograms/plane.mdl")
     self.holoText = holoText
     holoText:setMaterial("!" .. mat:getName())
     holoText:setSize(Vector(self.textSize, self.textSize, 1))
     
     
-    local holoText2 = hologram.create(pos(), Angle(), "models/holograms/plane.mdl")
+    local holoText2 = hologram.create(self:getTargetPos(), Angle(), "models/holograms/plane.mdl")
     self.holoText2 = holoText2
     holoText2:setMaterial("!" .. mat:getName())
     holoText2:setSize(Vector(self.textSize, self.textSize, 1))
@@ -265,8 +269,7 @@ function Text3D2D:run()
     local isCreated = false
     local isFirstParentPos = true
     local isFirstParentAngle = true
-    local _eyePos = Vector()
-    local _eyeAngles = Angle()
+    
     
     function getMargin(obj, isUp)
         return obj.margin != nil and obj.margin or (isUp and obj.marginUp or obj.marginDown)
@@ -389,63 +392,66 @@ function Text3D2D:run()
     
     
     hook.add("renderscene", "", function(origin, angles, fov)
-        _eyePos = origin
-        _eyeAngles = angles
+        self._eyePos = origin
+        self._eyeAngles = angles
     end)
     
     
     --hook.add("hologrammatrix", "3d2dText", function()
     local _isFirstHandled = false
-    hook.add("think", "3d2dText", function()
-        if !self.enabled or (self.isStaticMove and _isFirstHandled) then return end
-        _isFirstHandled = true
-        
-        local eyeAngle;
-        if self.Mode == 1 then
-            local d = -_eyeAngles:getForward()
-            _, eyeAngle = localToWorld(Vector(), Angle(90,0,180), Vector(), _eyeAngles)
-        elseif self.Mode == 2 then
-            local d = (_eyePos - holoText:getPos()):getNormalized()
-            eyeAngle = d:getAngle()  + self.InitAngle
-        elseif self.Mode==3 or self.Mode==4 then
-            if self.Target:isPlayer() then
-                eyeAngle = self.Target:getAngles():setP(0) + self.InitAngle
-            else
-                eyeAngle = self.Target:localToWorldAngles(self.InitAngle)
-            end
-            
+    hook.add("think", "3d2dText", function() self:thinkHandler() end)
+end
+
+
+function Text3D2D:thinkHandler()
+    if !self.enabled or (self.isStaticMove and _isFirstHandled) then return end
+    _isFirstHandled = true
+    
+    local eyeAngle;
+    if self.Mode == 1 then
+        local d = -self._eyeAngles:getForward()
+        _, eyeAngle = localToWorld(Vector(), Angle(90,0,180), Vector(), self._eyeAngles)
+    elseif self.Mode == 2 then
+        local d = (self._eyePos - self.holoText:getPos()):getNormalized()
+        eyeAngle = d:getAngle()  + self.InitAngle
+    elseif self.Mode==3 or self.Mode==4 then
+        if self.Target:isPlayer() then
+            eyeAngle = self.Target:getAngles():setP(0) + self.InitAngle
+        else
+            eyeAngle = self.Target:localToWorldAngles(self.InitAngle)
         end
         
-        //print(d)
+    end
+    
+    //print(d)
+    
+    if (self.Mode==1 or self.Mode==2) and self.isStaticVertical then
+        eyeAngle:setP(90)
+    end
+    
+    if self.isRotate then
+        eyeAngle = eyeAngle + Angle(0, timer.systime()*self.rotateSpeed, 0)
+    end
+    
+    if self.swayDegreesMax ~= 0 then
+        local quat1 = eyeAngle:getQuaternion()
+        local quat2 = (Vector(0,0,1)):getQuaternionFromAxis( math.cos(timer.systime()*self.swaySpeed)*self.swayDegreesMax )
+        local quat4 = quat1 * quat2
+        eyeAngle = quat4:getEulerAngle()
         
-        if (self.Mode==1 or self.Mode==2) and self.isStaticVertical then
-            eyeAngle:setP(90)
-        end
-        
-        if self.isRotate then
-            eyeAngle = eyeAngle + Angle(0, timer.systime()*self.rotateSpeed, 0)
-        end
-        
-        if self.swayDegreesMax ~= 0 then
-            local quat1 = eyeAngle:getQuaternion()
-            local quat2 = (Vector(0,0,1)):getQuaternionFromAxis( math.cos(timer.systime()*self.swaySpeed)*self.swayDegreesMax )
-            local quat4 = quat1 * quat2
-            eyeAngle = quat4:getEulerAngle()
-            
-        end
-        
-        //text:setAngles(eyeAngle + Angle(90, 0, math.cos(timer.systime()*rotateSpeed)*70))
-        //text:setAngles(eyeAngle + Angle(90, 90, 90))
-        
-        if self.isParentPos or isFirstParentPos then 
-            isFirstParentPos = false
-            holoText:setPos(pos()) 
-            if self.IsDoubleData then holoText2:setPos(pos()) end 
-        end
-        if self.isParentAngle or isFirstParentAngle then 
-            isFirstParentAngle = false
-            holoText:setAngles(eyeAngle) 
-            if self.IsDoubleData then holoText2:setAngles(eyeAngle + Angle(0,0,180)) end
-        end
-    end)
+    end
+    
+    //text:setAngles(eyeAngle + Angle(90, 0, math.cos(timer.systime()*rotateSpeed)*70))
+    //text:setAngles(eyeAngle + Angle(90, 90, 90))
+    
+    if self.isParentPos or isFirstParentPos then
+        isFirstParentPos = false
+        self.holoText:setPos(self:getTargetPos())
+        if self.IsDoubleData then self.holoText2:setPos(self:getTargetPos()) end 
+    end
+    if self.isParentAngle or isFirstParentAngle then 
+        isFirstParentAngle = false
+        self.holoText:setAngles(eyeAngle) 
+        if self.IsDoubleData then self.holoText2:setAngles(eyeAngle + Angle(0,0,180)) end
+    end
 end

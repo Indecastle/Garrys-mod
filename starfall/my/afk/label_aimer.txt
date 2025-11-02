@@ -59,7 +59,7 @@ local Vars = {
     alphaGlobal=255,
     
     textSize=100,
-    DataOffsetZ=10,
+    DataOffsetZ=15,
     
     isParentPos=true,
     isParentAngle=true,

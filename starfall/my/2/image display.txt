@@ -26,9 +26,9 @@ local URLS = {
     custom = nil
 }
 
-local img = "e2sf"
+local img = "barryWood"
 
-local maxh = 100
+local maxh = 200
 
 local ParentAngle = true
 local VerticalAngle = true

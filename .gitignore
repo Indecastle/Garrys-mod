@@ -17,6 +17,7 @@
 !/expression2/
 !/expression2/**
 /expression2/Private/
+/expression2/tests/
 
 /expression2/_autosave_.txt
 /expression2/_helloworld_.txt
