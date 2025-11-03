@@ -3,15 +3,6 @@
 --@shared
 -- version 1.1.1
 
---local Target = owner()
---Target = find.playersByName("owner")[1]
-/*Target = find.allPlayers(function(p)
-    if p:getSteamID() == "STEAM_0:0:582893321" then
-        return true
-    end
-end)[1]*/
-//print(Target)
-
 -- Third person
 local ThPersDist = 100
 local ThPersDistAddValue = 50

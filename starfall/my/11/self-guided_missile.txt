@@ -2,14 +2,14 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.4.1
+-- version 1.6.1
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
 
 local RocketVelocity = 4000
 local RocketLerpRatio = 0.11
-local TrailTime = 2
+local TrailTime = 1
 local RockeForceTime = 10
 local RocketAutoRemoveTime = 20
 
@@ -29,7 +29,10 @@ local OnlyUngod = true
 
 local EyeFromChip = true
 local WaitFindingTarget = false
+local FireAfterFinding = true
+
 local HasCenterDot = true
+local ShowDotWhileFinding = true
 
 local RocketModel = "models/weapons/w_missile_closed.mdl" -- "models/weapons/w_missile_closed.mdl"
 local RocketStartOffset = Vector(0,0,50)
@@ -74,7 +77,8 @@ end
 
 
 function isValidTarget_(ent)
-    return ent != player()
+    return isValid(ent)
+        and ent != player()
         and !ent._isRocket
         and (ent:getClass() == 'prop_physics' or ent:isPlayer())
         and ent:getModel() != RocketModel
@@ -614,11 +618,25 @@ net.receive("sendRocketToClient", function(len)
         rocket._holo = getBaseHolo(rocket:getPos())
         rocket._holo:setParent(rocket)
         rocket._holo:emitSound(RocketForcingSoundUrl, 85, 100, 1, 0)
+        rocket._lastLifeTime = timer.curtime() + RockeForceTime
         table.insert(_rockets, rocket)
     end)
     
     notifyTarget(target)
 end)
+
+
+timer.create("disableRocketEngine", 0.4, 0, function()
+    if !isActive() then return end
+
+    local now = timer.curtime()
+    for i, rocket in ipairs(_rockets) do
+        if rocket._lastLifeTime < now then
+            rocket._holo:stopSound(RocketForcingSoundUrl)
+        end
+    end
+end)
+
 
 hook.add("EntityRemoved", "removeHolo", function(ent)
     if isValid(ent) and isValid(ent._holo) then
@@ -648,13 +666,21 @@ hook.add("think", "particleRockets", function()
             continue
         end
         
-        local maxSize = 150
+        local maxSize = 80
         local startAlpha = 200
         local part = emitter:add( m, rocket:getPos() - rocket:getForward()*TrailRocketStartOffset, 5, maxSize, 0, 0, startAlpha, 0, TrailTime )
-        part:setColor(Color(100,100,100))
-        part:setRollDelta(2)
+        part:setColor(Color(50,50,50))
+        part:setRollDelta(math.random(2, 5))
         part:setAirResistance(30)
-        part:setVelocity(-rocket:getForward():rotateAroundAxis(Vector(1,0,0), math.random(-20, 20))*400)
+        --local degree = 10
+        --local _, a = localToWorld(Vector(), Angle(math.random(-degree, degree), math.random(-degree, degree), 0), Vector(), (-rocket:getForward()):getAngle())
+        
+        local degree = 10
+        local x = (timer.curtime()*500 ) % 360
+        local _, a = localToWorld(Vector(), Angle(0, 0, -x), Vector(), (-rocket:getForward()):getAngle())
+        _, a = localToWorld(Vector(), Angle(degree, 0, 0), Vector(), a)
+    
+        part:setVelocity(a:getForward() * 400)
     end
     emitter:destroy()
 end)
@@ -910,7 +936,8 @@ end
 
 
 function drawCenterDot(bindCb)
-    if !HasCenterDot or !bindCb('ChooseTarget').Pressed or isValid(_target) then return end
+    local _onlyFireAfterFinding = FireAfterFinding or WaitFindingTarget or ShowDotWhileFinding
+    if !HasCenterDot or (_onlyFireAfterFinding and !bindCb('ChooseTarget').Pressed) or isValid(_target) then return end
     
     local startPos = _e:getPos()
     local tr = trace.line(startPos, startPos + _e:getUp()*9999999999, isValidTarget_, MASK.ALL, nil, false)
@@ -976,7 +1003,8 @@ end
 function eventMouseHandler(bindCb)
     local target = _target
     --local target = owner()
-    if bindCb('ChooseTarget').Pressed and bindCb('Fire').IsFirst and (!WaitFindingTarget and target == nil or isValid(target)) then
+    local _onlyFireAfterFinding = FireAfterFinding or WaitFindingTarget
+    if (!_onlyFireAfterFinding or bindCb('ChooseTarget').Pressed) and bindCb('Fire').IsFirst and (!WaitFindingTarget and target == nil or isValid(target)) then
         net.start("fire")
         net.writeBool(!!target)
         if target then

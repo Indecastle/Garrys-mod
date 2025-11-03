@@ -1,0 +1,43 @@
+--@name FPV drone
+--@author maxobur0001
+--@shared
+--@include https://raw.githubusercontent.com/maxobur0001/StarfallFPVDrone/refs/heads/main/drone.lua as drone
+require("drone")
+
+do
+    INITIALHEALTH = 50
+    ADDSPEED = 2.5
+    MAXSPEED = 500
+    CAMERAANGLE = -45
+    KAMIKADZE = true
+end
+
+
+if SERVER then
+    -- Create seat and init drone entity
+    local function newDrone()
+        return Drone:spawn(chip():getPos() + Vector(0, 50, 20), Angle(), KAMIKADZE, CAMERAANGLE, ADDSPEED, MAXSPEED, INITIALHEALTH)
+    end
+
+    local seat = prop.createSeat(chip():getPos(), Angle(), "models/nova/chair_plastic01.mdl", true)
+    local dr = newDrone()
+
+    -- Add hook on entering and leaving vehicle
+    hook.add("PlayerEnteredVehicle", "EnterDrone", function(ply, veh)
+        if seat ~= veh then return end
+        if !dr:isValid() then dr = newDrone() end
+        dr:setDriver(ply)
+        printHud(ply, "This is a FPV drone")
+        printHud(ply, "You can edit it options in chip")
+        printHud(ply, "Controls:")
+        printHud(ply, "* W and S - change gas power")
+        printHud(ply, "* A and D - slope")
+        printHud(ply, "* Mouse - rotation")
+    end)
+
+    hook.add("PlayerLeaveVehicle", "LeaveDrone", function(_, veh)
+        if seat ~= veh then return end
+        dr:resetDriver()
+    end)
+end
+
