@@ -32,7 +32,7 @@ local Data = {
     {   text={"Cheater"}, 
         fontSize=200, 
         fontBold=600, 
-        bold=true,
+        bold=false,
         color=Color(255,100,0),
         margin=100,
         colorMode = 1,
@@ -56,10 +56,10 @@ local Vars = {
     shadowAlphaReverce=0,
     shadowOffset=1,
     
-    alphaGlobal=255,
+    alphaGlobal=100,
     
-    textSize=100,
-    DataOffsetZ=15,
+    textSize=25,
+    DataOffsetZ=10,
     
     isParentPos=true,
     isParentAngle=true,

@@ -99,12 +99,26 @@ function Text3D2D:initialize(data, vars, enabled)
     -----
     self._eyePos = Vector()
     self._eyeAngles = Angle()
+    
+    self._isFirstHandled = false
+    self._isFirstParentPos = false
+    self._isFirstParentAngle = false
+    self._isCreated = false
+end
+
+
+function Text3D2D:resetFirstTriggers()
+    self._isFirstHandled = false
+    self._isFirstParentPos = true
+    self._isFirstParentAngle = true
 end
 
 
 function Text3D2D:setEnabled(value)
     self.enabled = value and true or false
     self:thinkHandler()
+    self:resetFirstTriggers()
+    
     self.holoText:setNoDraw(!self.enabled)
     self.holoText2:setNoDraw(!self.enabled)
 end
@@ -266,10 +280,6 @@ function Text3D2D:run()
     
     // ##################### don't touch !!! #####################
     
-    local isCreated = false
-    local isFirstParentPos = true
-    local isFirstParentAngle = true
-    
     
     function getMargin(obj, isUp)
         return obj.margin != nil and obj.margin or (isUp and obj.marginUp or obj.marginDown)
@@ -378,8 +388,8 @@ function Text3D2D:run()
     
     
     hook.add("renderoffscreen", "", function()
-        if !isCreated then
-            isCreated = true
+        if !self._isCreated then
+            self._isCreated = true
             initRender()
             renderBold()
             renderText()
@@ -398,14 +408,13 @@ function Text3D2D:run()
     
     
     --hook.add("hologrammatrix", "3d2dText", function()
-    local _isFirstHandled = false
     hook.add("think", "3d2dText", function() self:thinkHandler() end)
 end
 
 
 function Text3D2D:thinkHandler()
-    if !self.enabled or (self.isStaticMove and _isFirstHandled) then return end
-    _isFirstHandled = true
+    if !self.enabled or (self.isStaticMove and self._isFirstHandled) then return end
+    self._isFirstHandled = true
     
     local eyeAngle;
     if self.Mode == 1 then
@@ -444,13 +453,13 @@ function Text3D2D:thinkHandler()
     //text:setAngles(eyeAngle + Angle(90, 0, math.cos(timer.systime()*rotateSpeed)*70))
     //text:setAngles(eyeAngle + Angle(90, 90, 90))
     
-    if self.isParentPos or isFirstParentPos then
-        isFirstParentPos = false
+    if self.isParentPos or self._isFirstParentPos then
+        self._isFirstParentPos = false
         self.holoText:setPos(self:getTargetPos())
         if self.IsDoubleData then self.holoText2:setPos(self:getTargetPos()) end 
     end
-    if self.isParentAngle or isFirstParentAngle then 
-        isFirstParentAngle = false
+    if self.isParentAngle or self._isFirstParentAngle then 
+        self._isFirstParentAngle = false
         self.holoText:setAngles(eyeAngle) 
         if self.IsDoubleData then self.holoText2:setAngles(eyeAngle + Angle(0,0,180)) end
     end

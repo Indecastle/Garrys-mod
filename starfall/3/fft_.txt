@@ -17,7 +17,7 @@ local url1 = "http://radio.licen777.ru/chechnya"
 local url2 = "http://radio.licen777.ru/stream"
 local url3 = "https://play.sas-media.ru/play_256"
 local url4 = "http://sv.wargaming.fm:8051/128"
-local url5 = "https://raw.githubusercontent.com/1Boop1/sf-music-data/main/tracks/11315618.mp3"
+local url5 = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/GangnamStyle.mp3"
 
 local url = url5
 

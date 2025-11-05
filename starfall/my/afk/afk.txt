@@ -3,7 +3,7 @@
 --@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
 --include libs/3d2dtext.txt
 --@shared
---Version 1.0.1
+--Version 1.0.2
 
 local ActiveSec = 30
 
@@ -13,9 +13,18 @@ local ActiveSec = 30
 
 if SERVER then
     
-    net.receive("afk", function()
-        net.start("afk2")
-        net.writeBool(net.readBool())
+    local _isAfk = false
+    
+    net.receive("afkServer", function()
+        net.start("afkClient")
+        _isAfk = net.readBool()
+        net.writeBool(_isAfk)
+        net.send()
+    end)
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("afkClient")
+        net.writeBool(_isAfk)
         net.send()
     end)
     
@@ -91,13 +100,13 @@ if owner() == player() then
         if newActiveState != _lastActiveState then
             _lastActiveState = newActiveState
             
-            net.start("afk")
+            net.start("afkServer")
             net.writeBool(newActiveState)
             net.send()
         end
     end)
 end
 
-net.receive("afk2", function()
+net.receive("afkClient", function()
     afkScreen:setEnabled(net.readBool())
 end)

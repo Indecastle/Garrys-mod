@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.6.1
+-- version 1.6.2
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -32,7 +32,7 @@ local WaitFindingTarget = false
 local FireAfterFinding = true
 
 local HasCenterDot = true
-local ShowDotWhileFinding = true
+local ShowDotWhileFinding = false
 
 local RocketModel = "models/weapons/w_missile_closed.mdl" -- "models/weapons/w_missile_closed.mdl"
 local RocketStartOffset = Vector(0,0,50)
@@ -675,12 +675,16 @@ hook.add("think", "particleRockets", function()
         --local degree = 10
         --local _, a = localToWorld(Vector(), Angle(math.random(-degree, degree), math.random(-degree, degree), 0), Vector(), (-rocket:getForward()):getAngle())
         
-        local degree = 10
-        local x = (timer.curtime()*500 ) % 360
-        local _, a = localToWorld(Vector(), Angle(0, 0, -x), Vector(), (-rocket:getForward()):getAngle())
-        _, a = localToWorld(Vector(), Angle(degree, 0, 0), Vector(), a)
-    
-        part:setVelocity(a:getForward() * 400)
+        if rocket:getVelocity():getLength() == 0 then
+            part:setVelocity(-rocket:getForward() * 400)
+        else
+            local degree = 8
+            local x = (timer.curtime()*400 ) % 360
+            local _, a = localToWorld(Vector(), Angle(0, 0, -x), Vector(), (-rocket:getForward()):getAngle())
+            _, a = localToWorld(Vector(), Angle(degree, 0, 0), Vector(), a)
+            part:setVelocity(a:getForward() * 400)
+        end
+        
     end
     emitter:destroy()
 end)

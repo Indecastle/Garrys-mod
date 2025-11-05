@@ -553,6 +553,9 @@ end
 net.receive("ActiveEnts", function(len)
     local tab = net.readTable()
     for id, data in pairs(tab) do
+        if _skibidiActiveList[id] then
+            continue
+        end
         if isValid(data.PropBase) and isValid(data.HeadHolo) then
             _skibidiActiveList[id] = SkibidiClientClass:new(id, data.SoundItemIndex, data.PropScaleDataIndex, data.PropBase, data.HeadHolo)
         end
@@ -561,12 +564,18 @@ end)
 
 net.receive("AddSkibidi", function(len)
     local id = net.readString()
+    if _skibidiActiveList[id] then
+        return
+    end
     local soundItemIndex = net.readInt(8)
     local propScaleDataIndex = net.readInt(8)
     local propBase, headHolo
     local handle = function()
         if propBase and headHolo then
-            _skibidiActiveList[id] = SkibidiClientClass:new(id, soundItemIndex, propScaleDataIndex, propBase, headHolo)
+            --timer.simple(0.5, function() -- timer for fix a bug "Permission entities.setRenderProperty: You're not the owner of this prop"
+                _skibidiActiveList[id] = SkibidiClientClass:new(id, soundItemIndex, propScaleDataIndex, propBase, headHolo)
+            --end)
+            
         end
     end
     net.readEntity(function(ent)
