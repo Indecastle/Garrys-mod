@@ -171,7 +171,7 @@ end
 timer.create("Updater", 2, 0, update)
 
 hook.add("render", "", function()
-    local w, h = render.getResolution()
+    local w, h = 512, 512--render.getResolution()
     scr = render.getScreenEntity()
 
     render.setRenderTargetTexture("screen")
@@ -222,7 +222,7 @@ hook.add("renderoffscreen", "", function()
 
     render.selectRenderTarget("screen")
     
-    w, h = render.getResolution()
+    w, h = 1024, 1024--render.getResolution()
     
     render.clear(Color(14, 14, 14))
     

@@ -23,6 +23,7 @@ local URLS = {
     flag_poland = "https://i.imgur.com/2l0Eq5L.png",
     barryWood = "https://i.imgur.com/PQiuccK.png",
     e2sf = "https://i.imgur.com/uRIupZe.png",
+    putin = "https://i.imgur.com/ngN7RZF.jpg",
     custom = nil
 }
 

@@ -231,7 +231,7 @@ if SERVER then
             return isValid(ent)
                 and ent:isVehicle()
                 and isValid(ent:getDriver())
-                --and !ent:getDriver():hasGodMode()
+                and !ent:getDriver():hasGodMode()
                 and angleBetweenVectors((ent:getPos() - _cannon:getPos()):getNormalized(), upDir) < MaxPitchAngle
                 and isVisibleEnt(startPos, ent)
         end)

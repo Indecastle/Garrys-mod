@@ -71,7 +71,7 @@ hook.add("renderoffscreen", "", function()
     
     render.selectRenderTarget("screen")
     
-    local w, h = render.getResolution()
+    local w, h = 1024, 1024--render.getResolution()
     
     render.clear(Color(14, 14, 14))
     

@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.6.2
+-- version 1.6.3
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -219,6 +219,7 @@ if SERVER then
     function fireRocket(startPos, startAng, target)
         if !prop.canSpawn() then return end
         local rocket = prop.create(startPos, startAng, RocketModel, false)
+        rocket:setFrozen(false)
         rocket:enableGravity(false)
         rocket:setHealth(10000000)
         --rocket:setMass(0)
