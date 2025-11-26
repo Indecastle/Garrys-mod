@@ -1,0 +1,342 @@
+--@name Minecraft v5
+--@author
+--@server
+
+
+local BLOCK_SIZE = 38.100
+local HALF       = BLOCK_SIZE * 0.5
+
+
+local MAX_DIST   = 400
+
+
+local ORIGIN     = chip():getPos()
+local OWNER      = chip():getOwner()
+
+
+local blocks = {}
+
+
+local worldProps = {}
+
+
+local dirty = false
+
+
+local nextRebuildTime = 0
+
+
+
+local function makeKey(ix, iy, iz)
+    return ix .. ":" .. iy .. ":" .. iz
+end
+
+
+local function syncOriginFromProps()
+    for i = 1, #worldProps do
+        local p = worldProps[i]
+        if p and p.isValid and p:isValid() then
+            ORIGIN = p:getPos()
+            return
+        end
+    end
+end
+
+
+local function worldToGrid(pos)
+    local rel = pos - ORIGIN
+
+    local ix = math.floor(rel[1] / BLOCK_SIZE + 0.5)
+    local iy = math.floor(rel[2] / BLOCK_SIZE + 0.5)
+    local iz = math.floor(rel[3] / BLOCK_SIZE + 0.5)
+
+    return ix, iy, iz
+end
+
+
+local function gridToLocal(ix, iy, iz)
+    return Vector(
+        ix * BLOCK_SIZE,
+        iy * BLOCK_SIZE,
+        iz * BLOCK_SIZE
+    )
+end
+
+  
+local function hasKnife(ply)
+    if not ply or not ply:isValid() then return false end
+    local w = ply:getActiveWeapon()
+    if not (w and w.isValid and w:isValid()) then return false end
+    return w:getClass() == "weapon_crowbar"
+end
+
+
+local function clearWorldProps()
+    for i = 1, #worldProps do
+        local p = worldProps[i]
+        if p and p.isValid and p:isValid() then
+            p:remove()
+        end
+    end
+    worldProps = {}
+end
+
+
+local function buildHulls()
+    local hulls = {}
+
+    for _, b in pairs(blocks) do
+        local c = gridToLocal(b.ix, b.iy, b.iz)
+
+        local cx, cy, cz = c[1], c[2], c[3]
+        local hx, hy, hz = HALF, HALF, HALF
+
+        local hull = {
+            Vector(cx - hx, cy - hy, cz - hz),
+            Vector(cx + hx, cy - hy, cz - hz),
+            Vector(cx + hx, cy + hy, cz - hz),
+            Vector(cx - hx, cy + hy, cz - hz),
+
+            Vector(cx - hx, cy - hy, cz + hz),
+            Vector(cx + hx, cy - hy, cz + hz),
+            Vector(cx + hx, cy + hy, cz + hz),
+            Vector(cx - hx, cy + hy, cz + hz),
+        }
+
+        hulls[#hulls + 1] = hull
+    end
+
+    return hulls
+end
+
+local function rebuildWorldProps()
+--return coroutine.wrap(function()
+    
+    local now = timer.curtime()
+    if now < nextRebuildTime then
+        --  ,     
+        return
+    end
+
+    
+    syncOriginFromProps()
+
+    
+    local hasBlocks = false
+    for _ in pairs(blocks) do
+        hasBlocks = true
+        break
+    end
+
+       
+    if not hasBlocks then
+        clearWorldProps()
+        --dirty = false
+        return
+    end
+
+    
+    local hulls = buildHulls()
+    local total = #hulls
+    if total == 0 then
+        clearWorldProps()
+        --dirty = false
+        return
+    end
+
+    local needProps = math.ceil(total / 10)
+
+    local newProps = {}
+    
+    printConsole("Start Rebuild...")
+    
+    local i = 1
+    while i <= total do
+        printConsole("" .. tostring(i) .. "/" .. tostring(total))
+        if not prop.canSpawn() then
+   
+            --for _, p in ipairs(newProps) do
+            --    if p and p.isValid and p:isValid() then
+            --        p:remove()
+            --    end
+            --end
+            --newProps = {}
+            
+            printConsole("Cant spawn on i=" .. tostring(i) .. "/" .. tostring(total))
+            while not prop.canSpawn() do
+                coroutine.yield()
+            end
+            --dirty = true
+            
+            nextRebuildTime = now + 0.5  --     
+            --return
+        end
+
+        local batch = {}
+ 
+        for j = 0, 9 do
+            local h = hulls[i + j]
+            if not h then break end
+            batch[#batch + 1] = h
+        end
+
+        local p = prop.createCustom(
+            ORIGIN,
+            Angle(0, 0, 0),
+            batch,
+            true
+        )
+
+        if p and p.isValid and p:isValid() then
+            p:setFrozen(true)
+            p:setColor(Color(255, 255, 255, 255))
+            newProps[#newProps + 1] = p
+            printConsole("New Prop")
+        else
+
+            for _, pp in ipairs(newProps) do
+                if pp and pp.isValid and pp:isValid() then
+                    pp:remove()
+                end
+            end
+            newProps = {}
+            coroutine.yield()
+            --dirty = true
+            nextRebuildTime = now + 0.5
+            --return
+        end
+
+        i = i + 10
+    end
+    printConsole("#newProps is " .. #newProps)
+    --      (  )
+    if #newProps == 0 then
+        --    
+        --dirty = true
+        coroutine.yield()
+        nextRebuildTime = now + 0.5
+        --return
+    end
+
+    -- :  ,   
+    clearWorldProps()
+    worldProps = newProps
+    printConsole("dirty = false")
+    dirty = false
+    nextRebuildTime = now + 0.05  -- -, 
+--end)   
+end
+
+local wrap = nil;
+
+function startRebuild()
+    wrap = coroutine.wrap(function()
+        rebuildWorldProps()
+        return true;
+    end)
+end
+
+
+local function placeBlock(ply)
+    if not ply or not ply:isValid() then return end
+
+    --           ORIGIN
+    syncOriginFromProps()
+
+    local tr = ply:getEyeTrace()
+    if not tr or not tr.Hit or not tr.HitPos then return end
+
+    local from = ply:getShootPos()
+    if tr.HitPos:getDistance(from) > MAX_DIST then return end
+
+    local hitPos    = tr.HitPos
+    local hitNormal = tr.HitNormal or Vector(0, 0, 1)
+
+    --   :     
+    local placePos = hitPos + hitNormal * HALF
+
+    local ix, iy, iz = worldToGrid(placePos)
+    local key = makeKey(ix, iy, iz)
+
+    if blocks[key] then
+        --      
+        return
+    end
+
+    blocks[key] = { ix = ix, iy = iy, iz = iz }
+    --dirty = true
+    startRebuild()
+end
+
+local function removeBlock(ply)
+    if not ply or not ply:isValid() then return end
+
+    --     ORIGIN
+    syncOriginFromProps()
+
+    local tr = ply:getEyeTrace()
+    if not tr or not tr.Hit or not tr.HitPos then return end
+
+    local from = ply:getShootPos()
+    if tr.HitPos:getDistance(from) > MAX_DIST then return end
+
+    local hitPos    = tr.HitPos
+    local hitNormal = tr.HitNormal or Vector(0, 0, 1)
+
+    --   
+    local insidePos = hitPos - hitNormal * (BLOCK_SIZE * 0.25)
+
+    local ix, iy, iz = worldToGrid(insidePos)
+    local key = makeKey(ix, iy, iz)
+
+    if not blocks[key] then return end
+
+    blocks[key] = nil
+    startRebuild()
+    --dirty = true
+end
+
+
+
+local prevAttack  = false
+local prevAttack2 = false
+
+hook.add("think", "mc_custom_blocks_input", function()
+    if not OWNER or not OWNER:isValid() then return end
+
+    --      
+    if not hasKnife(OWNER) then
+        prevAttack  = false
+        prevAttack2 = false
+        return
+    end
+
+    --  =  
+    local aDown  = OWNER:keyDown(IN_KEY.ATTACK)  or false
+    --  =  
+    local a2Down = OWNER:keyDown(IN_KEY.ATTACK2) or false
+
+    if aDown and not prevAttack then
+        placeBlock(OWNER)
+    end
+
+    if a2Down and not prevAttack2 then
+        removeBlock(OWNER)
+    end
+
+    prevAttack  = aDown
+    prevAttack2 = a2Down
+end)
+
+
+hook.add("think", "mc_custom_blocks_rebuild", function()
+    if wrap then
+        while math.max(chip():getQuotaAverage(), chip():getQuotaUsed()) < chip():getQuotaMax() * 0.3 do
+            if wrap() then
+                --printConsole("wrap is end")
+                wrap = nil
+                return
+            end
+        end
+    end
+end)

@@ -27,6 +27,6 @@ HPole:setMaterial("models/XQM/CellShadedCamo_diffuse")
 local HPole = hologram.create(chip():localToWorld(Vector(0,0,38.231)), chip():getAngles(), "models/holograms/cplane.mdl", Vector(15.6,15.6,15.6)) 
 HPole:setMaterial("models/shadertest/predator")
 
-local HPole = hologram.create(chip():localToWorld(Vector(0,0,36.231)), chip():getAngles(), "models/holograms/cplane.mdl", Vector(-15.6,-15.6,-15.6))
+local HPole = hologram.create(chip():localToWorld(Vector(0,0,36.231)), chip():getAngles()+Angle(180,0,0), "models/holograms/cplane.mdl", Vector(15.6,15.6,15.6))
 HPole:setMaterial("models/shadertest/predator")
 

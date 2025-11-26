@@ -1,7 +1,7 @@
 --@name cheat spectator
 --@author Markiz
 --@shared
--- version 1.3.1
+-- version 1.3.2
 
 -- Third person
 local ThPersDist = 100
@@ -353,7 +353,8 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
             originPos = originPos - ( angle:getForward() * ThPersDist )
             originPos = getThirdPersonPos(head, originPos)
         else
-            if TargetPlayer:inVehicle() then
+            --printConsole(isValid(TargetPlayer:getNWVarTable()["GlideVehicle"]))
+            if TargetPlayer:inVehicle() and !isValid(TargetPlayer:getNWVarTable()["GlideVehicle"]) then
                 _, angle = localToWorld(Vector(), TargetPlayer:getEyeAngles(), Vector(), TargetPlayer:getVehicle():getAngles())
             else
                 angle = TargetPlayer:getEyeAngles()

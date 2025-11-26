@@ -29,7 +29,7 @@ end
 --if Target == player() then return end
 
 local Data = {
-    {   text={"Cheater"}, 
+    {   text={"Kill me"}, 
         fontSize=200, 
         fontBold=600, 
         bold=false,
@@ -58,7 +58,7 @@ local Vars = {
     
     alphaGlobal=100,
     
-    textSize=25,
+    textSize=20,
     DataOffsetZ=10,
     
     isParentPos=true,

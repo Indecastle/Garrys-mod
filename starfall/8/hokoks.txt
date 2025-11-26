@@ -1,0 +1,253 @@
+--@name hokoks
+--@author radiant
+--@shared
+--include visual lib/holotext.txt
+--holotext = require("visual lib/holotext.txt")
+DEBUG = false
+if SERVER then
+    val = prop.createSent(chip():getPos(),Angle(0),"gmod_wire_expression2",true,{_original = [[@outputs G 
+G = ]] .. 10^9})
+end
+function path(pos1,pos2,len)
+    return pos1 + (pos2 - pos1) * len
+end
+function seed(length)
+    if type(length) == type(1) then
+        local preres = {}
+        local result
+        for x = 1, length do
+            table.insert(preres,x,tostring(math.floor(math.rand(0, 10))))
+        end
+        result = table.concat(preres, "")
+        return result
+    else
+        return nil
+    end
+end
+function home(pos1,pos2,ang)
+    local distance = pos2 - pos1
+    local yaw = math.deg(math.atan2(distance[2],distance[1]))
+    local pitch = math.deg(math.atan2(-distance[3],math.sqrt(distance[1]^2 + distance[2]^2)))
+    local delta_yaw = (yaw - ang[2] + 180) % 360 - 180
+    local delta_pitch = (pitch - ang[1] + 180) % 360 - 180
+    return Angle(delta_pitch,delta_yaw,0)
+end
+local Hook = class("HOOK")
+Hook.static.force = 200
+function Hook:initialize(settings)
+    self.active = {}
+    self.force = Hook.force
+    if settings then
+        if settings.force then
+            self.force = settings.force
+        end
+    end
+    if SERVER then
+    self.val = prop.createSent(chip():getPos(),Angle(0),"gmod_wire_expression2",true,{_original = [[@outputs G 
+G = ]] .. self.force})
+    end
+end
+function backof(pos,ignore)
+    try(function()
+    local targets = find.inSphere(pos,500,function(ent) if ent != ignore and ent:isValid() and (type(ent) == "Player" or type(ent) == "Npc" or type(ent) == "Vehicle") then return ent end end)
+    local g = prop.createSent(pos,Angle(0),"gmod_wire_forcer",true,{Length = 500,ShowBeam = false})
+    g:setNocollideAll(true)
+    g:setColor(Color(0,0,0,0))
+    wire.create(g,val,"Velocity","G")
+    local se = seed(19)
+    local x = 0
+    timer.create(se,0.15,0,function()
+        x = x + 1
+        if targets[x] then
+            g:setAngles(g:getAngles()+home(g:getPos(),targets[x]:getPos()+Vector(0,0,40),g:getAngles())+Angle(90,0,0))
+        else
+            timer.stop(se)
+            g:remove()
+        end
+    end)
+    end,function()end)
+end
+function Hook:give(ent)
+    table.insert(self.active,ent)
+    local name = ent:getName()
+    if SERVER then
+        hook.add("Net","hook."..name,function(name,len,ply)
+            if string.startsWith(name,"hook.start.") then
+                if table.hasValue(self.active,ply) then
+                    ply.hooked = true
+                end
+            elseif string.startsWith(name,"hook.end.") then
+                if table.hasValue(self.active,ply) and ply.hooked then
+                    ply.hooked = false
+                end
+            end 
+        end)
+        local sed = seed(19)
+        --[[hook.add("KeyPress","hammer."..sed,function(ply,key)
+            if ply == ent and ent:isAlive() and key == 1 then
+                print(1)
+                backof(self,ent:getEyePos()+ent:getAimVector()*500,ent)
+            end
+        end)]]
+        local _olhook = false
+        local con = hologram.create(ent:getPos()+Vector(0,0,14),Angle(0),"models/holograms/hq_rcylinder_thin.mdl")
+        con:setColor(Color(0,0,0,0))
+        con:suppressEngineLighting(true)
+        con:setParent(ent:getActiveWeapon())
+        local spearhead = hologram.create(chip():getPos(),Angle(0),"models/props_junk/meathook001a.mdl",Vector(2))
+        spearhead:setColor(Color(0,0,0,0))
+        spearhead:suppressEngineLighting(true)
+        local hookpos
+        local hookent = entity(0)
+        local buffer = {}
+        hook.add("Tick",sed,function()
+            if ent.hooked and not _olhook then
+                hookent = ent:getEyeTrace().Entity
+                try(function()
+                hookpos = ent:getEyeTrace().HitPos
+                --con:setColor(Color(255,255,255))
+                spearhead:setColor(Color(255,255,255))
+                if hookent:isValid() then
+                    ent.fo = prop.createSent(chip():getPos(),Angle(0),"gmod_wire_forcer",true,{Length = 100,ShowBeam = true})
+                else
+                    ent.fo = prop.createSent(chip():getPos(),Angle(0),"gmod_wire_forcer",true,{Length = 10^9,ShowBeam = false})
+                end
+                ent.fo:setNocollideAll(true)
+                --ent.fo:setParent(ent:getActiveWeapon())
+                --con:setSize(Vector(4,4,1))
+                con:emitSound("Metal.SawbladeStick")
+                ent.fo:setColor(Color(0,0,0,0))
+                wire.create(ent.fo,self.val,"Velocity","G")
+                --constraint.rope(1,spearhead,con,nil,nil,Vector(),Vector())
+                local z = (hookpos-ent.fo:getPos()):getNormalized()
+                spearhead:setPos(hookpos)
+                spearhead:emitSound("Metal.SawbladeStick")
+                con:setTrails(10,0,5,"trails/smoke",Color(255,255,255))
+                if hookent:isValid() then
+                    spearhead:setTrails(10,0,5,"trails/smoke",Color(255,255,255))
+                end
+                end,function()
+                    ent.hooked = false
+                    spearhead:remove()
+                    table.removeByValue(self.active,ent)
+                    hook.remove("Tick",sed)
+                    hook.remove("KeyPress","hammer."..sed)
+                    if DEBUG then
+                        print(ent:getName() .. " has lost the grapple.")
+                    end
+                end)
+            elseif not ent.hooked and _olhook then
+                ent.fo:remove()
+                hookpos = nil
+                try(function()
+                con:setColor(Color(0,0,0,0))
+                con:removeTrails()
+                spearhead:setColor(Color(0,0,0,0))
+                spearhead:removeTrails()
+                con:removeTrails()
+                end,function()
+                    ent.hooked = false
+                    spearhead:remove()
+                    table.removeByValue(self.active,ent)
+                    hook.remove("Tick",sed)
+                    hook.remove("KeyPress","hammer."..sed)
+                    if DEBUG then
+                        print(ent:getName() .. " has lost the grapple.")
+                    end
+                end)
+            end
+            if ent.hooked then
+                table.empty(buffer)
+                local z = (hookpos-ent.fo:getPos()):getNormalized()
+                if hookent:isValid() then
+                    z = (ent:getPos()+Vector(0,0,36)-ent.fo:getPos()):getNormalized()
+                    spearhead:setPos(hookent:getPos())
+                end
+                --con:setPos(ent:getPos()+Vector(0,0,45))
+                local center = path(ent.fo:getPos()-Vector(0,0,40),hookpos,0.5)
+                try(function()
+                con:setAngles(z:getAngle()+Angle(90,0,0))
+                spearhead:setAngles(z:getAngle()-Angle(90,0,0))
+                --con:setPos(center)
+                --con:setSize(Vector(6,6,center:getDistance(hookpos)*2))
+                ent.fo:setAngles(z:getAngle()+Angle(90,0,0))
+                if hookent:isValid() then
+                    ent.fo:setPos(hookent:getPos()+Vector(0,0,36)-z*15+hookent:getVelocity()/30)
+                else
+                    ent.fo:setPos(ent:getPos()+Vector(0,0,36)-z*15+ent:getVelocity()/30)
+                end
+                end,function()
+                    ent.hooked = false
+                    spearhead:remove()
+                    table.removeByValue(self.active,ent)
+                    hook.remove("Tick",sed)
+                    hook.remove("KeyPress","hammer."..sed)
+                    if DEBUG then
+                        print(ent:getName() .. " has lost the grapple.")
+                    end
+                end)
+            end
+            _olhook = ent.hooked
+        end)
+    else
+        if player() == ent then
+            hook.add("InputPressed","hook."..name,function(button)
+                if button == KEY.G then
+                    net.start("hook.start."..name)
+                    net.send()
+                end 
+            end)
+            hook.add("InputReleased","hook."..name,function(button) 
+                if button == KEY.G then
+                    net.start("hook.end."..name)
+                    net.send()
+                end 
+            end)
+        end
+    end
+end
+function Hook:disarm(ent)
+    ent.hooked = false
+    table.removeByValue(self.active,ent)
+end
+local hok = Hook:new({
+    force = 10000
+})
+--[[if SERVER then
+    prop.setPropUndo(true)
+    ex = prop.create(chip():getPos()+Vector(0,0,20),Angle(0),"models/props_interiors/BathTub01a.mdl",true)
+    holotext:new("Grappling Hook Giver",ex:getPos()+Vector(-85,0,40))
+    holotext:new("E - Have one",ex:getPos()+Vector(-85,0,25),Angle(0),Vector(0.2)):setKerning(20)
+    holotext:new("G - Use",ex:getPos()+Vector(-85,0,20),Angle(0),Vector(0.2)):setKerning(20)
+    ex.givingHooks = true
+    hook.add("Tick","anim",function()
+        ex:setAngles(ex:getAngles()+Angle(0,2,0))
+    end)
+    timer.simple(0.5,function()
+        net.start("sel")
+        net.writeEntity(ex)
+        net.send(find.allPlayers(),false)
+    end)
+else
+    ex = nil
+    net.receive("sel",function()
+        ex = net.readEntity()
+    end)
+end]]
+hok:give(owner())
+--hok:give(find.playersByName("[Z]",false,false)[1])
+--[[hook.add("KeyPress","",function(ply,key)
+    if key == 32 and ply:getEyeTrace().Entity == ex then
+        if table.hasValue(hok.active,ply) then
+            --[[hok:disarm(ply)
+            if CLIENT and DEBUG then
+                printMessage(3,ply:getName() .. " has lost the grapple.")
+            end
+        else
+            hok:give(ply)
+            if CLIENT and DEBUG then
+                printMessage(3,ply:getName() .. " has obtained the grapple.")
+            end
+        end
+    end
+end)]]

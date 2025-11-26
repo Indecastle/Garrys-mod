@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.6.3
+-- version 1.6.6
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -16,6 +16,9 @@ local RocketAutoRemoveTime = 20
 local AutoExplodeMaxDistance = 150
 local CounterMeasureTriggerRadius = 1500
 local NotifyTargetComingRocket = true
+
+local SoundFindingTargetVolume = 0.3
+local SoundComingRocketVolume = 0.25
 
 local ExplodeDamage = 110
 local ExplodeRadius = 400
@@ -472,7 +475,7 @@ bass.loadFile("sound/synth/tri.wav", "3d mono noblock noplay", function(snd, err
     _triSound = snd
     snd:setLooping(true)
     snd:setPitch(1.6)
-    snd:setVolume(0.2)
+    snd:setVolume(SoundFindingTargetVolume)
     snd:setFade(0, 10000, true)
     --print(errorCode, errorName)
 end)
@@ -481,7 +484,7 @@ bass.loadFile("sound/synth/tri.wav", "3d mono noblock noplay", function(snd, err
     _triSound2 = snd
     snd:setLooping(true)
     snd:setPitch(2.0)
-    snd:setVolume(0.15)
+    snd:setVolume(SoundComingRocketVolume)
     snd:setFade(0, 10000, true)
     --print(errorCode, errorName)
 end)
@@ -611,6 +614,11 @@ end)
 net.receive("sendRocketToClient", function(len)
     local hasTarget = net.readBool()
     local target = hasTarget and net.readEntity() or nil
+    
+    if isValid(target) and target:isVehicle() then
+        target = target:getDriver()
+    end
+    
     net.readEntity(function(rocket)
         if !isValid(rocket) then return end
         rocket._isRocket = true

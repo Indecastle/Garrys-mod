@@ -19,7 +19,7 @@ local InterpolationMove = true
 local InterpolationMoveRatio = 20
 
 local TargetRadius = 1500
-local BulletVelocity = 25
+local BulletVelocity = 30
 local PropDamageMode = true
 local BulletLifeTime = 10
 local BulletObbSize = 10

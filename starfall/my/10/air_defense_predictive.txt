@@ -2,7 +2,7 @@
 --@author Markiz
 --model models/hunter/blocks/cube1x1x1.mdl
 --@shared
--- version 0.2.0
+-- version 0.4.0
 
 local FireReloadDelay = 4.0
 local FireReactionDelay = 1.0
@@ -14,6 +14,8 @@ local BuildSpeed = 0.4
 
 local ExplodeDamage = 100
 local ExplodeRadius = 500
+
+local OnlyUngod = true
 
 --===========================================================
 
@@ -231,7 +233,7 @@ if SERVER then
             return isValid(ent)
                 and ent:isVehicle()
                 and isValid(ent:getDriver())
-                and !ent:getDriver():hasGodMode()
+                and (!OnlyUngod or !ent:getDriver():hasGodMode())
                 and angleBetweenVectors((ent:getPos() - _cannon:getPos()):getNormalized(), upDir) < MaxPitchAngle
                 and isVisibleEnt(startPos, ent)
         end)
@@ -386,6 +388,14 @@ if SERVER then
             _e:remove()
         end)
     end
+    
+    hook.add("EntityRemoved", "", function(ent)
+        if ent == _cannon then
+            timer.simple(1, function()
+                _e:remove()
+            end)
+        end
+    end)
         
     hook.add("EntityTakeDamage", "dmg", function(target, attacker, inflictor, amount, type, position, force)
         if _cannon != target then return end
@@ -407,6 +417,7 @@ if SERVER then
             end)
         end
     end)
+    
     
     return
 end
