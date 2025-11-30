@@ -16,6 +16,12 @@ local _flag_trollface = "https://i.imgur.com/lLIw3Im.png"
 local _flag_lgbt = "https://cdn.discordapp.com/attachments/885840722786418711/1096202070861819924/image.png"
 
 
+local RotateAngleFlag = 0
+local IsMirrorFlag = false
+
+local RotateAngle = 0
+local IsMirror = false
+
 
 local URL = _flag_trollface
 
@@ -70,28 +76,39 @@ for i = 0, HFlag:getBoneCount() - 1 do
 end
 
 
+local mat0 = material.create("UnlitGeneric")
 local mat = material.create("UnlitGeneric")
 
 mat:setInt("$flags", 256)
+mat0:setInt("$flags", 256)
 
-mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
-    if m == nil then return end
+local t = Matrix()
+t:scale(Vector(1, IsMirror and -1 or 1, 1))
+t:rotate(Angle(0, RotateAngle, 0))
+mat0:setMatrix("$basetexturetransform", t)
 
-    --ocal ratio = w / h
+mat:setTextureURL("$basetexture", URL, function(m, u, w, h, layout)
+    if not m or not layout then return end
 
-    --local sh = maxh
-    --local sw = sh * ratio
-    --HFlag:setSize(Vector(sh, sw, 1))
+
+    layout(0, 0, m:getWidth(), m:getHeight())
+   
+    local t = Matrix()
+    t:scale(Vector(1, IsMirrorFlag and -1 or 1, 1))
+    t:rotate(Angle(0, RotateAngleFlag, 0))
+    m:setMatrix("$basetexturetransform", t)
     
-    l(0, 0, m:getWidth(), m:getHeight())
+    local texture = mat:getTexture("$basetexture")
+    mat0:setTexture("$basetexture", texture)
     
-    HFlag:setMaterial("!" .. mat:getName())
+    HFlag:setMaterial("!" .. m:getName())
 end)
+
 
 
 net.receive("init", function(len)
     _weldedEnt = net.readEntity()
-    _weldedEnt:setSubMaterial(WeldSubMaterialIndex, '!' .. mat:getName())
+    _weldedEnt:setSubMaterial(WeldSubMaterialIndex, '!' .. mat0:getName())
 end)
 
 hook.add("Removed", "", function() 
@@ -99,6 +116,8 @@ hook.add("Removed", "", function()
 end)
 
 hook.add("drawhud","myshook",function()
+    if player() != owner() then return end
+    
     for i = 0, math.min(25, HFlag:getBoneCount() - 1) do
         local pos = HFlag:getBonePosition(i):toScreen()
         

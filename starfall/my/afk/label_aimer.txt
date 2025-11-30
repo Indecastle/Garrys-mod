@@ -29,7 +29,7 @@ end
 --if Target == player() then return end
 
 local Data = {
-    {   text={"Kill me"}, 
+    {   text={"WH enabled"}, 
         fontSize=200, 
         fontBold=600, 
         bold=false,

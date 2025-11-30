@@ -14,7 +14,7 @@ local KeyBindData = { -- The value can be both the key and the list from the key
 ---------------------------------------------------
 
 local _locks = {}
-function isLockEvent(name, sec)
+function lockEvent(name, sec)
     local curtime = timer.curtime()
     _locks[name] = _locks[name] or curtime
     local isLock = curtime < _locks[name]
@@ -22,7 +22,7 @@ function isLockEvent(name, sec)
         _locks[name] = curtime + sec
     end
 
-    return isLock
+    return !isLock
 end
 
 function setLockEvent(name, sec)
@@ -105,7 +105,7 @@ hook.add("Think", "", function()
     
     
     if bindCb('Snd').Pressed then
-        if !isLockEvent("testLock", 0.5) then
+        if lockEvent("testLock", 0.5) then
             print("Foo!")
         end
     end

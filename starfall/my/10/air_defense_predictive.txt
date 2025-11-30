@@ -1,5 +1,6 @@
 --@name Air defense Predictive
 --@author Markiz
+-- author STEAM_0:1:54066003
 --model models/hunter/blocks/cube1x1x1.mdl
 --@shared
 -- version 0.4.0

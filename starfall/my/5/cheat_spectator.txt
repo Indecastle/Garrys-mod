@@ -10,7 +10,7 @@ local ThPersDistAddValue = 50
 local FreeCumVelocity = 15
 local FreeCumVelocityShift = 200
 local FreeCumVelocityCtrl = 2
-local WH = true
+local WH = false
 local IsOnlyOwnerViewEntity = true
 
 local TeleportToPointEnabled = true

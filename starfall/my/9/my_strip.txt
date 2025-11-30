@@ -7,7 +7,7 @@ local Kill = true
 
 
 local Target = owner()
-Target = find.playersByName("dash")[1]
+Target = find.playersByName("markiz")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true

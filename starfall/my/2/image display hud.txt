@@ -53,6 +53,8 @@ local Target = owner() -- if RadiusMode = false
 --Target = find.playersByName("markiz")[1]
 
 
+local RotateAngle = 0
+local IsMirror = false
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -236,7 +238,10 @@ if _isUrl then
         local x=0 y=0 w=m:getWidth() h=m:getHeight()
         l(x, y, w, h)
         
-        
+        local t = Matrix()
+        t:scale(Vector(IsMirror and -1 or 1, 1, 1))
+        t:rotate(Angle(0, RotateAngle, 0))
+        m:setMatrix("$basetexturetransform", t)
         --Width, Height = Width or 1920, Height or 1080
         --print(Width, Height, ' - ', Fov)
         renderScene()

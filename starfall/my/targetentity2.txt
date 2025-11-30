@@ -1,7 +1,8 @@
 --@name TargetEntity 2
 --@author
 --@shared
---@include libs/my_methods.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/my_methods.txt as libs/my_methods.txt
+--include libs/my_methods.txt
 
 
 dofile("libs/my_methods.txt")
@@ -22,9 +23,11 @@ function func()
     print(target)
     --targetP = target:getPhysicsObject()
     --target:setPos(target:getPos() + Vector(0,0,50))
-    print(target:getOwner())
+    --print(target:getOwner())
     --target:setFrozen(false)
-    --printTable(O:getNWVarTable())
+    
+   -- printTable(target:getClipping())
+    --print(target:physicsClipsLeft())
     
     //local kek = target.Password 
     
@@ -91,7 +94,7 @@ if O == OO then
         
         net.receive("keyHandler", function (len, ply)
             local key = net.readInt(8)
-            if key == KEY.ALT then
+            if key == KEY.LSHIFT then
                 func(key)
             end
         end)

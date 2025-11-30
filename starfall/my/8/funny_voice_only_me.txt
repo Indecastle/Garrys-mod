@@ -35,7 +35,7 @@ end)
 
 
 hook.add("PlayerStartVoice", "", function(ply)
-    if owner() != player() then return end
+    if ply != owner() then return end
     _data[ply] = timer.systime() + 10
 end)
 

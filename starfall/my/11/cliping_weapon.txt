@@ -1,0 +1,134 @@
+--@name Cliping Weapon
+--@author Markiz
+-- author STEAM_0:1:54066003
+--@shared
+-- version 1.0.1
+
+
+local OnlyOwnerProps = true
+
+-------------------------------------------------------------
+
+local _e, _o = chip(), owner()
+
+
+
+
+---------------------------------------------------
+
+local _locks = {}
+function lockEvent(name, sec)
+    local curtime = timer.curtime()
+    _locks[name] = _locks[name] or curtime
+    local isLock = curtime < _locks[name]
+    if sec ~= nil and !isLock then
+        _locks[name] = curtime + sec
+    end
+
+    return !isLock
+end
+
+function setLockEvent(name, sec)
+    _locks[name] = timer.curtime() + sec
+end
+
+---------------------------------------------------
+
+local clippedEntsData = {}
+
+if SERVER then
+    
+    prop.setPropUndo(true)
+    --local p1 = prop.create(e:getPos() + Vector(0,0,100), Angle(), "models/props_c17/FurnitureCouch001a.mdl", true)
+    --local ang = p1:worldToLocalAngles(Vector(0,1,0))
+    --local isSuccess = p1:addClip(Vector(0, -20, 0), ang:getForward(), true, true)
+    --print(isSuccess)
+    
+    function func(ply)
+        local tr = ply:getEyeTrace()          
+        local target = tr.Entity 
+        if !isValid(target) then return end
+        if OnlyOwnerProps and target:getOwner() != _o then return end
+        --print(target)
+        
+        if !lockEvent("Clip", 0.5) then
+            return
+        end
+        
+        local originPos = target:getPos()
+        local originAngle = target:getAngles()
+        local model = target:getModel()
+        local color = target:getColor()
+        local hitPos = tr.HitPos
+        
+        local clipedData1 = {}
+        local clipedData2 = {}
+        
+        if clippedEntsData[target] == nil and target:getClipData() != nil then
+            return;
+        end
+        
+        if clippedEntsData[target] != nil then
+            if !target:physicsClipsLeft() or #clippedEntsData[target] >= 6 then
+                printConsole("Clips limit has been reached")
+                return
+            end
+            table.add(clipedData1, clippedEntsData[target])
+            table.add(clipedData2, clippedEntsData[target])
+        end
+        
+        local _, eyeDirAngle = localToWorld(Vector(), Angle(math.rand(0, 180), 90, 0), Vector(), owner():getEyeAngles())
+        eyeDirAngle = target:worldToLocalAngles(eyeDirAngle)
+        local eyeDir = eyeDirAngle:getForward()
+        local eyeDir2 = -eyeDir
+        
+        local clipOriginPos = target:worldToLocal(hitPos)
+        
+        table.insert(clipedData1, {ClipOriginPos = clipOriginPos, Normal = eyeDir})
+        table.insert(clipedData2, {ClipOriginPos = clipOriginPos, Normal = eyeDir2})
+        
+        target:setNocollideAll(true)
+        
+        local clippedEnt1 = prop.create(originPos, originAngle, model, false)
+        local clippedEnt2 = prop.create(originPos, originAngle, model, false)
+        
+        for i, item in ipairs(clipedData1) do
+            clippedEnt1:addClip(item.ClipOriginPos, item.Normal, true, true)
+        end
+        for i, item in ipairs(clipedData2) do
+            clippedEnt2:addClip(item.ClipOriginPos, item.Normal, true, true)
+        end
+
+        clippedEntsData[clippedEnt1] = clipedData1
+        clippedEntsData[clippedEnt2] = clipedData2
+        
+        clippedEntsData[target] = nil
+        target:remove()
+        
+        clippedEnt1:emitSound("weapons/knife/knife_hitwall1.wav")
+    end
+    
+    
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+    end)
+    
+    net.receive("keyHandler", function (len, ply)
+        local key = net.readInt(8)
+        func(ply)
+    end)
+    
+    return
+end        
+
+local _p = player()
+
+hook.add("InputPressed", "", function(button)
+    if _o != _p or button != KEY.LALT then
+        return
+    end
+    net.start("keyHandler")
+    net.writeInt(button, 8)
+    net.send()
+end)
+ 

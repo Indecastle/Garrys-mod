@@ -36,6 +36,12 @@ local VerticalAngle = true
 local PosUp = false
 local ParentOnMe = false
 
+local RotateAngle = 0
+local IsMirror = false
+
+
+-----------------------------------------------------------------------------------------
+
 function isLookingAtChip()
     local dir = owner():getEyeAngles():getForward()
     local dir2 = (chip():getPos() - owner():getShootPos()):getNormalized()
@@ -146,13 +152,22 @@ else
 
             local sh = maxh
             local sw = sh * ratio
-            screen:setSize(Vector(sh, sw, 1))
+            if RotateAngle % 180 == 90 or RotateAngle % 180 == -90 then
+                screen:setSize(Vector(sw, sh, 1))
+            else
+                screen:setSize(Vector(sh, sw, 1))
+            end
             
             local x,y,w,h;
             if PosUp then x=m:getWidth()/4 y=0 w=m:getWidth()/2 h=m:getHeight()/2
             else x=0 y=0 w=m:getWidth() h=m:getHeight() end
         
-            l(x, y, w, h)
+            l(x, y, h, w)
+            
+            local t = Matrix()
+            t:scale(Vector(1, IsMirror and -1 or 1, 1))
+            t:rotate(Angle(0, RotateAngle, 0))
+            m:setMatrix("$basetexturetransform", t)
             
             screen:setMaterial("!" .. mat:getName())
         end)
