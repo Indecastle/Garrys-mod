@@ -1,5 +1,6 @@
 --@name reklama xui
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
 --include libs/3d2dtext.txt
 --@client

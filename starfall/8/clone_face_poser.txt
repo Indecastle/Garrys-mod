@@ -1,0 +1,99 @@
+--@name Clone Face Poser
+--@author Markiz
+--@shared
+
+local _e, _o = chip(), chip():getOwner()
+
+
+
+local function copyPoseParams(pEntityFrom, pEntityTo)
+    if !isValid(pEntityFrom) or !isValid(pEntityTo) then return end
+    --printConsole(pEntityFrom)
+    --printConsole(pEntityTo)
+    if (SERVER) then
+        for i = 0, pEntityFrom:getPoseCount() - 1 do
+            local sPose = pEntityFrom:getPoseName(i)
+    --printConsole(sPose)
+            pEntityTo:setPose(sPose, pEntityFrom:getPose(sPose))
+        end
+    else
+        for i = 0, pEntityFrom:getPoseCount() - 1 do
+            local flMin, flMax = pEntityFrom:getPoseRange(i)
+            local sPose = pEntityFrom:getPoseName(i)
+            pEntityTo:setPose(sPose, math.remap(pEntityFrom:getPose(sPose), 0, 1, flMin, flMax))
+        end
+    end
+end
+
+
+function copyRagdollFaceToHologram(prop_ragdoll, holo)
+    --   
+    if not isValid(prop_ragdoll) or not isValid(holo) then return end
+
+    --   flexes  ragdoll  hologram
+    local flexes = prop_ragdoll:getFlexes()
+    
+    local flexScale = prop_ragdoll:getFlexScale(id)
+    holo:setFlexScale(flexScale)
+    --printTable(flexes)
+    --for i = 0, #flexes - 1 do
+    for key, id in pairs(flexes) do
+        
+        --local flexName = prop_ragdoll:getFlexName(i)
+        local flexWeight = prop_ragdoll:getFlexWeight(id)
+        
+
+        --      hologram,      flex
+        local targetFlexID = holo:getFlexByName(key)
+        if targetFlexID != nil and targetFlexID >= 0 then
+            holo:setFlexWeight(targetFlexID, flexWeight)
+            if key == "eyes_rightleft" then
+                --holo:setFlexWeight(targetFlexID, 1.0)
+            end
+        end
+    end
+end
+
+
+local holo, targetRagdoll
+
+timer.create("pose123", 0.3, 0, function()
+    --copyPoseParams(targetRagdoll, holo)
+    if (CLIENT) then
+        copyRagdollFaceToHologram(targetRagdoll, holo)
+    end
+end)
+
+
+if SERVER then
+    
+    holo = hologram.create(_e:getPos() + Vector(0,0,5), _e:getAngles(), "models/Kleiner.mdl", Vector(1))
+    holo:setParent(_e)
+    --holo = prop.createRagdoll("models/alyx.mdl", true)
+    --holo:setPos(_e:getPos() + Vector(0,0,50))
+    
+    local ar = find.byClass("prop_ragdoll", function(ent)
+        return ent:getOwner() == _o and ent != holo
+    end)
+    targetRagdoll = find.closest(ar, _e:getPos())
+    
+    hook.add("ClientInitialized", "cl_init", function(ply)
+        net.start("init")
+        net.writeEntity(targetRagdoll)
+        net.writeEntity(holo)
+        net.send(ply)
+    end)
+    
+    return
+end
+
+
+net.receive("init", function(len)
+    targetRagdoll = net.readEntity()
+    net.readEntity(function(ent)
+        holo = ent
+    end)
+end)
+
+
+

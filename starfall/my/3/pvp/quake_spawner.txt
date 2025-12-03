@@ -5,10 +5,10 @@ QuakeSpawner = class("quake_spawner")
 
 -- Example
 /*
---@name Spawner Heal
---@author Markiz
---@include ./quake_spawner.txt
---@server
+--name Spawner Heal
+--author Markiz
+--include ./quake_spawner.txt
+--server
 
 dofile("./quake_spawner.txt")
 

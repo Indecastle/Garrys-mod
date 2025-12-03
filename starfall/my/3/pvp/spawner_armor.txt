@@ -1,9 +1,9 @@
 --@name Spawner Armor
 --@author Markiz
---@include ./quake_spawner.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/my/3/pvp/quake_spawner.txt as quake_spawner.txt
 --@server
 
-dofile("./quake_spawner.txt")
+dofile("quake_spawner.txt")
 
 local Vars = {
     Radius = Vector(100),

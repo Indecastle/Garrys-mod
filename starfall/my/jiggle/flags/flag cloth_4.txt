@@ -19,7 +19,7 @@ local _flag_lgbt = "https://cdn.discordapp.com/attachments/885840722786418711/10
 local RotateAngleFlag = 0
 local IsMirrorFlag = false
 
-local RotateAngle = 0
+local RotateAngle = -90
 local IsMirror = false
 
 

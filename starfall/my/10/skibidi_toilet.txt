@@ -1,7 +1,7 @@
 --@name Skibidi DISSOLVE
 --@author Markiz
 --@shared
--- version 1.1.11
+-- version 1.2.2
 
 local Respawn = false
 local SpawnCounts = 1
@@ -345,7 +345,90 @@ end
 
 
 
+
 ---------- CLIENT ---------------------------------------------------------------
+
+function setFlexesData(ent, flexesData, flexScale)
+    if not isValid(ent) then return end
+
+    ent:setFlexScale(flexScale)
+    
+    for key, weight in pairs(flexesData) do
+        local targetFlexId = ent:getFlexByName(key)
+        if targetFlexId != nil and targetFlexId >= 0 then
+            ent:setFlexWeight(targetFlexId, weight)
+        end
+    end
+end
+
+
+local _flexScale1 = 5
+local _flexesData1 = {
+    left_upper_raiser=1,
+    gesture_rightleft=0.5,
+    left_lowerer=0.5,
+    right_corner_depressor=0,
+    gesture_updown=0.5,
+    dilator=0,
+    left_lid_closer=0,
+    jaw_clencher=0,
+    jaw_sideways=0.5,
+    right_lid_droop=0,
+    left_funneler=0,
+    right_lid_raiser=0,
+    chest_rightleft=0.5,
+    body_rightleft=0.5,
+    left_corner_depressor=0,
+    right_mouth_drop=0,
+    eyes_rightleft=0.5,
+    left_mouth_drop=0,
+    eyes_updown=0.5,
+    right_corner_puller=1,
+    right_lid_tightener=0,
+    jaw_drop=0,
+    head_tilt=0.5,
+    head_updown=0.5,
+    head_rightleft=0.5,
+    right_stretcher=1,
+    right_puckerer=0,
+    left_stretcher=1,
+    wrinkler=0.090000003576279,
+    half_closed=0,
+    lip_bite=0,
+    head_forwardback=0.5,
+    mouth_sideways=0.5,
+    blink=0,
+    right_funneler=0,
+    right_cheek_puffer=1,
+    tightener=0,
+    right_lowerer=0.5,
+    chin_raiser=0,
+    left_part=1,
+    right_outer_raiser=0,
+    left_dimpler=1,
+    left_lid_raiser=0,
+    sneer_left=1,
+    right_dimpler=1,
+    right_part=1,
+    presser=0,
+    right_lid_closer=0,
+    bite=0,
+    lower_lip=0,
+    left_cheek_puffer=1,
+    left_inner_raiser=0,
+    left_lid_droop=0,
+    left_outer_raiser=0,
+    right_upper_raiser=1,
+    left_lid_tightener=0,
+    left_cheek_raiser=0,
+    right_inner_raiser=0,
+    right_cheek_raiser=0,
+    left_corner_puller=1,
+    left_puckerer=0,
+}
+
+
+
 
 local SkibidiClientClass = class("SkibidiClientClass")
 
@@ -405,6 +488,8 @@ function SkibidiClientClass:initialize(id, soundItemIndex, propScaleDataIndex, p
     self._headHolo:manipulateBonePosition(rUpperArm, Vector(0,-100,0))
     self._headHolo:manipulateBoneScale(self._headBone, Vector(self._headScale))
     
+    setFlexesData(self._headHolo, _flexesData1, _flexScale1)
+    
     self:buildSounds()
 end
 
@@ -412,6 +497,7 @@ end
 function SkibidiClientClass:buildSounds()
     self.soundManagerData = getSoundManagerData(self._soundDataItem.Url, self._propScaleDataItem.Scale)
 end
+
 
 function SkibidiClientClass:isAlive()
     return self._isAlive and not self.isDisposed and isValid(self._propBase) and isValid(self._headHolo)
@@ -452,9 +538,22 @@ end
 
 function SkibidiClientClass:manipulateBone()
     if not isValid(self._headHolo) then return end
+    
+    if self._headBoneShakeAngle == nil then
+        self._headBoneShakeAngle = Angle()
+    end
+    local shakeStep = 5
+    local shakeLimit = 5
+    self._headBoneShakeAngle.p = math.clamp(self._headBoneShakeAngle.p + math.rand(-shakeStep,shakeStep), -shakeLimit, shakeLimit)
+    self._headBoneShakeAngle.y = math.clamp(self._headBoneShakeAngle.y + math.rand(-shakeStep,shakeStep), -shakeLimit, shakeLimit)
+    if self._callbackState != self.AngleState then
+        self._headHolo:manipulateBoneAngles(self._headBone, self._headBoneShakeAngle)
+    end
+    
     self:_callbackState()
 end
-    
+
+
 function SkibidiClientClass:PositionState()
     self._i1 = self._i1 + self._move1 * getFrameTime()
     if self._i1 > self._maxI1 then
@@ -490,7 +589,7 @@ function SkibidiClientClass:AngleState()
     elseif self._index2 == 2 then ang = Angle(0, 0, self._i2)
     elseif self._index2 == 3 then ang = Angle(0, 0, -self._i2)
     end
-    self._headHolo:manipulateBoneAngles(self._headBone, ang)
+    self._headHolo:manipulateBoneAngles(self._headBone, ang + self._headBoneShakeAngle)
 end
 
 function SkibidiClientClass:ScaleState()

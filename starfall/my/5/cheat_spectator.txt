@@ -1,7 +1,8 @@
 --@name cheat spectator
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@shared
--- version 1.3.2
+-- version 1.4.0
 
 -- Third person
 local ThPersDist = 100
@@ -32,6 +33,9 @@ local KeyBindings = {
     SwitchWH = 63, -- =
     TeleportToPoint = KEY.H,
 }
+
+local ShowHint = true
+local ShowHintOnlyOne = true
 
 
 -------------------------------------------------------------
@@ -397,36 +401,50 @@ end
 --end
 
 
-local _alertMessage = ""
-local _fkey = function(key) return input.getKeyName(key):upper() end
-
-_alertMessage = _alertMessage .. string.format("%s - Turn on/off HUD\n", _fkey(KeyBindings.EnableHud))
-_alertMessage = _alertMessage .. string.format("%s - Change eye pos\n", _fkey(KeyBindings.ChangeEyePos))
-_alertMessage = _alertMessage .. string.format("%s - Switch third person\n", _fkey(KeyBindings.SwitchThirdPerson))
-_alertMessage = _alertMessage .. string.format("%s/%s - Switching to another player\n", _fkey(KeyBindings.SwitchToAnotherPersonUp), _fkey(KeyBindings.SwitchToAnotherPersonDown))
-_alertMessage = _alertMessage .. string.format("%s - Switching cheat / free spectate\n", _fkey(KeyBindings.SwitchSpectate))
-_alertMessage = _alertMessage .. string.format("%s - reset free spectate position to your position and set to your Target\n", _fkey(KeyBindings.ResetFreeSpectate))
-_alertMessage = _alertMessage .. string.format("%s - Teleport to spectate position\n", _fkey(KeyBindings.TeleportToSpectatePosition))
-_alertMessage = _alertMessage .. string.format("%s/%s/%s/%s - move free camera (only in free spectating)\n", _fkey(KeyBindings.MoveFreeLeft), _fkey(KeyBindings.MoveFreeForward), _fkey(KeyBindings.MoveFreeBack), _fkey(KeyBindings.MoveFreeRight))
-_alertMessage = _alertMessage .. string.format("%s - flashlight (only in free spectating)\n", _fkey(KeyBindings.SwitchFlashlight))
-_alertMessage = _alertMessage .. string.format("%s - Switch WallHack\n", _fkey(KeyBindings.SwitchWH))
-_alertMessage = _alertMessage .. "\n\n\n"
-
-timer.create("isHUDActive", 0.2, 0, function()
-    local newIsHUDActive = render.isHUDActive()
-    if oldIsHUDActive ~= newIsHUDActive then
-        oldIsHUDActive = newIsHUDActive
-        if newIsHUDActive then
-            printMessage(4, _alertMessage)
+if ShowHint then
+    local _alertMessage = ""
+    local _fkey = function(key) return input.getKeyName(key):upper() end
+    
+    _alertMessage = _alertMessage .. string.format("%s - Turn on/off HUD\n", _fkey(KeyBindings.EnableHud))
+    _alertMessage = _alertMessage .. string.format("%s - Change eye pos\n", _fkey(KeyBindings.ChangeEyePos))
+    _alertMessage = _alertMessage .. string.format("%s - Switch third person\n", _fkey(KeyBindings.SwitchThirdPerson))
+    _alertMessage = _alertMessage .. string.format("%s/%s - Switching to another player\n", _fkey(KeyBindings.SwitchToAnotherPersonUp), _fkey(KeyBindings.SwitchToAnotherPersonDown))
+    _alertMessage = _alertMessage .. string.format("%s - Switching cheat / free spectate\n", _fkey(KeyBindings.SwitchSpectate))
+    _alertMessage = _alertMessage .. string.format("%s - reset free spectate position to your position and set to your Target\n", _fkey(KeyBindings.ResetFreeSpectate))
+    _alertMessage = _alertMessage .. string.format("%s - Teleport to spectate position\n", _fkey(KeyBindings.TeleportToSpectatePosition))
+    _alertMessage = _alertMessage .. string.format("%s/%s/%s/%s - move free camera (only in free spectating)\n", _fkey(KeyBindings.MoveFreeLeft), _fkey(KeyBindings.MoveFreeForward), _fkey(KeyBindings.MoveFreeBack), _fkey(KeyBindings.MoveFreeRight))
+    _alertMessage = _alertMessage .. string.format("%s - flashlight (only in free spectating)\n", _fkey(KeyBindings.SwitchFlashlight))
+    _alertMessage = _alertMessage .. string.format("%s - Switch WallHack\n", _fkey(KeyBindings.SwitchWH))
+    _alertMessage = _alertMessage .. "\n\n\n"
+    
+    local _isFirstHint = true
+    
+    timer.create("isHUDActive", 0.2, 0, function()
+        local newIsHUDActive = render.isHUDActive()
+        if oldIsHUDActive ~= newIsHUDActive then
+            oldIsHUDActive = newIsHUDActive
+            if newIsHUDActive and (!ShowHintOnlyOne or _isFirstHint) then
+                _isFirstHint = false
+                printMessage(4, _alertMessage)
+            end
         end
-    end
-end)
+    end)
+end
 
 local players = {}
 
 timer.create("update_players", 1,0, function()
     players = find.allPlayers()
 end)
+
+function getNickName(player, undefinedName)
+    undefinedName = undefinedName or "Undefined..."
+    local nickName = nil
+    pcall(function()
+        nickName = player:getName()
+    end)
+    return nickName or undefinedName 
+end
 
 
 hook.add("drawhud","cheat spectator",function()
@@ -437,7 +455,8 @@ hook.add("drawhud","cheat spectator",function()
     
     render.setFont(font)
     render.setColor(team.getColor(TargetPlayer:getTeam()))
-    render.drawText(1, 1, ""..TargetPlayer:getName(), 0)  
+    
+    render.drawText(1, 1, ""..getNickName(TargetPlayer), 0)  
     
     render.setColor(Color(0,200,200, 100))
     render.drawRoundedBox(100, GameW/2-10-2, GameH/2-0.7, 23, 2)
@@ -458,7 +477,7 @@ hook.add("drawhud","cheat spectator",function()
                 
                 
                 render.setColor(team.getColor(p:getTeam()))
-                render.drawSimpleText(pos.x, pos.y-10, p:getName(), 1, 1)
+                render.drawSimpleText(pos.x, pos.y-10, getNickName(p), 1, 1)
             end
         end
     end

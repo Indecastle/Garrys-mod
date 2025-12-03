@@ -402,10 +402,10 @@ end
 
 
 
-hook.Add( "PlayerButtonDown", "Markiz_KeyDown", function(ply, button)
-    if not IsFirstTimePredicted() then return end
+hook.Add( "KeyPress", "Markiz_KeyDown", function(ply, button)
+    --if not IsFirstTimePredicted() then return end
     local activeWeapon = ply:GetActiveWeapon():GetClass()
-    if not ActivePressedKey[ply] and button == MOUSE_RIGHT then
+    if not ActivePressedKey[ply] and button == IN_ATTACK2 then
         ActivePressedKey[ply] = true
 
         TryCreate(ply, 'weapon_crowbar', 0.1, CreateCrossbow)
@@ -415,7 +415,7 @@ hook.Add( "PlayerButtonDown", "Markiz_KeyDown", function(ply, button)
         TryCreate(ply, 'weapon_fists', -1, CreateCombineBall)
     end
 
-    if not ActivePressedKey[ply] and button == MOUSE_LEFT then
+    if not ActivePressedKey[ply] and button == IN_ATTACK then
         ActivePressedKey[ply] = true
 
         TryCreate(ply, 'weapon_crowbar', 0.1, CreateSmallBall)
@@ -423,16 +423,16 @@ hook.Add( "PlayerButtonDown", "Markiz_KeyDown", function(ply, button)
     end
 end)
 
-hook.Add( "PlayerButtonUp", "Markiz_KeyUp", function(ply, button )
-    if not IsFirstTimePredicted() then return end
-    if button == MOUSE_LEFT or button == MOUSE_RIGHT then
+hook.Add( "KeyRelease", "Markiz_KeyUp", function(ply, button )
+    --if not IsFirstTimePredicted() then return end
+    if button == IN_ATTACK or button == IN_ATTACK2 then
         ActivePressedKey[ply] = nil
         timer.Remove('tt'..ply:SteamID())
     end
 end)
 
 --hook.Remove('OnEntityCreated', 'Markiz_OnCreated1')
---hook.Remove('KeyPress', 'Markiz_OnAttack1')
+--hook.Remove('	', 'Markiz_OnAttack1')
 --hook.Remove('EntityRemoved', 'Markiz_OnRemoved1')
---hook.Remove('PlayerButtonDown', 'Markiz_KeyDown')
---hook.Remove('PlayerButtonUp', 'Markiz_KeyUp')
+--hook.Remove('KeyPress', 'Markiz_KeyDown')
+--hook.Remove('KeyRelease', 'Markiz_KeyUp')

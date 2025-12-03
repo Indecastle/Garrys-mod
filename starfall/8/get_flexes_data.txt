@@ -1,0 +1,43 @@
+--@name Get Flexes Data (Temp)
+--@author
+--@client
+
+local O = owner()
+local OO = player()
+
+local MOUSE4_pressed = false
+
+local target, targetP;
+
+local oldIsPressed = nil
+
+
+function func()
+    local tr = O:getEyeTrace()          
+    target = tr.Entity 
+    
+    local flexes = target:getFlexes()
+    printConsole("local flexScale = " .. tostring(target:getFlexScale()))
+    printConsole("local flexesData = {")
+    for key, id in pairs(flexes) do
+        printConsole("\t" .. key .. "=" .. tostring(target:getFlexWeight(id)) .. ",")
+    end
+    printConsole("}")
+    --printTable(flexes)
+    --print("count = " .. tostring(#table.getKeys(flexes)))
+end
+
+
+
+
+hook.add("inputPressed", "kk", function(button)
+    if button == MOUSE.MOUSE4 then          
+        func()
+    end
+end)
+
+
+
+
+
+

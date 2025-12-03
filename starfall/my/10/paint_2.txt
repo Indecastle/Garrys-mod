@@ -1,5 +1,6 @@
 --@name Paint 2
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@shared
 --owneronly
 

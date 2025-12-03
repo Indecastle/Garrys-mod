@@ -2,8 +2,10 @@
 --@author Markiz
 --@model models/lamps/torch.mdl
 --@shared
---@include libs/sprites1.txt
---@include libs/sprites_data.txt
+--include libs/sprites1.txt
+--include libs/sprites_data.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/sprites1.txt as libs/sprites1.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/sprites_data.txt as libs/sprites_data.txt
 
 dofile("libs/sprites_data.txt")
 local SpriteManager = require("libs/sprites1.txt")

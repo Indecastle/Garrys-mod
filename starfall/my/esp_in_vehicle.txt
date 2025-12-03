@@ -2,7 +2,7 @@
 
 --@shared
 
-local Radius = 10000
+local Radius = 20000
 local OnlyMap = false
 local BoxSize = 5
 

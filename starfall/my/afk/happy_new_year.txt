@@ -1,6 +1,8 @@
 --@name Happy new year
 --@author Markiz
---@include libs/3d2dtext.txt
+-- author STEAM_0:1:54066003
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
+--include libs/3d2dtext.txt
 --@client
 
 dofile("libs/3d2dtext.txt")

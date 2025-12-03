@@ -104,10 +104,11 @@ local m = cloneMaterial("Refract_DX90", "models/props_c17/fisheyelens")
 m:setFloat("$refractamount", _value)
 --m:setInt("$numframes", 4)
 
+local _targetValue = 0
 
 net.receive("Data", function(len)
-    _value = net.readFloat()
-    m:setFloat("$refractamount", _value)
+    _targetValue = net.readFloat()
+    
 end)
 
 
@@ -124,6 +125,9 @@ hook.add("think", "time", function()
     --m:setInt("$envmapframe", _numFrames)
     --m:setInt("$envmapmaskframe", _numFrames)
     --m:setInt("$flashlighttextureframe", _numFrames)
+    _value = _value + (_targetValue - _value) / 5
+    m:setFloat("$refractamount", _value)
+    
 end)
 
 
