@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.4.0
+-- version 1.4.1
 
 -- Third person
 local ThPersDist = 100
@@ -587,7 +587,7 @@ timer.create("updateActiveState", 0.1, 0, function()
     _prevActiveState = newActiveState
     
     if _flashlight then
-        _flashlight:setBrightness(newActiveState and IsFlashlighning and 3 or 0)
+        _flashlight:setBrightness(newActiveState and _isFlashlighning and 3 or 0)
         _flashlight:update()
     end
 end)
