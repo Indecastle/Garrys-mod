@@ -13,6 +13,7 @@ local _flag_anime = "https://cdn.discordapp.com/attachments/510528712320483329/7
 local _flag_germ = "https://i.imgur.com/QXkoWDt.png"
 local _flag_poland = "https://i.imgur.com/2l0Eq5L.png"
 local _flag_trollface = "https://i.imgur.com/lLIw3Im.png"
+local _flag_barryWood = "https://i.imgur.com/PQiuccK.png"
 local _flag_lgbt = "https://cdn.discordapp.com/attachments/885840722786418711/1096202070861819924/image.png"
 
 
@@ -26,7 +27,7 @@ local IsMirror = false
 local URL = _flag_trollface
 
 local EnableWeldMaterial = true
-local WeldSubMaterialIndex = 0
+local WeldSubMaterialIndex = 5
 
 local BoneScale = Vector(4,0.0001,0.0001)
 local Degree = 0

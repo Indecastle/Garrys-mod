@@ -1,0 +1,20 @@
+--@name Print local messages
+--@author Markiz
+-- author STEAM_0:1:54066003
+--@server
+-- version 1.0.0
+
+
+hook.add("PlayerSay", "", function(ply, text, isTeam, isLocal) // Player, string, bool, bool
+    local name = nil
+    try(function()
+        name = ply:getName()
+    end)
+    
+    if isLocal then
+        if ply:getPos():getDistance(owner():getPos()) > 300 then
+            local teamColor = team.getColor(ply:getTeam())
+            print(Color(100,200,255), '(local) ', teamColor, name, Color(250,255,255), ': ', text)
+        end
+    end
+end)
