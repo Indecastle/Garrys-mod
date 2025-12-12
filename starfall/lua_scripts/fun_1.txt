@@ -432,7 +432,7 @@ hook.Add( "KeyRelease", "Markiz_KeyUp", function(ply, button )
 end)
 
 --hook.Remove('OnEntityCreated', 'Markiz_OnCreated1')
---hook.Remove('	', 'Markiz_OnAttack1')
+--hook.Remove('KeyPress', 'Markiz_OnAttack1')
 --hook.Remove('EntityRemoved', 'Markiz_OnRemoved1')
 --hook.Remove('KeyPress', 'Markiz_KeyDown')
 --hook.Remove('KeyRelease', 'Markiz_KeyUp')

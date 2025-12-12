@@ -1,0 +1,114 @@
+--@name Player physgun
+--@author Markiz
+-- author STEAM_0:1:54066003
+--@server
+-- version 1.0.5
+
+
+--chip():setNoDraw(true)
+--chip():setSolid(false)
+--chip():setColor(Color(0,0,0,0))
+--chip():setMaterial("Models/effects/vol_light001")
+
+local _e, _o = chip(), chip():getOwner()
+
+--_e:setNoDraw(true)
+--_e:setSolid(false)
+
+--_o = find.playersByName("Markiz")[1]
+--_o = find.playerBySteamID("STEAM_0:1:54066003")[1]
+--print(_o)
+
+local _baseProp = nil
+local _weldedPropsData = {}
+
+
+function getBasePos()
+    return chip():localToWorld(Vector(0,0,30))
+end
+
+function initData(pos)
+
+    _baseProp = prop.create(pos + Vector(0,0,40), Angle(0,0,90), "models/sprops/misc/tubes/size_60/tube_60x90.mdl", true)
+    _baseProp:setPhysMaterial("gmod_silent")
+    _baseProp:setCollisionGroup(COLLISION_GROUP.INTERACTIVE)
+    _baseProp:setColor(Color(255,255,255,100))
+    _baseProp:setMaterial("debug/debugsolidmodelhulls")
+    _baseProp:setNoDraw(true)
+
+    local feet = prop.create(pos - Vector(0,0,12), Angle(0,0,90), "models/sprops/trans/wheel_c/wheel60.mdl", true)
+    feet:setPhysMaterial("gmod_silent")
+    feet:setCollisionGroup(COLLISION_GROUP.INTERACTIVE)
+    feet:setColor(Color(255,255,255,100))
+    feet:setMaterial("debug/debugsolidmodelhulls")
+    feet:setNoDraw(true)
+
+    local tube = prop.create(pos + Vector(0,0,90), Angle(0,0,90), "models/sprops/trans/wheel_c/wheel60.mdl", true)
+    tube:setPhysMaterial("gmod_silent")
+    tube:setCollisionGroup(COLLISION_GROUP.INTERACTIVE)
+    tube:setColor(Color(255,255,255,100))
+    tube:setMaterial("debug/debugsolidmodelhulls")
+    tube:setNoDraw(true)
+    
+    table.insert(_weldedPropsData, {Ent = _baseProp, Phys = _baseProp:getPhysicsObject(), OffsetPos = Vector(0,0,40), Angle = Angle(0,0,90)})
+    table.insert(_weldedPropsData, {Ent = feet, Phys = feet:getPhysicsObject(), OffsetPos = Vector(0,0,-12), Angle = Angle(0,0,90)})
+    table.insert(_weldedPropsData, {Ent = tube, Phys = tube:getPhysicsObject(), OffsetPos = Vector(0,0,90), Angle = Angle(0,0,90)})
+
+    constraint.nocollide(_baseProp, feet)
+    constraint.nocollide(_baseProp, tube)
+    constraint.nocollide(feet, tube)
+
+    constraint.weld(_baseProp, feet)
+    constraint.weld(_baseProp, tube)
+    constraint.weld(feet, tube)
+    
+    for i, item in ipairs(_weldedPropsData) do
+        item.Ent:setPos(pos + item.OffsetPos)
+        item.Ent:setAngles(item.Angle)
+        item.Ent:setFrozen(true)
+        item.Ent:setSolid(false)
+    end
+
+    --feet:setParent(_baseProp)
+    --tube:setParent(_baseProp)
+end
+
+
+initData(getBasePos())
+
+
+hook.add("KeyPress", "test", function(pl, key)
+    
+    if pl != _o or !isValid(_baseProp) then return end
+    
+    local eyeTrace = pl:getEyeTrace()
+    local aimEnt = eyeTrace.Entity
+    if key == IN_KEY.ATTACK and isValid(aimEnt) and aimEnt:isPlayer() and isValid(_o:getActiveWeapon()) and _o:getActiveWeapon():getClass() == "weapon_physgun" then
+        for i, item in ipairs(_weldedPropsData) do
+            item.Phys:wake()
+            item.Ent:setPos(aimEnt:getPos() + Vector(0,0,2) + item.OffsetPos)
+            item.Ent:setAngles(item.Angle)
+            item.Ent:setFrozen(false)
+            item.Ent:setSolid(true)
+            --item.Ent:setNocollideAll(false)
+            item.Ent:setCollisionGroup(COLLISION_GROUP.INTERACTIVE)
+        end
+    end
+end)
+
+
+hook.add("KeyRelease", "test", function(pl, key)
+    if pl != _o or !isValid(_baseProp) then return end
+    
+    if key != IN_KEY.ATTACK then return end
+    
+    local pos = getBasePos()
+    for i, item in ipairs(_weldedPropsData) do
+        item.Ent:setPos(pos + item.OffsetPos)
+        item.Ent:setAngles(item.Angle)
+        item.Ent:setFrozen(true)
+        item.Ent:setSolid(false)
+    end
+end)
+
+

@@ -1,0 +1,19 @@
+--@name
+--@author
+--@shared
+
+/*
+
+-- 1 Chip:
+hook.runRemote(nil, "unikalnoe_nazvanie")
+
+-- 2 Chip:
+hook.add("Remote"," ", function(s, o, payload)
+
+    if payload == "unikalnoe_nazvanie" then
+        chip():remove()
+    end
+
+end)
+
+*/
