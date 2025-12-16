@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.4.1
+-- version 1.4.3
 
 -- Third person
 local ThPersDist = 100
@@ -301,7 +301,7 @@ function flashlightHandle()
     if _isFlashlighning then
         if _flashlight then
             --local tr = trace.trace(FreeCumPos, FreeCumPos + eyeAngles():getForward()*10000000, nil, MASK.ALL, nil, false)
-            _flashlight:setPos(FreeCumPos)
+            _flashlight:setPos(OriginCumPos)
             _flashlight:setAngles(_calcviewAngles)
             _flashlight:update()
         end
@@ -595,6 +595,7 @@ end)
 
 hook.add("mouseWheeled", "", function(delta)
     if !ON or !render.isHUDActive() then return end
+    if FreeCumOn or !ThirdPerson then return end
     
     ThPersDist = ThPersDist-ThPersDistAddValue*delta
     if ThPersDist < 50 then ThPersDist = 50 end

@@ -40,10 +40,12 @@ end
 
 corWrap(function()
     
+print("__Start__")
 for i=1, 10 do
     prop.create(chip():getPos() + Vector(0,0,100), Angle(), "models/props_c17/oildrum001_explosive.mdl", false)
     --validQuota()
     corDelay(1)
 end
+print("__End__")
 
 end)

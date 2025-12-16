@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@server
--- version 1.0.5
+-- version 1.1.0
 
 
 --chip():setNoDraw(true)
@@ -20,6 +20,7 @@ local _e, _o = chip(), chip():getOwner()
 --print(_o)
 
 local _baseProp = nil
+local _basePropData = nil
 local _weldedPropsData = {}
 
 
@@ -53,6 +54,7 @@ function initData(pos)
     table.insert(_weldedPropsData, {Ent = _baseProp, Phys = _baseProp:getPhysicsObject(), OffsetPos = Vector(0,0,40), Angle = Angle(0,0,90)})
     table.insert(_weldedPropsData, {Ent = feet, Phys = feet:getPhysicsObject(), OffsetPos = Vector(0,0,-12), Angle = Angle(0,0,90)})
     table.insert(_weldedPropsData, {Ent = tube, Phys = tube:getPhysicsObject(), OffsetPos = Vector(0,0,90), Angle = Angle(0,0,90)})
+    _basePropData = _weldedPropsData[1]
 
     constraint.nocollide(_baseProp, feet)
     constraint.nocollide(_baseProp, tube)
@@ -77,22 +79,66 @@ end
 initData(getBasePos())
 
 
-hook.add("KeyPress", "test", function(pl, key)
+local _isFinding = false
+local _target = nil
+
+
+function resetToBase()
+    _isFinding = false
+    _target = nil
     
+    local pos = getBasePos()
+    for i, item in ipairs(_weldedPropsData) do
+        item.Ent:setPos(pos + item.OffsetPos)
+        item.Ent:setAngles(item.Angle)
+        item.Ent:setFrozen(true)
+        item.Ent:setSolid(false)
+    end
+end
+
+
+hook.add("Think", "hooking player", function()
+    if !isValid(_baseProp) then return end
+
+    if _isFinding and !isValid(_target) then
+        local eyeTrace = _o:getEyeTrace()
+        local aimEnt = eyeTrace.Entity
+        if isValid(aimEnt) and aimEnt:isPlayer() then
+            _isFinding = false
+            _target = aimEnt
+            
+            for i, item in ipairs(_weldedPropsData) do
+                item.Ent:setSolid(true)
+                item.Ent:setCollisionGroup(COLLISION_GROUP.INTERACTIVE)
+                item.Ent:setFrozen(false)
+                item.Ent:setAngles(item.Angle)
+            end
+        end
+    end
+    
+    if isValid(_target) then
+        _baseProp:setFrozen(true)
+        _baseProp:setFrozen(false)
+
+        for i, item in ipairs(_weldedPropsData) do
+            item.Ent:setPos(_target:getPos() + item.OffsetPos)
+        end
+
+        --local x1 = _baseProp:getAngles() - _basePropData.Angle
+        --local angleDiff = math.abs(x1.p) + math.abs(x1.y) + math.abs(x1.r)
+        --printConsole(angleDiff)
+        --if angleDiff > 5  then
+            --resetToBase()
+        --end
+        --item.Ent:setAngles(item.Angle)
+    end
+end)
+
+hook.add("KeyPress", "test", function(pl, key)
     if pl != _o or !isValid(_baseProp) then return end
     
-    local eyeTrace = pl:getEyeTrace()
-    local aimEnt = eyeTrace.Entity
-    if key == IN_KEY.ATTACK and isValid(aimEnt) and aimEnt:isPlayer() and isValid(_o:getActiveWeapon()) and _o:getActiveWeapon():getClass() == "weapon_physgun" then
-        for i, item in ipairs(_weldedPropsData) do
-            item.Phys:wake()
-            item.Ent:setPos(aimEnt:getPos() + Vector(0,0,2) + item.OffsetPos)
-            item.Ent:setAngles(item.Angle)
-            item.Ent:setFrozen(false)
-            item.Ent:setSolid(true)
-            --item.Ent:setNocollideAll(false)
-            item.Ent:setCollisionGroup(COLLISION_GROUP.INTERACTIVE)
-        end
+    if key == IN_KEY.ATTACK and isValid(_o:getActiveWeapon()) and _o:getActiveWeapon():getClass() == "weapon_physgun" then
+        _isFinding = true
     end
 end)
 
@@ -102,13 +148,7 @@ hook.add("KeyRelease", "test", function(pl, key)
     
     if key != IN_KEY.ATTACK then return end
     
-    local pos = getBasePos()
-    for i, item in ipairs(_weldedPropsData) do
-        item.Ent:setPos(pos + item.OffsetPos)
-        item.Ent:setAngles(item.Angle)
-        item.Ent:setFrozen(true)
-        item.Ent:setSolid(false)
-    end
+    resetToBase()
 end)
 
 

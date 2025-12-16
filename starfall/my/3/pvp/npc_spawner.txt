@@ -5,10 +5,10 @@ NpcSpawner = class("npc_spawner")
 
 -- Example
 /*
---@name Spawner Combine
---@author Markiz
---@include ./npc_spawner.txt
---@server
+--name Spawner Combine
+--author Markiz
+--include ./npc_spawner.txt
+--server
 
 dofile("./npc_spawner.txt")
 
