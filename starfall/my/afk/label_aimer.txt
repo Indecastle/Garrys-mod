@@ -8,7 +8,7 @@ dofile("libs/3d2dtext.txt")
 
 local Target = chip()
 Target = owner()
---Target = find.playersByName("markiz")[1]
+Target = find.playersByName("Markiz")[1]
 /*Target = find.allPlayers(function(p)
     if p:getSteamID() == "STEAM_0:0:582893321" then
         return true

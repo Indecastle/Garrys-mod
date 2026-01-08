@@ -1,0 +1,241 @@
+--@name glide explosion effect
+--@author Markiz
+--@client
+
+
+local RandomVec = function() return Vector(math.rand(-1,1), math.rand(-1,1), math.rand(-1,1)) end
+local RandomAng = function() return Angle(math.rand(-90,90), math.rand(-90,90), math.rand(-90,90)) end
+
+local ExplosionEffect = class("ExplosionEffect")
+
+function ExplosionEffect:initialize( pos, normal, size )
+    local origin = pos
+    local normal = normal
+    local scale = math.clamp( size, 0.1, 1.5 )
+
+    self.size = 1200 * scale
+    self.origin = origin
+    self.lifeTime = timer.curtime() + 0.05
+
+    local emitter = particle.create( origin, false )
+    if not isValid( emitter ) then return end
+
+    self:explosion( emitter, origin, normal, scale )
+    self:smoke( emitter, origin, normal, scale )
+    --self:debris( emitter, origin, normal, scale )
+
+    emitter:destroy()
+end
+
+local FLAME_MATERIAL = {}
+
+for i=1, 5 do
+    table.insert(FLAME_MATERIAL, material.load("glide/effects/flamelet"..i))
+end
+
+
+
+function ExplosionEffect:explosion( emitter, origin, normal, scale )
+    local count = math.min(24, math.floor( scale * 20 ))
+    local p, col
+
+    for _ = 0, count do
+        p = emitter:add(
+            table.random(FLAME_MATERIAL), -- Material material
+            origin, -- Vector position
+            math.random( 20, 30 ) * scale, -- number startSize
+            math.random( 70, 120 ) * scale, -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            255, -- number startAlpha
+            0, -- number endAlpha 
+            0.4) -- number dieTime
+        
+        if p then
+            p:setGravity( normal * math.random( 1800, 2200 ) )
+            p:setVelocity( RandomVec() * math.random( 1300, 1500 ) * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 600 )
+
+            p:setRoll( math.rand( -1, 1 ) )
+
+            col = math.rand( 0.7, 1 )
+
+            p:setColor( Color(255, 255 * col, 255 * col) )
+            p:setLighting( false )
+            --p:setDieTime( 0.4 )
+            p:setCollide( true )
+        end
+    end
+
+    for _ = 0, 10 do
+        p = emitter:add(
+            table.random(FLAME_MATERIAL), -- Material material
+            origin, -- Vector position
+            80 * scale, -- number startSize
+            math.random( 140, 180 ) * scale, -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            200, -- number startAlpha
+            0, -- number endAlpha 
+            0.2) -- number dieTime
+
+        if p then
+            p:setVelocity( RandomVec() * math.random( 0, 1500 ) * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 300 )
+
+            p:setRoll( math.rand( -1, 1 ) )
+
+            p:setColor( Color(255, 255, 200) )
+            --p:setDieTime( 0.2 )
+            p:setCollide( true )
+        end
+    end
+end
+
+local SMOKE_SPRITES = {
+    material.load("particle/smokesprites_0001"),
+    material.load("particle/smokesprites_0002"),
+    material.load("particle/smokesprites_0003"),
+    material.load("particle/smokesprites_0004"),
+    material.load("particle/smokesprites_0005"),
+    material.load("particle/smokesprites_0006"),
+    material.load("particle/smokesprites_0007"),
+    material.load("particle/smokesprites_0008"),
+    material.load("particle/smokesprites_0009"),
+    material.load("particle/smokesprites_0010"),
+    material.load("particle/smokesprites_0011"),
+    material.load("particle/smokesprites_0012"),
+    material.load("particle/smokesprites_0013"),
+    material.load("particle/smokesprites_0014"),
+    material.load("particle/smokesprites_0015"),
+    material.load("particle/smokesprites_0016")
+}
+
+local GRAVITY = Vector( 0, 0, 400 )
+local GRAVITY2 = Vector( 0, 0, 200 )
+
+function ExplosionEffect:smoke( emitter, origin, normal, scale )
+    local count = math.min(12, math.floor( scale * 10 ))
+    local p
+
+    for _ = 0, count do
+        local size = math.rand( 100, 120 ) * scale
+        
+        p = emitter:add(
+            SMOKE_SPRITES[math.random( 1, #SMOKE_SPRITES )], -- Material material
+            origin, -- Vector position
+            size, -- number startSize
+            size * math.rand( 1.5, 2 ), -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            255, -- number startAlpha
+            0, -- number endAlpha 
+            math.rand( 0.75, 2 ) * scale) -- number dieTime
+
+        if p then
+            local vel = ( normal * math.random( 1300, 1500 ) ) + RandomVec() * 1000
+            
+            p:setGravity( GRAVITY )
+            p:setVelocity( vel * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 400 )
+
+            p:setRoll( math.rand( -1, 1 ) )
+
+            p:setColor( Color(30, 30, 30) )
+            --p:setDieTime( math.rand( 0.75, 2 ) * scale )
+        end
+    end
+
+    count = math.min(48, math.floor( scale * 40 ))
+
+    for _ = 0, count do
+        local size = math.rand( 100, 120 ) * scale
+        
+        p = emitter:add(
+            SMOKE_SPRITES[math.random( 1, #SMOKE_SPRITES )], -- Material material
+            origin, -- Vector position
+            size * 0.5, -- number startSize
+            size * 1.5, -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            200, -- number startAlpha
+            0, -- number endAlpha 
+            math.rand( 3, 4 ) * scale) -- number dieTime
+
+        if p then
+            p:setGravity( GRAVITY2 )
+            p:setVelocity( RandomVec() * math.random( 800, 1500 ) * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 350 )
+
+            p:setRoll( math.rand( -0.5, 0.5 ) )
+
+            p:setColor( Color(40, 40, 40) )
+            --p:setDieTime( math.rand( 3, 4 ) * scale )
+        end
+    end
+end
+
+local DEBRIS_MATERIAL = {
+    material.load("effects/fleck_tile1"), 
+    material.load("effects/fleck_tile2")}
+    
+local DECAL_MATERIAL = "Scorch" --Material( util.DecalMaterial( "Scorch" ) )
+
+function ExplosionEffect:debris( emitter, origin, normal, scale )
+    if scale > 0.5 then
+        local tr = trace.line( {
+            start = origin + normal * 100,
+            endpos = origin - normal * 100,
+            mask = 16395 -- MASK_SOLID_BRUSHONLY
+        } )
+
+        if tr and tr.Hit and not tr.HitNonWorld then
+            trace.decal( DECAL_MATERIAL, tr.Entity, tr.HitPos + tr.HitNormal, tr.HitNormal,
+                color_white, math.rand( 1, 2 ) * scale, math.rand( 1, 2 ) * scale )
+        end
+    end
+
+    local count = math.min(24, math.floor( scale * 20 ))
+
+    for _ = 0, count do
+        local p = emitter:add(
+            table.random(DEBRIS_MATERIAL), -- Material material
+            origin, -- Vector position
+            3 * scale, -- number startSize
+            3 * scale, -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            255, -- number startAlpha
+            0, -- number endAlpha 
+            math.rand( 3, 5 )) -- number dieTime
+
+        if p then
+            local vel = ( normal * math.random( 300, 500 ) ) + RandomVec() * 500
+
+            p:setGravity( Vector( 0, 0, -500 ) )
+            p:setVelocity( vel * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 50 )
+
+            p:setRoll( math.rand( -1, 1 ) )
+
+            p:setColor( Color(0, 0, 0) )
+            --p:setDieTime( math.rand( 3, 5 ) )
+            p:setCollide( true )
+            p:setBounce( 0.3 )
+        end
+    end
+end
+
+function test()
+    ExplosionEffect:new(chip():getPos(), chip():getForward(), 0.7)
+end
+test()
+
+timer.create("fire", 2, 0, function()
+    test()
+end)

@@ -10,7 +10,7 @@ local BulletModel = "models/dynamite/dynamite.mdl"
 
 local Health = 200
 local MaxRadius = 11000
-local ReloadTime = 10
+local ReloadTime = 5
 local ExplodeDamage = 110
 local ExplodeRadius = 500
 local IsRect = true

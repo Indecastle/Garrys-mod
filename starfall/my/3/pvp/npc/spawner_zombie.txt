@@ -1,6 +1,6 @@
 --@name Spawner Zombie
 --@author Markiz
---@include ../npc_spawner.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/my/3/pvp/npc_spawner.txt as ../npc_spawner.txt
 --@server
 
 dofile("../npc_spawner.txt")

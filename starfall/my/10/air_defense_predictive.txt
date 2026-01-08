@@ -3,7 +3,7 @@
 -- author STEAM_0:1:54066003
 --model models/hunter/blocks/cube1x1x1.mdl
 --@shared
--- version 0.4.0
+-- version 0.5.0
 
 local FireReloadDelay = 4.0
 local FireReactionDelay = 1.0
@@ -269,7 +269,7 @@ if SERVER then
     --_sound:setDSP(1)
     _sound:setSoundLevel(90)
     
-    function explodeBulletScene(bullet)
+    function explodeBulletScene(bullet, collisionData)
         local holo = bullet._bulletHoloBase
         holo:setParent(nil)
         holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 120, nil, 1)
@@ -279,6 +279,8 @@ if SERVER then
         end)
         net.start("explodeBulletScene")
         net.writeVector(holo:getPos())
+        local normal = collisionData != nil and collisionData.OurOldVelocity:getNormalized()*-1 or bullet:getVelocity():getNormalized()
+        net.writeVector(normal)
         net.send()
     end
     
@@ -300,7 +302,7 @@ if SERVER then
         bullet._bulletHoloBase = hologram.create(bullet:getPos(), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
         bullet._bulletHoloBase:setNoDraw(true)
         --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
-        bullet._bulletHoloBase:setTrails(50, 0, 4, "trails/smoke", Color(255,255,255))
+        bullet._bulletHoloBase:setTrails(50, 0, 1, "trails/smoke", Color(255,255,255))
         bullet._bulletHoloBase:setParent(bullet)
         bullet:getPhysicsObject():setDragCoefficient(-10000)
         bullet:setMass(0)
@@ -312,8 +314,13 @@ if SERVER then
         _sound:stop()
         _sound:play()
         
+        local isExploded = false
+        
         timer.simple(t, function()
             pcall(function()
+                if isExploded then return end
+                isExploded = true
+                
                 explodeBulletScene(bullet)
                 explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
                 bullet:remove()
@@ -321,7 +328,10 @@ if SERVER then
         end)
         bullet:addCollisionListener(function(data)
             pcall(function()
-                explodeBulletScene(bullet)
+                if isExploded then return end
+                isExploded = true
+                
+                explodeBulletScene(bullet, data)
                 explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
                 bullet:remove()
             end)
@@ -425,29 +435,209 @@ end
 
 -------------- CLIENT ----------------------
 
-local m = material.load("particle/smokesprites_0004")
-local m2 = material.load("particles/flamelet5")
+--local m = material.load("particle/smokesprites_0004")
+--local m2 = material.load("particles/flamelet5")
 
-function createParticle(emitter, pos, mat)
+function oldCreateParticle(emitter, pos, mat, lifeTime)
     local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1)):getNormalized()
     -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
-    local part = emitter:add( mat, pos + dir*math.random(0, 50), 100, 1000, 0, 0, 20, 0, 10 )
+    local part = emitter:add( mat, pos + dir*math.random(0, 50), 100, 1000, 0, 0, 50, 0, lifeTime )
     part:setCollide(true)
     part:setBounce(0)
     part:setVelocity( dir*500 )
     part:setAirResistance(100)
 end
 
-net.receive("explodeBulletScene", function(len)
-    local explodePos = net.readVector()
-    local emitter = particle.create(Vector(), false)
-    
-    for i=1, 3 do
-        createParticle(emitter, explodePos, m)
+local RandomVec = function() return Vector(math.rand(-1,1), math.rand(-1,1), math.rand(-1,1)) end
+local RandomAng = function() return Angle(math.rand(-90,90), math.rand(-90,90), math.rand(-90,90)) end
+
+local ExplosionEffect = class("ExplosionEffect")
+
+function ExplosionEffect:initialize( pos, normal, size )
+    local origin = pos
+    local normal = normal
+    local scale = math.clamp( size, 0.1, 1.5 )
+
+    self.size = 1200 * scale
+    self.origin = origin
+    self.lifeTime = timer.curtime() + 0.05
+
+    local emitter = particle.create( origin, false )
+    if not isValid( emitter ) then return end
+
+    self:explosion( emitter, origin, normal, scale )
+    self:smoke( emitter, origin, normal, scale )
+    --self:debris( emitter, origin, normal, scale )
+
+    emitter:destroy()
+end
+
+local FLAME_MATERIAL = {}
+for i=1, 5 do
+    table.insert(FLAME_MATERIAL, material.load("glide/effects/flamelet"..i))
+end
+
+function ExplosionEffect:explosion( emitter, origin, normal, scale )
+    local count = math.min(24, math.floor( scale * 20 ))
+    local p, col
+
+    for _ = 0, count do
+        p = emitter:add(
+            table.random(FLAME_MATERIAL), -- Material material
+            origin, -- Vector position
+            math.random( 20, 30 ) * scale, -- number startSize
+            math.random( 70, 120 ) * scale, -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            255, -- number startAlpha
+            0, -- number endAlpha 
+            0.4) -- number dieTime
+        
+        if p then
+            p:setGravity( normal * math.random( 1800, 2200 ) )
+            p:setVelocity( RandomVec() * math.random( 1300, 1500 ) * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 600 )
+
+            p:setRoll( math.rand( -1, 1 ) )
+
+            col = math.rand( 0.7, 1 )
+
+            p:setColor( Color(255, 255 * col, 255 * col) )
+            p:setLighting( false )
+            --p:setDieTime( 0.4 )
+            p:setCollide( true )
+        end
     end
-    for i=1, 3 do
-        createParticle(emitter, explodePos, m2)
+
+    for _ = 0, 10 do
+        p = emitter:add(
+            table.random(FLAME_MATERIAL), -- Material material
+            origin, -- Vector position
+            80 * scale, -- number startSize
+            math.random( 140, 180 ) * scale, -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            200, -- number startAlpha
+            0, -- number endAlpha 
+            0.2) -- number dieTime
+
+        if p then
+            p:setVelocity( RandomVec() * math.random( 0, 1500 ) * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 300 )
+
+            p:setRoll( math.rand( -1, 1 ) )
+
+            p:setColor( Color(255, 255, 200) )
+            --p:setDieTime( 0.2 )
+            p:setCollide( true )
+        end
+    end
+end
+
+local SMOKE_SPRITES = {
+    material.load("particle/smokesprites_0001"),
+    material.load("particle/smokesprites_0002"),
+    material.load("particle/smokesprites_0003"),
+    material.load("particle/smokesprites_0004"),
+    material.load("particle/smokesprites_0005"),
+    material.load("particle/smokesprites_0006"),
+    material.load("particle/smokesprites_0007"),
+    material.load("particle/smokesprites_0008"),
+    material.load("particle/smokesprites_0009"),
+    material.load("particle/smokesprites_0010"),
+    material.load("particle/smokesprites_0011"),
+    material.load("particle/smokesprites_0012"),
+    material.load("particle/smokesprites_0013"),
+    material.load("particle/smokesprites_0014"),
+    material.load("particle/smokesprites_0015"),
+    material.load("particle/smokesprites_0016")
+}
+
+local GRAVITY = Vector( 0, 0, 400 )
+local GRAVITY2 = Vector( 0, 0, 200 )
+
+function ExplosionEffect:smoke( emitter, origin, normal, scale )
+    local count = math.min(12, math.floor( scale * 10 ))
+    local p
+
+    for _ = 0, count do
+        local size = math.rand( 100, 120 ) * scale
+        
+        p = emitter:add(
+            SMOKE_SPRITES[math.random( 1, #SMOKE_SPRITES )], -- Material material
+            origin, -- Vector position
+            size, -- number startSize
+            size * math.rand( 1.5, 2 ), -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            255, -- number startAlpha
+            0, -- number endAlpha 
+            math.rand( 0.75, 2 ) * scale) -- number dieTime
+
+        if p then
+            local vel = ( normal * math.random( 1300, 1500 ) ) + RandomVec() * 1000
+            
+            p:setGravity( GRAVITY )
+            p:setVelocity( vel * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 400 )
+
+            p:setRoll( math.rand( -1, 1 ) )
+
+            p:setColor( Color(30, 30, 30) )
+            --p:setDieTime( math.rand( 0.75, 2 ) * scale )
+        end
+    end
+
+    count = math.min(48, math.floor( scale * 40 ))
+
+    for _ = 0, count do
+        local size = math.rand( 100, 120 ) * scale
+        
+        p = emitter:add(
+            SMOKE_SPRITES[math.random( 1, #SMOKE_SPRITES )], -- Material material
+            origin, -- Vector position
+            size * 0.5, -- number startSize
+            size * 1.5, -- number endSize
+            0, -- number startLength
+            0, -- number endLength
+            200, -- number startAlpha
+            0, -- number endAlpha 
+            math.rand( 3, 4 ) * scale) -- number dieTime
+
+        if p then
+            p:setGravity( GRAVITY2 )
+            p:setVelocity( RandomVec() * math.random( 800, 1500 ) * scale )
+            p:setAngleVelocity( RandomAng() * 0.02 )
+            p:setAirResistance( 350 )
+
+            p:setRoll( math.rand( -0.5, 0.5 ) )
+
+            p:setColor( Color(40, 40, 40) )
+            --p:setDieTime( math.rand( 3, 4 ) * scale )
+        end
+    end
+end
+
+function oldRunExplosionEffect(explodePos)
+    local emitter = particle.create(Vector(), false)
+    for i=1, 5 do
+        oldCreateParticle(emitter, explodePos, m, 5)
+    end
+    for i=1, 5 do
+        oldCreateParticle(emitter, explodePos, m2, 5)
     end
     emitter:destroy()
+end
+
+
+net.receive("explodeBulletScene", function(len)
+    local explodePos = net.readVector()
+    local normal = net.readVector() * 1.5
+    
+    ExplosionEffect:new(explodePos, normal, 1.5)
+    --oldRunExplosionEffect(explodePos)
 end)
 

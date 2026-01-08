@@ -1,0 +1,291 @@
+--@name Fake Flashlight
+--@author Markiz
+--@model models/lamps/torch.mdl
+--@client
+
+local URLS = {
+    rikka_1 = "https://i.imgur.com/xdOEuic.png",
+    rikka_2 = "https://i.imgur.com/qSiOCZH.jpg",
+    rikka_ch = "https://i.imgur.com/9UtATPQ.gif",
+    rikka_s = "https://cdn.discordapp.com/attachments/510528712320483329/711301069413679154/received_1790417730979994.jpeg",
+    rikka_c = "https://i.imgur.com/5139yCi.jpg",
+    rikka_f = "https://anime-planet.com/images/characters/rikka-takanashi-43640.jpg",
+    horny = "https://media.discordapp.net/attachments/542043404629180417/849195384470503444/paLNxVWlfEM.png",
+    malina_booba = "https://media.discordapp.net/attachments/854459216839049267/854459668261109790/O2NFX9U5dT8.jpg",
+    malina_r = "https://media.discordapp.net/attachments/854459216839049267/854459668696793148/Prinz_Eugen.png",
+    flag_russia = "https://i.imgur.com/jR2vDAC.png",
+    
+    obunga = "https://i.imgur.com/wEBb6mG.png",
+    sidorovich = "https://i.imgur.com/rHE1lsn.png",
+    sidorovich_brightness_less = "https://i.imgur.com/RjeaHYn.png",
+    sidorovich_brightness_less2 = "https://i.imgur.com/EIEuHDO.png",
+    sidorovich_brightness_less3 = "https://i.imgur.com/e2mWcg5.png",
+    sidorovich_brightness_less4 = "https://i.imgur.com/PXRDwZO.png",
+    nigga = "https://i.imgur.com/VOtL40V.jpeg",
+    flag_poland = "https://i.imgur.com/2l0Eq5L.png",
+    
+    kitten = "https://i.imgur.com/qlhVKyZ.png",
+    soldierMeme = "https://i.imgur.com/etDODQs.jpg",
+    barryWood = "https://i.imgur.com/PQiuccK.png",
+    obobrali_do_gola = "https://i.imgur.com/YeA7JbG.png",
+    putin = "https://i.imgur.com/ngN7RZF.jpg",
+    
+    custom = nil
+}
+
+local img = "putin"
+
+local maxh = 100
+local ThirdPersonMode = true
+
+local Target = owner()
+--Target = find.playersByName("Markiz")[1]
+print(Target)
+
+
+local FPS = 5
+local frame = 0
+local delta = 1/FPS
+
+
+render.createRenderTarget("cantload")
+
+local nonmat = material.create("UnlitGeneric")
+nonmat:setTextureRenderTarget("$basetexture", "cantload")
+nonmat:setInt("$flags", 0)
+
+local texture = nonmat:getTexture("$basetexture")
+
+render.createRenderTarget("TargetScreen")
+
+
+function cloneMaterial(shader, path)
+    local mat0 = material.load(path)
+    local mat = material.create(shader)
+    
+    local blockedVars = {
+        '$frame',
+        '$frame2',
+        '$flags2',
+    }
+    
+    local texturedVars = {
+        '$basetexture',
+        '$dudvmap',
+        '$normalmap',
+        '$refracttinttexture',
+        '$flashlighttexture',
+    }
+    
+    for i, k in ipairs(texturedVars) do
+        mat:setUndefined(k)
+    end
+    
+    if owner() == player() then
+        --log(mat0:getKeyValues())
+    end
+    
+    for k, v in pairs(mat0:getKeyValues()) do
+        if table.hasValue(blockedVars, k) then
+            continue
+        end
+        if owner() == player() then
+            --log('' .. k .. ' - ' .. type(v))
+        end
+
+        --print(k, ' - ', v)
+        if type(v) == 'number' then
+            local ss = pcall(function()
+                mat:setFloat(k, v)
+            end)
+            if not ss then
+                mat:setInt(k, v)
+            end
+        elseif type(v) == 'Vector' then
+            mat:setVector(k, v)
+        elseif type(v) == 'VMatrix' then
+            mat:setMatrix(k, v)
+        elseif table.hasValue(texturedVars, k) then
+            mat:setTexture(k, v)
+        else
+            mat:setString(k, v)
+        end
+    end
+    mat:recompute()
+    
+    return mat
+end
+
+// deprecated
+function renderCircleMaterial()
+    hook.add("renderoffscreen", "alphaCircle", function()
+        render.selectRenderTarget("TargetScreen")
+        render.clear()
+        
+        render.setRenderTargetTexture(texture)
+        render.capturePixels()
+        
+        hook.remove("renderoffscreen", "alphaCircle")
+    end)
+end
+
+
+function loadImage()
+    if img == nil then return end
+    if URLS[img] == nil then return end
+    
+    URL = URLS[img]
+
+    if not hasPermission("material.urlcreate", URL) then
+        return
+    end
+
+    --local mat = material.create("UnlitGeneric")
+    local mat = cloneMaterial("UnlitGeneric", "effects/flashlight/logo")
+    --mat:setString("$basetexturetransform", "center 0.5 0.5 scale 1 1 rotate 0 translate 0 0")
+    mat:setInt("$nodecal", 1)
+    mat:setInt("$clampu", 1)
+    mat:setInt("$clampv", 1)
+    mat:setInt("$translucent", 1)
+    mat:setInt("$ignorez", 1)
+    mat:setInt("$nocull", 1)
+    mat:recompute()
+    
+    
+    --mat:setInt("$flags", 256)
+    
+    mat:setVector("$texturescale", Vector(1, 1))
+    mat:setVector("$textureoffset", Vector(0, 0))
+    mat:recompute()
+    
+    local finalMat = material.create("UnlitGeneric")
+    finalMat:setTexture("$basetexture", "error")
+    finalMat:setInt("$translucent", 1)
+    finalMat:setInt("$vertexcolor", 1)
+    finalMat:setInt("$vertexalpha", 1)
+    finalMat:setInt("$nolod ", 1)
+    finalMat:setVector("$texturescale", Vector(1, 1, 1))
+    finalMat:setVector("$textureoffset", Vector(0, 0, 0))
+    
+    
+    mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
+        if m == nil then return end
+    
+        local ratio = w / h
+
+        local sh = maxh
+        local sw = sh * ratio
+        --screen:setSize(Vector(sh, sw, 1))
+        
+        local x,y,w,h;
+        if PosUp then x=m:getWidth()/4 y=0 w=m:getWidth()/2 h=m:getHeight()/2
+        else x=0 y=0 w=m:getWidth() h=m:getHeight() end
+        
+         m:setVector("$texturescale", Vector(1, 1, 1))
+        m:setVector("$textureoffset", Vector(0, 0, 0))
+        m:setInt("$projective", 1)
+        --m:setInt("$nolod ", 1)
+        
+        --     
+        --m:setFloat("$basetexturescale", 1)
+        --m:setVector("$basetextureoffset", Vector(0, 0))
+    
+        --w, h = 1024, 1024
+        l(x, y, w, h)
+        
+        m:setTexture("$basetexture", mat:getTexture("$basetexture"))
+        --m:setVector("$texturescale", Vector(1, 1))
+        --m:setVector("$textureoffset", Vector(0, 0))
+        m:setInt("$projective", 1)
+        m:setInt("$nolod ", 1)
+        m:recompute()
+        
+        texture = m:getTexture("$basetexture")
+    end)
+    
+    texture = mat:getTexture("$basetexture")
+end
+
+
+loadImage()
+
+if not hasPermission("material.urlcreate", URL) then
+    setupPermissionRequest({"material.urlcreate"}, "Load images from external websites", true)
+    
+    hook.add("permissionrequest", "perm", loadImage)
+    
+    hook.add("renderoffscreen", "cantload", function()
+        local now = timer.systime()
+        if frame > now then return end
+        frame = now + delta
+        
+        render.selectRenderTarget("cantload")
+        render.clear()
+        
+        local font = render.createFont("Arial", 50, 400, true, false, false, false, false, true)
+        render.setFont(font)
+        
+        render.drawText(512, 270, "Image source is not whitelisted!", 1)
+        render.drawText(512, 330, "Press E on the dot to allow loading!", 1)
+        
+        render.draw3DSphere(Vector(w, h, 20), 30, 20, 20)
+        
+        // render.drawCircle(512, 512, 10)
+    end)
+end
+
+
+local flashlight = light.createProjected()
+
+local _isFlashOn = Target:isFlashlightOn()
+local attachmentRightHandIndex = Target:lookupAttachment("anim_attachment_RH")
+local _isFirstPerson = false
+local _eyeOffset = Vector(12, 8, -5)
+
+
+hook.add("renderscene", "my", function(origin, angles, fov)
+    _isFirstPerson = eyePos():getDistance(origin) < 10
+end)
+
+
+hook.add("renderscene", "UpdateFlashlight", function()
+    local isFlashOn = Target:isFlashlightOn()
+    
+    
+    
+    flashlight:setTexture(texture)
+    flashlight:setBrightness(isFlashOn and 1 or 0)
+    flashlight:setFarZ(700)
+    flashlight:setFOV(45)
+    flashlight:setColor(Color(255, 255, 255))
+    flashlight:setEnableShadows(false)
+    
+    if ThirdPersonMode or Target == player() and _isFirstPerson then
+        local eyeAngles = Target:getEyeAngles()
+        local pos = Target:getEyePos() + 
+                   eyeAngles:getForward() * _eyeOffset.x +
+                   eyeAngles:getRight() * _eyeOffset.y +
+                   eyeAngles:getUp() * _eyeOffset.z
+        flashlight:setPos(pos)
+        flashlight:setAngles(Target:getEyeAngles())
+    else
+        local p, a = Target:getAttachment(attachmentRightHandIndex)
+        flashlight:setPos(p)
+        flashlight:setAngles(a)
+    end
+    
+    flashlight:setHorizontalFOV(45)  --  FOV =  
+    flashlight:setVerticalFOV(45)
+    flashlight:setConstantAttenuation(1)
+    flashlight:setLinearAttenuation(0)
+    flashlight:setQuadraticAttenuation(0)
+    
+    flashlight:update()
+end)
+
+
+hook.add("PlayerSwitchFlashlight", "flashlight", function(ply, state)
+    if ply == Target then
+        
+    end
+end)
