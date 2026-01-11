@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
---owneronly
+-- version 2.0.0
 
 --@include https://raw.githubusercontent.com/Jacbo1/Public-Starfall/main/SafeNet/safeNet.lua as SafeNet
 --@include https://raw.githubusercontent.com/Jacbo1/Public-Starfall/refs/heads/main/Spawn%20Blocking/spawn_blocking.lua as SpawnBlocking
