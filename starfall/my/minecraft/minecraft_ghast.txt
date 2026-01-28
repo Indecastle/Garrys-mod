@@ -18,8 +18,8 @@ local TriggerOnlyWord = true
 local InterpolationMove = true
 local InterpolationMoveRatio = 20
 
-local TargetRadius = 1500
-local BulletVelocity = 30
+local TargetRadius = 2000
+local BulletVelocity = 40
 local PropDamageMode = true
 local BulletLifeTime = 10
 local BulletObbSize = 10

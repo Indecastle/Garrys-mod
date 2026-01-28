@@ -4,7 +4,7 @@
 --@server
 
 local BulletForce = 3000
-local PitchAngle = 45
+local PitchAngle = 50
 local BulletModel = "models/props_phx/misc/potato_launcher_explosive.mdl"
 
 
@@ -206,7 +206,7 @@ function UpdateTrajectory(posCannon, dirCannon, speed, explodeTime, gravity)
         for i = #trajectoryHolograms + 1, numPoints do
             local holo = hologram.create(Vector(), Angle(), "models/holograms/hq_icosphere.mdl", Vector(1))
             if isValid(holo) then
-                holo:setColor(Color(255, 0, 0))
+                holo:setColor(Color(255, 0, 0, 200))
                 table.insert(trajectoryHolograms, holo)
             end
         end
@@ -234,7 +234,8 @@ timer.create("fire", 1.0, 0, function()
     if not isValid(_target) then return end
     
     local targetVelocity = getTargetVelocity(_target)
-    --local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
+    local v0 = BulletForce
+    --local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce, _gravity)
     local aimDir, v0, t = CalculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, PitchAngle, _gravity)
     if aimDir == nil then return end
     --print(v0)
@@ -263,10 +264,11 @@ end)
 --hook.add("think", "aim", function()
 timer.create('trajectory', 0.2, 0, function()
     local targetVelocity = getTargetVelocity(_target)
-    --local aimDir, t = calculateAimDirection(_cannon:getPos(), _target:getPos(), targetVelocity, BulletForce*1, _gravity)
-    local aimDir, v0, t = CalculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(0,0,0)), _target:getPos(), targetVelocity, PitchAngle, _gravity)
+    local v0 = BulletForce
+    --local aimDir, t = calculateAimDirection(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, BulletForce, _gravity)
+    local aimDir, v0, t = CalculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(100,0,30)), _target:getPos(), targetVelocity, PitchAngle, _gravity)
     if aimDir == nil then return end
-    UpdateTrajectory(_cannon:localToWorld(Vector(0,0,0)), aimDir, v0, t, _gravity)
+    UpdateTrajectory(_cannon:localToWorld(Vector(100,0,30)), aimDir, v0, t, _gravity)
     _cannon:setAngles(aimDir:getAngle())
 end)
 

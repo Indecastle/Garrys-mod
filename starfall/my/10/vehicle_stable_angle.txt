@@ -7,13 +7,14 @@
 local TriggerAngleMin = 80
 local TriggetSpeedMax = 200
 local StableTime = 2
+local Force = 50
 
 
 if SERVER then
     local EntityCriticalPD = require("libs/criticalpd.txt")
     
     local baseProp = chip():isWeldedTo()
-    local critialPD = EntityCriticalPD:new(baseProp, 1, 50)
+    local critialPD = EntityCriticalPD:new(baseProp, 1, Force)
     critialPD:setTargetAng(Angle(0,0,0))
     
     local _times = 0

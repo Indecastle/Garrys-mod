@@ -1,0 +1,90 @@
+--@name Anti Raid
+--@author Markiz
+-- author STEAM_0:1:54066003
+--@server
+--superuser
+--@server
+-- version 1.0.0
+
+local _e, _o = chip(), chip():getOwner()
+
+function isTargetUser(ply)
+    return ply:getNWVar("UserGroup") == "user"
+end
+function isTargetEnt(ent)
+    return isValid(ent) and isValid(ent:getOwner()) and isTargetUser(ent:getOwner())
+end
+
+
+hook.add("OnEntityCreated", "", function(ent)
+    if isValid(ent) and isValid(ent:getOwner()) and isTargetUser(ent:getOwner()) then
+        ent:remove()
+    end
+end)
+
+
+timer.create("AntiDupe", 0.1, 0, function()
+    for i, ply in ipairs(find.allPlayers()) do
+        --if ply == O then print(ply:getActiveWeapon():getToolMode()) end
+        
+        if isValid(ply)
+            and isTargetUser(ply)
+            and isValid(ply:getActiveWeapon())
+            and ply:getActiveWeapon():getClass() == "gmod_tool" then
+                pcall(function()
+                    ply:getActiveWeapon():remove()
+                end)
+                --ply:applyDamage(100000, chip(), chip())
+        end
+    end
+end)
+
+
+
+
+
+local Classes = {
+    'prop_physics',
+    'gtav_*',
+    'starfall_*',
+    'gmod_wire_*',
+}
+
+
+function removerHandler()
+    --local ents = find.byClass('prop_physics', function(ent)
+    --    return table.hasValue(Models, ent:getModel())
+    --end)
+    
+    --for i, model in ipairs(Models) do
+    --    find.byModel(model, function(ent)
+    --        if isAdmin(ent) then return end
+    --        pcall(function()
+    --            --ent:remove()
+    --        end)
+    --    end)
+    --end
+    
+    --find.byClass('npc_*', function(ent)
+    --    if table.hasValue(Npc, ent:getClass()) then
+    --        if isAdmin(ent) then return end
+    --        pcall(function()
+    --            --ent:remove()
+    --        end)
+    --    end
+    --end)
+    
+    for i, class in ipairs(Classes) do
+        find.byClass(class, function(ent)
+            if !isTargetEnt(ent) or ent == _e then return end
+            pcall(function()
+                ent:remove()
+            end)
+        end)
+    end
+end
+
+
+timer.create("Remover", 2, 0, function()
+    removerHandler()
+end)

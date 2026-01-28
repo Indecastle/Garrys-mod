@@ -33,13 +33,13 @@ local URLS = {
     custom = nil
 }
 
-local img = "putin"
+local img = "kitten"
 
 local maxh = 100
 local ThirdPersonMode = true
 
 local Target = owner()
---Target = find.playersByName("Markiz")[1]
+--Target = find.playersByName("Ember")[1]
 print(Target)
 
 

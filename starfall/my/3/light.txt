@@ -1,5 +1,5 @@
 --@name Light
---@author
+--@author Markiz
 --@client
 
 local O = player()
@@ -42,8 +42,8 @@ hook.add("think", "", function()
     
     
     light2:setPos(hitPos + hitNormal*15)
-    light2:setBrightness(5)
-    light2:setSize(200)
+    light2:setBrightness(50)
+    light2:setSize(2000)
     --light2:setDirection(Vector(1,0,0))
     --light2:setInnerAngle(180)
     --light2:setOuterAngle(180)

@@ -22,7 +22,7 @@ local SoundComingRocketVolume = 0.25
 
 local ExplodeDamage = 110
 local ExplodeRadius = 400
-local ExplodeSize = 1.5 -- 0.1 - 1.5
+local ExplodeSize = 0.8 -- 0.1 - 1.5
 
 local FireDelay = 2
 local FindTargetSpeed = 1 -- 1 - 3
