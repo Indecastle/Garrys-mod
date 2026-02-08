@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.7.1
+-- version 1.7.2
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -224,40 +224,44 @@ if SERVER then
     function fireRocket(startPos, startAng, target)
         if !prop.canSpawn() then return end
         local rocket = prop.create(startPos, startAng, RocketModel, false)
-        rocket:setFrozen(false)
-        rocket:enableGravity(false)
-        rocket:setHealth(10000000)
-        --rocket:setMass(0)
-        rocket:getPhysicsObject():setDragCoefficient(-10000)
-        rocket:getPhysicsObject():setVelocity(rocket:getForward() * RocketVelocity)
-        rocket._rocketHoloBase = getBaseHolo(rocket:getPos())
-        rocket._rocketHoloBase:setNoDraw(true)
-        --rocket._rocketHoloBase:setTrails(50, 0, TrailTime, "trails/smoke", Color(255,255,255))
-        rocket._rocketHoloBase:setParent(rocket)
-        rocket._isRocket = true
-        rocket._target = target
-        rocket._isForce = true
-        rocket._lastLifeTime = timer.curtime() + RockeForceTime
-        --rocket:emitSound(RocketForcingSoundUrl, 85, 100, 1, 0)
-        _e:emitSound(RocketStartForcingSoundUrl, 85, 100, 1, 0)
-        --rocket_isRocket = true
-        rocket:addCollisionListener(function(data)
-            tryExplodeRocket(rocket)
-        end)
-        timer.simple(RocketAutoRemoveTime, function()
-            if isValid(rocket) then
+        
+        timer.simple(0, function()
+            rocket:setFrozen(false)
+        
+            rocket:enableGravity(false)
+            rocket:setHealth(10000000)
+            --rocket:setMass(0)
+            rocket:getPhysicsObject():setDragCoefficient(-10000)
+            rocket:getPhysicsObject():setVelocity(rocket:getForward() * RocketVelocity)
+            rocket._rocketHoloBase = getBaseHolo(rocket:getPos())
+            rocket._rocketHoloBase:setNoDraw(true)
+            --rocket._rocketHoloBase:setTrails(50, 0, TrailTime, "trails/smoke", Color(255,255,255))
+            rocket._rocketHoloBase:setParent(rocket)
+            rocket._isRocket = true
+            rocket._target = target
+            rocket._isForce = true
+            rocket._lastLifeTime = timer.curtime() + RockeForceTime
+            --rocket:emitSound(RocketForcingSoundUrl, 85, 100, 1, 0)
+            _e:emitSound(RocketStartForcingSoundUrl, 85, 100, 1, 0)
+            --rocket_isRocket = true
+            rocket:addCollisionListener(function(data)
                 tryExplodeRocket(rocket)
-            end
+            end)
+            timer.simple(RocketAutoRemoveTime, function()
+                if isValid(rocket) then
+                    tryExplodeRocket(rocket)
+                end
+            end)
+            
+            --notifyTarget(target)
+            table.insert(_rockets, rocket)
+            
+            net.start("sendRocketToClient")
+            net.writeBool(!!target)
+            if target then net.writeEntity(target) end
+            net.writeEntity(rocket)
+            net.send()
         end)
-        
-        --notifyTarget(target)
-        table.insert(_rockets, rocket)
-        
-        net.start("sendRocketToClient")
-        net.writeBool(!!target)
-        if target then net.writeEntity(target) end
-        net.writeEntity(rocket)
-        net.send()
     end
     
     
@@ -934,7 +938,8 @@ end
 
 
 function inBox(pos)
-    return math.abs(pos.x - _centerPos.x) < FindInBoxSize and math.abs(pos.y - _centerPos.y) < FindInBoxSize
+    local kk = _height/1080
+    return math.abs(pos.x - _centerPos.x) < FindInBoxSize*kk and math.abs(pos.y - _centerPos.y) < FindInBoxSize*kk
 end
 
 
@@ -1132,8 +1137,9 @@ function drawRect(bindCb)
     
     render.setRenderTargetTexture("template")
     --filterImage()
-    local IsRect = true
-    local kk = IsRect and (_height/_width) or 1
+    --local IsRect = true
+    --local kk = IsRect and (_height/_width) or 1
+    local kk = (_height/_width)
     render.drawTexturedRect(_width/2 - _width*kk/2, 0, _width*kk, _height)
 end
 

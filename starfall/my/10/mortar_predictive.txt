@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.1.10
+-- version 1.1.11
 
 local StartHeight = 500
 local StartPitchAngle = 45
@@ -263,7 +263,7 @@ if SERVER then
     function fire(aimDir, v0, t)
         if aimDir == nil or !prop.canSpawn() then return end
     
-        local bullet = prop.create(_cannon:localToWorld(Vector(0,0,40)), _cannon:getAngles(), BulletModel, false)
+        local bullet = prop.create(_cannon:localToWorld(Vector(0,0,40)), _cannon:getAngles(), BulletModel, true)
         bullet._bulletHoloBase = hologram.create(bullet:getPos(), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
         bullet._bulletHoloBase:setNoDraw(true)
         --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
@@ -273,7 +273,11 @@ if SERVER then
         bullet._health = 30
         bullet:getPhysicsObject():setDragCoefficient(-10000)
         bullet:setMass(0)
-        bullet:setFrozen(false)
+        --bullet:setFrozen(false)
+        timer.simple(0, function()
+            bullet:setFrozen(false)
+            bullet:getPhysicsObject():setVelocity(aimDir*v0)
+        end)
         --bullet:setMaterial("models/effects/splode_sheet")
     
         bullet:getPhysicsObject():setVelocity(aimDir*v0)

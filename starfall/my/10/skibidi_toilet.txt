@@ -1,7 +1,7 @@
 --@name Skibidi DISSOLVE
 --@author Markiz
 --@shared
--- version 1.2.2
+-- version 1.2.3
 
 local Respawn = false
 local SpawnCounts = 1
@@ -113,7 +113,9 @@ if SERVER then
         self.isDisposed = false
         
         self._propBase = prop.create(pos, Angle(), self._propScaleDataItem.Model, false)
-        self._propBase:setFrozen(false)
+        timer.simple(0, function()
+            self._propBase:setFrozen(false)
+        end)
         self._propBase:setColor(Color(0,0,0,0))
         self._propBase:setPhysMaterial("gmod_silent")
         --self._propBase:setUnbreakable(true)

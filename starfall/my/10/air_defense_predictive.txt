@@ -3,7 +3,7 @@
 -- author STEAM_0:1:54066003
 --model models/hunter/blocks/cube1x1x1.mdl
 --@shared
--- version 0.5.0
+-- version 0.5.1
 
 local FireReloadDelay = 4.0
 local FireReactionDelay = 1.0
@@ -306,10 +306,13 @@ if SERVER then
         bullet._bulletHoloBase:setParent(bullet)
         bullet:getPhysicsObject():setDragCoefficient(-10000)
         bullet:setMass(0)
-        bullet:setFrozen(false)
+        timer.simple(0, function()
+            bullet:setFrozen(false)
+            bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
+        end)
         --bullet:setMaterial("models/effects/splode_sheet")
     
-        bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
+        
         --bullet:emitSound("weapons/mortar/mortar_fire1.wav", soundLevel, 50, 10, channel)
         _sound:stop()
         _sound:play()
