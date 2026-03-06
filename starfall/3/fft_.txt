@@ -10,8 +10,8 @@ local fft={}
 mat = material.create("UnlitGeneric")
 mat:setInt("$flags",138414080)
 //mat:setInt("$flags", bit.bxor(bit.bor(2^11, 2^22, 2^27, 2^22)))
-mat:setTexture("$basetexture","matsys_regressiontest/background")
---mat:setTexture("$basetexture","gm_construct/grass1")
+--mat:setTexture("$basetexture","matsys_regressiontest/background")
+mat:setTexture("$basetexture","gm_construct/grass1")
 
 local url1 = "http://radio.licen777.ru/chechnya"
 local url2 = "http://radio.licen777.ru/stream"
@@ -22,8 +22,9 @@ local url5 = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads
 local url = url5
 
 function start() 
-    bass.loadURL( url, "3d noblock", function(Sound)
-        Sound:setVolume(2.2)
+    bass.loadURL( url, "3d noblock repeat", function(Sound)
+        Sound:setVolume(0.5)
+        Sound:setLooping(true)
         Sound:play()
         hook.add("think","",function()
             Sound:setPos(chip():getPos())

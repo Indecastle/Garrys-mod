@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.7.2
+-- version 1.8.0
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -52,6 +52,9 @@ local KeyBindData = { -- The value can be both the key and the list from the key
 
 
 local TestOnMe = false
+
+local EnableBetaParticleSystem = true
+local BetaParticleEmitterLimit = 2
 -----------------------------------------------------------------------
 
 
@@ -437,6 +440,60 @@ end
 local RandomVec = function() return Vector(math.rand(-1,1), math.rand(-1,1), math.rand(-1,1)) end
 local RandomAng = function() return Angle(math.rand(-90,90), math.rand(-90,90), math.rand(-90,90)) end
 
+
+-- ======================== Particle Safe ========================
+function RunBetaParticleSystem()
+    local _emitters = {}
+    local _emitterIndex = -1
+    
+    local particle_create_old = particle.create
+    
+    function initEmitters(use3D, limit)
+        local max = math.min(limit - #_emitters, particle.particleEmittersLeft())
+        for i=1, max do
+            table.insert(_emitters, particle_create_old(owner():getPos(), false))
+        end
+    end
+    
+    function nextEmitter(origin)
+        initEmitters(false, BetaParticleEmitterLimit)
+        
+        local length = #_emitters
+        _emitterIndex = (_emitterIndex + 1) % length
+        --print(length)
+        local targetEmitter = _emitters[_emitterIndex+1]
+        if targetEmitter then
+            targetEmitter:setPos(origin)
+        end
+        return targetEmitter
+    end
+    
+    particle.create = function(position, use3D)
+        return nextEmitter(position)
+    end
+    
+    local MetaParticleEmitter = getMethods("ParticleEmitter")
+    MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
+    MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
+    
+    function MetaParticleEmitter:add(...)
+        if self:getParticlesLeft() == 0 then
+            --printConsole("max")
+            return
+        end
+        return self:oldAdd(...)
+    end
+    
+    function MetaParticleEmitter:destroy()
+    end
+end
+
+if EnableBetaParticleSystem then
+    RunBetaParticleSystem()
+end
+-- ================================================
+
+
 local ExplosionEffect = class("ExplosionEffect")
 
 function ExplosionEffect:initialize( pos, normal, size )
@@ -778,6 +835,8 @@ function createParticle(emitter, pos, mat, lifeTime)
     local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1)):getNormalized()
     -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
     local part = emitter:add( mat, pos + dir*math.random(0, 50), 100, 1000, 0, 0, 50, 0, lifeTime )
+    if not part then return end
+    
     part:setCollide(true)
     part:setBounce(0)
     part:setVelocity( dir*500 )
@@ -786,6 +845,8 @@ end
 
 function oldRunExplosionEffect(explodePos)
     local emitter = particle.create(Vector(), false)
+    if !isValid(emitter) then return end
+    
     for i=1, 5 do
         createParticle(emitter, explodePos, m, 5)
     end
@@ -857,7 +918,11 @@ end)
 
 
 hook.add("think", "particleRockets", function()
+    if #_rockets == 0 then return end
+    
     local emitter = particle.create(Vector(), false)
+    if !isValid(emitter) then return end
+    
     local curtime = timer.curtime()
     
     for i, rocket in ipairs(_rockets) do
@@ -872,6 +937,8 @@ hook.add("think", "particleRockets", function()
         local maxSize = 80
         local startAlpha = 200
         local part = emitter:add( m, rocket:getPos() - rocket:getForward()*TrailRocketStartOffset, 5, maxSize, 0, 0, startAlpha, 0, TrailTime )
+        if not part then continue end
+        
         part:setColor(Color(50,50,50))
         part:setRollDelta(math.random(2, 5))
         part:setAirResistance(30)
