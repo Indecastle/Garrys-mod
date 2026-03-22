@@ -79,7 +79,10 @@ hook.add("drawhud","DrawChips",function()
     
     for i, ent in ipairs(chips) do
         local pos = ent:getPos():toScreen()
-        local text = ent:getOwner():getName() .. ' - ' .. ent:getChipName()
+        local owner = ent:getOwner()
+        local ownerName = isValid(owner) and owner:getName() or ''
+        local chipName = ent:getChipName()
+        local text = ownerName .. ' - ' .. chipName
         
         render.setColor(ent == closest and Color(0, 250, 0) or Color(255))
         render.drawText(pos.x, pos.y-10, text, 1)

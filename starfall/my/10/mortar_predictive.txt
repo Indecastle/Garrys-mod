@@ -2,23 +2,27 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.1.12
+-- version 1.2.0
 
 local StartHeight = 500
 local StartPitchAngle = 45
 local BulletModel = "models/dynamite/dynamite.mdl"
 
 local Health = 200
+local MinRadius = 500
 local MaxRadius = 11000
 local ReloadTime = 3
 local ExplodeDamage = 110
 local ExplodeRadius = 500
 local IsRect = true
 
-local OnlyPvpUse = false
+local OnlyPvpUse = true
 local UsePVS = true
 local UseWH = true
 local TrailTime = 5
+
+local EnableBetaParticleSystem = true
+local BetaParticleEmitterLimit = 1
 
 --------------------------------------------------
 
@@ -470,6 +474,59 @@ end
 ------------------- CLIENT ----------------------
 
 
+-- ======================== Particle Safe ========================
+function RunBetaParticleSystem()
+    local _emitters = {}
+    local _emitterIndex = -1
+    
+    local particle_create_old = particle.create
+    
+    function initEmitters(use3D, limit)
+        local max = math.min(limit - #_emitters, particle.particleEmittersLeft())
+        for i=1, max do
+            table.insert(_emitters, particle_create_old(owner():getPos(), false))
+        end
+    end
+    
+    function nextEmitter(origin)
+        initEmitters(false, BetaParticleEmitterLimit)
+        
+        local length = #_emitters
+        _emitterIndex = (_emitterIndex + 1) % length
+        --print(length)
+        local targetEmitter = _emitters[_emitterIndex+1]
+        if targetEmitter then
+            targetEmitter:setPos(origin)
+        end
+        return targetEmitter
+    end
+    
+    particle.create = function(position, use3D)
+        return nextEmitter(position)
+    end
+    
+    local MetaParticleEmitter = getMethods("ParticleEmitter")
+    MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
+    MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
+    
+    function MetaParticleEmitter:add(...)
+        if self:getParticlesLeft() == 0 then
+            --printConsole("max")
+            return
+        end
+        return self:oldAdd(...)
+    end
+    
+    function MetaParticleEmitter:destroy()
+    end
+end
+
+if EnableBetaParticleSystem then
+    RunBetaParticleSystem()
+end
+-- ================================================
+
+
 local _p = player()
 
 local holoEdge = hologram.create(_e:getPos(), Angle(), "models/props_phx/construct/metal_plate_curve360x2.mdl", Vector(1))
@@ -581,6 +638,8 @@ function createParticle(emitter, pos, mat)
     local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1)):getNormalized()
     -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
     local part = emitter:add( mat, pos + dir*math.random(0, 50), 100, 1000, 0, 0, 50, 0, 10 )
+    if !part then return end
+    
     part:setCollide(true)
     part:setBounce(0)
     part:setVelocity( dir*500 )
@@ -849,6 +908,8 @@ timer.create("200 ms", 0.2, 0, function()
 end)
 
 function tryFire()
+    if not _isCanFire then return end
+    
     local tr = trace.line(_freeCumPos, _freeCumPos - Vector(0,0,100000), nil, MASK.ALL, nil, false)
     net.start("tryFire")
     net.writeVector(tr.HitPos)
@@ -861,10 +922,15 @@ end
 timer.create("calcPredictiveData", 0.2, 0, function()
     if !isActive() then return end
     local tr = trace.line(_freeCumPos, _freeCumPos - Vector(0,0,100000), nil, MASK.ALL, nil, false)
-    local aimDir, v0, t = calculateAimDirectionAndSpeed(_cannon:getPos(), tr.HitPos, Vector(), _pitchAngle, -600)
-    _isCanFire = aimDir != nil
-    _flyTime = aimDir != nil and math.round(t,0) or 0
-    --printMessage(4, tostring(_isCanFire))
+    if tr.HitPos:getDistance(_cannon:getPos()) < MinRadius then
+        _isCanFire = false
+        _flyTime = 0
+    else
+        local aimDir, v0, t = calculateAimDirectionAndSpeed(_cannon:getPos(), tr.HitPos, Vector(), _pitchAngle, -600)
+        _isCanFire = aimDir != nil
+        _flyTime = aimDir != nil and math.round(t,0) or 0
+        --printMessage(4, tostring(_isCanFire))
+    end
 end)
 
 function resetKeys()

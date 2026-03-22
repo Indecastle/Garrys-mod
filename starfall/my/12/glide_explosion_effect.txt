@@ -232,7 +232,7 @@ function ExplosionEffect:debris( emitter, origin, normal, scale )
 end
 
 function test()
-    ExplosionEffect:new(chip():getPos(), chip():getForward(), 0.7)
+    ExplosionEffect:new(chip():getPos(), chip():getForward(), 1.5)
 end
 test()
 

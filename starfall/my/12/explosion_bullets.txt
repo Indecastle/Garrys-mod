@@ -5,11 +5,16 @@
 -- version 1.0.1
 
 
-local FireSize = 0.6 // 0.1 - 1.5
+local FireSize = 0.2 // 0.1 - 1.5
+
 
 local OnlyTarget = false
 local Target = owner()
 --Target = find.playersByName("Markiz")[1]
+
+
+local EnableBetaParticleSystem = true
+local BetaParticleEmitterLimit = 2
 
 
 -- ==== Server ====================================================================================================
@@ -41,45 +46,54 @@ local RandomVec = function() return Vector(math.rand(-1,1), math.rand(-1,1), mat
 local RandomAng = function() return Angle(math.rand(-90,90), math.rand(-90,90), math.rand(-90,90)) end
 
 -- ======================== Particle Safe ========================
-local _emitters = {}
-local _emitterIndex = 0
-
-local particle_create_old = particle.create
-
-function initEmitters(use3D, limit)
-    local max = math.min(limit, particle.particleEmittersLeft())
-    for i=1, max do
-        table.insert(_emitters, particle_create_old(owner():getPos(), false))
+function RunBetaParticleSystem()
+    local _emitters = {}
+    local _emitterIndex = -1
+    
+    local particle_create_old = particle.create
+    
+    function initEmitters(use3D, limit)
+        local max = math.min(limit - #_emitters, particle.particleEmittersLeft())
+        for i=1, max do
+            table.insert(_emitters, particle_create_old(owner():getPos(), false))
+        end
+    end
+    
+    function nextEmitter(origin)
+        initEmitters(false, BetaParticleEmitterLimit)
+        
+        local length = #_emitters
+        _emitterIndex = (_emitterIndex + 1) % length
+        --print(length)
+        local targetEmitter = _emitters[_emitterIndex+1]
+        if targetEmitter then
+            targetEmitter:setPos(origin)
+        end
+        return targetEmitter
+    end
+    
+    particle.create = function(position, use3D)
+        return nextEmitter(position)
+    end
+    
+    local MetaParticleEmitter = getMethods("ParticleEmitter")
+    MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
+    MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
+    
+    function MetaParticleEmitter:add(...)
+        if self:getParticlesLeft() == 0 then
+            --printConsole("max")
+            return
+        end
+        return self:oldAdd(...)
+    end
+    
+    function MetaParticleEmitter:destroy()
     end
 end
 
-function nextEmitter(origin)
-    local length = #_emitters
-    _emitterIndex = (_emitterIndex + 1) % length
-    --print(length)
-    local targetEmitter = _emitters[_emitterIndex+1]
-    --print(targetEmitter)
-    targetEmitter:setPos(origin)
-    return targetEmitter
-end
-
-particle.create = function(position, use3D)
-    return nextEmitter(position)
-end
-
-local MetaParticleEmitter = getMethods("ParticleEmitter")
-MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
-MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
-
-function MetaParticleEmitter:add(...)
-    if self:getParticlesLeft() == 0 then
-        --printConsole("max")
-        return
-    end
-    return self:oldAdd(...)
-end
-
-function MetaParticleEmitter:destroy()
+if EnableBetaParticleSystem then
+    RunBetaParticleSystem()
 end
 -- ================================================
 

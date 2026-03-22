@@ -33,7 +33,7 @@ local OnlyUngod = true
 
 local EyeFromChip = true
 local WaitFindingTarget = false
-local FireAfterFinding = true
+local FireAfterFinding = false
 
 local HasCenterDot = true
 local ShowDotWhileFinding = false
@@ -53,7 +53,7 @@ local KeyBindData = { -- The value can be both the key and the list from the key
 
 local TestOnMe = false
 
-local EnableBetaParticleSystem = true
+local EnableBetaParticleSystem = false
 local BetaParticleEmitterLimit = 2
 -----------------------------------------------------------------------
 
