@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.8.0
+-- version 1.8.1
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -33,7 +33,7 @@ local OnlyUngod = true
 
 local EyeFromChip = true
 local WaitFindingTarget = false
-local FireAfterFinding = false
+local FireAfterFinding = true
 
 local HasCenterDot = true
 local ShowDotWhileFinding = false
@@ -451,7 +451,7 @@ function RunBetaParticleSystem()
     function initEmitters(use3D, limit)
         local max = math.min(limit - #_emitters, particle.particleEmittersLeft())
         for i=1, max do
-            table.insert(_emitters, particle_create_old(owner():getPos(), false))
+            table.insert(_emitters, particle_create_old(owner():getPos(), use3D))
         end
     end
     
@@ -895,7 +895,7 @@ timer.create("disableRocketEngine", 0.4, 0, function()
 
     local now = timer.curtime()
     for i, rocket in ipairs(_rockets) do
-        if rocket._lastLifeTime < now then
+        if rocket._lastLifeTime < now and isValid(rocket._holo) then
             rocket._holo:stopSound(RocketForcingSoundUrl)
         end
     end
@@ -935,7 +935,8 @@ hook.add("think", "particleRockets", function()
         end
         
         local maxSize = 80
-        local startAlpha = 200
+        local startAlpha = 150
+
         local part = emitter:add( m, rocket:getPos() - rocket:getForward()*TrailRocketStartOffset, 5, maxSize, 0, 0, startAlpha, 0, TrailTime )
         if not part then continue end
         
