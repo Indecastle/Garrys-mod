@@ -1,15 +1,21 @@
 --@name force sphere
 --@author Markiz
+-- author STEAM_0:1:54066003
+--model models/hunter/blocks/cube1x1x1.mdl
 --@shared
+-- version 0.2.0
 
 
-local Radius = 300   
+local Radius = 500   
 local Speed = 200  -- 18 = no gravity
 
 local ToUp = false
 
 local IsUnfrozingProps = false
 local IsUnConstraintProps = false
+
+local IsOnlyPlayers = false
+local IsOnlyNoclipPlayers = false
 
 local IsSetPosProps = false
 local IsSetPosPlayers = false
@@ -19,14 +25,13 @@ local IsSetPosOnGround = false
 
 local IsTriggerWorldEntity = true
 
-local IsDeleteProps = true
+local IsDeleteProps = false
 local IsDeleteWorldProps = true
 
 
 local IsWorkByTimer = true
-local WorkTimerDelay = 0.1
+local WorkTimerDelay = 0.2
 
-local IsOnlyPlayers = false
 
 local Friends = {
     --'markiz'
@@ -112,8 +117,6 @@ end
 
 function checkEntity(ent)
     if ent == E or ent == nil or !ent:isValid() or ent:isWeapon() or !inSphere(ent) then return false end
-
-        if IsOnlyPlayers and ent:getClass() != 'player' then return false end
         
         if wire.ports.Friends and #wire.ports.Friends > 0 then
             for i, p in ipairs(wire.ports.Friends) do
@@ -151,6 +154,9 @@ else
     end)
 end
 
+local _excludeWordProps = {
+    "predicted_viewmodel", "gmod_hands", "physgun_beam"
+}
 
 function handleForce()
     
@@ -182,6 +188,10 @@ function handleForce()
         
         local Force = W:isWired("Force") and wire.ports.Force and wire.ports.Force or Speed
         
+        if IsOnlyNoclipPlayers and p:getClass() == 'player' and !p:isNoclipped() then
+            continue
+        end
+        
         pcall(function()
             if p:getClass() == 'player' then
                 --p:setVelocity(Vector(0,0,Speed))
@@ -190,12 +200,11 @@ function handleForce()
                 --p:applyForceCenter(Vector(0,0,20)*p:getMass()) 
                 --p:applyForceCenter(dir*Speed*p:getMass()) 
                 
-                if IsDeleteProps then
-                    if IsDeleteWorldProps and not p:isWeapon() and p:getClass() != "predicted_viewmodel" or p:getOwner() != nil then
-                        p:remove()
-                    end
+                if (IsDeleteProps and not p:isWeapon() and p:getOwner() != nil)
+                        or (IsDeleteWorldProps and p:getOwner() == nil and not table.hasValue(_excludeWordProps, p:getClass())) then
+                    p:remove()
                 else
-                     phys:addVelocity(dir*Force*ttimeDiff*33.272)
+                    phys:addVelocity(dir*Force*ttimeDiff*33.272)
                     if IsUnfrozingProps then
                         p:setFrozen(false)
                     end
@@ -217,11 +226,12 @@ function handleForce()
             p:setPos(p:getPos() + Vector(0,0,1))        
         end
         
-        if  p:getClass() == 'player' 
+        if (p:getClass() == 'player' 
                 and (IsSetPosPlayers 
-                    or IsSetPosNoclipPlayers and p:isNoclipped()) or
-            p:getClass() != 'player' and IsSetPosProps then
-            p:setPos(E:getPos() + dir0*(Radius+20))           
+                    or (IsSetPosNoclipPlayers or IsOnlyNoclipPlayers) and p:isNoclipped()))
+                or (p:getClass() != 'player' and IsSetPosProps and not table.hasValue(_excludeWordProps, p:getClass())) then
+            p:setPos(E:getPos() + dir0*(Radius+20))    
+            printConsole(p)       
         end
     end
     

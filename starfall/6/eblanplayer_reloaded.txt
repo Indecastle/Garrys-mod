@@ -114,22 +114,24 @@ if CLIENT then
             song:setPos(_eyePos + dirSound*100)
             
             FFT = song:getFFT()
+            local fft2 = FFT[2] or 0
             
-            frame = frame + 0.1 + FFT[2]*4
+            frame = frame + 0.1 + fft2*4
             mat:setAngles(Angle(frame, 0, 90))
 
             render.pushMatrix(mat)
             
             render.setMaterial(mat2)
             
-            render.draw3DSphere(Vector(0,0,0),150+FFT[2]*128,32,32)
+            render.draw3DSphere(Vector(0,0,0),150+fft2*128,32,32)
             
             render.popMatrix()
             render.setMaterial(mat3)
             render.setColor(Color(255,225,0))
             
             for i = 1,20 do
-                drawFFTBar(128+i*18,440,5+FFT[i]*128,1,90)
+                local fft = FFT[i] or 0
+                drawFFTBar(128+i*18,440,5+fft*128,1,90)
             end
             
             render.setColor(Color(255, 255, 255))
@@ -151,8 +153,9 @@ if CLIENT then
             render.setMaterial(putinmat)
             
             FFT = song:getFFT()
+            local fft1 = FFT[1] or 0
             
-            prikol = prikol+(0.1+FFT[1]*8*timer.frametime()*100)
+            prikol = prikol+(0.1+fft1*8*timer.frametime()*100)
 
             local prikol2 = math.floor(prikol)%tiles
             
@@ -161,7 +164,7 @@ if CLIENT then
             render.drawTexturedRectUV(-70, 256, 256, 256, uv(x), uv(y), uv(x + texSize.x), uv(y + texSize.y))
             
             _currentAnimSpeed = _currentAnimSpeed <= 0 and 0 or (_currentAnimSpeed - 0.1)
-            _currentAnimSpeed = (_currentAnimSpeed < FFT[1]*timer.frametime()*1000) and FFT[1]*timer.frametime()*1000 or _currentAnimSpeed
+            _currentAnimSpeed = (_currentAnimSpeed < fft1*timer.frametime()*1000) and fft1*timer.frametime()*1000 or _currentAnimSpeed
 
             --printMessage(4, string.format("%f", math.round(_currentAnimSpeed, 7)))
             --owner():setAnimationRate(0.1 + math.clamp(_currentAnimSpeed, 0, 2))

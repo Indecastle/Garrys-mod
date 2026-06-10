@@ -1,12 +1,11 @@
-// reset animation
---@name generic
---@author
+--@name reset animation
+--@author Markiz
 --@client
 
-for i, p in ipairs(find.allPlayers()) do
+--for i, p in ipairs(find.allPlayers()) do
     //--p:setAnimation("taunt_dance", nil, 2, false, nil, nil)
     --p:setAnimationLoop(false)
-    p:resetAnimation()
-end
+    --p:resetAnimation()
+--end
 
--- Player:setAnimation(number or string sequence, number or nil progress, number or nil rate, boolean or nil loop, boolean or nil auto_advance, string or number or nil act)
+owner():setAnimation("", nil, 1, false, nil, nil)

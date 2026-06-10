@@ -89,17 +89,13 @@ function smoke(dir)
 end
 
 function startSmoke()
+    emitter = particle.create(Vector(), false)
+    emitter:setNoDraw(false)
     for i=0, forMax do
         local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1))
-        
-        
-        emitter = particle.create(Vector(), false)
-        emitter:setNoDraw(false)
-        
         smoke(dir)
-        
-        if emitter and emitter:isValid() then emitter:destroy() end
     end
+    if emitter and emitter:isValid() then emitter:destroy() end
 end
 
 

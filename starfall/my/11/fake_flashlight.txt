@@ -1,7 +1,9 @@
 --@name Fake Flashlight
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@model models/lamps/torch.mdl
 --@client
+-- version 1.0.1
 
 local URLS = {
     rikka_1 = "https://i.imgur.com/xdOEuic.png",
@@ -36,12 +38,15 @@ local URLS = {
 local img = "kitten"
 
 local maxh = 100
+local FarZ = 700
 local ThirdPersonMode = true
 
 local Target = owner()
 --Target = find.playersByName("Ember")[1]
 print(Target)
 
+
+local RotateAngle = 0
 
 local FPS = 5
 local frame = 0
@@ -151,39 +156,41 @@ function loadImage()
     mat:setInt("$nocull", 1)
     mat:recompute()
     
-    
     --mat:setInt("$flags", 256)
-    
     mat:setVector("$texturescale", Vector(1, 1))
     mat:setVector("$textureoffset", Vector(0, 0))
     mat:recompute()
     
-    local finalMat = material.create("UnlitGeneric")
-    finalMat:setTexture("$basetexture", "error")
-    finalMat:setInt("$translucent", 1)
-    finalMat:setInt("$vertexcolor", 1)
-    finalMat:setInt("$vertexalpha", 1)
-    finalMat:setInt("$nolod ", 1)
-    finalMat:setVector("$texturescale", Vector(1, 1, 1))
-    finalMat:setVector("$textureoffset", Vector(0, 0, 0))
+    local t = Matrix()
+    t:scale(Vector(1, IsMirror and -1 or 1, 1))
+    t:rotate(Angle(0, RotateAngle, 0))
+    mat:setMatrix("$basetexturetransform", t)
+    
+    --local finalMat = material.create("UnlitGeneric")
+    --finalMat:setTexture("$basetexture", "error")
+    --finalMat:setInt("$translucent", 1)
+    --finalMat:setInt("$vertexcolor", 1)
+    --finalMat:setInt("$vertexalpha", 1)
+    --finalMat:setInt("$nolod ", 1)
+    --finalMat:setVector("$texturescale", Vector(1, 1, 1))
+    --finalMat:setVector("$textureoffset", Vector(0, 0, 0))
     
     
     mat:setTextureURL("$basetexture", URL, function(m, u, w, h, l)
         if m == nil then return end
     
-        local ratio = w / h
+        --local ratio = w / h
 
-        local sh = maxh
-        local sw = sh * ratio
+        --local sh = maxh
+        --local sw = sh * ratio
         --screen:setSize(Vector(sh, sw, 1))
         
         local x,y,w,h;
-        if PosUp then x=m:getWidth()/4 y=0 w=m:getWidth()/2 h=m:getHeight()/2
-        else x=0 y=0 w=m:getWidth() h=m:getHeight() end
+        x=0 y=0 w=m:getWidth() h=m:getHeight();
         
-         m:setVector("$texturescale", Vector(1, 1, 1))
-        m:setVector("$textureoffset", Vector(0, 0, 0))
-        m:setInt("$projective", 1)
+        --m:setVector("$texturescale", Vector(1, 1, 1))
+        --m:setVector("$textureoffset", Vector(0, 0, 0))
+        --m:setInt("$projective", 1)
         --m:setInt("$nolod ", 1)
         
         --     
@@ -193,14 +200,14 @@ function loadImage()
         --w, h = 1024, 1024
         l(x, y, w, h)
         
-        m:setTexture("$basetexture", mat:getTexture("$basetexture"))
+        --m:setTexture("$basetexture", mat:getTexture("$basetexture"))
         --m:setVector("$texturescale", Vector(1, 1))
         --m:setVector("$textureoffset", Vector(0, 0))
         m:setInt("$projective", 1)
         m:setInt("$nolod ", 1)
-        m:recompute()
+        --m:recompute()
         
-        texture = m:getTexture("$basetexture")
+        --texture = m:getTexture("$basetexture")
     end)
     
     texture = mat:getTexture("$basetexture")
@@ -255,7 +262,7 @@ hook.add("renderscene", "UpdateFlashlight", function()
     
     flashlight:setTexture(texture)
     flashlight:setBrightness(isFlashOn and 1 or 0)
-    flashlight:setFarZ(700)
+    flashlight:setFarZ(FarZ)
     flashlight:setFOV(45)
     flashlight:setColor(Color(255, 255, 255))
     flashlight:setEnableShadows(false)
@@ -267,7 +274,7 @@ hook.add("renderscene", "UpdateFlashlight", function()
                    eyeAngles:getRight() * _eyeOffset.y +
                    eyeAngles:getUp() * _eyeOffset.z
         flashlight:setPos(pos)
-        flashlight:setAngles(Target:getEyeAngles())
+        flashlight:setAngles(Target:getEyeAngles()+Angle(0,0,RotateAngle))
     else
         local p, a = Target:getAttachment(attachmentRightHandIndex)
         flashlight:setPos(p)

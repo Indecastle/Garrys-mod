@@ -102,6 +102,7 @@ if CLIENT then
             song:setPos(_eyePos + dirSound*100)
             
             FFT = song:getFFT()
+            if FFT[2] == nil then return end
             
             frame = frame + 0.1 + FFT[2]*4
             mat:setAngles(Angle(frame, 0, 90))
@@ -137,6 +138,7 @@ if CLIENT then
             render.setMaterial(putinmat)
             
             FFT = song:getFFT()
+            if FFT[1] == nil then return end
             
             prikol = prikol+(0.1+FFT[1]*8*timer.frametime()*100)
 

@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.2.0
+-- version 1.2.2
 
 local StartHeight = 500
 local StartPitchAngle = 45
@@ -16,7 +16,7 @@ local ExplodeDamage = 110
 local ExplodeRadius = 500
 local IsRect = true
 
-local OnlyPvpUse = true
+local OnlyPvpUse = false
 local UsePVS = true
 local UseWH = true
 local TrailTime = 5
@@ -174,8 +174,9 @@ if SERVER then
     local CumHolo
     local _isReloading = false
     local _aimDir, _fireForce
-    local _cannonAngle = Angle(45,0,0)
+    local _cannonAngle = Angle(StartPitchAngle, chip():getAngles().y, 0)
     local _health = Health
+
     
     function identifyVehicle()
         local li = chip():getLinkedComponents()
@@ -361,7 +362,9 @@ if SERVER then
     end)
     
     function userHasGodMode(user)
-        if user:hasGodMode() then
+        if user:hasGodMode()
+                or (user.isBUILD != nil and user:isBUILD())
+                or (user.isSafezoneSafe != nil and user:isSafezoneSafe()) then
             return true
         end
         local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")

@@ -3,7 +3,7 @@
 -- author STEAM_0:1:54066003
 --model models/hunter/blocks/cube1x1x1.mdl
 --@shared
--- version 0.5.1
+-- version 0.5.3
 
 local FireReloadDelay = 4.0
 local FireReactionDelay = 1.0
@@ -190,6 +190,14 @@ if SERVER then
         return !!pos2
     end
     
+    function userHasGodMode(user)
+        if user:hasGodMode() or (user.isBUILD != nil and user:isBUILD()) then
+            return true
+        end
+        local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")
+        return isKyleBuilder != nil and isKyleBuilder
+    end
+    
     -------------------------------------------------
     local _target, _prevTarget
     local _lastPos = nil
@@ -234,7 +242,7 @@ if SERVER then
             return isValid(ent)
                 and ent:isVehicle()
                 and isValid(ent:getDriver())
-                and (!OnlyUngod or !ent:getDriver():hasGodMode())
+                and (!OnlyUngod or !userHasGodMode(ent:getDriver()))
                 and angleBetweenVectors((ent:getPos() - _cannon:getPos()):getNormalized(), upDir) < MaxPitchAngle
                 and isVisibleEnt(startPos, ent)
         end)
@@ -298,8 +306,8 @@ if SERVER then
         _lastFireTime = curtime + FireReloadDelay
         
     
-        local bullet = prop.create(_cannon:localToWorld(Vector(100,0,50)), _cannon:getAngles(), BulletModel, false)
-        bullet._bulletHoloBase = hologram.create(bullet:getPos(), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
+        local bullet = prop.create(_cannon:localToWorld(Vector(100,0,25)), _cannon:getAngles(), BulletModel, false)
+        bullet._bulletHoloBase = hologram.create(bullet:localToWorld(Vector(0,0,25)), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
         bullet._bulletHoloBase:setNoDraw(true)
         --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
         bullet._bulletHoloBase:setTrails(50, 0, 1, "trails/smoke", Color(255,255,255))

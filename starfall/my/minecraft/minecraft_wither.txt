@@ -1,6 +1,8 @@
 --@name Minecraft Wither
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@shared
+-- version 2.0.1
 
 local Radius = 1500
 local Health = 800
@@ -332,16 +334,27 @@ if SERVER then
     local _heads = { Holo_Head1, Holo_Head2, Holo_Head3 }
     
     
+    function userHasGodMode(user)
+        if user:hasGodMode()
+                or (user.isBUILD != nil and user:isBUILD())
+                or (user.isSafezoneSafe != nil and user:isSafezoneSafe()) then
+            return true
+        end
+        local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")
+        return isKyleBuilder != nil and isKyleBuilder
+    end
+    
+    
     function isValidFindPlayerOrNPC(ent)
         return ent ~= nil and ent:isValid()
-            and (ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode()
+            and (ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !userHasGodMode(ent)
                 or ent:isNPC()) 
     end
     
     
     function isValidPlayerOrNPC(ent)
         return ent ~= nil and ent:isValid()
-            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode())
+            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !userHasGodMode(ent))
     end
     
     

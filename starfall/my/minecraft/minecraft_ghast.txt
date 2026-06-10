@@ -1,6 +1,8 @@
 --@name Minecraft Ghast
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@shared
+-- version 2.1.3
 
 local Respawn =  false
 local GhastSpawnCounts = 1 -- max 5
@@ -57,9 +59,19 @@ if SERVER then
     local GhastClass = class("GhastClass")
     local BulletClass = class("BulletClass")
     
+    function userHasGodMode(user)
+        if user:hasGodMode()
+                or (user.isBUILD != nil and user:isBUILD())
+                or (user.isSafezoneSafe != nil and user:isSafezoneSafe()) then
+            return true
+        end
+        local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")
+        return isKyleBuilder != nil and isKyleBuilder
+    end
+    
     function isValidPlayerOrNPC(ent)
         return ent ~= nil and ent:isValid()
-            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !ent:hasGodMode())
+            and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !userHasGodMode(ent))
     end
     
     function GhastClass:initialize(pos)
@@ -596,6 +608,8 @@ if SERVER then
         local pos = self.head:getPos()
         local nextPos = pos + self.direction * self._bulletVelocity * getFrameTime()
         
+        if not isValid(self.propBase) then return end
+        
         local ignoreEnts = self._repulsed and {} or { self.propBase }
         local tr = trace.hull(pos, nextPos, self._obbMins, self._obbMaxs, ignoreEnts, MASK.ALL, nil, false)
         if isValid(tr.Entity) or tr.HitWorld then
@@ -864,6 +878,10 @@ function SoundManager:initialize(url, items, fadeMax)
     self.Url = url
     self.Items = items
     self.IsPlaying = false
+    
+    if not hasPermission("bass.loadURL", url) then
+        return
+    end
     
     bass.loadURL(url, "3d noblock noplay", function(Sound)
         if not isValid(Sound) then return end

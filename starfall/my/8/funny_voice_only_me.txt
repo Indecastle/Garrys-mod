@@ -6,9 +6,10 @@
 local mat = material.load("voice/icntlk_pl")
 local _data = {}
 
+local emit = particle.create(chip():getPos(),false)
 
 timer.create("throwVoice",0.2,0,function()
-    local emit = particle.create(chip():getPos(),false)
+    
     for ply, untilAt in pairs(_data) do
         part = emit:add(mat,ply:getEyePos() + Vector(0,0,10) ,10,0,0,0,255,255,2)
         if part then
@@ -19,7 +20,7 @@ timer.create("throwVoice",0.2,0,function()
             part:setBounce(0.75)
         end
     end
-    emit:destroy()
+    --emit:destroy()
 end)
 
 

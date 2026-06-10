@@ -5,12 +5,12 @@
 -- version 1.0.1
 
 
-local FireSize = 0.2 // 0.1 - 1.5
+local FireSize = 0.3 // 0.1 - 1.5
 
 
 local OnlyTarget = true
 local Target = owner()
---Target = find.playersByName("Markiz")[1]
+--Target = find.playersByName("markiz")[1]
 
 
 local EnableBetaParticleSystem = true
@@ -94,10 +94,11 @@ end
 
 if EnableBetaParticleSystem then
     RunBetaParticleSystem()
+    initEmitters(false, 100)
 end
 -- ================================================
 
-initEmitters(false, 100)
+
 
 function ExplosionEffect:initialize( pos, normal, size )
     local origin = pos
@@ -301,11 +302,14 @@ hook.add("EntityFireBullets", "my", function(ent, data)
     --printConsole(_lockData[ent])
     
     return function(attacker, tr, dmgInfo)
-        ExplosionEffect:new(tr.HitPos, -data.Dir, FireSize)
+        local dir = data.Dir:getNormalized()
+        
+        ExplosionEffect:new(tr.HitPos, -dir, FireSize)
+        
         net.start("FireBulletServer")
         net.writeEntity(ent)
         net.writeVector(tr.HitPos)
-        net.writeVector(data.Dir)
+        net.writeVector(dir)
         net.send(nil, true)
     end
 end)

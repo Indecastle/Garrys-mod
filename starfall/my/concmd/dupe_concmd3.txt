@@ -26,7 +26,7 @@ end)[1]
 
 if Owner ~= owner() then
     if hasPermission("console.command") then
-        concmd("sf_permission_cl console.command client 3")
+        --concmd("sf_permission_cl console.command client 3")
         concmd("sf_permission_cl file.write client 3")
     end
 end

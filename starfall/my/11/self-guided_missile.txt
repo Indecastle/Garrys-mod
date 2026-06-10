@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.8.1
+-- version 1.8.2
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -24,7 +24,7 @@ local ExplodeDamage = 110
 local ExplodeRadius = 400
 local ExplodeSize = 0.8 -- 0.1 - 1.5
 
-local FireDelay = 2
+local FireDelay = 3
 local FindTargetSpeed = 1 -- 1 - 3
 local FindInBoxSize = 240
 
@@ -53,7 +53,7 @@ local KeyBindData = { -- The value can be both the key and the list from the key
 
 local TestOnMe = false
 
-local EnableBetaParticleSystem = false
+local EnableBetaParticleSystem = true
 local BetaParticleEmitterLimit = 2
 -----------------------------------------------------------------------
 
@@ -364,7 +364,7 @@ if SERVER then
     -------------------------------------------------
     
     function userHasGodMode(user)
-        if user:hasGodMode() then
+        if user:hasGodMode() or (user.isBUILD != nil and user:isBUILD()) then
             return true
         end
         local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")

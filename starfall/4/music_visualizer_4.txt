@@ -132,6 +132,7 @@ local soundData
 function start() 
     bass.loadURL(url,"3d noblock", function(snd)
         soundData = snd
+        snd:setFade(500,1500)
         hook.add("render", "", function()
             snd:setPos(render.getScreenEntity():getPos())
             local n = 64
