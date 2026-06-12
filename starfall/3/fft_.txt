@@ -24,6 +24,7 @@ local url = url5
 function start() 
     bass.loadURL( url, "3d noblock repeat", function(Sound)
         Sound:setVolume(0.5)
+		Sound:setFade(500,1500)
         Sound:setLooping(true)
         Sound:play()
         hook.add("think","",function()

@@ -33,7 +33,7 @@ local URLS = {
     custom = nil
 }
 
-local img = "putin"
+local img = "soldierMeme"
 
 local maxh = 100
 
@@ -115,11 +115,8 @@ function cloneMaterial(shader, path)
 end
 
 
---local matSprite0 = cloneMaterial("UnlitGeneric", "sprites/light_ignorez")
 local matSprite = cloneMaterial("UnlitGeneric", "sprites/light_ignorez")
 matSprite:setInt("$flags", 128)
-matSprite:setString("$ignorez", "1")
---matSprite:setTexture("$basetexture", matSprite0:getTexture("$basetexture"))
 
 local holoSprite = hologram.create(chip():localToWorld(Vector(6,0,0)), Angle(), "models/holograms/plane.mdl")
 holoSprite:setMaterial("!" .. matSprite:getName())
@@ -196,8 +193,6 @@ if not hasPermission("material.urlcreate", URL) then
         render.drawText(512, 330, "Press E on the dot to allow loading!", 1)
         
         render.draw3DSphere(Vector(w, h, 20), 30, 20, 20)
-        
-        // render.drawCircle(512, 512, 10)
     end)
 end
 
