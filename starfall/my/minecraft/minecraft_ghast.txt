@@ -74,6 +74,24 @@ if SERVER then
             and (ent:isNPC() or not IgnorePlayers and ent:isPlayer() and ent:isValidPhys() and ent:isAlive() and !userHasGodMode(ent))
     end
     
+    function isActiveGhast(ent)
+        for k, ghast in pairs(_ghastActiveList) do
+            if ent == ghast.propBase then
+                return true
+            end
+        end
+        return false
+    end
+    
+    function findActiveGhastByProp(ent)
+        for k, ghast in pairs(_ghastActiveList) do
+            if ent == ghast.propBase then
+                return ghast
+            end
+        end
+        return nil
+    end
+    
     function GhastClass:initialize(pos)
         self.ID = getNewId()
         _ghastActiveList[self.ID] = self
@@ -85,6 +103,7 @@ if SERVER then
         propBase = prop.create(pos, Angle(), self.model, true)
         propBase:setColor(Color(0,0,0,0))
         propBase:setMaterial("models/debug/debugwhite")
+        propBase._isGhastPropBase = true
     
         self.propBase = propBase or nil
         self.isDisposed = false
@@ -139,9 +158,9 @@ if SERVER then
     end
 
     function GhastClass:buildHolosNotFireState()
-        self.head_eye1 = hologram.create(self.head:localToWorld(Vector(47,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
-        self.head_eye2 = hologram.create(self.head:localToWorld(Vector(47, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
-        self.head_mouth = hologram.create(self.head:localToWorld(Vector(47,0,-25)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        self.head_eye1 = hologram.create(self.head:localToWorld(Vector(48,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        self.head_eye2 = hologram.create(self.head:localToWorld(Vector(48, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        self.head_mouth = hologram.create(self.head:localToWorld(Vector(48,0,-25)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
         
         self.head_eye1:setParent(self.head)
         self.head_eye2:setParent(self.head)
@@ -155,17 +174,17 @@ if SERVER then
     end
     
     function GhastClass:buildHolosFireState()
-        local head_eye11 = hologram.create(self.head:localToWorld(Vector(47,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
-        local head_eye12 = hologram.create(self.head:localToWorld(Vector(47,-18,24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,0.6))
-        local head_eye13 = hologram.create(self.head:localToWorld(Vector(47.2,-15,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,0.5,0.45))
+        local head_eye11 = hologram.create(self.head:localToWorld(Vector(48,-18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        local head_eye12 = hologram.create(self.head:localToWorld(Vector(48,-18,24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,0.6))
+        local head_eye13 = hologram.create(self.head:localToWorld(Vector(48.5,-15,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,0.5,0.45))
         
-        local head_eye21 = hologram.create(self.head:localToWorld(Vector(47, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
-        local head_eye22 = hologram.create(self.head:localToWorld(Vector(47,18,24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,0.6))
-        local head_eye23 = hologram.create(self.head:localToWorld(Vector(47.2,15,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,0.5,0.45))
+        local head_eye21 = hologram.create(self.head:localToWorld(Vector(48, 18,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,0.45))
+        local head_eye22 = hologram.create(self.head:localToWorld(Vector(48,18,24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,0.6))
+        local head_eye23 = hologram.create(self.head:localToWorld(Vector(48.5,15,20)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,0.5,0.45))
         
-        local head_mouth1 = hologram.create(self.head:localToWorld(Vector(47,0,-24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,1.3))
-        local head_mouth2 = hologram.create(self.head:localToWorld(Vector(47,0,-25)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,2.3))
-        local head_mouth3 = hologram.create(self.head:localToWorld(Vector(47.2,0,-26)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,1.0))
+        local head_mouth1 = hologram.create(self.head:localToWorld(Vector(48,0,-24)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,2.0,1.3))
+        local head_mouth2 = hologram.create(self.head:localToWorld(Vector(48,0,-25)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,2.3))
+        local head_mouth3 = hologram.create(self.head:localToWorld(Vector(48.5,0,-26)), self.head:getAngles(), "models/holograms/cube.mdl", Vector(0.11,1.0,1.0))
         
         head_eye11:setParent(self.head)
         head_eye12:setParent(self.head)
@@ -420,7 +439,7 @@ if SERVER then
             then return end
         
         self._oldLockDamageTime = timer.systime() + LockDamageTime
-        
+        --printTable(attacker)
         if attacker._ghastCritDamage then
             amount = self._health
         end
@@ -540,15 +559,40 @@ if SERVER then
     
     --########################## Bullet ##########################################################
     
+    hook.add("Remote"," ", function(s, o, payload)
+        pcall(function()
+            local request = json.decode(payload)
+    
+            if request.eventKey == "ghastBullet" then
+                local bulletEnt = entity(request.bulletEntIndex)
+                local hitPropBase = entity(request.hitEntIndex)
+       
+                bulletEnt._isMySF = true
+                bulletEnt._ghastDamage = request.isTakeGhastDamage
+                bulletEnt._ghastCritDamage = request.isTakeGhastDamage and hitPropBase._isGhastPropBase
+            end
+        end)
+    end)
+    
+    function runBulletEntRemote(bulletEnt, isTakeGhastDamage, hitEntity)
+        local obj = {
+            eventKey = "ghastBullet",
+            bulletEntIndex = bulletEnt:entIndex(),
+            isTakeGhastDamage = isTakeGhastDamage,
+            hitEntIndex = hitEntity:entIndex()
+        }
+        
+        local jsonStr = json.encode(obj, false)
+        hook.runRemote(nil, jsonStr)
+    end
     
     
-    function explodeTo(pos, isGhastDamage, isGhastCritDamage)
+    function explodeTo(pos, isTakeGhastDamage, hitEntity)
         while #ExplodeModels > 0 do
             local succeed = pcall(function()
                 local p = prop.create(pos, Angle(), ExplodeModels[1])
-                p._isMySF = true
-                p._ghastDamage = isGhastDamage
-                p._ghastCritDamage = isGhastCritDamage
+                
+                runBulletEntRemote(p, isTakeGhastDamage, hitEntity)
                 p:setNoDraw(true)
                 p:breakEnt()
             end)
@@ -579,7 +623,8 @@ if SERVER then
         self.lastLifeTime = timer.systime() + BulletLifeTime
         self.head = hologram.create(pos, self.direction and self.direction:getAngle() or Angle(), "models/XQM/Rails/gumball_1.mdl", Vector(1)*0.5)
         self.head:setMaterial("models/props_lab/cornerunit_cloud")
-        
+        self.head:ignite(100, 0)
+
         self._obbMins = Vector(-BulletObbSize)
         self._obbMaxs = Vector(BulletObbSize)
     end
@@ -595,10 +640,12 @@ if SERVER then
         table.removeByValue(_ghastBulletList, self)
     end
     
-    function BulletClass:explode(isGhastDamage, isGhastCritDamage)
-        explodeTo(self.head:getPos(), isGhastDamage, isGhastCritDamage)
+    function BulletClass:explode(isTakeGhastDamage, hitEntity)
+        explodeTo(self.head:getPos(), isTakeGhastDamage, hitEntity)
         self:destroy()
     end
+    
+    
     
     function BulletClass:think()
         if self.lastLifeTime < timer.systime() then
@@ -608,12 +655,15 @@ if SERVER then
         local pos = self.head:getPos()
         local nextPos = pos + self.direction * self._bulletVelocity * getFrameTime()
         
-        if not isValid(self.propBase) then return end
-        
-        local ignoreEnts = self._repulsed and {} or { self.propBase }
+        local ignoreEnts = (self._repulsed or !isValid(self.propBase)) and {} or { self.propBase }
         local tr = trace.hull(pos, nextPos, self._obbMins, self._obbMaxs, ignoreEnts, MASK.ALL, nil, false)
+        
         if isValid(tr.Entity) or tr.HitWorld then
-            self:explode(self._repulsed, self._repulsed and tr.Entity == self.propBase)
+            if isValid(tr.Entity) then
+                --runBulletEntRemote(tr.Entity)
+            end
+            --self:explode(self._repulsed, self._repulsed and isValid(self.Entity) and tr.Entity == self.propBase)
+            self:explode(self._repulsed, tr.Entity)
             return
         end
 

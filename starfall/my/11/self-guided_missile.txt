@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.8.2
+-- version 1.8.3
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -364,7 +364,9 @@ if SERVER then
     -------------------------------------------------
     
     function userHasGodMode(user)
-        if user:hasGodMode() or (user.isBUILD != nil and user:isBUILD()) then
+        if user:hasGodMode()
+                or (user.isBUILD != nil and user:isBUILD())
+                or (user.isSafezoneSafe != nil and user:isSafezoneSafe()) then
             return true
         end
         local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")

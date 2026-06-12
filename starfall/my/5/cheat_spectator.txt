@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.4.3
+-- version 1.5.1
 
 -- Third person
 local ThPersDist = 100
@@ -630,7 +630,13 @@ hook.add("huddisconnected", "", function ()
     hudConnecting(false)
 end)
 
+local _excludeBlockBinds = { "+use" }
 
+hook.add("InputBindPressed","block bind", function(bind)
+    if !ON or !render.isHUDActive() or (TargetPlayer == player() and !FreeCumOn) then return end
+    --print(bind)
+    return !table.hasValue(_excludeBlockBinds, bind)
+end)
 
 if player() == owner() then
     --enableHud(nil, true)

@@ -115,6 +115,19 @@ function cloneMaterial(shader, path)
 end
 
 
+--local matSprite0 = cloneMaterial("UnlitGeneric", "sprites/light_ignorez")
+local matSprite = cloneMaterial("UnlitGeneric", "sprites/light_ignorez")
+matSprite:setInt("$flags", 128)
+matSprite:setString("$ignorez", "1")
+--matSprite:setTexture("$basetexture", matSprite0:getTexture("$basetexture"))
+
+local holoSprite = hologram.create(chip():localToWorld(Vector(6,0,0)), Angle(), "models/holograms/plane.mdl")
+holoSprite:setMaterial("!" .. matSprite:getName())
+holoSprite:setSize(Vector(100, 100, 1))
+holoSprite:setParent(chip())
+holoSprite:suppressEngineLighting(true)
+
+
 function loadImage()
     if img == nil then return end
     if URLS[img] == nil then return end
@@ -203,4 +216,30 @@ hook.add("Think", "UpdateFlashlight", function()
     flashlight:setAngles(chip():localToWorldAngles(Angle(0,0,0)))
 
     flashlight:update()
+end)
+
+
+hook.add("renderscene", "", function()
+    holoSprite:setAngles((eyePos()-holoSprite:getPos()):getAngle() + Angle(90,0,0))
+    
+    local lightpos = holoSprite:getPos()
+    local viewnormal = lightpos - eyePos()
+    local distance = viewnormal:getLength()
+    
+    local viewdot = viewnormal:dot(chip():localToWorldAngles(Angle(180,0,0)):getForward()) / distance
+    if viewdot < 0 then return end
+    --printConsole(viewdot)
+
+    local visibile = render.pixelVisible(lightpos, 16)
+    local visdot = visibile * viewdot
+
+    local color = Color(255,255,255)
+    color.a = math.clamp((1000 - math.clamp(distance, 32, 800)) * visdot, 0, 100) / 100 * 255
+    
+    local scale = 2
+    local size = math.clamp(distance * visdot * scale, 64, 512)
+     
+    holoSprite:setSize(Vector(size * 0.4, size * 0.4, 1))
+    holoSprite:setColor(color)
+    --printConsole(tostring(visibile))
 end)

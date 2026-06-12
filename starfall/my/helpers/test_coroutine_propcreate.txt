@@ -42,7 +42,12 @@ corWrap(function()
     
 print("__Start__")
 for i=1, 10 do
-    prop.create(chip():getPos() + Vector(0,0,100), Angle(), "models/weapons/w_crowbar.mdl", false)
+    local p = prop.create(chip():getPos() + Vector(0,0,100), Angle(), "models/weapons/w_crowbar.mdl", false)
+    
+    timer.simple(0, function()
+        p:setFrozen(false)
+    end)
+    
     --validQuota()
     corDelay(1)
 end

@@ -67,7 +67,7 @@ local Toilet_datas = {
         ToiletLocalPos = Vector(0,0,0),
         WaterLocalPos = Vector(0,0,15.5),
         WaterScale = Vector(0.17, 0.12, 0.01)*0,
-        SeatLocalPos = Vector(2,0,12),
+        SeatLocalPos = Vector(0,0,15),
         EjectLocalPos = Vector(0,40,-15),
         EjectLocalAngle = Angle(45,-90,0),
     },

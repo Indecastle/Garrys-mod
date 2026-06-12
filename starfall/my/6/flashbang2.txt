@@ -1,7 +1,9 @@
 --@name FlashBang 2
 --@author Markiz
+-- author STEAM_0:1:54066003
 --@model models/items/grenadeammo.mdl
 --@shared
+-- version 1.0.1
 
 
 local Radius = 1000
@@ -13,7 +15,7 @@ local Wait2 = 1
 local DieTime = 10
 local alphaVel = 150
 
-local EnableSound = false
+local EnableSound = true
 local Volume = 2
 
 local soundPaths = {
@@ -201,9 +203,9 @@ function isVisibleEnt(startPos, targetPos)
 end
 
 function wait(pos)
+    local snd, _ = table.random(soundValues)
     if EnableSound and snd then
         --grenade:emitSound(SoundExplodePath, 75, 100, Volume, 0)
-        local snd, _ = table.random(soundValues)
         snd:setPos(pos)
         snd:play()
     end
