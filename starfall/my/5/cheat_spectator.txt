@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.5.1
+-- version 1.6.0
 
 -- Third person
 local ThPersDist = 100
@@ -29,6 +29,9 @@ local KeyBindings = {
     MoveFreeBack = KEY.S,
     MoveFreeLeft = KEY.A,
     MoveFreeRight = KEY.D,
+    MoveFreeUp = KEY.SPACE,
+    MoveFreeShift = KEY.SHIFT,
+    MoveFreeDuck = KEY.CTRL,
     SwitchFlashlight = KEY.F,
     SwitchWH = 63, -- =
     TeleportToPoint = KEY.H,
@@ -357,8 +360,11 @@ hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
             originPos = originPos - ( angle:getForward() * ThPersDist )
             originPos = getThirdPersonPos(head, originPos)
         else
-            --printConsole(isValid(TargetPlayer:getNWVarTable()["GlideVehicle"]))
-            if TargetPlayer:inVehicle() and !isValid(TargetPlayer:getNWVarTable()["GlideVehicle"]) then
+            local nwVars = TargetPlayer:getNWVarTable()
+            --printConsole(isValid(nwVars["GlideVehicle"]))
+            if TargetPlayer:inVehicle()
+                    and !isValid(nwVars["GlideVehicle"])
+                    and (nwVars["GlideSeatIndex"] == 0 or !nwVars["GlideSeatIndex"]) then
                 _, angle = localToWorld(Vector(), TargetPlayer:getEyeAngles(), Vector(), TargetPlayer:getVehicle():getAngles())
             else
                 angle = TargetPlayer:getEyeAngles()
@@ -563,9 +569,9 @@ hook.add("inputPressed", "cheat spectator", function(key)
         if key == KeyBindings.MoveFreeBack then Key_S = true end
         if key == KeyBindings.MoveFreeLeft then Key_A = true end
         if key == KeyBindings.MoveFreeRight then Key_D = true end
-        if key == KEY.SPACE then Key_Space = true end
-        if key == KEY.SHIFT then Key_Shift = true end
-        if key == KEY.CTRL then Key_Ctrl = true end
+        if key == KeyBindings.MoveFreeUp then Key_Space = true end
+        if key == KeyBindings.MoveFreeShift then Key_Shift = true end
+        if key == KeyBindings.MoveFreeDuck then Key_Ctrl = true end
         
         if key == KeyBindings.SwitchFlashlight then 
             _isFlashlighning = !_isFlashlighning
@@ -609,9 +615,9 @@ hook.add("inputReleased", "cheat spectator", function(key)
         if key == KeyBindings.MoveFreeBack then Key_S = false end
         if key == KeyBindings.MoveFreeLeft then Key_A = false end
         if key == KeyBindings.MoveFreeRight then Key_D = false end
-        if key == KEY.SPACE then Key_Space = false end
-        if key == KEY.SHIFT then Key_Shift = false end
-        if key == KEY.CTRL then Key_Ctrl = false end
+        if key == KeyBindings.MoveFreeUp then Key_Space = false end
+        if key == KeyBindings.MoveFreeShift then Key_Shift = false end
+        if key == KeyBindings.MoveFreeDuck then Key_Ctrl = false end
     end
 end)
 
@@ -630,15 +636,14 @@ hook.add("huddisconnected", "", function ()
     hudConnecting(false)
 end)
 
-local _excludeBlockBinds = { "+use" }
+local _excludeBlockBinds = { "+use", "+zoom", "+attack" }
+--local _blockBindList = { "+forward", "+back", "+moveleft", "+moveright", "+duck", "+walk", "impulse 100" }
 
 hook.add("InputBindPressed","block bind", function(bind)
     if !ON or !render.isHUDActive() or (TargetPlayer == player() and !FreeCumOn) then return end
+    local key, name = input.lookupBinding(bind)
     --print(bind)
-    return !table.hasValue(_excludeBlockBinds, bind)
+    
+    return table.hasValue(KeyBindings, key)
+    --return !table.hasValue(_excludeBlockBinds, bind)
 end)
-
-if player() == owner() then
-    --enableHud(nil, true)
-end
-

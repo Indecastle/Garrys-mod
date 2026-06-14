@@ -2,10 +2,10 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.0.1
+-- version 2.0.1
 
 
-local FireSize = 0.3 // 0.1 - 1.5
+local FireSize = 0.2 // 0.1 - 1.5
 
 
 local OnlyTarget = true
@@ -278,14 +278,57 @@ end
 
 -- ========================================================================================================
 
+local _lightsLimit = 20
+local _lights = {}
+local _lightIndex = -1
+
+function initLights(size, brightness, color, decay)
+    local leftCount = _lightsLimit - #_lights
+    for i=1, leftCount do
+        local isNext = false
+        pcall(function()
+            local newLight = light.create(Vector(), size, brightness, color)
+            newLight:setDecay(decay)
+            table.insert(_lights, newLight)
+            isNext = true
+        end)
+        if !isNext then
+            printConsole("Creating lights has been stoped on " .. i)
+            break
+        end
+    end
+end
+
+function nextLight()
+    local length = #_lights
+    _lightIndex = (_lightIndex + 1) % length
+    local targetEmitter = _lights[_lightIndex + 1]
+
+    return targetEmitter
+end
+
+function drawLight(pos)
+    local li = nextLight()
+
+    li:setPos(pos)
+    li:draw()    
+end
+
+initLights(1000, 0.1, Color(200,150,50), 2000)
+
+-- ========================================================================================================
+
+
 net.receive("FireBulletClient", function(len, ply)
     local attacker = net.readEntity()
     --printConsole(attacker)
     if attacker == player() then return end
     local hitPos = net.readVector()
+    local hitNormal = net.readVector()
     local dir = net.readVector()
     
     ExplosionEffect:new(hitPos, -dir, FireSize)
+    drawLight(hitPos + hitNormal*5)
 end)
 
 
@@ -305,10 +348,12 @@ hook.add("EntityFireBullets", "my", function(ent, data)
         local dir = data.Dir:getNormalized()
         
         ExplosionEffect:new(tr.HitPos, -dir, FireSize)
+        drawLight(tr.HitPos + tr.HitNormal*5)
         
         net.start("FireBulletServer")
         net.writeEntity(ent)
         net.writeVector(tr.HitPos)
+        net.writeVector(tr.HitNormal)
         net.writeVector(dir)
         net.send(nil, true)
     end

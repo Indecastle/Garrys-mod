@@ -30,11 +30,13 @@ local LockDamageTime = 0
 local DeathAngleVelocity = 4
 
 local ExplodeModels = {
+    --"models/props_junk/propane_tank001a.mdl",
     "models/props_phx/misc/potato_launcher_explosive.mdl",
-    "models/props_phx/ww2bomb.mdl",
-    "models/props_junk/propane_tank001a.mdl",
+    "models/props_explosive/explosive_butane_can.mdl",
     "models/props_phx/oildrum001_explosive.mdl",
     "models/props_c17/oildrum001_explosive.mdl",
+    "models/props_phx/ww2bomb.mdl",
+    "models/props_phx/cannonball_solid.mdl",
 }
 
 ----------------------------------------------------------
