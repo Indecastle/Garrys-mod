@@ -1,5 +1,6 @@
 --@name Test Sprite
 --@author Markiz
+--@model models/maxofs2d/lamp_flashlight.mdl
 --@client
 
 local mat0 = material.load("sprites/light_ignorez")
@@ -29,21 +30,31 @@ if flags ~= 0 then
 end
 --mat:recompute()
 
+local _eyePos, _eyeAngles = Vector(), Angle()
 
-local holoSprite = hologram.create(chip():localToWorld(Vector(0,0,10)), Angle(), "models/holograms/plane.mdl")
+hook.add("renderscene", "TestSprite", function(origin, angles, fov)
+    _eyePos = origin
+    _eyeAngles = angles
+end)
+    
+
+local holoSprite = hologram.create(chip():localToWorld(Vector(10,0,0)), Angle(), "models/holograms/plane.mdl")
 holoSprite:setMaterial("!" .. mat:getName())
 holoSprite:setSize(Vector(100, 100, 1))
 holoSprite:setParent(chip())
 
 
 hook.add("renderscene", "", function()
-    holoSprite:setAngles((eyePos()-holoSprite:getPos()):getAngle() + Angle(90,0,0))
+    local eyeAngle --= (eyePos()-holoSprite:getPos()):getAngle() + Angle(90,0,0)
+    _, eyeAngle = localToWorld(Vector(), Angle(90,0,180), Vector(), _eyeAngles)
+    
+    holoSprite:setAngles(eyeAngle)
     
     local lightpos = holoSprite:getPos()
     local viewnormal = lightpos - eyePos()
     local distance = viewnormal:getLength()
     
-    local viewdot = viewnormal:dot(chip():localToWorldAngles(Angle(90,0,0)):getForward()) / distance
+    local viewdot = viewnormal:dot(chip():localToWorldAngles(Angle(180,0,0)):getForward()) / distance
     if viewdot < 0 then return end
     --printConsole(viewdot)
 
@@ -53,7 +64,7 @@ hook.add("renderscene", "", function()
     local color = Color(255,255,255)
     color.a = math.clamp((1000 - math.clamp(distance, 32, 800)) * visdot, 0, 100) / 100 * 255
     
-    local scale = 1
+    local scale = 2
     local size = math.clamp(distance * visdot * (scale or 2), 64, 512)
      
     holoSprite:setSize(Vector(size * 0.4, size * 0.4, 1))

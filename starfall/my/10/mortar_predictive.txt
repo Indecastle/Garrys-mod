@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.2.2
+-- version 1.2.3
 
 local StartHeight = 500
 local StartPitchAngle = 45
@@ -16,7 +16,7 @@ local ExplodeDamage = 110
 local ExplodeRadius = 500
 local IsRect = true
 
-local OnlyPvpUse = false
+local OnlyPvpUse = true
 local UsePVS = true
 local UseWH = true
 local TrailTime = 5
@@ -308,7 +308,7 @@ if SERVER then
         if t > 1.2 then
             timer.simple(t-1.2, function()
                 if not isValid(bullet) then return end
-                bullet:emitSound("weapons/mortar/mortar_shell_incomming1.wav", 120, nil, 1)
+                bullet:emitSound("weapons/mortar/mortar_shell_incomming1.wav", 120, nil, 1, nil, nil, true)
             end)
         end
     end

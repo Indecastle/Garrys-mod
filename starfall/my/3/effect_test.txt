@@ -9,7 +9,7 @@ local E = chip()
 local worldE = game.getWorld()
 
 
-local effectData = effect:create()
+local effectData = effect.create()
 
 
 timer.create("kek", 0.2, 0, function()

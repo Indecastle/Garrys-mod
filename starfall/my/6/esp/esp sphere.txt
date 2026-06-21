@@ -4,7 +4,7 @@
 
 local Target = owner()
 Target = find.playersByName("markiz")[1]
---print(Target)
+print(Target)
 
 
 if player() ~= Target then return end

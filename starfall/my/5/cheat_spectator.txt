@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.6.0
+-- version 1.7.3
 
 -- Third person
 local ThPersDist = 100
@@ -35,6 +35,7 @@ local KeyBindings = {
     SwitchFlashlight = KEY.F,
     SwitchWH = 63, -- =
     TeleportToPoint = KEY.H,
+    SelectTarget = KEY.G,
 }
 
 local ShowHint = true
@@ -406,7 +407,7 @@ end
     end)
 --end
 
-
+----------------------------------
 if ShowHint then
     local _alertMessage = ""
     local _fkey = function(key) return input.getKeyName(key):upper() end
@@ -421,6 +422,7 @@ if ShowHint then
     _alertMessage = _alertMessage .. string.format("%s/%s/%s/%s - move free camera (only in free spectating)\n", _fkey(KeyBindings.MoveFreeLeft), _fkey(KeyBindings.MoveFreeForward), _fkey(KeyBindings.MoveFreeBack), _fkey(KeyBindings.MoveFreeRight))
     _alertMessage = _alertMessage .. string.format("%s - flashlight (only in free spectating)\n", _fkey(KeyBindings.SwitchFlashlight))
     _alertMessage = _alertMessage .. string.format("%s - Switch WallHack\n", _fkey(KeyBindings.SwitchWH))
+    _alertMessage = _alertMessage .. string.format("%s - Select player target (only in spectator mode)\n", _fkey(KeyBindings.SelectTarget))
     _alertMessage = _alertMessage .. "\n\n\n"
     
     local _isFirstHint = true
@@ -437,10 +439,12 @@ if ShowHint then
     end)
 end
 
-local players = {}
+----------------------------------
+
+local _players = {}
 
 timer.create("update_players", 1,0, function()
-    players = find.allPlayers()
+    _players = find.allPlayers()
 end)
 
 function getNickName(player, undefinedName)
@@ -452,6 +456,57 @@ function getNickName(player, undefinedName)
     return nickName or undefinedName 
 end
 
+----------------------------------
+
+local FindInBoxSize = 240
+
+local _width, _height = render.getGameResolution()
+local _centerPos = Vector(_width/2, _height/2, 0)
+local _closestSelectedTarget = nil
+
+function inBox(pos)
+    local kk = _height / 1080
+    return math.abs(pos.x - _centerPos.x) < FindInBoxSize*kk and math.abs(pos.y - _centerPos.y) < FindInBoxSize*kk
+end
+
+timer.create("findingClosestTarget", 0.1, 0, function()
+    if !ON or !render.isHUDActive() or !FreeCumOn then
+        _closestSelectedTarget = nil
+        return
+    end
+    
+    local closestPly, closestDist = nil, 999999999
+    
+    for i, p in ipairs(_players) do
+        if p == player() or !isValid(p) or !p:isAlive() then continue end
+        
+        local pos = p:obbCenterW():toScreen()
+        if !pos.visible or !inBox(pos) or p:getPos():getDistance(FreeCumPos) > 1000 then continue end
+        
+        --printConsole(pos.x, pos.y, pos.visible)
+        local dist = _centerPos:getDistance(Vector(pos.x, pos.y, 0))
+        if dist < closestDist then
+            closestPly, closestDist = p, dist
+        end
+    end
+    
+    _closestSelectedTarget = closestPly
+end)
+
+function selectPlayerTarget()
+    if !ON or !render.isHUDActive() or !FreeCumOn or !isValid(_closestSelectedTarget) then
+        return
+    end
+    
+    FreeCumOn = false
+    TargetPlayer = _closestSelectedTarget
+    FreeCumPos = _closestSelectedTarget:getEyePos()
+    
+    Players = find.allPlayers()
+    IndexPlayer = table.keyFromValue(Players, _closestSelectedTarget)
+end
+
+----------------------------------
 
 hook.add("drawhud","cheat spectator",function()
     if GameW == nil then
@@ -473,19 +528,28 @@ hook.add("drawhud","cheat spectator",function()
     render.setColor(Color(0,100,255, 255))
     render.drawText(100, 50, ""..math.clamp(TargetPlayer:getArmor(), 0, 999), 0) 
     
+    render.setFont(font2)
+    
     if _IsEnabledWH then
-        render.setFont(font2)
-        for i, p in ipairs(players) do
+        for i, p in ipairs(_players) do
             if isValid(p) and p ~= player() then
                 local obbhs = p:obbSize()
                 
                 local pos = (p:getPos() + Vector(0, 0, obbhs.z+10)):toScreen()
-                
-                
+
                 render.setColor(team.getColor(p:getTeam()))
                 render.drawSimpleText(pos.x, pos.y-10, getNickName(p), 1, 1)
+
             end
         end
+    end
+    
+     if isValid(_closestSelectedTarget) then
+        local obbhs = _closestSelectedTarget:obbSize()
+        local pos = (_closestSelectedTarget:getPos() + Vector(0, 0, obbhs.z+10)):toScreen()
+
+        render.setColor(Color(100,255,100, 150))
+        render.drawSimpleText(pos.x, pos.y-6, "____", 1, 1)
     end
 end)
 
@@ -540,6 +604,13 @@ hook.add("inputPressed", "cheat spectator", function(key)
             if key == KeyBindings.ChangeEyePos then
                 IsHead = !IsHead
             end
+        end
+        
+        if FreeCumOn then
+            if key == KeyBindings.SelectTarget then
+                selectPlayerTarget()
+            end
+            
         end
         
         if key == KeyBindings.SwitchSpectate then

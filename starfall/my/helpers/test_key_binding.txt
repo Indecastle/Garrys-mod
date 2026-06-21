@@ -44,9 +44,9 @@ end
 
 
 ------------------ Mouse Start
-local mouseKeys = {}
+local _mouseKeys = {}
 for k, v in pairs(MOUSE) do
-    mouseKeys[v] = true
+    _mouseKeys[v] = true
 end
 
 local _keyPressedData = {}
@@ -64,12 +64,13 @@ for _, keys in pairs(KeyBindData) do
     end
 end
 for k, data in pairs(_keyPressedData) do
-    data.IsMouse = mouseKeys[k]
+    data.IsMouse = _mouseKeys[k]
 end
 
 function getBindCb_(bindKey)
     if type(KeyBindData[bindKey]) == 'table' then
-        result = {Pressed = false, IsFirst = false}
+        local result = {Pressed = false, IsFirst = false}
+        
         for i, key in ipairs(KeyBindData[bindKey]) do
             result.IsFirst = result.IsFirst or _keyPressedData[key].IsFirst
             result.Pressed = result.Pressed or _keyPressedData[key].Pressed
@@ -77,12 +78,12 @@ function getBindCb_(bindKey)
                 break
             end
         end
+        
         return result
     else
         return _keyPressedData[KeyBindData[bindKey]]
     end
 end
-
 
 function getBindCbHandler()
     for k, v in pairs(_keyPressedData) do

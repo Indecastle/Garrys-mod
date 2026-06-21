@@ -13,8 +13,8 @@ local MaxTakeDamage = 200
 
 local GhastVelocity = 2
 local MoveRadius = 2000
-local MoveHeightMin = 150
-local MoveHeightMax = 400
+local MoveHeightMin = 200
+local MoveHeightMax = 450
 local TriggerOnlyWord = true
 
 local InterpolationMove = true

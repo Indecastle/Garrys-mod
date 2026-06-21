@@ -94,7 +94,6 @@ end
 
 if EnableBetaParticleSystem then
     RunBetaParticleSystem()
-    initEmitters(false, 100)
 end
 -- ================================================
 
@@ -110,12 +109,12 @@ function ExplosionEffect:initialize( pos, normal, size )
     self.lifeTime = timer.curtime() + 0.05
     
     local emitter = particle.create( origin, false )
+    if not isValid( emitter ) then return end
+    
     if emitter:getParticlesLeft() == 0 then
         --return
         --print("wow")
     end
-    
-    if not isValid( emitter ) then return end
 
     self:explosion( emitter, origin, normal, scale )
     self:smoke( emitter, origin, normal, scale )

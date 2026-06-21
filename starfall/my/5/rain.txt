@@ -3,7 +3,7 @@
 --@client
 
 
-local Target = player()
+local Target = owner()
 --Target = find.playersByName("Markiz")[1]
 --print(Target)
 
@@ -23,7 +23,64 @@ local checkSky = false
 local soundUrl = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/rain2.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
 --soundUrl = "https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/Resources/rain1.mp3" -- https://zvukipro.com/index.php?do=download&id=11777
 
+local EnableBetaParticleSystem = true
+local BetaParticleEmitterLimit = 2
+
 -------------------------------------------------
+
+-- ======================== Particle Safe ========================
+function RunBetaParticleSystem()
+    local _emitters = {}
+    local _emitterIndex = -1
+    
+    local particle_create_old = particle.create
+    
+    function initEmitters(use3D, limit)
+        local max = math.min(limit - #_emitters, particle.particleEmittersLeft())
+        for i=1, max do
+            table.insert(_emitters, particle_create_old(owner():getPos(), false))
+        end
+    end
+    
+    function nextEmitter(origin)
+        initEmitters(false, BetaParticleEmitterLimit)
+        
+        local length = #_emitters
+        _emitterIndex = (_emitterIndex + 1) % length
+        --print(length)
+        local targetEmitter = _emitters[_emitterIndex+1]
+        if targetEmitter then
+            targetEmitter:setPos(origin)
+        end
+        return targetEmitter
+    end
+    
+    particle.create = function(position, use3D)
+        return nextEmitter(position)
+    end
+    
+    local MetaParticleEmitter = getMethods("ParticleEmitter")
+    MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
+    MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
+    
+    function MetaParticleEmitter:add(...)
+        if self:getParticlesLeft() == 0 then
+            --printConsole("max")
+            return
+        end
+        return self:oldAdd(...)
+    end
+    
+    function MetaParticleEmitter:destroy()
+    end
+end
+
+if EnableBetaParticleSystem then
+    RunBetaParticleSystem()
+    initEmitters(false, 100)
+end
+-- ================================================
+
 
 --if player() ~= Target then return end
 
@@ -69,6 +126,7 @@ end
 
 function startRain()
     emitter = particle.create(Vector(), false)
+    if !isValid(emitter) then return end
     
     for i=0, forMax do
         local radius, degree = math.rand(0, maxRadius), math.rand(0, math.pi*2)

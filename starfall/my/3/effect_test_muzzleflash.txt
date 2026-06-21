@@ -1,0 +1,19 @@
+--@name Effect Test MuzzleFlash
+--@author Markiz
+--@model models/weapons/w_irifle.mdl
+--@client
+
+
+local _e = chip()
+
+local effectData = effect.create()
+
+timer.create("kek", 0.2, 0, function()
+        effectData:setEntity(_e)
+        effectData:setAttachment(1)
+        effectData:setFlags(5)
+
+        effectData:play("MuzzleFlash") 
+        
+        _e:emitSound("Weapon_AR2.NPC_Single")
+end)

@@ -11,7 +11,7 @@ dofile("libs/sprites_data.txt")
 local SpriteManager = require("libs/sprites1.txt")
 
 
-local img = "ricardo1"
+local img = "triangle"
 local maxh = 10*20
 local delay = 0.05
 
@@ -123,7 +123,7 @@ local flashlight = light.createProjected()
 hook.add("Think", "UpdateFlashlight", function()
     
     flashlight:setTexture(texture)
-    flashlight:setBrightness(10)
+    flashlight:setBrightness(5)
     flashlight:setFarZ(9000)
     flashlight:setFOV(70)
     flashlight:setColor(Color(255, 255, 255))
@@ -139,36 +139,60 @@ end)
 
 local matSprite0 = material.load("sprites/light_ignorez")
 local matSprite = material.create("UnlitGeneric")
-matSprite:setInt("$flags", 128)
+matSprite:setInt("$flags", 128 + 2^15)
 matSprite:setTexture("$basetexture", matSprite0:getTexture("$basetexture"))
 
-local holoSprite = hologram.create(chip():localToWorld(Vector(6,0,0)), Angle(), "models/holograms/plane.mdl")
-holoSprite:setMaterial("!" .. matSprite:getName())
-holoSprite:setSize(Vector(100, 100, 1))
-holoSprite:setParent(chip())
-holoSprite:suppressEngineLighting(true)
+local holoSprite1 = hologram.create(chip():localToWorld(Vector(5,0,0)), Angle(), "models/holograms/plane.mdl")
+holoSprite1:setMaterial("!" .. matSprite:getName())
+holoSprite1:setSize(Vector(0, 0, 1))
+holoSprite1:setParent(chip())
+holoSprite1:suppressEngineLighting(true)
+
+local holoSprite2 = hologram.create(chip():localToWorld(Vector(5,0,0)), Angle(), "models/holograms/plane.mdl")
+holoSprite2:setMaterial("!" .. matSprite:getName())
+holoSprite2:setSize(Vector(0, 0, 1))
+holoSprite2:setParent(chip())
+holoSprite2:suppressEngineLighting(true)
+
+
+local _eyePos, _eyeAngles = Vector(), Angle()
+
+hook.add("renderscene", "Sprite", function(origin, angles, fov)
+    _eyePos = origin
+    _eyeAngles = angles
+end)
+
 
 hook.add("renderscene", "", function()
-    holoSprite:setAngles((eyePos()-holoSprite:getPos()):getAngle() + Angle(90,0,0))
+    local eyeAngle --= (eyePos()-holoSprite:getPos()):getAngle() + Angle(90,0,0)
+    _, eyeAngle = localToWorld(Vector(), Angle(90,0,180), Vector(), _eyeAngles)
+    holoSprite1:setAngles(eyeAngle)
+    holoSprite2:setAngles(eyeAngle)
     
-    local lightpos = holoSprite:getPos()
+    local lightpos = holoSprite1:getPos()
     local viewnormal = lightpos - eyePos()
     local distance = viewnormal:getLength()
+    viewnormal:normalize()
     
-    local viewdot = viewnormal:dot(chip():localToWorldAngles(Angle(180,0,0)):getForward()) / distance
-    if viewdot < 0 then return end
-    --printConsole(viewdot)
+    local viewDot = viewnormal:dot(chip():localToWorldAngles(Angle(180,0,0)):getForward())
+    if viewDot < 0 then 
+        viewDot = 0
+        --return
+    end
+    --printConsole(viewDot)
 
     local visibile = render.pixelVisible(lightpos, 16)
-    local visdot = visibile * viewdot
-
-    local color = Color(255,255,255)
-    color.a = math.clamp((1000 - math.clamp(distance, 32, 800)) * visdot, 0, 100) / 100 * 255
     
     local scale = 2
-    local size = math.clamp(distance * visdot * scale, 64, 512)
+    local size = math.clamp( distance * visibile * viewDot * scale, 64, 512 )
+    local distance = math.clamp( distance, 32, 800 )
+    local alpha = math.clamp( ( 1000 - distance ) * visibile * viewDot, 0, 100 )
+    local color = chip():getColor()
+    color.a = alpha
      
-    holoSprite:setSize(Vector(size * 0.4, size * 0.4, 1))
-    holoSprite:setColor(color)
-    --printConsole(tostring(visibile))
+    holoSprite1:setSize(Vector(size, size, 1))
+    holoSprite1:setColor(color)
+    
+    holoSprite2:setSize(Vector(size * 0.4, size * 0.4, 1))
+    holoSprite2:setColor(Color(255, 255, 255, alpha))
 end)

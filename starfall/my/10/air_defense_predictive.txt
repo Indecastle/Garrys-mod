@@ -191,7 +191,10 @@ if SERVER then
     end
     
     function userHasGodMode(user)
-        if user:hasGodMode() or (user.isBUILD != nil and user:isBUILD()) then
+        if !isValid(user)
+                or user:hasGodMode()
+                or (user.isBUILD != nil and user:isBUILD())
+                or (user.isSafezoneSafe != nil and user:isSafezoneSafe()) then
             return true
         end
         local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")

@@ -19,6 +19,15 @@ physEnt:addGameFlags(FVPHYSICS.DMG_DISSOLVE)
 physEnt:addGameFlags(FVPHYSICS.NO_PLAYER_PICKUP)
 
 
+function userHasGodMode(user)
+    if user:hasGodMode()
+            or (user.isBUILD != nil and user:isBUILD())
+            or (user.isSafezoneSafe != nil and user:isSafezoneSafe()) then
+        return true
+    end
+    local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")
+    return isKyleBuilder != nil and isKyleBuilder
+end
 
 function gethead(ent)
     if ent:lookupBone("ValveBiped.Bip01_Head1") then
@@ -38,8 +47,7 @@ timer.create("fun", 0.2, 0, function()
             and ent:isValid() 
             and ent:isValidPhys() 
             --and p == owner() 
-            and !p:hasGodMode() 
-            and !p:getNWVarTable()["_Kyle_Buildmode"] 
+            and !userHasGodMode(p)
             and !p:inVehicle() then
         physEnt:setPos(gethead(p) + Vector(0,0,30))
         physEnt:setVelocity(Vector(0,0,-40))
