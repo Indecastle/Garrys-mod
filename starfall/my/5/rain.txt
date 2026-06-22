@@ -77,7 +77,6 @@ end
 
 if EnableBetaParticleSystem then
     RunBetaParticleSystem()
-    initEmitters(false, 100)
 end
 -- ================================================
 

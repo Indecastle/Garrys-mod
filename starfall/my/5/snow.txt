@@ -9,21 +9,21 @@ local Target = player()
 --print(Target)
 
 
-local maxRadius = 1500
-local forMax = 100
-local spawnDelay = 0.2
+local maxRadius = 1000
+local forMax = 50
+local spawnDelay = 0.4
 local startZ = 300
 local velocity = 100
 
 local enableSound = false
 local volume = 5
-local dieTime = 20
+local dieTime = 5
 
 local soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348343148584/f969747680e8276.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
 soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348645146684/28f2bf70e8d0701.mp3" -- https://zvukipro.com/index.php?do=download&id=11777
 
 local EnableBetaParticleSystem = true
-local BetaParticleEmitterLimit = 2
+local BetaParticleEmitterLimit = 20
 
 -------------------------------------------------
 
@@ -76,13 +76,11 @@ end
 
 if EnableBetaParticleSystem then
     RunBetaParticleSystem()
-    initEmitters(false, 100)
 end
 -- ================================================
 
 --if player() ~= Target then return end
 
-local emitter = nil
 local sound = nil
 local parts = {}
 local eyeAngle = Angle()
@@ -128,7 +126,7 @@ if enableSound then
 end
 
 
-function rain(radius, degree)
+function rain(emitter, radius, degree)
     local x =  radius * math.cos(degree)
     local y = -radius * math.sin(degree)
     local pos = Target:getPos() + Vector(x, y, startZ)
@@ -149,13 +147,13 @@ end
 
 function startRain()
     if not EnableBetaParticleSystem and emitter and emitter:isValid() then emitter:destroy() end
-    emitter = particle.create(Vector(), false)
+    local emitter = particle.create(Vector(), false)
     if !isValid(emitter) then return end
     --emitter:setNoDraw(false)
     
     for i=0, forMax do
         local radius, degree = math.rand(0, maxRadius), math.rand(0, math.pi*2)
-        rain(radius, degree)
+        rain(emitter, radius, degree)
     end
     --emitter:destroy()
 end
