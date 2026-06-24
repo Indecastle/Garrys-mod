@@ -8,7 +8,7 @@ local Speed = 0.1
 
 local IsGettingSounds = true
 
-local IsDamaging = false
+local IsDamaging = true
 local MaxDamage = 2
 
 
@@ -102,7 +102,8 @@ if SERVER then
         if IsDamaging 
                     and (!WW:isWired('ON') or wire.ports.ON != 0) 
                     and (!wire.ports.NoDamagePlayers or table.all(wire.ports.NoDamagePlayers, function(x) return x != ply end) ) then
-            ply:applyDamage(MaxDamage * convertToDamage(damage), chip(), chip())
+            --ply:applyDamage(MaxDamage * convertToDamage(damage), chip(), chip())
+			game.blastDamage(ply:getPos(), 35, MaxDamage * convertToDamage(damage))
         end
     end)
     

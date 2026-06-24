@@ -3,30 +3,21 @@
 --@model models/maxofs2d/lamp_flashlight.mdl
 --@client
 
-local mat0 = material.load("sprites/light_ignorez")
-local mat = material.create("UnlitGeneric")
-mat:setInt("$flags", 128)
-mat:setTexture("$basetexture", mat0:getTexture("$basetexture"))
+local matSprite0 = material.load("sprites/light_ignorez")
+local matSprite = material.create("UnlitGeneric")
+matSprite:setInt("$flags", 128 + 2^15)
+matSprite:setTexture("$basetexture", matSprite0:getTexture("$basetexture"))
 
 
-local HaveAlpha = true
-
-local VertexAlpha= false
-local VertexColor= false
-local AlphaTest= false
-local Additive= HaveAlpha
-local Translucent= false
-
+local Additive= true
+local Ignorez = true
 local flags = 
-    (VertexColor and 16 or 0) +
-    (VertexAlpha and 32 or 0) +
-    (Additive and 128 or 0) +
-    (AlphaTest and 256 or 0) +
-    (Translucent and 2097152 or 0)
+    (Additive and 2^7 or 0) + -- 128
+    (Ignorez and 2^15 or 0) -- 32768
     
     
-if flags ~= 0 then
-    --mat:setInt("$flags", flags)    
+if flags != 0 then
+    matSprite:setInt("$flags", flags)
 end
 --mat:recompute()
 
@@ -38,37 +29,54 @@ hook.add("renderscene", "TestSprite", function(origin, angles, fov)
 end)
     
 
-local holoSprite = hologram.create(chip():localToWorld(Vector(10,0,0)), Angle(), "models/holograms/plane.mdl")
-holoSprite:setMaterial("!" .. mat:getName())
-holoSprite:setSize(Vector(100, 100, 1))
-holoSprite:setParent(chip())
+local holoSprite1 = hologram.create(chip():localToWorld(Vector(9,0,0)), Angle(), "models/holograms/plane.mdl")
+holoSprite1:setMaterial("!" .. matSprite:getName())
+holoSprite1:setSize(Vector(0, 0, 1))
+holoSprite1:setParent(chip())
+holoSprite1:suppressEngineLighting(true)
+
+local holoSprite2 = hologram.create(chip():localToWorld(Vector(9,0,0)), Angle(), "models/holograms/plane.mdl")
+holoSprite2:setMaterial("!" .. matSprite:getName())
+holoSprite2:setSize(Vector(0, 0, 1))
+holoSprite2:setParent(chip())
+holoSprite2:suppressEngineLighting(true)
 
 
 hook.add("renderscene", "", function()
     local eyeAngle --= (eyePos()-holoSprite:getPos()):getAngle() + Angle(90,0,0)
     _, eyeAngle = localToWorld(Vector(), Angle(90,0,180), Vector(), _eyeAngles)
+    holoSprite1:setAngles(eyeAngle)
+    holoSprite2:setAngles(eyeAngle)
     
-    holoSprite:setAngles(eyeAngle)
-    
-    local lightpos = holoSprite:getPos()
+    local lightpos = holoSprite1:getPos()
     local viewnormal = lightpos - eyePos()
     local distance = viewnormal:getLength()
+    viewnormal:normalize()
     
-    local viewdot = viewnormal:dot(chip():localToWorldAngles(Angle(180,0,0)):getForward()) / distance
-    if viewdot < 0 then return end
-    --printConsole(viewdot)
+    local viewDot = viewnormal:dot(chip():localToWorldAngles(Angle(180,0,0)):getForward())
+    if viewDot < 0 then 
+        viewDot = 0
+        --return
+    end
+    --printConsole(viewDot)
 
     local visibile = render.pixelVisible(lightpos, 16)
-    local visdot = visibile * viewdot
-
-    local color = Color(255,255,255)
-    color.a = math.clamp((1000 - math.clamp(distance, 32, 800)) * visdot, 0, 100) / 100 * 255
     
     local scale = 2
-    local size = math.clamp(distance * visdot * (scale or 2), 64, 512)
+    local size = math.clamp( distance * visibile * viewDot * scale, 64, 512 )
+    local distance = math.clamp( distance, 32, 800 )
+    local alpha = math.clamp( ( 1000 - distance ) * visibile * viewDot, 0, 100 )
+    local color = chip():getColor()
+    color.a = alpha
      
-    holoSprite:setSize(Vector(size * 0.4, size * 0.4, 1))
-    holoSprite:setColor(color)
+    holoSprite1:setSize(Vector(size, size, 1))
+    holoSprite1:setColor(color)
+    
+    holoSprite2:setSize(Vector(size * 0.4, size * 0.4, 1))
+    holoSprite2:setColor(Color(255, 255, 255, alpha))
+    
+    
+    --printConsole(tostring(visibile))
 end)
 
 

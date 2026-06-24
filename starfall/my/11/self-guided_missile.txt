@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.8.3
+-- version 1.9.0
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -173,25 +173,37 @@ if SERVER then
     
     
     function explodeWireTo(pos, damage, radius)
-        if !prop.canSpawn() then return end
-    
-        local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
-            damage = damage,
-            radius = radius,
-            removeafter = true,
-            Model = "models/bull/gates/logic_nano.mdl",
-        })
-        ent._isSF = true
-        ent:setSolid(false)
-        ent:setNoDraw(true)
-        ent:getWirelink()['Detonate'] = 1
+		local isNeedCreateSent = false
+
+		try(function()
+			game.blastDamage(pos, radius, damage)
+		end, function(a, b, c)
+			isNeedCreateSent = true
+			printConsole(err.message)
+		end)
+
+		if isNeedCreateSent then
+			if !prop.canSpawn() then return end
+			
+			local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
+				damage = damage,
+				radius = radius,
+				removeafter = true,
+				Model = "models/bull/gates/logic_nano.mdl"
+			})
+			ent._isSF = true
+			ent:setSolid(false)
+			ent:setNoDraw(true)
+			ent:getWirelink()['Detonate'] = 1
+		end
     end
     
     
     function explodeRocketScene(rocket)
         local holo = rocket._rocketHoloBase
         holo:setParent(nil)
-        holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 120, nil, 1)
+        --holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 110, nil, 1, 0, nil, true)
+		sound.emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", rocket:getPos(), 110, nil, 1, 0, nil, true)
         timer.simple(math.max(3, TrailTime), function()
             if !isValid(holo) then return end
             holo:remove()
@@ -244,8 +256,8 @@ if SERVER then
             rocket._target = target
             rocket._isForce = true
             rocket._lastLifeTime = timer.curtime() + RockeForceTime
-            --rocket:emitSound(RocketForcingSoundUrl, 85, 100, 1, 0)
-            _e:emitSound(RocketStartForcingSoundUrl, 85, 100, 1, 0)
+            rocket:emitSound(RocketForcingSoundUrl, 85, nil, 1, 0, nil, true)
+            _e:emitSound(RocketStartForcingSoundUrl, 85, nil, 1, 0, nil, true)
             --rocket_isRocket = true
             rocket:addCollisionListener(function(data)
                 tryExplodeRocket(rocket)
@@ -266,8 +278,7 @@ if SERVER then
             net.send()
         end)
     end
-    
-    
+
     --timer.create("fire", 3, 0, function()
     --    fireRocket(chip():localToWorld(Vector(0,0,50)), chip():localToWorldAngles(Angle(-90, 00, 0)), owner())
     --end)
@@ -883,26 +894,13 @@ net.receive("sendRocketToClient", function(len)
         rocket._target = target
         rocket._holo = getBaseHolo(rocket:getPos())
         rocket._holo:setParent(rocket)
-        rocket._holo:emitSound(RocketForcingSoundUrl, 85, 100, 1, 0)
-        rocket._lastLifeTime = timer.curtime() + RockeForceTime
+        --rocket._holo:emitSound(RocketForcingSoundUrl, 85, nil, 1, 0, nil, true)
+        --rocket._lastLifeTime = timer.curtime() + RockeForceTime
         table.insert(_rockets, rocket)
     end)
     
     notifyTarget(target)
 end)
-
-
-timer.create("disableRocketEngine", 0.4, 0, function()
-    if !isActive() then return end
-
-    local now = timer.curtime()
-    for i, rocket in ipairs(_rockets) do
-        if rocket._lastLifeTime < now and isValid(rocket._holo) then
-            rocket._holo:stopSound(RocketForcingSoundUrl)
-        end
-    end
-end)
-
 
 hook.add("EntityRemoved", "removeHolo", function(ent)
     if isValid(ent) and isValid(ent._holo) then
