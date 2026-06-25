@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.9.0
+-- version 1.9.1
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -173,37 +173,42 @@ if SERVER then
     
     
     function explodeWireTo(pos, damage, radius)
-		local isNeedCreateSent = false
+        local isNeedCreateSent = !hasPermission("game.blastDamage")
 
-		try(function()
-			game.blastDamage(pos, radius, damage)
-		end, function(a, b, c)
-			isNeedCreateSent = true
-			printConsole(err.message)
-		end)
+        if !isNeedCreateSent then
+            try(function()
+                game.blastDamage(pos, radius, damage)
+            end, function(a, b, c)
+                isNeedCreateSent = true
+                printConsole(err.message)
+            end)
+        end
 
-		if isNeedCreateSent then
-			if !prop.canSpawn() then return end
-			
-			local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
-				damage = damage,
-				radius = radius,
-				removeafter = true,
-				Model = "models/bull/gates/logic_nano.mdl"
-			})
-			ent._isSF = true
-			ent:setSolid(false)
-			ent:setNoDraw(true)
-			ent:getWirelink()['Detonate'] = 1
-		end
+        if isNeedCreateSent then
+            if !prop.canSpawn() then return end
+            
+            local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
+                damage = damage,
+                radius = radius,
+                removeafter = true,
+                Model = "models/bull/gates/logic_nano.mdl"
+            })
+            ent._isSF = true
+            ent:setSolid(false)
+            ent:setNoDraw(true)
+            ent:getWirelink()['Detonate'] = 1
+        end
     end
     
     
     function explodeRocketScene(rocket)
         local holo = rocket._rocketHoloBase
         holo:setParent(nil)
-        --holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 110, nil, 1, 0, nil, true)
-		sound.emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", rocket:getPos(), 110, nil, 1, 0, nil, true)
+        if sound.emitSound then
+            sound.emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", rocket:getPos(), 110, nil, 1, 0, nil, true)
+        else
+            holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 110, nil, 1, 0, nil, true)
+        end
         timer.simple(math.max(3, TrailTime), function()
             if !isValid(holo) then return end
             holo:remove()

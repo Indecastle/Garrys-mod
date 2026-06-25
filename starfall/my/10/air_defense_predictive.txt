@@ -48,31 +48,31 @@ if SERVER then
     end
     
     function explodeWireTo(pos, damage, radius, isForceSent)
-		local isNeedCreateSent = isForceSent
+        local isNeedCreateSent = isForceSent or !hasPermission("game.blastDamage")
 
-		if !isForceSent then
-			try(function()
-				game.blastDamage(pos, radius, damage)
-			end, function(err)
-				isNeedCreateSent = true
-				printConsole(err.message)
-			end)
-		end
+        if !isNeedCreateSent then
+            try(function()
+                game.blastDamage(pos, radius, damage)
+            end, function(err)
+                isNeedCreateSent = true
+                printConsole(err.message)
+            end)
+        end
 
-		if isNeedCreateSent then
-			if !prop.canSpawn() then return end
-			
-			local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
-				damage = damage,
-				radius = radius,
-				removeafter = true,
-				Model = "models/bull/gates/logic_nano.mdl"
-			})
-			ent._isSF = true
-			ent:setSolid(false)
-			ent:setNoDraw(true)
-			ent:getWirelink()['Detonate'] = 1
-		end
+        if isNeedCreateSent then
+            if !prop.canSpawn() then return end
+            
+            local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
+                damage = damage,
+                radius = radius,
+                removeafter = true,
+                Model = "models/bull/gates/logic_nano.mdl"
+            })
+            ent._isSF = true
+            ent:setSolid(false)
+            ent:setNoDraw(true)
+            ent:getWirelink()['Detonate'] = 1
+        end
     end
     
     function buildScene()
@@ -294,15 +294,22 @@ if SERVER then
     --_sound:setDSP(1)
     _sound:setSoundLevel(90)
     
-    function explodeBulletScene(pos, bulletVelocity, collisionData, isBigExplode)
-        --local holo = bullet._bulletHoloBase
-        --holo:setParent(nil)
-		sound.emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", pos, 110, nil, 1, nil, nil, true)
-        --holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 110, nil, 1, nil, nil, true)
-        --timer.simple(4, function()
-        --    if !isValid(holo) then return end
-        --    holo:remove()
-        --end)
+    function explodeBulletScene(bullet, pos, bulletVelocity, collisionData, isBigExplode)
+		local holo
+		if isValid(bullet) then
+			holo = bullet._bulletHoloBase
+			holo:setParent(nil)
+			timer.simple(4, function()
+				if !isValid(holo) then return end
+				holo:remove()
+			end)
+		end
+		if sound.emitSound and isValid(holo) then
+            sound.emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", bullet:getPos(), 100, nil, 1, 0, nil, true)
+        else
+			-- need for old SF version and emitSound.
+            holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 100, nil, 1, 0, nil, true)
+        end
         net.start("explodeBulletScene")
         net.writeVector(pos)
         local normal = collisionData != nil and collisionData.OurOldVelocity:getNormalized()*-1 or bulletVelocity:getNormalized()
@@ -351,7 +358,7 @@ if SERVER then
                 if isExploded then return end
                 isExploded = true
                 
-                explodeBulletScene(bullet:getPos(), bullet:getVelocity())
+                explodeBulletScene(bullet, bullet:getPos(), bullet:getVelocity())
                 explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
                 bullet:remove()
             end)
@@ -361,7 +368,7 @@ if SERVER then
                 if isExploded then return end
                 isExploded = true
                 
-                explodeBulletScene(bullet:getPos(), bullet:getVelocity(), data)
+                explodeBulletScene(bullet, bullet:getPos(), bullet:getVelocity(), data)
                 explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
                 bullet:remove()
             end)
@@ -423,7 +430,7 @@ if SERVER then
     end
     
     function killingScene()
-		explodeBulletScene(_cannon:getPos(), Vector(0,0,1), nil, true)
+        explodeBulletScene(nil, _cannon:getPos(), Vector(0,0,1), nil, true)
         explodeWireTo(_cannon:obbCenterW(), ExplodeDamage, ExplodeRadius, true)
         _cannon:remove()
         timer.simple(1, function()
@@ -668,7 +675,7 @@ end
 net.receive("explodeBulletScene", function(len)
     local explodePos = net.readVector()
     local normal = net.readVector() * 1.5
-	local isBigExplode = net.readBool()
+    local isBigExplode = net.readBool()
     
     ExplosionEffect:new(explodePos, normal, 1.5)
     --oldRunExplosionEffect(explodePos)
