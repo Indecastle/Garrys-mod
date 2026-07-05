@@ -4,20 +4,20 @@
 --@client
 
 
-local Target = player()
+local Target = owner()
 --Target = find.playersByName("Markiz")[1]
 --print(Target)
 
 
 local maxRadius = 1000
-local forMax = 50
+local forMax = 48
 local spawnDelay = 0.4
 local startZ = 300
 local velocity = 100
 
 local enableSound = false
 local volume = 5
-local dieTime = 5
+local dieTime = 6
 
 local soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348343148584/f969747680e8276.mp3" -- https://zvukipro.com/index.php?do=download&id=11782
 soundUrl = "https://cdn.discordapp.com/attachments/974678227362660395/974678348645146684/28f2bf70e8d0701.mp3" -- https://zvukipro.com/index.php?do=download&id=11777
@@ -63,11 +63,20 @@ function RunBetaParticleSystem()
     MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
     
     function MetaParticleEmitter:add(...)
-        if self:getParticlesLeft() == 0 then
-            --printConsole("max")
-            return
+        if self:getParticlesLeft() > 0 then
+            return self:oldAdd(...)
         end
-        return self:oldAdd(...)
+        
+        for i=1, #_emitters do
+            local otherEmit = nextEmitter(self:getPos())
+            if otherEmit:getParticlesLeft() > 0 then
+                printConsole("ok_" .. i)
+                return otherEmit:oldAdd(...)
+            end
+        end
+        printConsole("max_" .. #_emitters)
+        
+        return nil
     end
     
     function MetaParticleEmitter:destroy()

@@ -92,7 +92,7 @@ hook.add("think", "holo", function()
     if not isValid(holo) and isValidEnt(Target) then
         holo = holograms.create(chip():getPos(), Angle(), Target:getModel(), Vector(1))
         holo:setMaterial("debug/debugportals")
-        holo:setColor(Color(100,50,0, 150))
+        holo:setColor(Color(100,50,0, 100))
         holo:setParent( Target )
         holo:addEffects( 1 )
     end

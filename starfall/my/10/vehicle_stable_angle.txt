@@ -1,7 +1,8 @@
 --@name Vehicle Stable Angle
 --@author Markiz
 --@shared
---@include libs/criticalpd.txt
+--@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/criticalpd.txt as libs/criticalpd.txt
+--include libs/criticalpd.txt
 
 
 local TriggerAngleMin = 80

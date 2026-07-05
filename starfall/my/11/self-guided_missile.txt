@@ -2,14 +2,14 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.9.1
+-- version 1.9.3
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
 
 local RocketVelocity = 4000
 local RocketLerpRatio = 0.11
-local TrailTime = 1
+local TrailTime = 0.9 
 local RockeForceTime = 10
 local RocketAutoRemoveTime = 20
 
@@ -54,7 +54,7 @@ local KeyBindData = { -- The value can be both the key and the list from the key
 local TestOnMe = false
 
 local EnableBetaParticleSystem = true
-local BetaParticleEmitterLimit = 2
+local BetaParticleEmitterLimit = 3
 -----------------------------------------------------------------------
 
 
@@ -130,6 +130,11 @@ function getBaseHolo(pos)
     local holo =  hologram.create(pos, Angle(), "models/holograms/cube.mdl", Vector(1))
     holo:setNoDraw(true)
     return holo
+end
+
+
+function isVectorNaN(v)
+    return v.x ~= v.x or v.y ~= v.y or v.z ~= v.z
 end
 
 ---------------------------------------------------
@@ -336,10 +341,14 @@ if SERVER then
                 end
                 
                 if rocket._isTargetClose then
-                    local targetDir = (rocket._target:getPos() - rocket:getPos()):getNormalized()
-                    if angleBetweenVectors(rocket:getForward(), targetDir) > 70 then
-                        rocket._target = nil
-                        --print(rocket)
+                    local v1 = rocket._target:getPos()
+                    local v2 = rocket:getPos()
+                    if isVectorNaN(v1) and isVectorNaN(v2) then
+                        local targetDir = (v1 - v2):getNormalized()
+                        if angleBetweenVectors(rocket:getForward(), targetDir) > 70 then
+                            rocket._target = nil
+                            --print(rocket)
+                        end
                     end
                 end
             end
@@ -495,11 +504,21 @@ function RunBetaParticleSystem()
     MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
     
     function MetaParticleEmitter:add(...)
-        if self:getParticlesLeft() == 0 then
-            --printConsole("max")
-            return
+        if self:getParticlesLeft() > 0 then
+            return self:oldAdd(...)
         end
-        return self:oldAdd(...)
+        
+        local maxIndex = #_emitters - 1
+        for i=1, maxIndex do
+            local otherEmit = nextEmitter(self:getPos())
+            if otherEmit:getParticlesLeft() > 0 then
+                --printConsole("ok_" .. i)
+                return otherEmit:oldAdd(...)
+            end
+        end
+        --printConsole("max_" .. #_emitters)
+        
+        return nil
     end
     
     function MetaParticleEmitter:destroy()

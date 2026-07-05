@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 2.0.1
+-- version 2.0.2
 
 
 local FireSize = 0.2 // 0.1 - 1.5
@@ -81,11 +81,21 @@ function RunBetaParticleSystem()
     MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
     
     function MetaParticleEmitter:add(...)
-        if self:getParticlesLeft() == 0 then
-            --printConsole("max")
-            return
+        if self:getParticlesLeft() > 0 then
+            return self:oldAdd(...)
         end
-        return self:oldAdd(...)
+        
+        local maxIndex = #_emitters - 1
+        for i=1, maxIndex do
+            local otherEmit = nextEmitter(self:getPos())
+            if otherEmit:getParticlesLeft() > 0 then
+                --printConsole("ok_" .. i)
+                return otherEmit:oldAdd(...)
+            end
+        end
+        --printConsole("max_" .. #_emitters)
+        
+        return nil
     end
     
     function MetaParticleEmitter:destroy()
