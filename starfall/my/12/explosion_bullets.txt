@@ -79,6 +79,8 @@ function RunBetaParticleSystem()
     local MetaParticleEmitter = getMethods("ParticleEmitter")
     MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
     MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
+    MetaParticleEmitter.oldGetPos = MetaParticleEmitter.getPos
+    MetaParticleEmitter.oldSetPos = MetaParticleEmitter.setPos
     
     function MetaParticleEmitter:add(...)
         if self:getParticlesLeft() > 0 then
@@ -96,6 +98,15 @@ function RunBetaParticleSystem()
         --printConsole("max_" .. #_emitters)
         
         return nil
+    end
+    
+    function MetaParticleEmitter:getPos(...)
+        return self._pos or self:oldGetPos(...)
+    end
+    
+    function MetaParticleEmitter:setPos(pos, ...)
+        self._pos = pos
+        return self:oldSetPos(pos, ...)
     end
     
     function MetaParticleEmitter:destroy()

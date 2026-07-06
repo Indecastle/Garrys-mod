@@ -46,12 +46,20 @@ if SERVER then
             local spreadDir = -Vector(10, math.rand(-1,1), math.rand(-1,1)):getNormalized()
             local _, dirA = localToWorld(Vector(), spreadDir:getAngle(), Vector(), originDirA)
 
-            P = prop.create(Prop:localToWorld(Vector(7, -5, -10)), originDirA, "models/props/cs_assault/dollar.mdl")
-            P:setPhysMaterial("gmod_silent")
-            P:setFrozen(false)
-            P:applyForceCenter(dirA:getForward() * ThrowForce)
-            P:setMass(35)
+            local P = prop.create(Prop:localToWorld(Vector(7, -5, -10)), originDirA, "models/props/cs_assault/dollar.mdl")
             constraint.nocollide(P, Prop)
+            P:setPhysMaterial("gmod_silent")
+            
+            timer.simple(0.01, function()
+                P:setFrozen(false)
+                P:applyForceCenter(dirA:getForward() * ThrowForce)
+                timer.simple(0.01, function()
+                    P:setMass(35)
+                end)
+            end)
+            
+            
+            
             
             table.insert(ents, 1, P)
             if #ents > MaxEntsCount then

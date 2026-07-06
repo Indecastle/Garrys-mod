@@ -3,7 +3,75 @@
 --@client
 
 
+local EnableBetaParticleSystem = true
+local BetaParticleEmitterLimit = 2
+
 local mat = material.load("voice/icntlk_pl")
+
+
+-- ======================== Particle Safe ========================
+function RunBetaParticleSystem()
+    local _emitters = {}
+    local _emitterIndex = -1
+    
+    local particle_create_old = particle.create
+    
+    function initEmitters(use3D, limit)
+        local max = math.min(limit - #_emitters, particle.particleEmittersLeft())
+        for i=1, max do
+            table.insert(_emitters, particle_create_old(owner():getPos(), use3D))
+        end
+    end
+    
+    function nextEmitter(origin)
+        initEmitters(false, BetaParticleEmitterLimit)
+        
+        local length = #_emitters
+        _emitterIndex = (_emitterIndex + 1) % length
+        --print(length)
+        local targetEmitter = _emitters[_emitterIndex+1]
+        if targetEmitter then
+            targetEmitter:setPos(origin)
+        end
+        return targetEmitter
+    end
+    
+    particle.create = function(position, use3D)
+        return nextEmitter(position)
+    end
+    
+    local MetaParticleEmitter = getMethods("ParticleEmitter")
+    MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
+    MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
+    
+    function MetaParticleEmitter:add(...)
+        if self:getParticlesLeft() > 0 then
+            return self:oldAdd(...)
+        end
+        
+        local maxIndex = #_emitters - 1
+        for i=1, maxIndex do
+            local otherEmit = nextEmitter(self:getPos())
+            if otherEmit:getParticlesLeft() > 0 then
+                --printConsole("ok_" .. i)
+                return otherEmit:oldAdd(...)
+            end
+        end
+        --printConsole("max_" .. #_emitters)
+        
+        return nil
+    end
+    
+    function MetaParticleEmitter:destroy()
+    end
+end
+
+if EnableBetaParticleSystem then
+    RunBetaParticleSystem()
+end
+-- ================================================
+
+
 local _data = {}
 
 

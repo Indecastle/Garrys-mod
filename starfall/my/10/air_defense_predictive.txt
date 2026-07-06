@@ -3,7 +3,7 @@
 -- author STEAM_0:1:54066003
 --model models/hunter/blocks/cube1x1x1.mdl
 --@shared
--- version 0.6.0
+-- version 0.6.1
 
 local FireReloadDelay = 4.0
 local FireReactionDelay = 1.0
@@ -340,9 +340,17 @@ if SERVER then
         bullet._bulletHoloBase:setParent(bullet)
         bullet:getPhysicsObject():setDragCoefficient(-10000)
         bullet:setMass(0)
-        timer.simple(0, function()
+        bullet:setFrozen(false)
+        bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
+        timer.simple(0.01, function()
+            if not isValid(bullet) then return end
             bullet:setFrozen(false)
             bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
+            timer.simple(0.01, function()
+                if not isValid(bullet) then return end
+                bullet:setFrozen(false)
+                bullet:getPhysicsObject():setVelocity(aimDir*BulletForce)
+            end)
         end)
         --bullet:setMaterial("models/effects/splode_sheet")
     

@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.3.3
+-- version 1.3.4
 
 local StartHeight = 500
 local StartPitchAngle = 45
@@ -20,10 +20,10 @@ local ExplodeRadius = 500
 local OnlyPvpUse = true
 local UsePVS = true
 local UseWH = true
-local TrailTime = 5
+local TrailTime = 4
 
 local EnableBetaParticleSystem = true
-local BetaParticleEmitterLimit = 1
+local BetaParticleEmitterLimit = 2
 
 --------------------------------------------------
 
@@ -286,7 +286,7 @@ if SERVER then
     function fire(aimDir, v0, t)
         if aimDir == nil or !prop.canSpawn() then return end
     
-        local bullet = prop.create(_cannon:localToWorld(Vector(0,0,40)), _cannon:getAngles(), BulletModel, true)
+        local bullet = prop.create(_cannon:localToWorld(Vector(0,0,40)), _cannon:getAngles(), BulletModel, false)
         bullet._bulletHoloBase = hologram.create(bullet:getPos(), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
         bullet._bulletHoloBase:setNoDraw(true)
         --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
@@ -294,14 +294,17 @@ if SERVER then
         bullet._bulletHoloBase:setParent(bullet)
         bullet._isBullet = true
         bullet._health = 30
+        bullet._isRemoved = false
         bullet:getPhysicsObject():setDragCoefficient(-10000)
         bullet:setMass(0)
         bullet:setFrozen(false)
         bullet:getPhysicsObject():setVelocity(aimDir*v0)
-        timer.simple(0, function()
+        timer.simple(0.01, function()
+            if not isValid(bullet) then return end
             bullet:setFrozen(false)
             bullet:getPhysicsObject():setVelocity(aimDir*v0)
-            timer.simple(0, function()
+            timer.simple(0.01, function()
+                if not isValid(bullet) then return end
                 bullet:setFrozen(false)
                 bullet:getPhysicsObject():setVelocity(aimDir*v0)
             end)
@@ -312,18 +315,20 @@ if SERVER then
         
         timer.simple(t, function()
             pcall(function()
-                if !isValid(bullet) then return end
+                if bullet._isRemoved then return end
                 explodeBulletScene(bullet)
                 explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
+                bullet._isRemoved = true
                 bullet:remove()
             end)
         end)
         bullet:addCollisionListener(function(data)
             pcall(function()
-                if !isValid(bullet) then return end
+                if bullet._isRemoved then return end
                 explodeBulletScene(bullet)
                 explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
             end)
+            bullet._isRemoved = true
             bullet:remove()
         end)
         if t > 1.2 then
@@ -361,14 +366,15 @@ if SERVER then
     
     net.receive("tryFire", function(len, ply)
         if _isReloading then return end
+        if not isValid(_cannon) then return end
         
         local targetPos = net.readVector()
         _cannonAngle = net.readAngle()
         
-        local aimDir, v0, t = calculateAimDirectionAndSpeed(_cannon:getPos(), targetPos, Vector(), 90-_cannonAngle.p, -600)
+        local aimDir, v0, t = calculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(0,0,40)), targetPos, Vector(), 90-_cannonAngle.p, -600)
         if aimDir == nil then return end
         _isReloading = true
-        fire(aimDir, v0, t)
+        fire(aimDir, v0, t+0.07)
         
         net.start("fire")
         net.writeBool(true)
@@ -533,6 +539,8 @@ function RunBetaParticleSystem()
     local MetaParticleEmitter = getMethods("ParticleEmitter")
     MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
     MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
+    MetaParticleEmitter.oldGetPos = MetaParticleEmitter.getPos
+    MetaParticleEmitter.oldSetPos = MetaParticleEmitter.setPos
     
     function MetaParticleEmitter:add(...)
         if self:getParticlesLeft() > 0 then
@@ -550,6 +558,15 @@ function RunBetaParticleSystem()
         --printConsole("max_" .. #_emitters)
         
         return nil
+    end
+    
+    function MetaParticleEmitter:getPos(...)
+        return self._pos or self:oldGetPos(...)
+    end
+    
+    function MetaParticleEmitter:setPos(pos, ...)
+        self._pos = pos
+        return self:oldSetPos(pos, ...)
     end
     
     function MetaParticleEmitter:destroy()
@@ -961,7 +978,7 @@ timer.create("calcPredictiveData", 0.2, 0, function()
         _isCanFire = false
         _flyTime = 0
     else
-        local aimDir, v0, t = calculateAimDirectionAndSpeed(_cannon:getPos(), tr.HitPos, Vector(), _pitchAngle, -600)
+        local aimDir, v0, t = calculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(0,0,40)), tr.HitPos, Vector(), _pitchAngle, -600)
         _isCanFire = aimDir != nil
         _flyTime = aimDir != nil and math.round(t,0) or 0
         --printMessage(4, tostring(_isCanFire))
