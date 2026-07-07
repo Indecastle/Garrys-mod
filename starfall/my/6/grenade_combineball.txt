@@ -7,7 +7,9 @@
 local TriggerClasses = {
     'npc_grenade_frag',
     'grenade_ar2',
-    'rpg_missile'
+    'rpg_missile',
+    'glide_missile',
+    'glide_projectile'
 }
 
 -------------------------------------------------
@@ -45,14 +47,18 @@ function start(pos)
     end
     
     hook.add("RenderScene", "beamRingPoint1", function(origin, angles, fov)
-        --effect.beamRingPoint(Vector pos, number lifetime, number startRad, number endRad, number width, number amplitude, Color color, number or nil speed, number or nil flags, number or nil framerate, string or nil material)
-        effect.beamRingPoint(pos, 0.2, 12, 1024, 64, 0, Color(255,255,225,32), 0, nil, 2, "sprites/lgtning.vmt")
+        pcall(function()
+            --effect.beamRingPoint(Vector pos, number lifetime, number startRad, number endRad, number width, number amplitude, Color color, number or nil speed, number or nil flags, number or nil framerate, string or nil material)
+            effect.beamRingPoint(pos, 0.2, 12, 1024, 64, 0, Color(255,255,225,32), 0, nil, 2, "sprites/lgtning.vmt")
+        end)
         hook.remove("RenderScene", "beamRingPoint1")
     end)
     
     hook.add("RenderScene", "beamRingPoint2", function(origin, angles, fov)
-        --effect.beamRingPoint(Vector pos, number lifetime, number startRad, number endRad, number width, number amplitude, Color color, number or nil speed, number or nil flags, number or nil framerate, string or nil material)
-        effect.beamRingPoint(pos, 0.5, 12, 1024, 64, 0, Color(255,255,225,64), 0, nil, 2, "sprites/lgtning.vmt")
+        pcall(function()
+            --effect.beamRingPoint(Vector pos, number lifetime, number startRad, number endRad, number width, number amplitude, Color color, number or nil speed, number or nil flags, number or nil framerate, string or nil material)
+            effect.beamRingPoint(pos, 0.5, 12, 1024, 64, 0, Color(255,255,225,64), 0, nil, 2, "sprites/lgtning.vmt")
+        end)
         hook.remove("RenderScene", "beamRingPoint2")
     end)
     
