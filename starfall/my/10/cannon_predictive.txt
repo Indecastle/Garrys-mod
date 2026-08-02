@@ -245,8 +245,13 @@ timer.create("fire", 1.0, 0, function()
     bullet:setMass(0)
     bullet:setFrozen(false)
     bullet:setMaterial("models/effects/splode_sheet")
+    
+    timer.simple(0, function()
+        bullet:setFrozen(false)
+        bullet:getPhysicsObject():setVelocity(aimDir*v0)
+    end)
 
-    bullet:getPhysicsObject():setVelocity(aimDir*v0)
+    
     
     timer.simple(t, function()
         pcall(function()

@@ -1,4 +1,4 @@
---@name Flag cloth_4
+--@name Flag cloth
 --@author Markiz
 --@shared
 

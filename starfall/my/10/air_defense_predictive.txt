@@ -16,7 +16,7 @@ local BuildSpeed = 0.4
 local ExplodeDamage = 100
 local ExplodeRadius = 500
 
-local OnlyUngod = false
+local OnlyUngod = true
 
 --===========================================================
 

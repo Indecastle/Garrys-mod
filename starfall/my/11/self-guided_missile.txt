@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.9.3
+-- version 1.9.4
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -228,8 +228,8 @@ if SERVER then
             explodeRocketScene(rocket)
             explodeWireTo(rocket:getPos(), ExplodeDamage, ExplodeRadius)
             --game.blastDamage(rocket:getPos(), ExplodeRadius, ExplodeDamage)
+            rocket:remove()
         end)
-        rocket:remove()
     end
     
     
@@ -343,7 +343,7 @@ if SERVER then
                 if rocket._isTargetClose then
                     local v1 = rocket._target:getPos()
                     local v2 = rocket:getPos()
-                    if isVectorNaN(v1) and isVectorNaN(v2) then
+                    if !isVectorNaN(v1) and !isVectorNaN(v2) then
                         local targetDir = (v1 - v2):getNormalized()
                         if angleBetweenVectors(rocket:getForward(), targetDir) > 70 then
                             rocket._target = nil
