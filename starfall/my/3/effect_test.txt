@@ -9,7 +9,7 @@ local E = chip()
 local worldE = game.getWorld()
 
 
-local effectData = effect.create()
+--local effectData = effect.create()
 
 
 timer.create("kek", 0.2, 0, function()
@@ -19,9 +19,10 @@ timer.create("kek", 0.2, 0, function()
         local hitPos = tr.HitPos
         local hitNormal = tr.HitNormal
         
-        effectData:setEntity(target)
+        effectData = {}
+        effectData.entity = target
         --effectData:setMagnitude(1)
-        effectData:setScale(2.0)
+        effectData.scale = 2.0
         --effectData:setRadius(1)
 
         --effectData:setFlags(1+5+7)
@@ -30,11 +31,11 @@ timer.create("kek", 0.2, 0, function()
         
         --effectData:setStart(E:localToWorld(Vector(0,0,50)))
         --effectData:setNormal(E:getForward())
-        effectData:setOrigin(E:getPos())  
+        effectData.origin = E:getPos() 
         --effectData:setEntity(E)
         for i=1, 5 do
-            effectData:setOrigin(E:getPos() + Vector(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1)):getNormalized()*200) 
-            effectData:play("HelicopterMegaBomb") 
+            effectData.origin = E:getPos() + Vector(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1)):getNormalized()*200
+            effect.create("cball_explode", effectData)
         end
         
     --end)

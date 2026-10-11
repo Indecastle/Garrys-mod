@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.9.4
+-- version 1.9.7
 
 local FindRadiusMin = 500
 local FindRadiusMax = 15000
@@ -28,8 +28,13 @@ local FireDelay = 3
 local FindTargetSpeed = 1 -- 1 - 3
 local FindInBoxSize = 240
 
+local IsFindPlayers = true
+local IsFindNPCs = true
+
+-- if IsFindPlayers is true
 local OnlyVehicle = false
 local OnlyUngod = true
+--
 
 local EyeFromChip = true
 local WaitFindingTarget = false
@@ -298,7 +303,7 @@ if SERVER then
         local curtime = timer.curtime()
         
         for i, rocket in ipairs(_rockets) do
-            if !isValid(rocket) then
+            if !isValid(rocket) or !rocket:isValidPhys() then
                 table.removeByValue(_rockets, rocket)
                 continue
             end
@@ -331,9 +336,10 @@ if SERVER then
                 phys:setAngles(resultAngle)
             end
             
-            if isValid(rocket._target) then
+            if isValid(rocket._target) and (!rocket:isNPC() or rocket:isAlive()) then
                 if distance < AutoExplodeMaxDistance then
                     tryExplodeRocket(rocket)
+					return
                 end
                 
                 if distance < 1000 then
@@ -381,7 +387,9 @@ if SERVER then
     net.receive("fire", function(len, ply)
         local hasTarget = net.readBool()
         local target = hasTarget and net.readEntity() or nil
-        if (target != nil and !isValid(target)) or isLockEvent("canFire", FireDelay) then return end
+        if (target != nil 
+				and (!isValid(target) or (target:isNPC() and !target:isAlive())))
+			or isLockEvent("canFire", FireDelay) then return end
         
         fireRocket(chip():localToWorld(RocketStartOffset), chip():localToWorldAngles(Angle(-90, 00, 0)), TestOnMe and owner() or target)
     end)
@@ -397,15 +405,26 @@ if SERVER then
         local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")
         return isKyleBuilder != nil and isKyleBuilder
     end
-    
-    
-    timer.create("check_players", 1, 0, function()
-        local players = find.allPlayers(function(ent)
-            return !OnlyUngod or !userHasGodMode(ent)
-        end)
+
+    timer.create("find_targets", 1, 0, function()
+        local result = {}
         
-        net.start("conecting_players")
-        net.writeTable(players)
+        if IsFindPlayers then
+            local players = find.allPlayers(function(ent)
+                return !OnlyUngod or !userHasGodMode(ent)
+            end)
+            table.add(result, players)
+        end
+        
+        if IsFindNPCs then
+            local npcs = find.byClass("npc*", function(e)
+                return e:isValid() and e:isNPC()
+            end)
+            table.add(result, npcs)
+        end
+        
+        net.start("FindedTargets")
+        net.writeTable(result)
         net.send()
     end)
     
@@ -566,7 +585,7 @@ end
 local FLAME_MATERIAL = {}
 
 for i=1, 5 do
-    table.insert(FLAME_MATERIAL, material.load("glide/effects/flamelet"..i))
+    table.insert(FLAME_MATERIAL, material.load("particles/flamelet"..i)) -- glide/effects/flamelet
 end
 
 
@@ -730,7 +749,7 @@ local _triSound, _triSound2 --= sound.create(_p, "synth/tri.wav")
 
 
 local _damageInfo = {}
-local _validPlayers, _resultPlayers = {}, {}
+local _validTargets, _resultTargets = {}, {}
 local _rockets = {}
 local _vehicle = nil
 local _inited = false
@@ -851,22 +870,25 @@ end)
 
 ----------------------------------------------------------
 
-net.receive("conecting_players", function (len)
-    _validPlayers = net.readTable()
+net.receive("FindedTargets", function (len)
+    _validTargets = net.readTable()
 end)
 
 
 timer.create("findVisiblePlayers", 0.4, 0, function()
     if !isActive() then return end
     local startPos = EyeFromChip and (chip():getPos() + chip():getForward()*42) or eyePos()
-    _resultPlayers = table.filter(_validPlayers, function(ent)
+    _resultTargets = table.filter(_validTargets, function(ent)
         if !isValid(ent) or ent:getPos():getDistance(startPos) < FindRadiusMin then return false end
-        if OnlyVehicle and !ent:inVehicle() then
+        if OnlyVehicle and ent:isPlayer() and !ent:inVehicle() then
+            return false
+        end
+        if ent:isNPC() and !ent:isAlive() then
             return false
         end
         return isEntityVisible(startPos, ent)
     end)
-    --rintConsole(#_resultPlayers)
+    --rintConsole(#_resultTargets)
 end) 
 
 ----------------------------------------------------------
@@ -1201,7 +1223,7 @@ function findClosestTarget(bindCb)
     
     
     if isLockEvent("isFindTarget", 0.5) then
-        if isValid(_waitingTarget) and table.hasValue(_resultPlayers, _waitingTarget) then
+        if isValid(_waitingTarget) and table.hasValue(_resultTargets, _waitingTarget) then
             local pos = _waitingTarget:obbCenterW():toScreen()
             if inBox(pos) then
                 return
@@ -1211,7 +1233,7 @@ function findClosestTarget(bindCb)
         
         local closestPly, closestDist = nil, 999999999
         
-        for i, p in ipairs(_resultPlayers) do
+        for i, p in ipairs(_resultTargets) do
             if p == _p or !isValid(p) or !p:isAlive() then continue end
             
             local pos = p:obbCenterW():toScreen()
@@ -1264,7 +1286,7 @@ function drawVisiblePlayers(bindCb)
         return
     end
     
-    for i, p in ipairs(_resultPlayers) do
+    for i, p in ipairs(_resultTargets) do
         if isValid(p) and p ~= _p and p:isAlive() then
             local pos = p:obbCenterW():toScreen()
             if !inBox(pos) then continue end

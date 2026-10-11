@@ -25,6 +25,7 @@ local URLS = {
     flag_poland = "https://i.imgur.com/2l0Eq5L.png",
     
     kitten = "https://i.imgur.com/qlhVKyZ.png",
+    cat = "https://i.imgur.com/6nukgLM.jpeg",
     soldierMeme = "https://i.imgur.com/etDODQs.jpg",
     barryWood = "https://i.imgur.com/PQiuccK.png",
     obobrali_do_gola = "https://i.imgur.com/YeA7JbG.png",
@@ -33,7 +34,7 @@ local URLS = {
     custom = nil
 }
 
-local img = "soldierMeme"
+local img = "cat"
 
 local maxh = 100
 

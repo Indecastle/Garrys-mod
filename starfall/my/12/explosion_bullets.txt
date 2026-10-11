@@ -147,7 +147,7 @@ end
 local FLAME_MATERIAL = {}
 
 for i=1, 5 do
-    table.insert(FLAME_MATERIAL, material.load("glide/effects/flamelet"..i))
+    table.insert(FLAME_MATERIAL, material.load("particles/flamelet"..i)) -- glide/effects/flamelet
 end
 
 
@@ -334,7 +334,7 @@ function drawLight(pos)
     li:draw()    
 end
 
-initLights(1000, 0.1, Color(200,150,50), 2000)
+initLights(500, 0.1, Color(200,150,50), 2000)
 
 -- ========================================================================================================
 

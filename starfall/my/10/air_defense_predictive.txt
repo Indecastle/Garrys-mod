@@ -3,7 +3,7 @@
 -- author STEAM_0:1:54066003
 --model models/hunter/blocks/cube1x1x1.mdl
 --@shared
--- version 0.6.1
+-- version 0.6.2
 
 local FireReloadDelay = 4.0
 local FireReactionDelay = 1.0
@@ -521,7 +521,7 @@ end
 
 local FLAME_MATERIAL = {}
 for i=1, 5 do
-    table.insert(FLAME_MATERIAL, material.load("glide/effects/flamelet"..i))
+    table.insert(FLAME_MATERIAL, material.load("particles/flamelet"..i)) -- glide/effects/flamelet
 end
 
 function ExplosionEffect:explosion( emitter, origin, normal, scale )

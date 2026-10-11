@@ -25,7 +25,7 @@ local IsSetPosOnGround = false
 
 local IsTriggerWorldEntity = true
 
-local IsDeleteProps = false
+local IsDeleteProps = true
 local IsDeleteWorldProps = true
 
 
@@ -34,7 +34,7 @@ local WorkTimerDelay = 0.2
 
 
 local Friends = {
-    --'markiz'
+    'markiz'
 }
 
 --local SphereMode = 'ihv' -- invisible / ihv

@@ -1,0 +1,511 @@
+--@name Nuke Deployer
+--@author 
+--@shared
+--@model models/Items/item_item_crate.mdl
+--@include https://raw.githubusercontent.com/radiantik1/MyStarfallResources/refs/heads/main/objsmegm.lua as models.txt
+local MODELS = require("models.txt")
+if CLIENT then
+    SOUNDS = {}
+    local function loadWater()
+    bass.loadURL(http.urlGithubToRaw("https://github.com/radiantik1/S/blob/main/water_atomic.ogg"),'3d noblock',function(obj)
+    if obj then
+        SOUNDS.WATER = obj
+        SOUNDS.WATER:pause()
+        SOUNDS.WATER:setPos(chip():getPos())
+        SOUNDS.WATER:setVolume(13)
+        SOUNDS.WATER:setFade(6000,12000,true)
+    else
+        loadWater()
+    end
+    end)
+    end
+    local function loadGround()
+    bass.loadURL(http.urlGithubToRaw("https://github.com/radiantik1/S/blob/main/ground_atomic.ogg"),'3d noblock',function(obj)
+    if obj then
+        SOUNDS.GROUND = obj
+        SOUNDS.GROUND:pause()
+        SOUNDS.GROUND:setPos(chip():getPos())
+        SOUNDS.GROUND:setVolume(20)
+        SOUNDS.GROUND:setFade(0,20000,true)
+    else
+        loadGround()
+    end
+    end)
+    end
+    loadWater() loadGround()
+render.createRenderTarget("gay")
+local sigmamat = material.create("VertexLitGeneric")
+sigmamat:setTextureRenderTarget("$basetexture","gay")
+local hol = hologram.create(chip():getPos(),Angle(0),"models/holograms/plane.mdl",Vector(5))
+hol:setMaterial("!"..sigmamat:getName())
+hol:suppressEngineLighting(true)
+hol:setColor(Color(0,0,0,0))
+local VertexAlpha= true
+local VertexColor= true
+local AlphaTest= false
+local Additive= false
+local Translucent= false
+local flags = 
+    (VertexColor and 16 or 0) +
+    (VertexAlpha and 32 or 0) +
+    (Additive and 128 or 0) +
+    (AlphaTest and 256 or 0) + 
+    (Translucent and 2097152 or 0)  
+if flags ~= 0 then
+    sigmamat:setInt("$flags", flags)    
+end
+xh,yh = render.getResolution()
+local qmax = chip():getQuotaMax() - 0.0002
+function flash(shake,time,fadeout)
+    timer.create("shakespear",time,1,function()
+        hook.remove("RenderScene","")
+        hol:setColor(Color(0,0,0,0))
+    end)
+    local start = timer.curtime()
+    local o = true
+    hook.add("RenderScene","",function(origin, angles, fov) 
+        local _, eyeA = localToWorld(Vector(), Angle(90,0,180), Vector(), angles)
+        local g = input.screenToVector(xh/2,yh/2)
+        hol:setPos(origin + g*5.34+angles:getRight()*math.rand(-1,1)/25*shake*fadeout((timer.curtime()-start)/time)+angles:getUp()*math.rand(-1,1)/25*shake*fadeout((timer.curtime()-start)/time))
+        hol:setColor(Color(255,255,255,254*fadeout((timer.curtime()-start)/time)))
+        hol:setAngles(eyeA)
+        hol:setSize(Vector(6*math.tan((fov * math.pi / 180)/2),6*math.tan((2 * math.atan(math.tan((fov * math.pi / 180)/2) / (yh/xh)))/2),1)*1.108)
+        if hol:getMaterial() ~= "!"..sigmamat:getName() then
+            hol:setMaterial("!"..sigmamat:getName())
+        end
+            if chip():getQuotaAverage() > qmax * 0.65 then return end
+            render.selectRenderTarget("gay")
+            render.renderView(
+            {
+                ["origin"] = origin,
+                ["angles"] = angles,
+                aspectratio = xh/yh,
+                x = 0,
+                y = 0,
+                w = 1024,
+                h = 1024,
+                fov = fov+5,
+                drawmonitors = false,
+                viewid = 2
+            }
+        )
+    end)
+end
+function loadHolo(objdata,texturl,names,cb,everycb,fincb)
+local holos = {}
+for j,name in ipairs(names) do
+    timer.simple((j-1)*0.4,function()
+local holo = hologram.create(chip():getPos(),Angle(0,90,90),"models/Combine_Helicopter/helicopter_bomb01.mdl")
+holo:setColor(Color(0,0,0,0))
+local textureloaded, mymesh
+local texture = material.create("VertexLitGeneric")
+local VertexAlpha= false
+local VertexColor= false
+local AlphaTest= false
+local Additive= false
+local Translucent= false
+local flags = 
+    (VertexColor and 16 or 0) +
+    (VertexAlpha and 32 or 0) +
+    (Additive and 128 or 0) +
+    (AlphaTest and 256 or 0) +
+    (Translucent and 2097152 or 0)  
+if flags ~= 0 then
+    texture:setInt("$flags", flags)    
+end
+--texture:setTextureURL("$basetexture",texturl)
+    local triangles = mesh.trianglesLeft()
+    local function doneLoadingMesh()
+        --print("Used "..(triangles - mesh.trianglesLeft()).." triangles.")
+    end
+    local loadmesh = coroutine.wrap(function() mymesh = mesh.createFromObj(objdata, true, true)[name] return true end)
+    hook.add("think","loadingMesh",function()
+        while chip():getQuotaAverage() < chip():getQuotaMax() / 2 do
+            if loadmesh() then
+                doneLoadingMesh()
+                fincb(mymesh,texture)
+                hook.remove("think","loadingMesh")
+                return
+            end
+        end
+    end)
+if everycb then everycb(holo) end
+holos[name] = holo
+end)
+end
+cb(holos)
+end
+local bombmesh
+local bombtext
+loadHolo(http.base64Decode(MODELS.ATOMIC),"https://raw.githubusercontent.com/radiantik1/MyStarfallResources/refs/heads/main/Atomic%20bomb.jpg",{"Cylinder01"},function()end,function(z) z:remove() end,function(j,k) bombmesh = j bombtext = k end)
+SMOKE_SPRITES = {
+    "particle/smokesprites_0001",
+    "particle/smokesprites_0002",
+    "particle/smokesprites_0003",
+    "particle/smokesprites_0004",
+    "particle/smokesprites_0005",
+    "particle/smokesprites_0006",
+    "particle/smokesprites_0007",
+    "particle/smokesprites_0008",
+    "particle/smokesprites_0009",
+    "particle/smokesprites_0010",
+    "particle/smokesprites_0011",
+    "particle/smokesprites_0012",
+    "particle/smokesprites_0013",
+    "particle/smokesprites_0014",
+    "particle/smokesprites_0015",
+    "particle/smokesprites_0016"
+}
+SMOKE_MAT = {}
+for i,path in ipairs(SMOKE_SPRITES) do
+    SMOKE_MAT[i] = material.load(path)
+end
+function randvec()
+    local g = Vector(math.rand(-1,1),math.rand(-1,1),math.rand(-1,1))
+    if g == Vector() then
+        return Vector()
+    else
+        return g:getNormalized()
+    end
+end
+function randang()
+    return Angle(math.rand(-180,180),math.rand(-180,180),math.rand(-180,180))
+end
+local fire = material.load("particle/fire")
+function bum(STARTPOS)
+    local height = trace.line(STARTPOS+Vector(0,0,20),STARTPOS+Vector(0,0,10^9),game.getWorld(),nil,nil,nil,true).HitPos[3]
+    local b = timer.curtime()
+local part = particle.create(chip():getPos(),true)
+local ligh = light.create(STARTPOS,200000000,100000000,Color(255,225,200))
+part:setNoDraw(false)
+local PARTS = {}
+local g = 0
+local explodone = false
+local h = 0 
+local q = 0
+local z = effect.create("glide_explosion", {})
+if z then
+    z:setOrigin(STARTPOS)
+    z:setScale(0.5)
+end
+local smoke = particle.create(chip():getPos(),false)
+smoke:setNoDraw(false)
+local function pernut(pos,scale,normal,ignore,a)
+    if !ignore then if smoke:getParticlesLeft() < 2 then return end end
+    local count = math.floor(scale*20)
+    local size = math.rand(100,120)*scale
+    local p = smoke:add(SMOKE_MAT[math.random(1,#SMOKE_MAT)],pos,size,size*math.rand(1.5,2),0,0,255,0,math.clamp(math.rand(0.75,2)*scale*a,0,15))
+    p:setAirResistance(400)
+    p:setAngleVelocity(randang()*0.02)
+    p:setColor(Color(50*2,43*2,30*2))
+    p:setVelocity(normal*math.random(1300,1500)+randvec()*1000)
+    p:setRoll(math.rand(-1,1)/size)
+    p:setGravity(Vector(0,0,400))
+    local count = math.floor(scale*20)
+    local size = math.rand(100,120)*scale
+    local p = smoke:add(SMOKE_MAT[math.random(1,#SMOKE_MAT)],pos,size*0.5,size*1.5,0,0,200,0,math.clamp(math.rand(3,4)*scale*a,0,15))
+    p:setAirResistance(350)
+    p:setVelocity(randvec()*math.random(800,1500)*scale)
+    p:setAngleVelocity(randang()*0.02)
+    p:setColor(Color(70*2,55*2,40*2))
+    p:setRoll(math.rand(-1,1)/2/size)
+    p:setGravity(Vector(0,0,200))
+end
+local base = hologram.create(STARTPOS,Angle(),"models/props_c17/FurnitureBathtub001a.mdl",Vector(10))
+base._vel = Vector()
+local startrings = false
+local rings = {}
+for x = 1, 5 do
+    local ring = hologram.create(STARTPOS,Angle(180,0,0),"models/holograms/hq_cubinder.mdl",Vector())
+    ring._spin = math.rand(-1,1)
+    ring:setColor(Color(0,0,0,0))
+    ring:setMaterial("models/effects/splode1_sheet")
+    ring._subring = hologram.create(STARTPOS,Angle(180,0,0),"models/holograms/hq_rcylinder_thick.mdl",Vector())
+    ring._subring._spin = math.rand(-1,1)
+    ring._subring:setColor(Color(0,0,0,0))
+    ring._subring:setMaterial("models/props/cs_office/clouds")
+    ring._subring:suppressEngineLighting(true)
+    table.insert(rings,ring)
+end
+local leg = hologram.create(STARTPOS,Angle(180,0,0),"models/hunter/tubes/tube4x4x2to2x2.mdl",Vector(1000,1000,0))
+leg:setMaterial("models/props/cs_office/clouds")
+leg._spin = math.rand(-1,1)
+leg._subleg = hologram.create(STARTPOS,Angle(180,0,0),"models/hunter/tubes/tube4x4x2to2x2.mdl",Vector(1000,1000,0))
+leg._subleg:setMaterial("models/props/cs_office/clouds")
+leg._subleg._spin = math.rand(-1,1)
+local mamma1 = hologram.create(STARTPOS,Angle(),"models/holograms/hq_sphere.mdl",Vector(0))
+mamma1:setMaterial("models/screenspace")
+mamma1:suppressEngineLighting(true)
+local mamma2 = hologram.create(STARTPOS,Angle(),"models/holograms/hq_sphere.mdl",Vector(0))
+mamma2:setMaterial("models/screenspace")
+mamma2:suppressEngineLighting(true)
+mamma2:setParent(mamma1)
+local i = 0
+local vee = false
+base:setColor(Color(0,0,0,0))
+local shaked = false
+hook.add("RenderScene","animation",function(_,a,_)
+    if not shaked then
+        shaked = true
+        if SOUNDS.GROUND then
+            SOUNDS.GROUND:setPos(STARTPOS)
+            SOUNDS.GROUND:setTime(0)
+            SOUNDS.GROUND:play()
+            timer.create("groundstop",SOUNDS.GROUND:getLength(),1,function() if SOUNDS.GROUND then SOUNDS.GROUND:pause() end end)
+        end
+        flash(math.min(4000/STARTPOS:getDistance(player():getEyePos()),25),8,function(n) return (1-n) end)
+    end
+    base._vel = base._vel + Vector(0,0,5)
+    if g < 26 then
+        base:setPos(base:getPos()+base._vel*timer.frametime()*180)
+        base:setPos(base:getPos()+Vector(0,0,-base:getPos()[3]+math.min(height,base:getPos()[3])))
+        if part:getParticlesLeft() >= 3 then
+        local p1 = part:add(fire,STARTPOS+randvec()*Vector(1,1,0)*300,1200,0,500,0,255,0,10)
+            p1._basevel = randvec()*90*Vector(1,1,0)
+        local p2 = part:add(fire,STARTPOS+randvec()*Vector(1,1,0)*200,1200,0,500,0,255,0,10)
+            p2._basevel = randvec()*60*Vector(1,1,0)
+            p2:setAirResistance(10)
+        local p3 = part:add(fire,STARTPOS+randvec()*Vector(1,1,0)*100,1200,0,500,0,255,0,10)
+            p3._basevel = randvec()*30*Vector(1,1,0)
+            p3:setAirResistance(10)
+            table.insert(PARTS,p1)
+        table.insert(PARTS,p2)
+        table.insert(PARTS,p3)
+        end
+        mamma1:setColor(Color(255,225,200,(1-g/25)^(2)*255))
+        mamma1:setScale(Vector((g/25)^2*1200))
+        mamma1:setAngles(mamma1:getAngles()+randang()/4)
+        ligh:setSize(math.easeOutCirc(g/30)*1000)
+        if i == 0 and chip():getQuotaAverage() <= qmax * 0.8 then
+            pernut(base:getPos()+Vector(0,0,200),5+g/5,Vector(0,0,1)+randvec()*Vector(1,1,0)*(g/25),false,1)
+        end
+        g = g + timer.frametime()*60
+        for _,g in ipairs(PARTS) do
+            g:setAngles(a+Angle(-2*a[1],180,0))
+            g:setVelocity(g:getVelocity()+Vector(0,0,250)+g._basevel*0.5)
+            g:setColor(Color(255,225,200))
+        end
+        if z then
+            z:setOrigin(base:getPos()+randvec()*Vector(200,200,0))
+            z:setScale((1-g/50)*1.5)
+            if effect.canCreate() then
+                z:play()
+            end
+        end
+    elseif !explodone then
+        base:setPos(base:getPos()+base._vel*timer.frametime()*180)
+        if h < 31 then
+            ligh:setSize(math.easeOutCirc(1-h/30)*10^9)
+            if i == 0 and chip():getQuotaAverage() <= qmax * 0.7 then
+                pernut(base:getPos()+Vector(0,0,200),10+h/3,(Vector(0,0,1)+randvec()*Vector(1,1,0)):getNormalized(),false,1)
+            end
+            if chip():getQuotaAverage() < (chip():getQuotaMax() - 0.0002) * 0.8 then
+            for _,g in ipairs(PARTS) do
+                g:setAngles(a+Angle(-2*a[1],180,0))
+                g:setVelocity(g:getVelocity()+g._basevel*5)
+                g:setColor(Color(255,225,200))
+            end
+            end
+            h = h + timer.frametime()*60
+        else
+            explodone = true
+            for i,r in ipairs(rings) do
+                r:setPos(base:getPos()+Vector(0,0,200)*i)
+                r:setColor(Color(70+10*(i-1),55+7*(i-1),40+3*(i-1),130))
+            end
+            startrings = true
+            timer.simple(9,function()
+                part:destroy()
+            end)
+        end
+    elseif startrings then
+        if q < 961 then
+            if i == 0 and q < 721 then
+                local u = math.rand(0,1)
+                pernut(math.lerpVector(u,STARTPOS,base:getPos()+Vector(0,0,200)),math.lerp(g,1,20),Vector(0,0,-1),false,math.sin((960-q)/960*math.rad(180))^(1/4)/3)
+            end
+            for l,r in ipairs(rings) do
+                r:setAngles(r:getAngles()+Angle(0,2,0)*r._spin)
+                r._subring:setAngles(r._subring:getAngles()+Angle(0,2,0)*r._subring._spin)
+                r._subring:setPos(r:getPos())
+                local m = math.easeInQuad(math.clamp(q/700-(5-l)/20,0,1))
+                r:setScale(Vector(m*(3000+200*l),m*(3000+200*l),math.rand(400,700)*(q/480)^(1/2))*Vector(0.5,0.5,1))
+                r:setColor(Color(40*l,25*l,10,20*(math.sin((960-q)/960*math.rad(180)))))
+                r._subring:setScale(Vector(m*(3000+200*l),m*(3000+200*l),math.rand(220,400)*(q/480)^(1/2))*Vector(1,1,2))
+                r._subring:setColor(Color(40*l,25*l,10,150*(math.sin((960-q)/960*math.rad(180)))))
+            end
+            leg:setAngles(leg:getAngles()+Angle(0,leg._spin*(math.sin((960-q)/960*math.rad(180)))*20,0))
+            leg:setColor(Color(40,25,10,150*(math.sin((960-q)/960*math.rad(180)))))
+            leg:setScale(Vector(18*(math.sin((960-q)/960*math.rad(180)))^2,18*(math.sin((960-q)/960*math.rad(180)))^2,(base:getPos()[3]+400-STARTPOS[3])/70))
+            leg._subleg:setAngles(leg._subleg:getAngles()+Angle(0,leg._subleg._spin*(math.sin((960-q)/960*math.rad(180)))*20,0))
+            leg._subleg:setColor(Color(40,25,10,250*(math.sin((960-q)/960*math.rad(180)))))
+            leg._subleg:setScale(Vector(14*(math.sin((960-q)/960*math.rad(180)))^2,14*(math.sin((960-q)/960*math.rad(180)))^2,(base:getPos()[3]+400-STARTPOS[3])/70))
+            q = q + timer.frametime()*30
+        else
+            hook.remove("RenderScene","animation")
+            vee = true
+        end
+    end
+    mamma2:setScale(-mamma1:getScale())
+    mamma2:setColor(mamma1:getColor())
+    leg:setPos(math.lerpVector(0.25,STARTPOS,base:getPos()+Vector(0,0,400))+randvec()*Vector(200,200,0))
+    leg._subleg:setPos(leg:getPos())
+    i = (i + 1) % 2
+end)
+hook.add("Think","checker",function()
+    if vee then
+        hook.remove("Think","checker")
+            base:remove()
+            smoke:destroy()
+            ligh:destroy()
+            mamma1:remove()
+            mamma2:remove()
+            for _,r in ipairs(rings) do
+                r:remove()
+                r._subring:remove()
+            end
+            leg:remove()
+            leg._subleg:remove()
+    end
+end)
+end
+net.receive("boom",function()
+    bum(net.readVector())
+end)
+net.receive("waterboom",function()
+    local jay = net.readVector()
+    flash(math.min(1400/jay:getDistance(player():getEyePos()),25),8,function(n) return (1-n) end)
+    if SOUNDS.WATER then
+        SOUNDS.WATER:setPos(jay)
+        SOUNDS.WATER:setTime(0)
+        SOUNDS.WATER:play()
+        timer.create("waterstop",SOUNDS.WATER:getLength(),1,function() if SOUNDS.WATER then SOUNDS.WATER:pause() end end)
+    end
+end)
+local boobs = {}
+net.receive("bombify",function()
+    net.readEntity(function(bo)
+        local holo = hologram.create(bo:getPos()+Vector(14,14,69),Angle(),"models/Combine_Helicopter/helicopter_bomb01.mdl",Vector(0.065))
+        holo:setParent(bo)
+        holo:setLocalPos(Vector(14,14,69))
+        holo:setLocalAngles(Angle())
+        holo:setMesh(bombmesh)
+        holo:setMeshMaterial(bombtext)
+        holo:setRenderBounds(Vector(-200),Vector(200))
+        holo:setColor(Color(12,72,34))
+        table.insert(boobs,holo)
+    end)
+end)
+hook.add("Think","checkerchalk",function()
+    for _,bo in ipairs(boobs) do
+        if not bo:getParent():isValid() then table.removeByValue(boobs,bo) if bo:isValid() then bo:remove() end end
+    end
+end)
+else
+     
+    -- ONLY PVP + FUNC --
+    
+ONLYPVP = false
+PVPFUNC = function(ent) return !ent:isBuild() end
+
+    -- ONLY PVP + FUNC --
+
+local explo = prop.createSent(Vector(0,0,12000),Angle(0),"gmod_wire_explosive",true,{damage = 1500,coloreffect = false,fireeffect = false,invisibleatzero = true})
+explo:setColor(Color(0,0,0,0))
+explo:setNocollideAll(true)
+local laser = prop.createSent(Vector(0,0,12000),Angle(-90,0,0),"gmod_wire_turret",true,{damage = 1, force = 0, delay = 0.0001, numbullets = 1,tracer = "ShakeRopes"})
+laser:setColor(Color(0,0,0,0))
+laser:setNocollideAll(true)
+wire.triggerInput(laser,"Spread",0)
+hook.add("Tick","exploboomchik",function()
+    wire.triggerInput(explo,"ResetHealth",1)
+    wire.triggerInput(explo,"Detonate",1)
+end)
+function babaxx(pos)
+    local rpos = trace.line(pos,pos+Vector(0,0,9000),game.getWorld(),nil,nil,nil,true).HitPos
+    local gye = prop.create(rpos,Angle(),"models/hunter/blocks/cube05x05x05.mdl",true)
+    local gey = prop.create(pos,Angle(),"models/hunter/blocks/cube05x05x05.mdl",true)
+    gye:setColor(Color(0,0,0,0))
+    gey:setColor(Color(0,0,0,0))
+    local targets = {}
+    local testers = {}
+    for v,u in ipairs(find.all(function(ent) if ent:isValid() and ((ent:isPlayer() and ent:isAlive() and ((ONLYPVP and PVPFUNC(ent)) or !ONLYPVP)) or ent:isVehicle() or ent:isNPC()) and ent:getEyePos():getDistance(pos-Vector(0,0,pos[3]-ent:getEyePos()[3])) < 8000 and ((trace.line(ent:getEyePos(),gye:getPos(),gye,nil,nil,nil,true).Entity == gye) or (trace.line(ent:getEyePos(),gey:getPos(),gey,nil,nil,nil,true).Entity == gey)) then return ent end end)) do
+        testers[v] = hologram.create(u:getEyePos(),Angle(),"models/props_c17/FurnitureBathtub001a.mdl")
+        timer.simple(timer.frametime(),function()
+            if testers[v]:isValid() then testers[v]:remove() table.insert(targets,u) end
+        end)
+    end
+    local i = 0
+    timer.simple(timer.frametime()*2,function()
+    timer.create("explodrop",timer.frametime()*2,#targets+1,function()
+        i = i + 1
+        if i <= #targets then
+            if targets[i]:isValid() then
+                explo:setPos(targets[i]:getEyePos())
+            end
+        else
+            explo:setPos(Vector(0,0,12000))
+            laser:setPos(pos+Vector(0,0,100))
+            wire.triggerInput(laser,"Fire",1)
+            local yt = 0
+            local yr = 0
+            local tars = find.all(function(ent) if ent:isValid() and ((ent:isPlayer() and ent:isAlive() and ((ONLYPVP and PVPFUNC(ent)) or !ONLYPVP)) or ent:isVehicle() or ent:isNPC()) and ent:getEyePos():getDistance(pos-Vector(0,0,pos[3]-ent:getEyePos()[3])) < 8000 and ((trace.line(ent:getEyePos(),gye:getPos(),gye,nil,nil,nil,true).Entity == gye) or (trace.line(ent:getEyePos(),gey:getPos(),gey,nil,nil,nil,true).Entity == gey)) then return ent end end)
+            hook.add("Tick","radiation",function()
+                yr = (yr + 1) % #tars
+                local closet = tars[1+yr]
+                if closet and closet:isValid() then
+                    wire.triggerInput(laser,"Damage",3000/closet:getEyePos():getDistance(pos)*(11-yt))
+                    laser:setAngles((closet:getEyePos()-laser:getPos()):getAngle())
+                end
+            end)
+            timer.create("jeay",3,11,function()
+                yt = yt + 1
+                if yt <= 10 then
+                    wire.triggerInput(laser,"NumBullets",1000/(yt*100))
+                    yr = 0
+                    tars = find.all(function(ent) if ent:isValid() and ((ent:isPlayer() and ent:isAlive() and ((ONLYPVP and PVPFUNC(ent)) or !ONLYPVP)) or ent:isVehicle() or ent:isNPC()) and ent:getEyePos():getDistance(pos-Vector(0,0,pos[3]-ent:getEyePos()[3])) < 8000 and ((trace.line(ent:getEyePos(),gye:getPos(),gye,nil,nil,nil,true).Entity == gye) or (trace.line(ent:getEyePos(),gey:getPos(),gey,nil,nil,nil,true).Entity == gey)) then return ent end end)
+                else
+                    hook.remove("Tick","radiation")
+                    laser:setPos(Vector(0,0,12000))
+                    laser:setAngles(Angle(-90,0,0))
+                    wire.triggerInput(laser,"Fire",0)
+                    gey:remove()
+                    gye:remove()
+                end
+            end)
+        end
+    end)
+    end)
+end
+function wall(pos,scl)
+local x, y, z = scl[1],scl[2],scl[3]
+local convexes = {
+    {
+        Vector(0, 0, 0), Vector(x, 0, 0), Vector(x, y, 0), Vector(0, y, 0),
+        Vector(0, 0, z), Vector(x, 0, z), Vector(x, y, z), Vector(0, y, z),
+    },
+}
+local ent = prop.createCustom(pos-scl/2, Angle(), convexes, true)
+ent:setColor(Color(0,0,0,0))
+return ent
+end
+    function deploy(pos,ang,frozen)
+        local bomb = wall(pos,Vector(28,28,106))
+        bomb:setAngles(ang)
+        bomb:setMass(100)
+        bomb:setFrozen(frozen)
+        net.start("bombify")
+        net.writeEntity(bomb)
+        net.send(find.allPlayers(),false)
+        bomb:addCollisionListener(function(dat) if !bomb:isPlayerHolding() and (dat.HitEntity == game.getWorld() or dat.HitEntity:isFrozen()) and dat.HitNormal[3] < -0.15 and dat.HitSpeed:getLength() > 10^3 then if bomb:getWaterLevel() <= 1 then babaxx(bomb:getPos()) net.start("boom") net.writeVector(bomb:getPos()) net.send(find.allPlayers(),false) else net.start("waterboom") net.writeVector(bomb:getPos()) net.send(find.allPlayers(),false) end bomb:removeCollisionListener() bomb:remove() end end)
+        function bomb:detonate()
+            if bomb:getWaterLevel() <= 1 then babaxx(bomb:getPos()) net.start("boom") net.writeVector(bomb:getPos()) net.send(find.allPlayers(),false) else net.start("waterboom") net.writeVector(bomb:getPos()) net.send(find.allPlayers(),false) end bomb:removeCollisionListener() bomb:remove()
+        end
+        return bomb
+    end
+    hook.add("KeyPress","",function(ply,key)
+        if prop.canSpawn() and key == 32 and ply:getEyeTrace().Entity == chip() then
+            local b = deploy(chip():getPos()+chip():getUp()*100+Vector(math.rand(-1,1),math.rand(-1,1),0):getNormalized()*100,Angle(),false)
+        end
+    end)
+end

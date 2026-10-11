@@ -179,8 +179,6 @@ local Key_Ctrl = false;
 local FreeCumPos = eyePos();
 local _ThPersDist = 50
 
-local effectData = effect:create()
-
 
 function reset_keys()
     Key_W = false;
@@ -194,10 +192,11 @@ end
 
 function showLightning()
     pcall(function()
-        effectData:setEntity(_Killer)
-        effectData:setMagnitude(20)
-        effectData:setScale(30)
-        effectData:play("TeslaHitboxes")
+        local effectData = {}
+        effectData.entity = _Killer
+        effectData.magnitude  = 20
+        effectData.scale = 16
+        effect.create("TeslaHitboxes", effectData)
         
         if ShockSoundEffect then
             local path = 'ambient/energy/spark'..string.format('%01d', math.round(math.rand(2,3)))..'.wav'
