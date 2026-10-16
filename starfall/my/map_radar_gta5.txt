@@ -1,12 +1,55 @@
 --@name Map Radar client GTA5 Style
 --@author Markiz
 --@shared
--- version 1.1.0
+-- version 2.1.0
 
-local Detail = 5
-local SizeMap = 30000
-local Z = 10000
-local Zoom = 4
+--      
+local DefaultMapConfig = {
+    Detail = 5,
+    AutoMap = true,       // true:    
+    SizeMap = 30000,      // ,  AutoMap = false
+    BoundsMin = nil,      // Vector(minX, minY, minZ)  nil  
+    BoundsMax = nil,      // Vector(maxX, maxY, maxZ)  nil  
+    CamHeight = nil,      //    nil  
+    Z = 10000,            //     AutoMap = false
+    Zoom = 4
+}
+
+--   .
+--       game.getMap(),  "gm_flatgrass".
+--      DefaultMapConfig.
+local MapConfigs = {
+    ["gm_construct"] = {
+        Detail = 5,
+        AutoMap = true,
+        SizeMap = 30000,
+        BoundsMin = Vector(-15000, -15000, -1000),
+        BoundsMax = Vector(15000, 15000, 2000),
+        CamHeight = 5000,
+        Z = 10000,
+        Zoom = 4
+    }
+}
+
+local CurrentMapConfig = MapConfigs[game.getMap()] or {}
+
+local function getMapConfig(key)
+    local value = CurrentMapConfig[key]
+    if value == nil then
+        return DefaultMapConfig[key]
+    end
+    return value
+end
+
+local Detail = getMapConfig("Detail")
+local AutoMap = getMapConfig("AutoMap")
+local SizeMap = getMapConfig("SizeMap")
+local BoundsMin = getMapConfig("BoundsMin")
+local BoundsMax = getMapConfig("BoundsMax")
+local CamHeight = getMapConfig("CamHeight")
+local Z = getMapConfig("Z")
+local Zoom = getMapConfig("Zoom")
+
 local LevelDiff = 100
 
 local Performance = 50 // Manage to perfomance
@@ -27,8 +70,16 @@ local MapPosY = 10
 local RenderDistanceLimit = 35000000
 local Filtering = false
 
+local UseRenderView = true // true: build the map with render.renderView (needs permissions), if impossible -> trace scan
+
 
 local OnlyOwner = false
+
+local KeyBindings = {
+    ZoomIn = KEY.EQUAL,
+    ZoomOut = KEY.MINUS,
+}
+
 
 
 
@@ -72,13 +123,61 @@ end
 local conectingPlayers = {}
 
 // ##### don't touch !!! ########
+// ---- map bounds: center of the map + size covering the whole map ----
+local function boundsOk(a, b)
+    if not (a and b) then return false end
+    local dx, dy = b.x - a.x, b.y - a.y
+    if dx < 512 or dy < 512 or dx > 66000 or dy > 66000 then return false end
+    local c = chip():getPos()
+    return c.x >= a.x and c.x <= b.x and c.y >= a.y and c.y <= b.y
+end
+
+local function noEnts() return false end
+
+local function rayBounds()
+    local o = chip():getPos() + Vector(0, 0, 50)
+    local top = trace.line(o, o + Vector(0, 0, 32000), noEnts, MASK.SOLID_BRUSHONLY).HitPos.z
+    local h = Vector(o.x, o.y, top - 48)
+    local function reach(d) return trace.line(h, h + d * 33000, noEnts, MASK.SOLID_BRUSHONLY).HitPos end
+    local xp, xn, yp, yn = reach(Vector(1, 0, 0)), reach(Vector(-1, 0, 0)), reach(Vector(0, 1, 0)), reach(Vector(0, -1, 0))
+    local bot = trace.line(o, o - Vector(0, 0, 32000), noEnts, MASK.SOLID_BRUSHONLY).HitPos.z
+    return Vector(xn.x, yn.y, bot - 512), Vector(xp.x, yp.y, top + 64)
+end
+
+local InitPos
+local TraceDist = RenderDistanceLimit
+
+if AutoMap then
+    local mn, mx = BoundsMin, BoundsMax
+    if not boundsOk(mn, mx) then
+        local s, a, b = pcall(function() return game.getWorld():getModelBounds() end)
+        if s and boundsOk(a, b) then
+            mn, mx = a, b
+        else
+            s, a, b = pcall(rayBounds)
+            if s and boundsOk(a, b) then
+                mn, mx = a, b
+            else
+                mn, mx = Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384)
+            end
+        end
+    end
+    local zTop = CamHeight or (mx.z + 32)
+    local zBot = mn.z - 32
+    SizeMap = math.max(mx.x - mn.x, mx.y - mn.y)
+    InitPos = Vector((mn.x + mx.x) / 2, (mn.y + mx.y) / 2, zTop)
+    TraceDist = math.min(RenderDistanceLimit, zTop - zBot + 64)
+else
+    InitPos = chip():getPos() + Vector(0,0, CamHeight and (CamHeight - chip():getPos().z) or Z)
+end
+
 local Res_ = 1024 / Detail
 local HalfRes_ = 1024 / 2
-local InitPos = chip():getPos() + Vector(0,0, Z)
 local MapDxy = SizeMap / Res_
 local HalfSizeMap_ = SizeMap / 2
 local SunDirection = Vector(-1,-1,-1):getNormalized()
 local Zoom_ = 1024 * Zoom
+local _zoomSmooth = Zoom_
 local Dir = Vector(0, 0, -1)
 local ON = false
 local mode = 1
@@ -93,6 +192,23 @@ render.createRenderTarget("myrendertarget")
 render.createRenderTarget("myrendertarget2")
 render.createRenderTarget("myrendertarget3")
 local paint
+
+// ##### renderView support #####
+local rvFailed = false   // renderView threw an error -> use trace
+local rvCapture = true   // need to (re)capture the map via renderView
+
+function canRenderView()
+    return UseRenderView and not rvFailed
+        and hasPermission("render.renderscene") and hasPermission("render.renderView")
+end
+
+if UseRenderView then
+    setupPermissionRequest({"render.renderscene", "render.renderView"},
+        "Map Radar: captures the map from an orthographic camera above the chip (otherwise a slow trace scan is used).", true)
+    hook.add("permissionrequest", "mapradar_perm", function()
+        if canRenderView() then rvCapture = true end
+    end)
+end
 
 local polyDown = {
     { x=0, y=0 },
@@ -198,8 +314,8 @@ function getOffset()
     local eyeAngles = OO:getEyeAngles()
     eyeAngles:setP(0)
     local pos, _ = worldToLocal(InitPos, Angle(), OO:getPos(), eyeAngles)
-    return  -pos.y / SizeMap * Zoom_,
-            -pos.x / SizeMap * Zoom_
+    return  -pos.y / SizeMap * _zoomSmooth,
+            -pos.x / SizeMap * _zoomSmooth
 end
 
 
@@ -231,7 +347,7 @@ function get_coro()
                     
                     local tr
                     local startPos = InitPos + Vector(HalfSizeMap_ - x*MapDxy, HalfSizeMap_ - y*MapDxy)
-                    local endPos = startPos + Dir * RenderDistanceLimit
+                    local endPos = startPos + Dir * TraceDist
                     local dist = -1
                     for i=0, 2 do
                         tr = trace.trace(startPos, endPos, nil, 24737, nil, false)
@@ -329,8 +445,8 @@ function renderPlayers(cx, cy, tilt)
               
             local pos, ang = worldToLocal(p:getPos(), Angle(), OO:getPos(), eyeAngles)
             
-            local dx = -pos.y / SizeMap * Zoom_
-            local dy = -pos.x / SizeMap * Zoom_
+            local dx = -pos.y / SizeMap * _zoomSmooth
+            local dy = -pos.x / SizeMap * _zoomSmooth
             
             local screenX = cx + dx
             local screenY = cy + dy * tilt
@@ -377,28 +493,93 @@ function renderBar(mapPosX, mapPosY, MapSizeX, MapSizeY)
 end
 
 
-function initHooks()
+// Map through render.renderView: orthographic camera from above, same area (SizeMap / auto map bounds) and
+// same orientation as the trace scan (texture: right = -X, down = +Y), so the rest of the code is untouched
+function captureMapRenderView()
+    local hs = HalfSizeMap_
+
+    render.selectRenderTarget("myrendertarget")
+    render.clear(Color(0,0,0,255), true)
+
+    local ok, err = pcall(render.renderView, {
+        origin = Vector(InitPos.x, InitPos.y, InitPos.z),
+        angles = Angle(90, -90, 0),
+        x = 0, y = 0, w = 1024, h = 1024,
+        aspectratio = 1,
+        ortho = {left = -hs, right = hs, top = -hs, bottom = hs},
+        znear = 1,
+        zfar = TraceDist,
+        drawviewmodel = false,
+        drawmonitors = false,
+        drawviewer = false,
+        dopostprocess = false,
+        bloomtone = false,
+    })
+
+    if ok then
+        // renderView leaves garbage alpha -> force alpha 255
+        render.overrideBlend(true, BLEND.ZERO, BLEND.ONE, BLENDFUNC.ADD, BLEND.ONE, BLEND.ZERO, BLENDFUNC.ADD)
+        render.setRGBA(255, 255, 255, 255)
+        render.drawRect(0, 0, 1024, 1024)
+        render.overrideBlend(false)
+    else
+        render.clear(Color(0,0,0,0), true)
+    end
+
+    render.selectRenderTarget()
+    return ok, err
+end
+
+
+// Map through trace (fallback)
+function traceRender()
+    if canRenderView() then return end // renderView will draw the map (see "renderscene")
+
+    render.selectRenderTarget("myrendertarget")
+    if _ifFirstTime then
+        _ifFirstTime = false
+        render.clear(Color(0,0,0,0))
+    end
+
+    while math.max(quotaAverage(), quotaUsed()) < quotaMax() * Performance_Cpu_Limit do
+        if paint() then
+            hook.remove("renderoffscreen","")
+            return
+            //paint = get_coro()
+        end
+    end
+end
+
+
+function startTrace()
     paint = get_coro()
+    _ifFirstTime = true
+    hook.add("renderoffscreen","",traceRender)
+end
 
-    hook.add("renderoffscreen","",function()
-        render.selectRenderTarget("myrendertarget")
-        if _ifFirstTime then
-            _ifFirstTime = false
-            render.clear(Color(0,0,0,0))
-        end
-        
-        while math.max(quotaAverage(), quotaUsed()) < quotaMax() * Performance_Cpu_Limit do
-            if paint() then
-                hook.remove("renderoffscreen","")
-                return
-                //paint = get_coro()
-            end
-        end
 
+function initHooks()
+    startTrace()
+
+    hook.add("renderscene","",function()
+        if not rvCapture or render.isInRenderView() or not canRenderView() then return end
+        rvCapture = false
+
+        local ok, err = captureMapRenderView()
+        if ok then
+            hook.remove("renderoffscreen","") // map is ready, trace is not needed anymore
+        else
+            rvFailed = true
+            print("[MapRadar] renderView failed, using trace: " .. tostring(err))
+            startTrace()
+        end
     end)
-    
+
     hook.add("drawhud","",function()    
         if Mode != 0 then   
+            _zoomSmooth = _zoomSmooth + (Zoom_ - _zoomSmooth)/10
+            local size = _zoomSmooth / 2
+            
             local offsetX, offsetY = getOffset()
 
             render.selectRenderTarget("myrendertarget2")
@@ -413,8 +594,6 @@ function initHooks()
             local cc1 = math.clamp(CenterMapCoef, 0, 1)
             local cx = 512
             local cy = 1024 - 512 * (cc1)
-            
-            local size = Zoom_ / 2
             
             --   
             local eyeAngles = OO:getEyeAngles()
@@ -515,11 +694,11 @@ hook.add("inputPressed", "", function(button)
             Mode = (Mode + 1) % 2
         end
     end
-    if button == KEY.EQUAL then
+    if button == KeyBindings.ZoomIn then
         Zoom = Zoom + 1
         Zoom_ = 1024 * Zoom
     end
-    if button == KEY.MINUS then
+    if button == KeyBindings.ZoomOut then
         if Zoom != 1 then
             Zoom = Zoom - 1
             Zoom_ = 1024 * Zoom

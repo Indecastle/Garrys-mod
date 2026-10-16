@@ -3,7 +3,7 @@
 --@include https://raw.githubusercontent.com/Indecastle/Garrys-mod/refs/heads/master/starfall/libs/3d2dtext.txt as libs/3d2dtext.txt
 --include libs/3d2dtext.txt
 --@shared
---Version 1.0.2
+--Version 1.1.0
 
 local ActiveSec = 30
 
@@ -96,7 +96,7 @@ if owner() == player() then
     
     local _lastActiveState = false
     timer.create("afk", 0.1, 0, function()
-        local newActiveState = _lastActiveTime < timer.curtime()
+        local newActiveState = _lastActiveTime < timer.curtime() or !game.hasFocus()
         if newActiveState != _lastActiveState then
             _lastActiveState = newActiveState
             
