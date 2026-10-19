@@ -1,0 +1,324 @@
+--@name SpaceX
+--@author Markiz
+--@shared
+--@model models/props_phx/rocket1.mdl
+
+-- ===== Tunables =====
+local LaunchDelay       = 5
+local Thrust            = 25000
+local TrailTime         = 5
+local DetonateDelay     = 10
+local ScreenShakeRadius = 4000
+local ExplosionDamage   = 200
+local ExplosionRadius   = 600
+local EnableBetaParticleSystem = true
+local BetaParticleEmitterLimit = 3
+
+-- Fallback explosion models (from air_defense_predictive.txt)
+local ExplodeModels = {
+    "models/props_phx/ww2bomb.mdl",
+    "models/props_phx/misc/potato_launcher_explosive.mdl",
+    "models/props_junk/propane_tank001a.mdl",
+    "models/props_phx/oildrum001_explosive.mdl",
+    "models/props_c17/oildrum001_explosive.mdl",
+}
+
+-- ==========================================================
+if SERVER then
+
+    local _launched, _detonated = false, false
+
+    -- Explosion damage (from air_defense_predictive.txt)
+    local function explodeWireTo(pos, damage, radius)
+        local needSent = !hasPermission("game.blastDamage")
+        if !needSent then
+            try(function() game.blastDamage(pos, radius, damage) end,
+                function() needSent = true end)
+        end
+        if needSent then
+            if !prop.canSpawn() then return end
+            local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
+                damage = damage, radius = radius, removeafter = true,
+                Model = "models/bull/gates/logic_nano.mdl"
+            })
+            ent._isSF = true
+            ent:setSolid(false)
+            ent:setNoDraw(true)
+            ent:getWirelink()['Detonate'] = 1
+        end
+    end
+
+    local function explodeTo(pos)
+        while #ExplodeModels > 0 do
+            local ok = pcall(function()
+                local p = prop.create(pos, Angle(), ExplodeModels[1])
+                p._isSF = true
+                p:setNoDraw(true)
+                p:breakEnt()
+            end)
+            if ok then return end
+            table.remove(ExplodeModels, 1)
+        end
+    end
+
+    chip():emitSound("ambient/alarms/siren.wav", 105, 100, 1, nil, nil, true)
+
+    -- Sync launch time so client can display countdown / trigger effects
+    hook.add("ClientInitialized", "spacex_init", function(ply)
+        net.start("spacex_init")
+        net.writeFloat(LaunchDelay)
+        net.send(ply)
+    end)
+
+    timer.simple(LaunchDelay, function()
+        if !isValid(chip()) then return end
+        _launched = true
+        chip():enableMotion(true)
+        chip():stopSound("ambient/alarms/siren.wav")
+        chip():emitSound("ambient/levels/launch/rockettakeoffblast.wav", 750, 100, 1, nil, nil, true)
+
+        net.start("launched")
+        net.send()
+
+        hook.add("tick", "spacex_thrust", function()
+            if !isValid(chip()) then
+                hook.remove("tick", "spacex_thrust")
+                return
+            end
+            chip():applyForceCenter(chip():getAngles():getUp() * Thrust)
+        end)
+
+        timer.create("spacex_hit", 0.1, 0, function()
+            if !isValid(chip()) or _detonated then
+                timer.stop("spacex_hit")
+                return
+            end
+            local tr = trace.trace(
+                chip():getPos() + chip():getUp() * 50,
+                chip():getPos() + chip():getUp() * 600,
+                {chip()}, MASK.ALL, nil, false
+            )
+            if tr.Hit or tr.HitWorld then
+                _detonated = true
+                timer.stop("spacex_hit")
+                hook.remove("tick", "spacex_thrust")
+
+                local pos = chip():getPos()
+                chip():emitSound("ambient/explosions/explode_6.wav", 750, 100, 10, nil, nil, true)
+                chip():setNoDraw(true)
+
+                -- REAL damage
+                explodeWireTo(pos, ExplosionDamage, ExplosionRadius)
+                explodeTo(pos)
+
+                net.start("exploded")
+                net.writeVector(pos)
+                net.send()
+
+                timer.simple(DetonateDelay, function()
+                    if isValid(chip()) then chip():remove() end
+                end)
+            end
+        end)
+    end)
+
+    return
+end
+
+-- ==========================================================
+-- CLIENT
+-- ==========================================================
+
+local _eyePos, _launchTime
+local _launched = false
+local _rocketHolo = nil
+
+hook.add("renderscene", "spacex_eye", function(o) _eyePos = o end)
+
+-- ===== Particle safety wrapper =====
+function RunBetaParticleSystem()
+    local _emitters = {}
+    local _index = -1
+    local create_old = particle.create
+    local function init(limit)
+        local max = math.min(limit - #_emitters, particle.particleEmittersLeft())
+        for i=1, max do table.insert(_emitters, create_old(owner():getPos(), false)) end
+    end
+    local function next(origin)
+        init(BetaParticleEmitterLimit)
+        if #_emitters == 0 then return nil end
+        _index = (_index + 1) % #_emitters
+        local e = _emitters[_index+1]
+        if e then e:setPos(origin) end
+        return e
+    end
+    particle.create = function(pos) return next(pos) end
+
+    local M = getMethods("ParticleEmitter")
+    M.oldAdd, M.oldDestroy = M.add, M.destroy
+    M.oldGetPos, M.oldSetPos = M.getPos, M.setPos
+    function M:add(...)
+        if self:getParticlesLeft() > 0 then return self:oldAdd(...) end
+        for i=1, #_emitters - 1 do
+            local e = next(self:getPos())
+            if e and e:getParticlesLeft() > 0 then return e:oldAdd(...) end
+        end
+    end
+    function M:getPos(...) return self._pos or self:oldGetPos(...) end
+    function M:setPos(p, ...) self._pos = p return self:oldSetPos(p, ...) end
+    function M:destroy() end
+end
+if EnableBetaParticleSystem then RunBetaParticleSystem() end
+
+-- ===== Explosion effect =====
+local RVec = function() return Vector(math.rand(-1,1), math.rand(-1,1), math.rand(-1,1)) end
+local RAng = function() return Angle(math.rand(-90,90), math.rand(-90,90), math.rand(-90,90)) end
+
+local FLAME = {}
+for i=1, 5 do table.insert(FLAME, material.load("particles/flamelet"..i)) end
+local SMOKE = {}
+for i=1, 16 do table.insert(SMOKE, material.load("particle/smokesprites_"..string.format("%04d", i))) end
+
+local ExplosionEffect = class("ExplosionEffect")
+function ExplosionEffect:initialize(pos, normal, size)
+    local s = math.clamp(size, 0.1, 1.5)
+    local em = particle.create(pos, false)
+    if not isValid(em) then return end
+
+    -- Flames
+    for _=0, math.min(24, math.floor(s*20)) do
+        local p = em:add(table.random(FLAME), pos,
+            math.random(20,30)*s, math.random(70,120)*s, 0,0, 255,0, 0.4)
+        if p then
+            p:setGravity(normal * math.random(1800,2200))
+            p:setVelocity(RVec() * math.random(1300,1500) * s)
+            p:setAngleVelocity(RAng() * 0.02)
+            p:setAirResistance(600)
+            p:setRoll(math.rand(-1,1))
+            local c = math.rand(0.7,1)
+            p:setColor(Color(255, 255*c, 255*c))
+            p:setLighting(false)
+            p:setCollide(true)
+        end
+    end
+    for _=0, 10 do
+        local p = em:add(table.random(FLAME), pos, 80*s, math.random(140,180)*s, 0,0, 200,0, 0.2)
+        if p then
+            p:setVelocity(RVec() * math.random(0,1500) * s)
+            p:setAngleVelocity(RAng() * 0.02)
+            p:setAirResistance(300)
+            p:setRoll(math.rand(-1,1))
+            p:setColor(Color(255,255,200))
+            p:setCollide(true)
+        end
+    end
+
+    -- Smoke
+    local G1, G2 = Vector(0,0,400), Vector(0,0,200)
+    for _=0, math.min(12, math.floor(s*10)) do
+        local sz = math.rand(100,120) * s
+        local p = em:add(SMOKE[math.random(1,#SMOKE)], pos, sz, sz*math.rand(1.5,2), 0,0, 255,0, math.rand(0.75,2)*s)
+        if p then
+            p:setGravity(G1)
+            p:setVelocity(((normal * math.random(1300,1500)) + RVec()*1000) * s)
+            p:setAngleVelocity(RAng() * 0.02)
+            p:setAirResistance(400)
+            p:setRoll(math.rand(-1,1))
+            p:setColor(Color(30,30,30))
+        end
+    end
+    for _=0, math.min(48, math.floor(s*40)) do
+        local sz = math.rand(100,120) * s
+        local p = em:add(SMOKE[math.random(1,#SMOKE)], pos, sz*0.5, sz*1.5, 0,0, 200,0, math.rand(3,4)*s)
+        if p then
+            p:setGravity(G2)
+            p:setVelocity(RVec() * math.random(800,1500) * s)
+            p:setAngleVelocity(RAng() * 0.02)
+            p:setAirResistance(350)
+            p:setRoll(math.rand(-0.5,0.5))
+            p:setColor(Color(40,40,40))
+        end
+    end
+
+    em:destroy()
+end
+
+-- ===== Screen shake =====
+local function shake(pos, intensity, freq)
+    if !render.isHUDActive() then return end
+    local d = _eyePos:getDistance(pos)
+    if d > ScreenShakeRadius then return end
+    render.screenShake(intensity * (1 - d/ScreenShakeRadius), freq, freq)
+end
+
+-- ===== Trail =====
+local function startTrail()
+    if isValid(_rocketHolo) then _rocketHolo:remove() end
+    _rocketHolo = hologram.create(chip():getPos(), chip():getAngles(),
+        "models/holograms/cube.mdl", Vector(1))
+    _rocketHolo:setNoDraw(true)
+    _rocketHolo:setParent(chip())
+    --_rocketHolo:setTrails(50, 0, TrailTime, "trails/smoke", Color(255,255,255))
+end
+
+-- ===== Net =====
+net.receive("spacex_init", function()
+    _launchTime = timer.systime() + net.readFloat()
+end)
+
+local _part1
+
+net.receive("launched", function()
+    _launched = true
+    startTrail()
+    shake(chip():getPos(), 5, 1)
+
+    -- Choreo rocket particles (from spacex_test.txt)  optional, may fail gracefully
+    try(function()
+        particleEffect.attach(chip(), "choreo_launch_rocket_start", PATTACH.POINT, {})
+        _part1 = particleEffect.attach(chip(), "choreo_launch_rocket_jet", PATTACH.POINT_FOLLOW, {})
+    end)
+end)
+
+net.receive("exploded", function()
+    local pos = net.readVector()
+
+    ExplosionEffect:new(pos, Vector(0,0,1), 1.5)
+
+    try(function()
+        local lt = light.create(pos, 500, 0.1, Color(255,200,100))
+        lt:setDecay(2000)
+        lt:draw()
+    end)
+
+    -- Choreo upsmoke on the rocket entity
+    try(function()
+        particleEffect.attach(chip(), "choreo_launch_rocket_upsmoke", PATTACH.POINT, {})
+        _part1:destroy()
+    end)
+
+    shake(pos, 20, 1)
+
+    if isValid(_rocketHolo) then
+        timer.simple(TrailTime, function()
+            if isValid(_rocketHolo) then _rocketHolo:remove() end
+        end)
+    end
+end)
+
+-- Keep trail glued to the moving chip
+hook.add("tick", "spacex_trail", function()
+    if _launched and isValid(_rocketHolo) and isValid(chip()) then
+        try(function() _rocketHolo:setPos(chip():getPos()) end)
+    end
+end)
+
+-- Optional countdown HUD (only for the owner)
+hook.add("drawhud", "spacex_countdown", function()
+    if _launched or !_launchTime or player() ~= owner() then return end
+    local rem = math.max(0, _launchTime - timer.systime())
+    if rem <= 0 then return end
+    render.setFont(render.createFont("Arial", 36, 400, true, false, true))
+    render.setColor(Color(255, 120, 120))
+    render.drawSimpleText(256, 200, string.format("T-%0.1f", rem), TEXT_ALIGN.CENTER)
+end)

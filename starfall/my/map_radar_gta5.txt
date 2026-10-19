@@ -1,23 +1,21 @@
 --@name Map Radar client GTA5 Style
 --@author Markiz
 --@shared
--- version 2.1.0
+-- version 2.2.0
 
 --      
 local DefaultMapConfig = {
-    Detail = 5,
-    AutoMap = true,       // true:    
-    SizeMap = 30000,      // ,  AutoMap = false
-    BoundsMin = nil,      // Vector(minX, minY, minZ)  nil  
-    BoundsMax = nil,      // Vector(maxX, maxY, maxZ)  nil  
-    CamHeight = nil,      //    nil  
-    Z = 10000,            //     AutoMap = false
-    Zoom = 4
+    Detail = 5,           // Map rendering detail; higher values produce a more detailed map but require more processing.
+    AutoMap = true,       // true: automatically detect map bounds and center the map; false: use SizeMap and Z.
+    SizeMap = 30000,      // Map width and height in world units. Used when AutoMap = false.
+    BoundsMin = nil,      // Manual minimum map bounds: Vector(minX, minY, minZ). nil = automatically detected.
+    BoundsMax = nil,      // Manual maximum map bounds: Vector(maxX, maxY, maxZ). nil = automatically detected.
+    CamHeight = nil,      // Camera height (Z coordinate) used to capture the map. nil = automatically calculated.
+    Z = 10000,             // Camera height offset above the chip when AutoMap = false.
+    Zoom = 4              // Initial radar zoom level; higher values zoom in, lower values zoom out.
 }
 
---   .
---       game.getMap(),  "gm_flatgrass".
---      DefaultMapConfig.
+
 local MapConfigs = {
     ["gm_construct"] = {
         Detail = 5,
@@ -26,6 +24,16 @@ local MapConfigs = {
         BoundsMin = Vector(-15000, -15000, -1000),
         BoundsMax = Vector(15000, 15000, 2000),
         CamHeight = 5000,
+        Z = 10000,
+        Zoom = 4
+    },
+    ["gm_thebox_17"] = {
+        Detail = 5,
+        AutoMap = true,
+        SizeMap = 30000,
+        BoundsMin = nil,
+        BoundsMax = nil,
+        CamHeight = 10000,
         Z = 10000,
         Zoom = 4
     }
@@ -82,12 +90,15 @@ local KeyBindings = {
 
 
 
+-----------------------------------------------------------------------------------------------------
+
 
 
 // ##### don't touch !!! ########
 local O = owner()
 local OO = player()
 local isOwner = O == OO
+local Mode = 0
 // ##### don't touch !!! ########
 
 if SERVER then
@@ -477,7 +488,7 @@ function renderBar(mapPosX, mapPosY, MapSizeX, MapSizeY)
     render.setColor(Color(42, 88, 49))
     render.drawRect(startX, startY, MapSizeX/2, 10)
     
-    local healthP = player():getHealth() / player():getMaxHealth()
+    local healthP = math.min(1, player():getHealth() / player():getMaxHealth())
     
     render.setColor(Color(87, 144, 86))
     render.drawRect(startX, startY, MapSizeX/2 * healthP, 10)
@@ -486,7 +497,7 @@ function renderBar(mapPosX, mapPosY, MapSizeX, MapSizeY)
     render.setColor(Color(12, 97, 152))
     render.drawRect(startX + MapSizeX/2, startY, MapSizeX/2, 10)
     
-    local healthP = player():getArmor() / player():getMaxArmor()
+    local healthP = math.min(1, player():getArmor() / player():getMaxArmor())
     
     render.setColor(Color(54, 162, 207))
     render.drawRect(startX + MapSizeX/2, startY, MapSizeX/2 * healthP, 10)

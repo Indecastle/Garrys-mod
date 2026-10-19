@@ -2,1091 +2,1210 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.3.4
+-- version 2.0.0
 
-local StartHeight = 500
-local StartPitchAngle = 45
-local BulletModel = "models/dynamite/dynamite.mdl"
+--------------------------------------------------------------------
+-- CONFIG
+--------------------------------------------------------------------
+local CFG = {
+    startHeight = 500,      -- initial camera height above the chip
+    startPitch  = 45,       -- initial barrel pitch
+    minPitch    = 20,
+    maxPitch    = 80,
+    pitchStep   = 5,        -- mouse wheel step
 
-local Health = 200
-local MinRadius = 500
-local MaxRadius = 11000
-local ReloadTime = 3
-local IsRect = true
+    shellModel  = "models/dynamite/dynamite.mdl",
+    shellHealth = 30,
 
-local ExplodeDamage = 110
-local ExplodeRadius = 500
+    health      = 200,
+    minRadius   = 500,
+    maxRadius   = 11000,
+    reloadTime  = 3,
+    squareView  = true,     -- square viewfinder
 
-local OnlyPvpUse = true
-local UsePVS = true
-local UseWH = true
-local TrailTime = 4
+    blastDamage = 110,
+    blastRadius = 500,
 
-local EnableBetaParticleSystem = true
-local BetaParticleEmitterLimit = 2
+    pvpOnly     = true,     -- don't let players in build/god mode use the seat
+    usePVS      = true,     -- keep a PVS hologram under the camera
+    showPlayers = true,     -- player markers on the HUD
+    trailTime   = 4,
+}
 
---------------------------------------------------
+-- Mortar hologram geometry (units). Needed on both server and client:
+-- the shell spawn point depends on it.
+local PLATE_H, PIVOT_H, MUZZLE_LEN = 3, 6, 100
 
+--------------------------------------------------------------------
+-- SHARED
+--------------------------------------------------------------------
 local _e, _o = chip(), owner()
-local _hud, _vehicle
-local _cannon
 
+local GRAVITY = 600
+pcall(function()
+    local g = physenv.getGravity()
+    if g and math.abs(g.z) > 1 then GRAVITY = math.abs(g.z) end
+end)
 
-function table.filter(t, func)
-    local maped = {}
-    local j = 1
-    for i=1, #t do
-        if func(t[i]) then
-            maped[j] = t[i]
-            j = j + 1
-        end
-    end
-    return maped
+local function angDiff(a, b)
+    return ((a - b + 180) % 360) - 180
 end
 
-
-function calculateAimDirectionAndSpeed(shooterPos, targetPos, targetVel, pitchAngle, gravity)
-    local theta = math.rad(pitchAngle)
-    local tan_theta = math.tan(theta)
-    local cos_theta = math.cos(theta)
-    local sin_theta = math.sin(theta)
-
-    --    (cos_theta   )
-    if cos_theta < 1e-5 then
-        local dx = targetPos.x - shooterPos.x
-        local dy = targetPos.y - shooterPos.y
-        if math.abs(dx) > 1e-5 or math.abs(dy) > 1e-5 then
-            return nil --    
-        end
-        return nil --     ,   
-    end
-
-    --    f(t)
-    local function compute_f(t)
-        local dx = targetPos.x - shooterPos.x + targetVel.x * t
-        local dy = targetPos.y - shooterPos.y + targetVel.y * t
-        local D_horiz = math.sqrt(dx * dx + dy * dy)
-        local left = D_horiz * tan_theta
-
-        local delta_z = targetPos.z - shooterPos.z + targetVel.z * t
-        local right = delta_z + 0.5 * -gravity * t * t
-        return left - right
-    end
-
-    --     
-    local t_low = 0.001
-    local t_high = 0.001
-    local max_iter = 100
-    local found = false
-
-    local f_low = compute_f(t_low)
-
-    for _ = 1, 100 do
-        local f_high = compute_f(t_high)
-        if f_high == 0 then
-            t = t_high
-            found = true
-            break
-        end
-        if f_low * f_high < 0 then
-            found = true
-            break
-        end
-        t_high = t_high * 2
-        if t_high > 1e6 then break end
-    end
-
-    if not found then
-        if math.abs(f_low) < 1e-3 then
-            t = t_low
-        else
-            return nil
-        end
-    else
-        --  
-        for _ = 1, 100 do
-            local t_mid = (t_low + t_high) / 2
-            local f_mid = compute_f(t_mid)
-            if f_mid == 0 then
-                t = t_mid
-                break
-            end
-            if f_low * f_mid < 0 then
-                t_high = t_mid
-            else
-                t_low = t_mid
-                f_low = f_mid
-            end
-        end
-        t = (t_low + t_high) / 2
-    end
-
-    if t <= 0 then return nil end
-
-    --  dx, dy  
-    local dx = targetPos.x - shooterPos.x + targetVel.x * t
-    local dy = targetPos.y - shooterPos.y + targetVel.y * t
-    local D_horiz = math.sqrt(dx * dx + dy * dy)
-
-    if D_horiz < 1e-5 and cos_theta > 1e-5 then
-        return nil
-    end
-
-    --   
-    local v0 = D_horiz / (t * cos_theta)
-
-    --  
-    local dir_x = dx / (v0 * t)
-    local dir_y = dy / (v0 * t)
-    local dir_z = sin_theta
-
-    local dir = Vector(dir_x, dir_y, dir_z)
-    dir:getNormalized()
-
-    return dir, v0, t
+-- Muzzle position and barrel direction. elev is the angle above the horizon.
+local function getMuzzlePos(origin, yawDeg, elevDeg)
+    local y, el = math.rad(yawDeg), math.rad(elevDeg)
+    local dir = Vector(math.cos(el) * math.cos(y), math.cos(el) * math.sin(y), math.sin(el))
+    return origin + Vector(0, 0, PLATE_H + PIVOT_H) + dir * MUZZLE_LEN, dir
 end
 
+-- Ballistics at a fixed angle: find the flight time t at which the shell
+-- hits a (possibly moving) target. Returns dir, v0, t or nil.
+local function solveBallistic(from, to, vel, pitchDeg, g)
+    local th = math.rad(pitchDeg)
+    local cosT, sinT = math.cos(th), math.sin(th)
+    if cosT < 1e-4 then return nil end
+    local tanT = sinT / cosT
 
-function isEntityVisible(startPos, targetEnt)
-    local targetPos = targetEnt:obbCenterW()
-    local dir = (targetPos - startPos):getNormalized()
-    
-    
-    local tr = trace.line(startPos, startPos + dir*10000, _ignoreEnts, _mask, nil, false)
-    local dist = startPos:getDistance(tr.HitPos)
-    if isValid(tr.Entity) then
-        --printConsole(tr.Entity)
+    local function horiz(t)
+        local dx = to.x - from.x + vel.x * t
+        local dy = to.y - from.y + vel.y * t
+        return dx, dy, math.sqrt(dx * dx + dy * dy)
     end
-    
-    if tr.Entity == targetEnt then
-        return true
-    end
-    
-    local pos2 = trace.intersectRayWithOBB(startPos, dir*dist, targetPos, Angle(), Vector(-50,-50,-50), Vector(50,50,50))
-    
-    local boxMin = Vector(0, 0, 0)
-    local boxMax = Vector(100, 100, 100)
 
-    return !!pos2
+    local function f(t)
+        local _, _, d = horiz(t)
+        local dz = to.z - from.z + vel.z * t
+        return d * tanT - 0.5 * g * t * t - dz
+    end
+
+    local lo = 0.01
+    if f(lo) <= 0 then return nil end
+
+    local hi
+    local t = lo
+    while t < 300 do
+        t = t * 1.1
+        if f(t) <= 0 then hi = t break end
+        lo = t
+    end
+    if not hi then return nil end
+
+    for _ = 1, 50 do
+        local mid = (lo + hi) * 0.5
+        if f(mid) > 0 then lo = mid else hi = mid end
+    end
+
+    local tf = (lo + hi) * 0.5
+    local dx, dy, d = horiz(tf)
+    if d < 1e-3 then return nil end
+
+    local v0 = d / (tf * cosT)
+    local dir = Vector(dx / d * cosT, dy / d * cosT, sinT)
+    return dir, v0, tf
 end
 
-
+--------------------------------------------------------------------
+-- SERVER
+--------------------------------------------------------------------
 if SERVER then
-    local CumHolo
-    local _isReloading = false
-    local _aimDir, _fireForce
-    local _cannonAngle = Angle(StartPitchAngle, chip():getAngles().y, 0)
-    local _health = Health
+    local vehicle, hud
+    local reloading = false
+    local alive = true
+    local health = CFG.health
+    local baseYaw = _e:getAngles().y
 
-    
-    function identifyVehicle()
-        local li = chip():getLinkedComponents()
-        if #li > 0 and li[1]:getClass() == 'starfall_hud' then
-            _hud = li[1]
-        else
-            _hud = prop.createComponent(chip():localToWorld(Vector(0,12,0)), chip():getAngles(), 'starfall_hud', 'models/bull/dynamicbuttonsf.mdl', true)
-            _hud:linkComponent(chip())
-        end
-        
-        local li2 = _hud:getLinkedComponents()
-        if #li2 > 0 and li2[1]:getClass() == 'prop_vehicle_prisoner_pod' then
-            _vehicle = li2[1]
-        else
-            _vehicle = prop.createSeat(chip():localToWorld(Vector(-40,0,0)), chip():getAngles(), "models/nova/airboat_seat.mdl", true)
-            _hud:linkComponent(_vehicle)
-        end
-        _vehicle:setNocollideAll(true)
-    end
-    
-    identifyVehicle()
-    
-    _cannon = hologram.create(_e:localToWorld(Vector(0,0,0)), _e:localToWorldAngles(Angle(45,0,0)), "models/props_phx/construct/metal_plate_curve360x2.mdl", Vector(0.1, 0.1, 0.5))
-    local _rack1 = hologram.create(_cannon:localToWorld(Vector(5,0,40)), Angle(180,0,10), "models/props_phx/construct/metal_plate_curve360x2.mdl", Vector(0.02, 0.02, 0.40))
-    local _rack2 = hologram.create(_cannon:localToWorld(Vector(5,0,40)), Angle(180,0,-10), "models/props_phx/construct/metal_plate_curve360x2.mdl", Vector(0.02, 0.02, 0.40))
-    local _base = hologram.create(_cannon:localToWorld(Vector(0,0,1)), _cannon:localToWorldAngles(Angle(145,0,0)), "models/props_wasteland/prison_lamp001c.mdl", Vector(1, 1, 0.2))
-    _base:setMaterial("phoenix_storms/future_vents")
-    --_cannon:setParent(_e)
-    _rack1:setParent(_cannon)
-    _rack2:setParent(_cannon)
-    _base:setParent(_cannon)
-    
-    
-    function setCannonAngle(ang)
-        _cannon:setAngles(ang)
-        
-        local sin = math.sin(math.rad(90-ang.p))
-        local catheter = sin
-        local cos = catheter / 1
-        local rackAngle = math.deg(math.acos(cos))
-        
+    local state = {                       -- last validated data from the driver
+        yaw   = baseYaw,
+        pitch = CFG.startPitch,
+        cam   = _e:getPos() + Vector(0, 0, CFG.startHeight),
+    }
+    local pose = { yaw = baseYaw, elev = CFG.startPitch, recoil = 0 }
 
-        _rack1:setAngles(Angle(180, ang.y, rackAngle))
-        _rack2:setAngles(Angle(180, ang.y, -rackAngle))
+    ----------------------------------------------------------------
+    -- seat + HUD
+    ----------------------------------------------------------------
+    local function setupVehicle()
+        local linked = _e:getLinkedComponents()
+        if #linked > 0 and linked[1]:getClass() == "starfall_hud" then
+            hud = linked[1]
+        else
+            hud = prop.createComponent(_e:localToWorld(Vector(0, 12, 0)), _e:getAngles(),
+                "starfall_hud", "models/bull/dynamicbuttonsf.mdl", true)
+            hud:linkComponent(_e)
+        end
+
+        local linked2 = hud:getLinkedComponents()
+        if #linked2 > 0 and linked2[1]:getClass() == "prop_vehicle_prisoner_pod" then
+            vehicle = linked2[1]
+        else
+            vehicle = prop.createSeat(_e:localToWorld(Vector(-90, 0, 0)), _e:getAngles(),
+                "models/nova/airboat_seat.mdl", true)
+            hud:linkComponent(vehicle)
+        end
+        vehicle:setNocollideAll(true)
     end
-    
-    hook.add("think", "setPosAngle", function()
-        if !isValid(_cannon) then return end
-        _cannon:setPos(_e:getPos())
-        _base:setAngles(_cannon:getAngles():setP(190))
-        setCannonAngle(math.lerpAngle(0.1, _cannon:getAngles(), _cannonAngle))
+    setupVehicle()
+
+    ----------------------------------------------------------------
+    -- MORTAR HOLOGRAM (Brandt layout, like real 81/120 mm mortars)
+    --   base    - baseplate with ribs and a socket + ammo crate
+    --   turret  - bipod foot pads (stand on the ground, rotate with yaw)
+    --   barrel  - smooth-bore tube with a ball breech seated in the baseplate
+    --             socket (yaw + elevation + recoil), bipod clamp, sight bracket
+    --   dynamic - telescopic bipod legs, spreader bar, optical sight
+    --
+    -- How it works physically:
+    --   * the tube pivots around the ball joint at the center of the plate, not on a fork;
+    --   * the bipod is clamped to the tube, its legs are telescopic - their length
+    --     changes with elevation while the foot pads stay put on the ground;
+    --   * on firing the tube recoils along its axis, the legs act as shock absorbers;
+    --   * the sight always stays level and points along the azimuth (like a panoramic sight).
+    ----------------------------------------------------------------
+    if hologram.hologramsLeft and hologram.hologramsLeft() < 45 then
+        error("Not enough holograms left (need ~40)")
+    end
+
+    local MDL_CYL    = "models/holograms/hq_cylinder.mdl"
+    local MDL_SPHERE = "models/holograms/hq_sphere.mdl"
+    local MDL_CONE   = "models/holograms/hq_cone.mdl"
+    local MDL_CUBE   = "models/holograms/cube.mdl"
+    local MDL_RCUBE  = "models/holograms/hq_rcube.mdl"
+    local MAT_WHITE  = "models/debug/debugwhite"
+
+    local C_STEEL = Color(128, 135, 142)
+    local C_CHROME= Color(170, 176, 182)
+    local C_PLATE = Color(66, 70, 74)
+    local C_DARK  = Color(48, 52, 57)
+    local C_TUBE  = Color(58, 64, 54)
+    local C_OLIVE = Color(74, 86, 60)
+    local C_BRASS = Color(200, 163, 66)
+    local C_BLACK = Color(12, 12, 14)
+    local C_WOOD  = Color(96, 72, 46)
+    local C_GLASS = Color(80, 200, 255)
+    local C_RED   = Color(255, 70, 70)
+
+    -- bipod geometry (turret coordinates: x forward, y left, z up from the plate)
+    local FOOT_X, FOOT_Y, FOOT_Z = 60, 32, -1   -- foot pad: forward offset, lateral spread, top height
+    local YOKE_S, YOKE_W = 68, 11                -- clamp: distance from the ball along the tube, axle half-width
+    local SIGHT_S = 50                           -- where the sight bracket attaches along the tube
+    local SPREAD_K = 0.4                         -- where the spreader sits on the legs (0 = at the ground, 1 = at the clamp)
+    local RECOIL_VIS = 0.4                       -- visual recoil = pose.recoil * this
+
+    local PARTS = {}
+
+    local function addPart(frame, model, lpos, size, color, material, lang)
+        local h = hologram.create(_e:getPos(), Angle(), model, Vector(1))
+        h:setSize(size)
+        h:setColor(color)
+        h:setMaterial(material or MAT_WHITE)
+        h:setParent(_e)
+        local p = { holo = h, frame = frame, lpos = lpos, lang = lang or Angle(), color = color }
+        PARTS[#PARTS + 1] = p
+        return h
+    end
+
+    local ALONG_X = Angle(90, 0, 0)   -- cylinder/cone axis along the frame's x
+    local ALONG_Y = Angle(0, 0, 90)   -- cylinder axis along the frame's y
+
+    -- ---- base: baseplate ----
+    addPart("base", MDL_CYL, Vector(0, 0, 0.6), Vector(66, 66, 1.2), C_DARK)    -- bottom flange
+    addPart("base", MDL_CYL, Vector(0, 0, 2.1), Vector(62, 62, 1.8), C_PLATE)   -- plate disc (top at z=3)
+    for i = 0, 2 do                                                             -- reinforcing ribs
+        addPart("base", MDL_RCUBE, Vector(0, 0, 4.2), Vector(56, 2.6, 2.4), C_DARK, nil, Angle(0, i * 60, 0))
+    end
+    addPart("base", MDL_CYL, Vector(0, 0, 5), Vector(15, 15, 4), C_STEEL)       -- ball socket
+    addPart("base", MDL_RCUBE, Vector(0,  30, 4.6), Vector(12, 3.2, 3.4), C_STEEL)  -- carrying handles
+    addPart("base", MDL_RCUBE, Vector(0, -30, 4.6), Vector(12, 3.2, 3.4), C_STEEL)
+
+    -- ---- base: crate of mortar rounds (rotated 90 deg CW) ----
+    --addPart("base", MDL_RCUBE, Vector(0, -100, 4.5), Vector(32, 46, 9), C_WOOD)
+    --for i = -1, 1 do
+    --    local x, z = -i * 9.5, 11.6
+    --    addPart("base", MDL_CONE, Vector(x, -112, z), Vector(7, 7, 9),  C_STEEL, nil, ALONG_Y) -- tail fins
+    --    addPart("base", MDL_CYL,  Vector(x, -98.5, z), Vector(6, 6, 18), C_OLIVE, nil, ALONG_Y) -- body
+    --    addPart("base", MDL_CONE, Vector(x, -86.5, z), Vector(6, 6, 6),  C_BRASS, nil, ALONG_Y) -- fuze
+    --end
+
+    -- ---- turret: bipod foot pads ----
+    addPart("turret", MDL_CYL, Vector(FOOT_X,  FOOT_Y, FOOT_Z - 1), Vector(10, 10, 2), C_DARK)
+    addPart("turret", MDL_CYL, Vector(FOOT_X, -FOOT_Y, FOOT_Z - 1), Vector(10, 10, 2), C_DARK)
+
+    -- ---- barrel: tube (local z axis runs along the bore, origin at the ball center) ----
+    addPart("barrel", MDL_CYL,    Vector(0, 0, 50),    Vector(8, 8, 100),     C_TUBE)    -- smooth-bore tube
+    addPart("barrel", MDL_CYL,    Vector(0, 0, 13),    Vector(9.6, 9.6, 26),  C_DARK)    -- thickened breech section
+    addPart("barrel", MDL_CYL,    Vector(0, 0, 26.5),  Vector(10.6, 10.6, 2), C_STEEL)   -- shoulder ring
+    addPart("barrel", MDL_SPHERE, Vector(0, 0, 0),     Vector(11, 11, 11),    C_STEEL)   -- ball breech
+    addPart("barrel", MDL_CYL,    Vector(0, 0, 97.4),  Vector(9.4, 9.4, 5),   C_STEEL)   -- muzzle reinforcement
+    addPart("barrel", MDL_CYL,    Vector(0, 0, 100.05),Vector(6, 6, 0.3),     C_BLACK)   -- bore
+    addPart("barrel", MDL_CYL,    Vector(0, 0, YOKE_S),Vector(10.8, 10.8, 5), C_DARK)    -- bipod clamp
+    addPart("barrel", MDL_CYL,    Vector(0, 0, YOKE_S),Vector(3, 3, YOKE_W * 2 + 2), C_STEEL, nil, ALONG_Y) -- leg axle
+    addPart("barrel", MDL_RCUBE,  Vector(0, 9, SIGHT_S), Vector(3, 12, 3),    C_DARK)    -- sight bracket
+
+    -- ---- dynamic parts (position and size are recomputed every update) ----
+    local DYNAMIC, DYN_COLOR = {}, {}
+
+    local function addDyn(model, size, color)
+        local h = hologram.create(_e:getPos(), Angle(), model, Vector(1))
+        h:setSize(size)
+        h:setColor(color)
+        h:setMaterial(MAT_WHITE)
+        h:setParent(_e)
+        DYNAMIC[#DYNAMIC + 1] = h
+        DYN_COLOR[#DYNAMIC] = color
+        return h
+    end
+
+    local legs = {
+        { side =  1, outer = addDyn(MDL_CYL, Vector(5, 5, 10), C_OLIVE), inner = addDyn(MDL_CYL, Vector(3, 3, 10), C_CHROME) },
+        { side = -1, outer = addDyn(MDL_CYL, Vector(5, 5, 10), C_OLIVE), inner = addDyn(MDL_CYL, Vector(3, 3, 10), C_CHROME) },
+    }
+    local spreadLen = 2 * (FOOT_Y + (YOKE_W - FOOT_Y) * SPREAD_K)
+    local spreader  = addDyn(MDL_CYL, Vector(2, 2, spreadLen), C_STEEL)
+
+    local sightBody = addDyn(MDL_CYL, Vector(3.4, 3.4, 12), C_DARK)
+    local sightEye  = addDyn(MDL_CYL, Vector(4.4, 4.4, 2.5), C_BLACK)
+    local sightLens = addDyn(MDL_CYL, Vector(3, 3, 0.8), C_GLASS)
+
+    -- muzzle flash (position is set by the firing code)
+    local flash = hologram.create(_e:getPos(), Angle(), MDL_SPHERE, Vector(1))
+    flash:setSize(Vector(34, 34, 34)); flash:setColor(Color(255, 170, 60))
+    flash:setMaterial(MAT_WHITE); flash:setNoDraw(true)
+
+    local function rot(v, ang)
+        local r = Vector(v.x, v.y, v.z)
+        r:rotate(ang)
+        return r
+    end
+
+    -- Telescopic leg: the outer tube hangs from the clamp, the inner one extends to the foot pad.
+    local function placeLeg(outer, inner, top, foot)
+        local d = top - foot
+        local len = d:getLength()
+        if len < 1 then return end
+        local dir = d:getNormalized()
+        local ang = d:getAngle() + Angle(90, 0, 0)
+
+        local outerLen = math.min(len * 0.62, 34)
+        local innerLen = len - outerLen + 10          -- 10 units of overlap inside the outer tube
+
+        outer:setSize(Vector(5, 5, outerLen))
+        outer:setPos(top - dir * (outerLen * 0.5))
+        outer:setAngles(ang)
+
+        inner:setSize(Vector(3, 3, innerLen))
+        inner:setPos(foot + dir * (innerLen * 0.5))
+        inner:setAngles(ang)
+    end
+
+    local function applyPose()
+        local basePos = _e:getPos()
+        local baseAng = Angle(0, baseYaw, 0)
+        local turPos  = basePos + Vector(0, 0, PLATE_H)
+        local turAng  = Angle(0, pose.yaw, 0)
+        local pivot   = turPos + Vector(0, 0, PIVOT_H)
+        local barAng  = Angle(90 - pose.elev, pose.yaw, 0)
+        local barPos  = pivot - barAng:getUp() * (pose.recoil * RECOIL_VIS)
+
+        local frames = {
+            base   = { basePos, baseAng },
+            turret = { turPos, turAng },
+            barrel = { barPos, barAng },
+        }
+
+        for _, p in ipairs(PARTS) do
+            local f = frames[p.frame]
+            p.holo:setPos(f[1] + rot(p.lpos, f[2]))
+            p.holo:setAngles(f[2] + p.lang)
+        end
+
+        -- bipod: leg tops on the clamp axle, bottoms in the foot pads
+        local footL = turPos + rot(Vector(FOOT_X,  FOOT_Y, FOOT_Z), turAng)
+        local footR = turPos + rot(Vector(FOOT_X, -FOOT_Y, FOOT_Z), turAng)
+        local topL  = barPos + rot(Vector(0,  YOKE_W, YOKE_S), barAng)
+        local topR  = barPos + rot(Vector(0, -YOKE_W, YOKE_S), barAng)
+        placeLeg(legs[1].outer, legs[1].inner, topL, footL)
+        placeLeg(legs[2].outer, legs[2].inner, topR, footR)
+
+        -- spreader bar between the legs
+        local pl = footL + (topL - footL) * SPREAD_K
+        local pr = footR + (topR - footR) * SPREAD_K
+        spreader:setPos((pl + pr) * 0.5)
+        spreader:setAngles(turAng + ALONG_Y)
+
+        -- sight: mounted on the tube, but its body always stays level and points along the azimuth
+        local sightPos = barPos + rot(Vector(0, 15, SIGHT_S), barAng)
+        local fwd  = turAng:getForward()
+        local sAng = turAng + ALONG_X
+        sightBody:setPos(sightPos);              sightBody:setAngles(sAng)
+        sightEye:setPos(sightPos - fwd * 7.2);   sightEye:setAngles(sAng)
+        sightLens:setPos(sightPos + fwd * 6.2);  sightLens:setAngles(sAng)
+    end
+    applyPose()
+
+    hook.add("think", "mortarPose", function()
+        if not alive then return end
+        local dy = angDiff(state.yaw, pose.yaw)
+        local de = state.pitch - pose.elev
+        if math.abs(dy) < 0.05 and math.abs(de) < 0.05 and pose.recoil < 0.02 then return end
+
+        pose.yaw  = pose.yaw + dy * 0.15
+        pose.elev = pose.elev + de * 0.15
+        pose.recoil = pose.recoil > 0.02 and pose.recoil * 0.94 or 0
+        applyPose()
     end)
-    
-    function sendExplodeBulletScene(pos)
-        net.start("explodeBulletScene")
+
+    local function setDamageTint(on)
+        for _, p in ipairs(PARTS) do
+            p.holo:setColor(on and C_RED or p.color)
+        end
+        for i, h in ipairs(DYNAMIC) do
+            h:setColor(on and C_RED or DYN_COLOR[i])
+        end
+    end
+
+    ----------------------------------------------------------------
+    -- explosions / damage
+    ----------------------------------------------------------------
+    local function sendExplosion(pos)
+        net.start("explode")
         net.writeVector(pos)
         net.send()
     end
 
-    function explodeBulletScene(bullet)
-        local holo = bullet._bulletHoloBase
-        holo:setParent(nil)
-        if sound.emitSound and isValid(bullet) then
-            sound.emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", bullet:getPos(), 100, nil, 1, 0, nil, true)
-        else
-            holo:emitSound("weapons/mortar/mortar_explode" .. math.random(1,3) .. ".wav", 100, nil, 1, 0, nil, true)
+    local function blast(pos, damage, radius)
+        local done = false
+        if hasPermission("game.blastDamage") then
+            done = pcall(game.blastDamage, pos, radius, damage)
         end
-        timer.simple(TrailTime, function()
-            if !isValid(holo) then return end
-            holo:remove()
-        end)
-        sendExplodeBulletScene(bullet:getPos())
+        if done then return end
+        if not prop.canSpawn() then return end
+
+        local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
+            damage = damage,
+            radius = radius,
+            removeafter = true,
+            Model = "models/bull/gates/logic_nano.mdl",
+        })
+        ent._isSF = true
+        ent:setSolid(false)
+        ent:setNoDraw(true)
+        ent:getWirelink()["Detonate"] = 1
     end
-    
-    function explodeWireTo(pos, damage, radius)
-        local isNeedCreateSent = !hasPermission("game.blastDamage")
 
-        if !isNeedCreateSent then
-            try(function()
-                game.blastDamage(pos, radius, damage)
-            end, function(err)
-                isNeedCreateSent = true
-                printConsole(err.message)
-            end)
+    local function hasShield(user)
+        if user:hasGodMode()
+                or (user.isBUILD ~= nil and user:isBUILD())
+                or (user.isSafezoneSafe ~= nil and user:isSafezoneSafe()) then
+            return true
         end
+        local kyle = user:getNWVar("_Kyle_Buildmode")
+        return kyle ~= nil and kyle
+    end
 
-        if isNeedCreateSent then
-            if !prop.canSpawn() then return end
-            
-            local ent = prop.createSent(pos, Angle(), "gmod_wire_explosive", true, {
-                damage = damage,
-                radius = radius,
-                removeafter = true,
-                Model = "models/bull/gates/logic_nano.mdl"
-            })
-            ent._isSF = true
-            ent:setSolid(false)
-            ent:setNoDraw(true)
-            ent:getWirelink()['Detonate'] = 1
+    local function playExplodeSound(pos, holo)
+        local path = "weapons/mortar/mortar_explode" .. math.random(1, 3) .. ".wav"
+        if sound.emitSound then
+            sound.emitSound(path, pos, 100, nil, 1, 0, nil, true)
+        elseif isValid(holo) then
+            holo:emitSound(path, 100, nil, 1, 0, nil, true)
         end
     end
 
-    local _sound = sound.create(_cannon, "weapons/mortar/mortar_fire1.wav", true)
-    _sound:setSoundLevel(90)
+    local function detonate(shell, withBlast)
+        if shell._done then return end
+        shell._done = true
 
-    function fire(aimDir, v0, t)
-        if aimDir == nil or !prop.canSpawn() then return end
-    
-        local bullet = prop.create(_cannon:localToWorld(Vector(0,0,40)), _cannon:getAngles(), BulletModel, false)
-        bullet._bulletHoloBase = hologram.create(bullet:getPos(), bullet:getAngles(), "models/holograms/cube.mdl", Vector(1))
-        bullet._bulletHoloBase:setNoDraw(true)
-        --setTrails(startSize, endSize, length, material, color, attachmentID, additive)
-        bullet._bulletHoloBase:setTrails(50, 0, TrailTime, "trails/smoke", Color(255,255,255))
-        bullet._bulletHoloBase:setParent(bullet)
-        bullet._isBullet = true
-        bullet._health = 30
-        bullet._isRemoved = false
-        bullet:getPhysicsObject():setDragCoefficient(-10000)
-        bullet:setMass(0)
-        bullet:setFrozen(false)
-        bullet:getPhysicsObject():setVelocity(aimDir*v0)
+        local pos = isValid(shell) and shell:getPos() or nil
+        local trail = shell._trail
+        if pos then
+            if isValid(trail) then
+                trail:setParent(nil)
+                playExplodeSound(pos, trail)
+                timer.simple(CFG.trailTime, function()
+                    if isValid(trail) then trail:remove() end
+                end)
+            else
+                playExplodeSound(pos, nil)
+            end
+            sendExplosion(pos)
+            if withBlast then blast(pos, CFG.blastDamage, CFG.blastRadius) end
+            shell:remove()
+        end
+    end
+
+    local function damageShell(shell, amount)
+        if not isValid(shell) or not shell._isBullet or shell._done then return end
+        shell._health = math.max(0, shell._health - amount)
+        if shell._health == 0 then
+            detonate(shell, false)   -- a shot-down shell explodes without area damage
+        end
+    end
+
+    ----------------------------------------------------------------
+    -- firing
+    ----------------------------------------------------------------
+    local fireSound = sound.create(_e, "weapons/mortar/mortar_fire1.wav", true)
+    fireSound:setSoundLevel(90)
+
+    local function spawnShell(muzzle, dir, v0, t, ang)
+        if not prop.canSpawn() then return false end
+
+        local shell = prop.create(muzzle, ang, CFG.shellModel, false)
+        local trail = hologram.create(muzzle, ang, MDL_CUBE, Vector(1))
+        trail:setNoDraw(true)
+        trail:setTrails(50, 0, CFG.trailTime, "trails/smoke", Color(255, 255, 255))
+        trail:setParent(shell)
+
+        shell._trail = trail
+        shell._isBullet = true
+        shell._health = CFG.shellHealth
+        shell._done = false
+
+        local phys = shell:getPhysicsObject()
+        phys:setDragCoefficient(-10000)
+        shell:setMass(0)
+        shell:setFrozen(false)
+
+        local vel = dir * v0
+        phys:setVelocity(vel)
+        -- set the velocity again: physics may reset it during the first ticks
         timer.simple(0.01, function()
-            if not isValid(bullet) then return end
-            bullet:setFrozen(false)
-            bullet:getPhysicsObject():setVelocity(aimDir*v0)
+            if not isValid(shell) then return end
+            shell:setFrozen(false)
+            shell:getPhysicsObject():setVelocity(vel)
             timer.simple(0.01, function()
-                if not isValid(bullet) then return end
-                bullet:setFrozen(false)
-                bullet:getPhysicsObject():setVelocity(aimDir*v0)
+                if not isValid(shell) then return end
+                shell:setFrozen(false)
+                shell:getPhysicsObject():setVelocity(vel)
             end)
         end)
 
-        _sound:stop()
-        _sound:play()
-        
-        timer.simple(t, function()
-            pcall(function()
-                if bullet._isRemoved then return end
-                explodeBulletScene(bullet)
-                explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
-                bullet._isRemoved = true
-                bullet:remove()
-            end)
+        timer.simple(t + 0.07, function()
+            if isValid(shell) then detonate(shell, true) end
         end)
-        bullet:addCollisionListener(function(data)
-            pcall(function()
-                if bullet._isRemoved then return end
-                explodeBulletScene(bullet)
-                explodeWireTo(bullet:getPos(), ExplodeDamage, ExplodeRadius)
-            end)
-            bullet._isRemoved = true
-            bullet:remove()
+        shell:addCollisionListener(function()
+            if isValid(shell) then detonate(shell, true) end
         end)
         if t > 1.2 then
-            timer.simple(t-1.2, function()
-                if not isValid(bullet) then return end
-                bullet:emitSound("weapons/mortar/mortar_shell_incomming1.wav", 100, nil, 1, nil, nil, true)
+            timer.simple(t - 1.2, function()
+                if not isValid(shell) or shell._done then return end
+                shell:emitSound("weapons/mortar/mortar_shell_incomming1.wav", 100, nil, 1, nil, nil, true)
             end)
         end
+        return true
     end
-    
-    CumHolo = hologram.create(_cannon:getPos() + Vector(0,0,StartHeight), chip():getAngles(), "models/holograms/cube.mdl", Vector(1))
-    CumHolo:setNoDraw(true)
-    
-    net.receive("SetData", function (len, ply)
-        --if _isReloading then return end
-        local originCumPos = net.readVector()
-        _cannonAngle = net.readAngle()
-        local driver
 
-        if isValid(_vehicle:getDriver()) and _vehicle:getDriver() == ply or !isValid(_vehicle:getDriver()) then
-            driver = ply
+    -- The server picks the impact point itself: a trace straight down from the camera.
+    local function computeShot(cam, pitch)
+        local chipPos = _e:getPos()
+        local tr = trace.line(cam, cam - Vector(0, 0, 100000), nil, MASK.ALL, nil, false)
+        local target = tr.HitPos
+        local flat = Vector(target.x - chipPos.x, target.y - chipPos.y, 0)
+        local dist = flat:getLength()
+        if dist < CFG.minRadius or dist > CFG.maxRadius then return nil end
+
+        local yaw = flat:getAngle().y
+        local muzzle = getMuzzlePos(chipPos, yaw, pitch)
+        local dir, v0, t = solveBallistic(muzzle, target, Vector(), pitch, GRAVITY)
+        if not dir then return nil end
+        return dir, v0, t, muzzle, yaw
+    end
+
+    ----------------------------------------------------------------
+    -- network
+    ----------------------------------------------------------------
+    local function sanitizeCam(cam)
+        local base = _e:getPos()
+        local flat = Vector(cam.x - base.x, cam.y - base.y, 0)
+        local maxR = CFG.maxRadius
+        if flat:getLength() > maxR then
+            flat = flat:getNormalized() * maxR
         end
+        local z = math.clamp(cam.z, base.z + 200, base.z + 30000)
+        return Vector(base.x + flat.x, base.y + flat.y, z)
+    end
+
+    local viewHolo = hologram.create(_e:getPos() + Vector(0, 0, CFG.startHeight), Angle(), MDL_CUBE, Vector(1))
+    viewHolo:setNoDraw(true)
+
+    net.receive("SetData", function(_, ply)
+        if not alive or not isValid(vehicle) then return end
+        if ply ~= vehicle:getDriver() then return end
+
+        local cam = sanitizeCam(net.readVector())
+        local pitch = math.clamp(net.readUInt(8), CFG.minPitch, CFG.maxPitch)
+
+        state.cam, state.pitch = cam, pitch
+        local flat = Vector(cam.x - _e:getPos().x, cam.y - _e:getPos().y, 0)
+        if flat:getLength() > 1 then state.yaw = flat:getAngle().y end
 
         pcall(function()
-            CumHolo:setPos(UsePVS and originCumPos or Vector(0,0,-1000000))
-            driver:setViewEntity(CumHolo)   
+            viewHolo:setPos(CFG.usePVS and cam or Vector(0, 0, -1000000))
+            ply:setViewEntity(viewHolo)
         end)
-        
-        net.start("syncData")
-        net.writeEntity(ply)
-        net.writeVector(originCumPos)
-        net.writeAngle(_cannonAngle)
-        net.send()
     end)
-    
-    net.receive("tryFire", function(len, ply)
-        if _isReloading then return end
-        if not isValid(_cannon) then return end
-        
-        local targetPos = net.readVector()
-        _cannonAngle = net.readAngle()
-        
-        local aimDir, v0, t = calculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(0,0,40)), targetPos, Vector(), 90-_cannonAngle.p, -600)
-        if aimDir == nil then return end
-        _isReloading = true
-        fire(aimDir, v0, t+0.07)
-        
+
+    net.receive("tryFire", function(_, ply)
+        if not alive or reloading or not isValid(vehicle) then return end
+        if ply ~= vehicle:getDriver() then return end
+
+        local cam = sanitizeCam(net.readVector())
+        local pitch = math.clamp(net.readUInt(8), CFG.minPitch, CFG.maxPitch)
+
+        local dir, v0, t, muzzle, yaw = computeShot(cam, pitch)
+        if not dir then return end
+
+        -- snap the barrel to the target pose so the shell leaves from the muzzle
+        state.cam, state.pitch, state.yaw = cam, pitch, yaw
+        pose.yaw, pose.elev = yaw, pitch
+        pose.recoil = 9
+        applyPose()
+
+        local ang = Angle(90 - pitch, yaw, 0)
+        if not spawnShell(muzzle, dir, v0, t, ang) then return end
+
+        reloading = true
+        fireSound:stop()
+        fireSound:play()
+
+        flash:setPos(muzzle)
+        flash:setNoDraw(false)
+        timer.simple(0.07, function()
+            if isValid(flash) then flash:setNoDraw(true) end
+        end)
+
         net.start("fire")
         net.writeBool(true)
-        net.writeFloat(timer.curtime() + ReloadTime)
+        net.writeFloat(timer.curtime() + CFG.reloadTime)
+        net.writeVector(muzzle)
         net.send()
-        timer.simple(ReloadTime, function()
-            _isReloading = false
+
+        timer.simple(CFG.reloadTime, function()
+            reloading = false
             net.start("fire")
             net.writeBool(false)
             net.send()
         end)
     end)
-    
-    function userHasGodMode(user)
-        if user:hasGodMode()
-                or (user.isBUILD != nil and user:isBUILD())
-                or (user.isSafezoneSafe != nil and user:isSafezoneSafe()) then
-            return true
-        end
-        local isKyleBuilder = user:getNWVar("_Kyle_Buildmode")
-        return isKyleBuilder != nil and isKyleBuilder
-    end
-    
-    timer.create("check_players", 1, 0, function()
-        local players = find.allPlayers(function(ent)
-            return !userHasGodMode(ent)
+
+    timer.create("scanPlayers", 1, 0, function()
+        if not isValid(vehicle) then return end
+        local drv = vehicle:getDriver()
+        if not isValid(drv) then return end
+
+        local list = find.allPlayers(function(p)
+            return p ~= drv and not hasShield(p)
         end)
-        
-        net.start("conecting_players")
-        net.writeTable(players)
-        net.send()
+        net.start("players")
+        net.writeTable(list)
+        net.send(drv)
     end)
-    
-    function setScreamState(isScreaming)
-        local color = isScreaming and Color(255, 0, 0) or Color(255,255,255)
-        _cannon:setColor(color)
-    end
-    
-    function killingScene()
-        local pos = _cannon:obbCenterW()
-        sendExplodeBulletScene(pos)
-        explodeWireTo(pos, ExplodeDamage, ExplodeRadius)
-        _cannon:remove()
+
+    ----------------------------------------------------------------
+    -- death and damage to the mortar
+    ----------------------------------------------------------------
+    local function killingScene()
+        alive = false
+        local pos = _e:getPos() + Vector(0, 0, 40)
+        sendExplosion(pos)
+        blast(pos, CFG.blastDamage, CFG.blastRadius)
+        for _, p in ipairs(PARTS) do
+            if isValid(p.holo) then p.holo:remove() end
+        end
+        for _, h in ipairs(DYNAMIC) do
+            if isValid(h) then h:remove() end
+        end
+        if isValid(flash) then flash:remove() end
         timer.simple(10, function()
-            _e:remove()
+            if isValid(_e) then _e:remove() end
         end)
     end
-    
-    function bulletTakeDamage(bullet, amount)
-        if not isValid(bullet) or not bullet._isBullet then return end
-        bullet._health = math.max(0, bullet._health - amount)
-        if bullet._health == 0 then
-            explodeBulletScene(bullet)
-            bullet:remove()
-        end
-    end
-    
-    hook.add("EntityTakeDamage", "", function(target, attacker, inflictor, amount, type, position, force)
-        if !isValid(_cannon) then return end
-        
-        local driver = _vehicle:getDriver()
-        if isValid(driver)
-                and (attacker == owner()
-                    or isValid(inflictor)
-                    and inflictor._isSF)
-                and isValid(target)
-                and target:isPlayer()
-                and target:isAlive()
-                and !userHasGodMode(target) then
-            net.start("entityTakeDamage")
+
+    hook.add("EntityTakeDamage", "mortarDamage", function(target, attacker, inflictor, amount)
+        if not alive then return end
+
+        -- hit markers for the driver
+        local drv = isValid(vehicle) and vehicle:getDriver() or nil
+        if isValid(drv)
+                and (attacker == _o or (isValid(inflictor) and inflictor._isSF))
+                and isValid(target) and target:isPlayer() and target:isAlive()
+                and not hasShield(target) then
+            net.start("hitmark")
             net.writeVector(target:getPos())
             net.writeInt(math.round(amount, 0), 32)
-            net.send(driver)
+            net.send(drv)
         end
-        
+
         if isValid(target) and target._isBullet then
-            bulletTakeDamage(target, amount)
+            damageShell(target, amount)
         end
-        
-        if target == _e and isValid(chip()) and _health > 0 then
-            _health = math.max(0, _health - amount)
-        
-            --print(amount)
-            setScreamState(true)
-            
-            if _health <= 0 then
+
+        if target == _e and health > 0 then
+            health = math.max(0, health - amount)
+            setDamageTint(true)
+            if health <= 0 then
+                timer.remove("mortarTint")
                 killingScene()
-                timer.remove("timerScreamingKey")
             else
-                timer.create("timerScreamingKey", 0.5, 1, function()
-                    setScreamState(false)
-                end)
+                timer.create("mortarTint", 0.5, 1, function() setDamageTint(false) end)
             end
         end
     end)
-    
-    net.receive("bulletTakeDmg", function(ply, len)
-        local ent = net.readEntity()
-        local amount = net.readInt(32)
-        if ent==nil or !ent._isBullet then return end
-        bulletTakeDamage(ent, amount)
-    end)
-    
-    hook.add("PlayerEnteredVehicle", "", function(ply, vehicle, num)
-        if !isValid(_cannon) then return end
-        if OnlyPvpUse and isValid(ply) and userHasGodMode(ply) and vehicle == _vehicle then
-            _vehicle:ejectDriver()
+
+    hook.add("PlayerEnteredVehicle", "mortarEnter", function(ply, veh)
+        if not alive then return end
+        if CFG.pvpOnly and isValid(ply) and veh == vehicle and hasShield(ply) then
+            vehicle:ejectDriver()
         end
     end)
 
-    hook.add("ClientInitialized", "cl_init", function(ply)
-        if !isValid(_cannon) then return end
+    hook.add("ClientInitialized", "mortarInit", function(ply)
+        if not alive then return end
         net.start("init")
-        net.writeEntity(_vehicle)
-        net.writeEntity(_cannon)
+        net.writeEntity(vehicle)
         net.send(ply)
     end)
-    
+
     return
 end
 
-
-
-
-
-
-
-------------------- CLIENT ----------------------
-
-
--- ======================== Particle Safe ========================
-function RunBetaParticleSystem()
-    local _emitters = {}
-    local _emitterIndex = -1
-    
-    local particle_create_old = particle.create
-    
-    function initEmitters(use3D, limit)
-        local max = math.min(limit - #_emitters, particle.particleEmittersLeft())
-        for i=1, max do
-            table.insert(_emitters, particle_create_old(owner():getPos(), false))
-        end
-    end
-    
-    function nextEmitter(origin)
-        initEmitters(false, BetaParticleEmitterLimit)
-        
-        local length = #_emitters
-        _emitterIndex = (_emitterIndex + 1) % length
-        --print(length)
-        local targetEmitter = _emitters[_emitterIndex+1]
-        if targetEmitter then
-            targetEmitter:setPos(origin)
-        end
-        return targetEmitter
-    end
-    
-    particle.create = function(position, use3D)
-        return nextEmitter(position)
-    end
-    
-    local MetaParticleEmitter = getMethods("ParticleEmitter")
-    MetaParticleEmitter.oldAdd = MetaParticleEmitter.add
-    MetaParticleEmitter.oldDestroy = MetaParticleEmitter.destroy
-    MetaParticleEmitter.oldGetPos = MetaParticleEmitter.getPos
-    MetaParticleEmitter.oldSetPos = MetaParticleEmitter.setPos
-    
-    function MetaParticleEmitter:add(...)
-        if self:getParticlesLeft() > 0 then
-            return self:oldAdd(...)
-        end
-        
-        local maxIndex = #_emitters - 1
-        for i=1, maxIndex do
-            local otherEmit = nextEmitter(self:getPos())
-            if otherEmit:getParticlesLeft() > 0 then
-                --printConsole("ok_" .. i)
-                return otherEmit:oldAdd(...)
-            end
-        end
-        --printConsole("max_" .. #_emitters)
-        
-        return nil
-    end
-    
-    function MetaParticleEmitter:getPos(...)
-        return self._pos or self:oldGetPos(...)
-    end
-    
-    function MetaParticleEmitter:setPos(pos, ...)
-        self._pos = pos
-        return self:oldSetPos(pos, ...)
-    end
-    
-    function MetaParticleEmitter:destroy()
-    end
-end
-
-if EnableBetaParticleSystem then
-    RunBetaParticleSystem()
-end
--- ================================================
-
-
+--------------------------------------------------------------------
+-- CLIENT
+--------------------------------------------------------------------
 local _p = player()
+local vehicle
 
-local holoEdge = hologram.create(_e:getPos(), Angle(), "models/props_phx/construct/metal_plate_curve360x2.mdl", Vector(1))
-holoEdge:setSize(Vector(MaxRadius*2.2, MaxRadius*2.2, 100000))
-holoEdge:setColor(Color(100,100,100, 200))
-holoEdge:setNoDraw(true)
-holoEdge:setMaterial("models/debug/debugwhite")
-local initPost = function() end
+local resW, resH = render.getGameResolution()
+local pitch = CFG.startPitch
+local camPos = _e:getPos() + Vector(0, 0, CFG.startHeight)
 
-net.receive("init", function(len)
-    _vehicle = net.readEntity()
-    net.readEntity(function(ent)
-        if ent==nil then error("Failed to get Hologram!") end
-        _cannon = ent
-        hook.add("think", "setPosHoloEdge", function()
-            if !isValid(holoEdge) or !isValid(_cannon) then return end
-            holoEdge:setPos(_cannon:getPos() - Vector(0,0,5000))
-        end)
-        initPost()
-    end)
-end)
-
-local _width, _height = render.getGameResolution()
-local _pitchAngle = StartPitchAngle
-local _cannonAngle = Angle(StartPitchAngle,0,0)
-local _isCanFire = false
-local _isReloading = false
-local _unreloadTime = 0
-local _flyTime = 0
-local _matBlur -- Material Glass
-local _damageInfo = {}
-local _validPlayers, _resultPlayers = {}, {}
-local _freeCumPos = _e:getPos() + Vector(0, 0, StartHeight)
-
-local m = material.load("particle/smokesprites_0004")
-local m2 = material.load("particles/flamelet5")
+local reloading, unreloadTime = false, 0
+local validPlayers, visiblePlayers = {}, {}
+local damageInfo = {}
+local aim = { ok = false, reason = "NO DATA", dist = 0, t = 0 }
+local matBlur
 local startTime = timer.systime()
-local _recFont = render.createFont("Arial", 30, 300, true)
-local _textFont = render.createFont("Arial", 40, 300, true)
-local _smallFont = render.createFont("Arial", 21, 400, true)
+
+local mSmoke = material.load("particle/smokesprites_0004")
+local mFlame = material.load("particles/flamelet5")
+
+local fontRec   = render.createFont("Arial", 30, 300, true)
+local fontText  = render.createFont("Arial", 40, 300, true)
+local fontSmall = render.createFont("Arial", 21, 400, true)
 render.createRenderTarget("template")
 render.createRenderTarget("screen")
 
+-- edge of the bombardment zone
+local holoEdge = hologram.create(_e:getPos() - Vector(0, 0, 5000), Angle(),
+    "models/props_phx/construct/metal_plate_curve360x2.mdl", Vector(1))
+holoEdge:setSize(Vector(CFG.maxRadius * 2.2, CFG.maxRadius * 2.2, 100000))
+holoEdge:setColor(Color(100, 100, 100, 200))
+holoEdge:setMaterial("models/debug/debugwhite")
+holoEdge:setNoDraw(true)
 
-function isActive()
-    return render.isHUDActive() and isValid(_cannon) and isValid(_vehicle) and _vehicle:getDriver() == player()
+local function isActive()
+    return render.isHUDActive() and isValid(vehicle) and vehicle:getDriver() == _p
 end
 
+local spawnParticle -- defined below, in the particles section
 
-net.receive("fire", function(len)
-    _isReloading = net.readBool()
-    _unreloadTime = net.readFloat()
+net.receive("init", function()
+    net.readEntity(function(ent) vehicle = ent end)
 end)
 
-
-net.receive("conecting_players", function (len)
-    _validPlayers = net.readTable()
+net.receive("fire", function()
+    reloading = net.readBool()
+    if reloading then
+        unreloadTime = net.readFloat()
+        local muzzle = net.readVector()
+        for _ = 1, 6 do
+            spawnParticle(muzzle, mSmoke, 40, 260, 200, 4)
+        end
+    end
 end)
 
+net.receive("players", function()
+    validPlayers = net.readTable()
+end)
 
-net.receive("entityTakeDamage", function()
+net.receive("hitmark", function()
     local pos = net.readVector()
     local amount = net.readInt(32)
-    table.insert(_damageInfo, 1, {
-        Pos = pos,
-        Amount = amount,
-        DieTime = timer.curtime() + 2
-    })
+    table.insert(damageInfo, 1, { pos = pos, amount = amount, die = timer.curtime() + 2 })
 end)
 
+----------------------------------------------------------------
+-- particles: one shared emitter instead of monkey-patching particle.create
+----------------------------------------------------------------
+local emitter
 
-hook.add("EntityFireBullets", "bullets", function(ent, data)
-    return function(attacker, tr, dmginfo)
-        if tr.Hit and isValid(tr.Entity) and tr.Entity:getModel() == BulletModel and !tr.Entity._used then
-            tr.Entity._used = true
-            net.start("bulletTakeDmg")
-            net.writeEntity(tr.Entity)
-            net.writeInt(data.Damage, 32)
-            net.send(data)
-        end
+function spawnParticle(pos, mat, sizeStart, sizeEnd, speed, life)
+    if not emitter then
+        if particle.particleEmittersLeft() < 1 then return end
+        emitter = particle.create(Vector(), false)
     end
-end)
+    if emitter:getParticlesLeft() < 1 then return end
 
-
-function handleDamageInfo()
-    local now = timer.curtime()
-    for i, data in ipairs(_damageInfo) do
-        if data.DieTime < now then
-            table.removeByValue(_damageInfo, data)
-        end
-    end
-end
-
-
-timer.create("findVisiblePlayers", 0.4, 0, function()
-    if !isActive() then return end
-    
-    _resultPlayers = table.filter(_validPlayers, function(ent)
-        if !isValid(ent) then return false end
-        if ent:inVehicle() then
-            ent = ent:getVehicle()
-        end
-        return isEntityVisible(_freeCumPos, ent)
-    end)
-end) 
-
-
-function createParticle(emitter, pos, mat)
     local dir = Vector(math.rand(-1, 1), math.rand(-1, 1), math.rand(0, 1)):getNormalized()
-    -- (Material material, Vector position, number startSize, number endSize, number startLength, number endLength, number startAlpha, number endAlpha, number dieTime)
-    local part = emitter:add( mat, pos + dir*math.random(0, 50), 100, 1000, 0, 0, 50, 0, 10 )
-    if !part then return end
-    
+    local part = emitter:add(mat, pos + dir * math.random(0, 50), sizeStart, sizeEnd, 0, 0, 50, 0, life)
+    if not part then return end
     part:setCollide(true)
     part:setBounce(0)
-    part:setVelocity( dir*500 )
+    part:setVelocity(dir * speed)
     part:setAirResistance(100)
 end
 
-
-net.receive("explodeBulletScene", function(len)
-    local explodePos = net.readVector()
-    local emitter = particle.create(Vector(), false)
-    
-    for i=1, 5 do
-        createParticle(emitter, explodePos, m)
-    end
-    for i=1, 5 do
-        createParticle(emitter, explodePos, m2)
-    end
-    emitter:destroy()
+net.receive("explode", function()
+    local pos = net.readVector()
+    for _ = 1, 5 do spawnParticle(pos, mSmoke, 100, 1000, 500, 10) end
+    for _ = 1, 5 do spawnParticle(pos, mFlame, 100, 1000, 500, 10) end
 end)
 
+----------------------------------------------------------------
+-- visible players
+----------------------------------------------------------------
+local function isEntityVisible(startPos, ent)
+    local target = ent:obbCenterW()
+    local tr = trace.line(startPos, target, nil, MASK.VISIBLE, nil, false)
+    return not tr.Hit or tr.Entity == ent or tr.Fraction >= 0.97
+end
 
-function sendData(pos, cannonAngle)
-    net.start("SetData")
-    net.writeVector(pos)
-    net.writeAngle(cannonAngle)
+timer.create("findVisiblePlayers", 0.4, 0, function()
+    if not isActive() then return end
+    local result, n = {}, 0
+    for _, ent in ipairs(validPlayers) do
+        if isValid(ent) then
+            local target = ent:inVehicle() and ent:getVehicle() or ent
+            if isValid(target) and isEntityVisible(camPos, target) then
+                n = n + 1
+                result[n] = ent
+            end
+        end
+    end
+    visiblePlayers = result
+end)
+
+----------------------------------------------------------------
+-- client-side solver
+----------------------------------------------------------------
+local aimRate = 6
+local aimSnap = false -- flag: apply result immediately
+
+local function computeAim()
+    if not isActive() then return end
+
+    local chipPos = _e:getPos()
+    local tr = trace.line(camPos, camPos - Vector(0, 0, 100000), nil, MASK.ALL, nil, false)
+    local target = tr.HitPos
+
+    --       (.  )
+    if aim.tTarget and (aim.tTarget - target):getLength() < 8 then
+        target = aim.tTarget
+    end
+
+    local flat = Vector(target.x - chipPos.x, target.y - chipPos.y, 0)
+    local dist = flat:getLength()
+
+    aim.tTarget    = target
+    aim.distTarget = dist
+    aim.rawReason  = nil
+    aim.rawOk      = false
+
+    if dist < CFG.minRadius then aim.rawReason = "TOO CLOSE"   return end
+    if dist > CFG.maxRadius then aim.rawReason = "OUT OF RANGE" return end
+
+    local muzzle = getMuzzlePos(chipPos, flat:getAngle().y, pitch)
+    local dir, v0, t = solveBallistic(muzzle, target, Vector(), pitch, GRAVITY)
+    if not dir then aim.rawReason = "NO SOLUTION" return end
+
+    aim.rawOk = true
+    aim.rawReason = "READY"
+    aim.rawMuzzle, aim.rawDir, aim.rawV0, aim.rawT = muzzle, dir, v0, t
+end
+
+--   raw*  aim ( )
+local function snapAim()
+    if not aim.rawOk then
+        aim.ok, aim.reason = false, aim.rawReason or "NO DATA"
+        --     ,    
+        -- aim.dir, aim.muzzle, aim.t, aim.v0 = nil, nil, nil, nil
+        return
+    end
+    aim.target = Vector(aim.tTarget.x, aim.tTarget.y, aim.tTarget.z)
+    aim.dist   = aim.distTarget
+    aim.muzzle = Vector(aim.rawMuzzle.x, aim.rawMuzzle.y, aim.rawMuzzle.z)
+    aim.dir    = Vector(aim.rawDir.x, aim.rawDir.y, aim.rawDir.z)
+    aim.v0     = aim.rawV0
+    aim.t      = aim.rawT
+    aim.ok     = true
+    aim.reason = "READY"
+end
+
+timer.create("aimSolver", 0.05, 0, function()
+    computeAim()
+    if aimSnap then
+        snapAim()
+        aimSnap = false
+    end
+end)
+
+----------------------------------------------------------------
+-- smooth interpolation helpers
+----------------------------------------------------------------
+local function damp(cur, goal, rate, dt)
+    -- FPS-independent exponential approximation
+    return cur + (goal - cur) * (1 - math.exp(-rate * dt))
+end
+
+local function dampVec(cur, goal, rate, dt)
+    if not cur then return Vector(goal.x, goal.y, goal.z) end
+    return Vector(
+        damp(cur.x, goal.x, rate, dt),
+        damp(cur.y, goal.y, rate, dt),
+        damp(cur.z, goal.z, rate, dt)
+    )
+end
+
+-- called every frame while the HUD is active
+hook.add("think", "aimSmooth", function()
+    if not isActive() then return end
+
+    local now = timer.curtime()
+    local d = math.min(now - (aim._last or now), 0.1)
+    aim._last = now
+    if d <= 0 then return end
+
+    --   snap       
+    if aimSnap then return end
+
+    if aim.tTarget then
+        aim.target = dampVec(aim.target, aim.tTarget, aimRate, d)
+        aim.dist   = damp(aim.dist or aim.distTarget or 0, aim.distTarget or 0, aimRate, d)
+    end
+
+    if aim.rawOk then
+        aim.t      = damp(aim.t or aim.rawT, aim.rawT, aimRate, d)
+        aim.v0     = damp(aim.v0 or aim.rawV0, aim.rawV0, aimRate, d)
+        aim.dir    = dampVec(aim.dir, aim.rawDir, aimRate, d)
+        aim.muzzle = dampVec(aim.muzzle, aim.rawMuzzle, aimRate, d)
+        local l = aim.dir:getLength()
+        if l > 0 then aim.dir = aim.dir / l end
+        aim.ok, aim.reason = true, "READY"
+    else
+        aim.ok, aim.reason = false, aim.rawReason or aim.reason or "NO DATA"
+    end
+end)
+
+----------------------------------------------------------------
+-- network: camera data and firing
+----------------------------------------------------------------
+local function sendCamera(msg)
+    net.start(msg)
+    net.writeVector(camPos)
+    net.writeUInt(math.floor(pitch), 8)
     net.send()
 end
 
+timer.create("sendCamera", 0.15, 0, function()
+    holoEdge:setNoDraw(not isActive())
+    if not isActive() then return end
+    sendCamera("SetData")
 
-function filterImage()
+    local now = timer.curtime()
+    for i = #damageInfo, 1, -1 do
+        if damageInfo[i].die < now then table.remove(damageInfo, i) end
+    end
+end)
+
+local function tryFire()
+    if not aim.ok or reloading then return end
+    sendCamera("tryFire")
+end
+
+----------------------------------------------------------------
+-- camera overlay (drawn into the render target once / every frame)
+----------------------------------------------------------------
+local function filterImage()
     render.setFilterMin(1)
     render.setFilterMag(1)
 end
 
-
-function renderCameraRect(size, lineWidth, lineLength)
-    local rectStartXY = 512-size
-    local rectEndXY = 512+size
-    
-    render.drawRect(rectStartXY, rectStartXY, lineWidth, lineLength) -- top-left
-    render.drawRect(rectStartXY, rectStartXY, lineLength, lineWidth)
-
-    render.drawRect(rectEndXY-lineWidth, rectEndXY-lineLength, lineWidth, lineLength) -- bottom-right
-    render.drawRect(rectEndXY-lineLength, rectEndXY-lineWidth, lineLength, lineWidth)
-    
-    render.drawRect(rectEndXY-lineWidth, rectStartXY, lineWidth, lineLength) -- top-right
-    render.drawRect(rectEndXY-lineLength, rectStartXY, lineLength, lineWidth)
-    
-    render.drawRect(rectStartXY, rectEndXY-lineLength, lineWidth, lineLength) -- bottom-left
-    render.drawRect(rectStartXY, rectEndXY-lineWidth, lineLength, lineWidth)
+local function renderCameraRect(size, lw, ll)
+    local s, e = 512 - size, 512 + size
+    render.drawRect(s, s, lw, ll)
+    render.drawRect(s, s, ll, lw)
+    render.drawRect(e - lw, e - ll, lw, ll)
+    render.drawRect(e - ll, e - lw, ll, lw)
+    render.drawRect(e - lw, s, lw, ll)
+    render.drawRect(e - ll, s, ll, lw)
+    render.drawRect(s, e - ll, lw, ll)
+    render.drawRect(s, e - lw, ll, lw)
 end
 
-
-function renderCameraCenterPlus(lineWidth, lineLength, isRed)
-    local centerW = lineWidth / 2
-    local centerL = lineLength / 2
-    
-    render.setColor(isRed and Color(255,0,0) or Color(255,255,255))
-    render.drawRect(512-centerW, 512-centerL, lineWidth, lineLength)
-    render.drawRect(512-centerL, 512-centerW, lineLength, lineWidth)
+local function renderCenterPlus(lw, ll, red)
+    render.setColor(red and Color(255, 0, 0) or Color(255, 255, 255))
+    render.drawRect(512 - lw / 2, 512 - ll / 2, lw, ll)
+    render.drawRect(512 - ll / 2, 512 - lw / 2, ll, lw)
 end
 
 hook.add("renderoffscreen", "InitTemplate", function()
     hook.remove("renderoffscreen", "InitTemplate")
-    
-    _width, _height = render.getGameResolution()
-    
+    resW, resH = render.getGameResolution()
+
     render.selectRenderTarget("template")
     render.setLightingMode(0)
-    
-    render.clear(Color(0,0,0,0))
-    render.setColor(Color(255,255,255))
+    render.clear(Color(0, 0, 0, 0))
+    render.setColor(Color(255, 255, 255))
 
-    renderCameraRect(462, 2   , 100)
+    renderCameraRect(462, 2, 100)
     renderCameraRect(60, 2, 30)
-    
-    render.setFont(_recFont)
-    render.setColor(Color(255,255,255))
+
+    render.setFont(fontRec)
     render.drawText(510, 55, "REC")
-    
-    render.setFont(_textFont)
+
+    render.setFont(fontText)
     render.drawText(380, 950, "1/60")
     render.drawText(495, 950, "f2,8")
     render.drawText(590, 950, "ISO 200")
-    
+
     render.drawRectOutline(838, 70, 50, 40)
     render.drawText(840, 70, "4K")
     render.drawText(890, 70, "60")
-    render.setFont(_recFont)
+    render.setFont(fontRec)
     render.drawText(930, 75, "fps")
-    
+
+    -- battery icon
     render.drawRectOutline(60, 70, 90, 30, 2)
     render.drawRectOutline(148, 75, 7, 20, 2)
-    render.drawRect(64, 74, 10, 22)
-    render.drawRect(64+12*1, 74, 10, 22)
-    render.drawRect(64+12*2, 74, 10, 22)
-    render.drawRect(64+12*3, 74, 10, 22)
-    render.drawRect(64+12*4, 74, 10, 22)
-    render.drawRect(64+12*5, 74, 10, 22)
-    render.drawRect(64+12*5, 74, 10, 22)
+    for i = 0, 5 do
+        render.drawRect(64 + 12 * i, 74, 10, 22)
+    end
 end)
 
-function renderCannon()
+local function renderPitchGauge()
     render.drawText(55, 930, "Angle")
-    local height = 60
-    render.drawRectRotatedFast(60 + math.cos(math.rad(_pitchAngle))*height/2, 920 - math.sin(math.rad(_pitchAngle))*height/2, 5, height, 90+_pitchAngle)
-    local rackX = 60 + math.cos(math.rad(_pitchAngle))*height/1.2
-    local rackY = 920 - math.sin(math.rad(_pitchAngle))*height/1.2
-    local rackHeight = height/1.2*math.sin(math.rad(_pitchAngle))
-    render.drawRectRotatedFast(rackX, rackY+rackHeight/2, 2, rackHeight, 0)
+    local h = 60
+    local r = math.rad(pitch)
+    render.drawRectRotatedFast(60 + math.cos(r) * h / 2, 920 - math.sin(r) * h / 2, 5, h, 90 + pitch)
+    local rackX = 60 + math.cos(r) * h / 1.2
+    local rackY = 920 - math.sin(r) * h / 1.2
+    local rackH = h / 1.2 * math.sin(r)
+    render.drawRectRotatedFast(rackX, rackY + rackH / 2, 2, rackH, 0)
 end
 
 hook.add("renderoffscreen", "Camera", function()
-    if !isActive() then return end
-    
+    if not isActive() then return end
+
     render.selectRenderTarget("screen")
     render.setLightingMode(0)
-    render.clear(Color(0,0,0,0))
+    render.clear(Color(0, 0, 0, 0))
 
     render.setRenderTargetTexture("template")
     filterImage()
-    render.drawTexturedRect(0,0,1024,1024)
-    
-    renderCameraCenterPlus(2, 40, !_isCanFire)
-    
-    render.setColor(Color(255,255,255))
+    render.drawTexturedRect(0, 0, 1024, 1024)
 
-    render.setFont(_recFont)
-    render.setColor(Color(200,0,0, 255/2 + 255/2 * math.sin((timer.systime()*6) % 360)))
+    renderCenterPlus(2, 40, not aim.ok)
+
+    render.setColor(Color(255, 255, 255))
+    render.setFont(fontRec)
+    render.setColor(Color(200, 0, 0, 127 + 127 * math.sin((timer.systime() * 6) % 360)))
     render.drawFilledCircle(490, 70, 10)
-    
-    render.setColor(Color(255,255,255))
-    render.setFont(_textFont)
-    local time = os.date('!%H:%M:%S', timer.systime() - startTime)
-    local ms = string.match(tostring(os.clock()), "%d%.(%d+)") or ''
-    render.drawText(430, 900, string.format("%s:%s", time, ms:sub(1,2)))
-    
-    render.setFont(_textFont)
-    renderCannon()
-    render.drawText(490, 410, '' .. _flyTime .. ' s')
-    if _isReloading then
-        render.setColor(Color(255,100,100))
+
+    render.setColor(Color(255, 255, 255))
+    render.setFont(fontText)
+    local clock = os.date("!%H:%M:%S", timer.systime() - startTime)
+    local ms = string.match(tostring(os.clock()), "%d%.(%d+)") or ""
+    render.drawText(430, 900, string.format("%s:%s", clock, ms:sub(1, 2)))
+
+    renderPitchGauge()
+
+    -- aiming info
+    render.setFont(fontText)
+    render.setColor(aim.ok and Color(120, 255, 120) or Color(255, 100, 100))
+    render.drawText(512, 330, aim.reason, 1)
+    render.setColor(Color(255, 255, 255))
+    if aim.ok then
+        render.drawText(512, 410, string.format("%d s", math.round(aim.t, 0)), 1)
+    end
+    render.setFont(fontRec)
+    local rngText = aim.dist < 10000 and math.floor(aim.dist) or 
+    render.drawText(512, 450, string.format("RNG %d", math.floor(aim.dist)), 1)
+
+    if reloading then
+        render.setFont(fontText)
+        render.setColor(Color(255, 100, 100))
         render.drawText(440, 600, "Reloading...")
-        render.setColor(Color(255,255,255, 150))
+        render.setColor(Color(255, 255, 255, 150))
         render.drawRect(440, 650, 150, 10)
-        render.setColor(Color(255,100,100, 150))
-        local x = math.max((_unreloadTime - timer.curtime())/ReloadTime, 0)
-        render.drawRect(440, 650, (1-x) * 150, 10)
+        render.setColor(Color(255, 100, 100, 150))
+        local left = math.max((unreloadTime - timer.curtime()) / CFG.reloadTime, 0)
+        render.drawRect(440, 650, (1 - left) * 150, 10)
     end
 end)
 
-
-hook.add("HUDConnected", "Help", function(ent, ply)
+----------------------------------------------------------------
+-- HUD
+----------------------------------------------------------------
+hook.add("HUDConnected", "Help", function(_, ply)
     startTime = timer.systime()
-    if ply != player() then return end
-                printMessage(4, [[
+    if ply ~= _p then return end
+    camPos = _e:getPos() + Vector(0, 0, CFG.startHeight)
+    printMessage(4, [[
 ATTACK1 - Fire
-A / W / S / D / ALT / SPACE - camera movement
-CTRL - decrease movement
-SHIFT - increase movement
+W / A / S / D / SPACE / ALT - camera movement
+CTRL - slow, SHIFT - fast
 Mouse wheel - change pitch angle
-
-
-
-
+Yellow arc = predicted shell path, ring = blast radius
 ]])
 end)
 
-function drawBlur()
-    if _matBlur == nil then
-        _matBlur = material.create("UnlitGeneric")
-        _matBlur:setTexture("$basetexture", "phoenix_storms/concrete0")
-        _matBlur:setFloat("$alpha", 0.3)
+local function drawBlur()
+    if matBlur == nil then
+        matBlur = material.create("UnlitGeneric")
+        matBlur:setTexture("$basetexture", "phoenix_storms/concrete0")
+        matBlur:setFloat("$alpha", 0.3)
     end
-    
-    render.setMaterial(_matBlur)
-    render.drawTexturedRect(0, 0, _width, _height)
+    render.setMaterial(matBlur)
+    render.drawTexturedRect(0, 0, resW, resH)
 end
 
-function drawVisiblePlayers()
-    if !UseWH then return end
-    
-    for i, p in ipairs(_resultPlayers) do
+local function drawTrajectory()
+    if not aim.ok then return end
+
+    render.setColor(Color(255, 220, 80, 170))
+    local prev
+    local steps = 28
+    for i = 0, steps do
+        local tt = aim.t * i / steps
+        local p = aim.muzzle + aim.dir * aim.v0 * tt - Vector(0, 0, 0.5 * GRAVITY * tt * tt)
+        local s = p:toScreen()
+        if s.visible and prev then render.drawLine(prev.x, prev.y, s.x, s.y) end
+        prev = s.visible and s or nil
+    end
+
+    -- blast radius ring around the impact point
+    render.setColor(Color(255, 90, 60, 200))
+    local last
+    local seg = 24
+    for i = 0, seg do
+        local a = (i / seg) * math.pi * 2
+        local p = aim.target + Vector(math.cos(a) * CFG.blastRadius, math.sin(a) * CFG.blastRadius, 5)
+        local s = p:toScreen()
+        if s.visible and last then render.drawLine(last.x, last.y, s.x, s.y) end
+        last = s.visible and s or nil
+    end
+end
+
+local function drawVisiblePlayers()
+    if not CFG.showPlayers then return end
+    for _, p in ipairs(visiblePlayers) do
         if isValid(p) and p ~= _p and p:isAlive() then
-            local obbhs = p:obbSize()
-            
-            local pos = (p:obbCenterW()):toScreen()
-            
-            local color = p:isPlayer() and p:inVehicle() and Color(255,100,100) or Color(255,255,100)
-            
-            --render.setFont(font)
-            --render.setColor(team.getColor(p:getTeam()))
-            render.setColor(color)
-            --render.drawText(pos.x, pos.y, p:inVehicle() and p:getVehicle():getClass() or "", 1)
-            local BoxSize = 5
-            render.drawRect(pos.x-BoxSize, pos.y-BoxSize, BoxSize*2, BoxSize*2)
+            local s = p:obbCenterW():toScreen()
+            render.setColor(p:inVehicle() and Color(255, 100, 100) or Color(255, 255, 100))
+            render.drawRect(s.x - 5, s.y - 5, 10, 10)
         end
     end
 end
 
-function drawDamageInfo()
-    render.setColor(Color(255,255,0, 150))
-    render.setFont(_smallFont)
-    for i, data in ipairs(_damageInfo) do
-        local pos = data.Pos:toScreen()
-        render.drawSimpleText(pos.x, pos.y, '-' .. data.Amount)
+local function drawDamageInfo()
+    render.setColor(Color(255, 255, 0, 150))
+    render.setFont(fontSmall)
+    for _, d in ipairs(damageInfo) do
+        local s = d.pos:toScreen()
+        render.drawSimpleText(s.x, s.y, "-" .. d.amount)
     end
 end
 
+hook.add("DrawHUD", "mortarHUD", function()
+    if not isActive() then return end
 
-hook.add("DrawHUD", "", function()
-    if !isActive() then return end
-    
     drawBlur()
-    
+
     render.setRenderTargetTexture("screen")
     filterImage()
-    local kk = IsRect and (_height/_width) or 1
-    render.drawTexturedRect(_width/2 - _width*kk/2, 0, _width*kk, _height)
-    
+    local k = CFG.squareView and (resH / resW) or 1
+    render.drawTexturedRect(resW / 2 - resW * k / 2, 0, resW * k, resH)
+
+    drawTrajectory()
     drawVisiblePlayers()
     drawDamageInfo()
 end)
 
---------------------------------------------------------
+----------------------------------------------------------------
+-- camera controls
+----------------------------------------------------------------
+local SPEED, SPEED_FAST, SPEED_SLOW = 15, 50, 2
+local keys = {}
+local lastTime = 0
+local dt = 0
 
-local _height = StartHeight
-local FreeCumVelocity = 15
-local FreeCumVelocityShift = 50
-local FreeCumVelocityCtrl = 2
+hook.add("HUDDisconnected", "resetKeys", function() keys = {} end)
 
-local Key_W = false;
-local Key_S = false;
-local Key_A = false;
-local Key_D = false;
-local Key_Space = false;
-local Key_Alt = false;
-local Key_Shift = false;
-local Key_Ctrl = false;
-local time = 0
-local timeDiff = 0
-    
-initPost = function()
-    _freeCumPos = _cannon:getPos() + Vector(0, 0, StartHeight)
-end
-
-hook.add("HUDConnected", "", function(ent, ply)
-    if !isValid(_cannon) then return end
-    _freeCumPos = _cannon:getPos() + Vector(0, 0, StartHeight)
-end)
-
-net.receive("syncData", function(len)
-    if net.readEntity() == player() then return end
-    _freeCumPos = net.readVector()
-    _cannonAngle = net.readAngle()
-end)
-
-timer.create("200 ms", 0.2, 0, function()
-    holoEdge:setNoDraw(!isActive())
-    if !isActive() then return end
-    local y = (_freeCumPos - _cannon:getPos()):getAngle().y
-    _cannonAngle = Angle(90-_pitchAngle, y, 0)
-    sendData(_freeCumPos, _cannonAngle)
-    
-    handleDamageInfo()
-end)
-
-function tryFire()
-    if not _isCanFire then return end
-    
-    local tr = trace.line(_freeCumPos, _freeCumPos - Vector(0,0,100000), nil, MASK.ALL, nil, false)
-    net.start("tryFire")
-    net.writeVector(tr.HitPos)
-    local y = (_freeCumPos - _cannon:getPos()):getAngle().y
-    _cannonAngle = Angle(90-_pitchAngle, y, 0)
-    net.writeAngle(_cannonAngle)
-    net.send()
-end
-
-timer.create("calcPredictiveData", 0.2, 0, function()
-    if !isActive() then return end
-    local tr = trace.line(_freeCumPos, _freeCumPos - Vector(0,0,100000), nil, MASK.ALL, nil, false)
-    if tr.HitPos:getDistance(_cannon:getPos()) < MinRadius then
-        _isCanFire = false
-        _flyTime = 0
-    else
-        local aimDir, v0, t = calculateAimDirectionAndSpeed(_cannon:localToWorld(Vector(0,0,40)), tr.HitPos, Vector(), _pitchAngle, -600)
-        _isCanFire = aimDir != nil
-        _flyTime = aimDir != nil and math.round(t,0) or 0
-        --printMessage(4, tostring(_isCanFire))
-    end
-end)
-
-function resetKeys()
-    Key_W = false
-    Key_S = false
-    Key_A = false
-    Key_D = false
-    Key_Space = false
-    Key_Alt = false
-    Key_Shift = false
-    Key_Ctrl = false
-end
-
-hook.add("HUDDisconnected", "reset keys", function()
-    resetKeys()
-end)
-
-hook.add("inputPressed", "cheat spectator", function(key)
-    if !isActive() then return end
-    
-    if key == KEY.W then Key_W = true end
-    if key == KEY.S then Key_S = true end
-    if key == KEY.A then Key_A = true end
-    if key == KEY.D then Key_D = true end
-    if key == KEY.SPACE then Key_Space = true end
-    if key == KEY.ALT then Key_Alt = true end
-    if key == KEY.SHIFT then Key_Shift = true end
-    if key == KEY.CTRL then Key_Ctrl = true end
-    
+hook.add("inputPressed", "mortarInput", function(key)
+    if not isActive() then return end
+    keys[key] = true
     if key == MOUSE.MOUSE1 then tryFire() end
 end)
 
-hook.add("inputReleased", "cheat spectator", function(key)
-    if !isActive() then return end
-    
-    if key == KEY.W then Key_W = false end
-    if key == KEY.S then Key_S = false end
-    if key == KEY.A then Key_A = false end
-    if key == KEY.D then Key_D = false end
-    if key == KEY.SPACE then Key_Space = false end
-    if key == KEY.ALT then Key_Alt = false end
-    if key == KEY.SHIFT then Key_Shift = false end
-    if key == KEY.CTRL then Key_Ctrl = false end
+hook.add("inputReleased", "mortarInput", function(key)
+    keys[key] = nil
 end)
 
-hook.add("mouseWheeled", "", function(delta)
-    if !isActive() then return end
-    
-    _pitchAngle = _pitchAngle + 5 * delta
-    if _pitchAngle < 20 then _pitchAngle = 20 end
-    if _pitchAngle > 80 then _pitchAngle = 80 end
-end)
+hook.add("mouseWheeled", "mortarWheel", function(delta)
+    if not isActive() then return end
 
-function getCurrentHeight()
-    local height =  _freeCumPos.z - _e:getPos().z
-    return height < 1000 and 1000 or height
-end
+    local newPitch = math.clamp(pitch + CFG.pitchStep * delta, CFG.minPitch, CFG.maxPitch)
+    if newPitch == pitch then return end
+    pitch = newPitch
 
-function isValidPos(fromPos, toPos)
-    local tr = trace.hull(fromPos, toPos, Vector(-50,-50,-100), Vector(50,50,300), nil, MASK.VISIBLE, nil, false)
-    return !tr.Hit and _cannon:getPos():getDistance(toPos:clone():setZ(_cannon:getPos().z)) < MaxRadius
-end
-
-hook.add("calcview", "my_calcview",  function(pos, ang, fov, znear, zfar)
-    local time2 = timer.curtime()
-    timeDiff = time2 - time
-    time = time2
-    
-    if !isActive() then return end
-
-    local velocity = Vector()
-    if Key_W then velocity = velocity + Vector(1,0,0) end
-    if Key_S then velocity = velocity - Vector(1,0,0) end
-    if Key_A then velocity = velocity + Vector(0,1,0) end
-    if Key_D then velocity = velocity - Vector(0,1,0) end
-    if Key_Space then velocity = velocity + Vector(0,0,1) end
-    if Key_Alt then velocity = velocity - Vector(0,0,1) end
-    
-    if velocity:getLength() ~= 0 then
-        velocity = velocity:getNormalized()
-        
-        if Key_Ctrl then 
-            velocity = velocity * FreeCumVelocityCtrl
-        elseif Key_Shift then
-            velocity = velocity * FreeCumVelocityShift
-        else
-            velocity = velocity * FreeCumVelocity
-        end
-        
-        local tt = getCurrentHeight() / 1000
-        
-        local nextFreeCumPos = _freeCumPos + velocity * timeDiff*70 * tt
-        if isValidPos(_freeCumPos, nextFreeCumPos) then
-            _freeCumPos = nextFreeCumPos
-        end
+    -- reset the "catch-up" and recalculate immediately
+    aimSnap = true
+    computeAim()
+    -- apply immediately (do not wait for 0.1 s timer)
+    if aim.rawOk then
+        snapAim()
     end
-    --printMessage(4, tostring(_freeCumPos))
+end)
+
+local function isValidPos(from, to)
+    local tr = trace.hull(from, to, Vector(-50, -50, -100), Vector(50, 50, 300), nil, MASK.VISIBLE, nil, false)
+    local base = _e:getPos()
+    local flat = Vector(to.x - base.x, to.y - base.y, 0)
+    return not tr.Hit and flat:getLength() < CFG.maxRadius
+end
+
+hook.add("calcview", "mortarView", function(_, _, _, znear, zfar)
+    local now = timer.curtime()
+    dt = math.min(now - lastTime, 0.1)
+    lastTime = now
+
+    if not isActive() then return end
+
+    local v = Vector()
+    if keys[KEY.W] then v = v + Vector(1, 0, 0) end
+    if keys[KEY.S] then v = v - Vector(1, 0, 0) end
+    if keys[KEY.A] then v = v + Vector(0, 1, 0) end
+    if keys[KEY.D] then v = v - Vector(0, 1, 0) end
+    if keys[KEY.SPACE] then v = v + Vector(0, 0, 1) end
+    if keys[KEY.ALT] then v = v - Vector(0, 0, 1) end
+
+    if v:getLength() ~= 0 then
+        local speed = SPEED
+        if keys[KEY.CTRL] then speed = SPEED_SLOW
+        elseif keys[KEY.SHIFT] then speed = SPEED_FAST end
+
+        -- the higher the camera, the faster it moves
+        local height = math.max(camPos.z - _e:getPos().z, 1000)
+        local nextPos = camPos + v:getNormalized() * speed * dt * 70 * (height / 1000)
+        if isValidPos(camPos, nextPos) then camPos = nextPos end
+    end
 
     return {
-        origin = _freeCumPos
-        ,angles = Angle(90,0,0)
-        ,fov = 120
-        ,znear = znear
-        ,zfar = zfar,
-        drawviewer = true
+        origin = camPos,
+        angles = Angle(90, 0, 0),
+        fov = 120,
+        znear = znear,
+        zfar = zfar,
+        drawviewer = true,
     }
 end)

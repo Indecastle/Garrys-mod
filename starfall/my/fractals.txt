@@ -1,39 +1,38 @@
 --@name fractals
 --@author Markiz
 --@client
---@include my/complex.txt
-complex = require("my/complex.txt")
 
--- This chip draws pixels to a rendertarget and then displays the result
+-- Optimized: inline complex math, cached palette, precomputed coordinates.
+-- Complex library (my/complex.txt) is no longer required.
 
-render.createRenderTarget("myrendertarget")
+-- Cached math functions (upvalue lookups are faster than globals)
+local math_sqrt  = math.sqrt
+local math_atan2 = math.atan2
+local math_cos   = math.cos
+local math_max   = math.max
 
-//local time1 = 0
+local Performance           = 250   -- iterations between coroutine yields
+local Performance_Cpu_Limit = 0.60  -- max quota fraction used
+local Detail                = 5
+local CountSet              = 400
 
+local Zoom    = 1
+local OffsetX = -400
+local OffsetY = 0
 
-local Performance = 250 // Manage to perfomance
-local Performance_Cpu_Limit = 0.60 // Manage to perfomance
-local Detail = 5
-local CountSet = 400 // 110
-
-local Zoom = 1 // 46
-local OffsetX = -400 // 375.00081406460
-local OffsetY = 0 // -661.10450005275
-
-
-// ##### don't touch !!! ########
-local Res_ = 1024
+-- ##### don't touch !!! ########
+local Res_     = 1024
 local HalfRes_ = Res_ / 2
-local Zoom_ = 2 ^ Zoom - 1.8
+local Zoom_    = 2 ^ Zoom - 1.8
 
-local oldIsPressed_MOUSE1 = false
-local oldIsPressed_MOUSE2 = false
-local oldIsPressed_UP = false
-local oldIsPressed_DOWN = false
-local oldIsPressed_Up_time = -1
+local oldIsPressed_MOUSE1    = false
+local oldIsPressed_MOUSE2    = false
+local oldIsPressed_UP        = false
+local oldIsPressed_DOWN      = false
+local oldIsPressed_Up_time   = -1
 local oldIsPressed_Down_time = -1
-local oldIsPressed_LEFT = false
-local oldIsPressed_RIGHT = false
+local oldIsPressed_LEFT      = false
+local oldIsPressed_RIGHT     = false
 
 local mouse = {
     { x=0, y=0 },
@@ -44,39 +43,71 @@ local mouse = {
     { x=0.9, y=2.1 },
     { x=0.1, y=4 },
 }
-// ##### don't touch !!! ########
+-- ##### don't touch !!! ########
 
+render.createRenderTarget("myrendertarget")
+
+local blackColor = Color(0, 0, 0)
+local whiteColor = Color(255, 255, 255)
+
+-- Pre-baked color palette: hue depends only on I (iteration count),
+-- so we build CountSet+1 Color objects once instead of per pixel.
+local colorPalette = {}
+local function rebuildPalette()
+    for i = 0, CountSet do
+        local Col = (CountSet - i) / CountSet
+        colorPalette[i] = Color(Col * 360 * 2 + Zoom + 100, 1, 1):hsvToRGB()
+    end
+end
+rebuildPalette()
 
 setupPermissionRequest({ "render.screen", "input" }, "See an example of render.screen.", true)
-
 local permissionSatisfied = hasPermission("render.screen") and hasPermission("input")
 
 hook.add("permissionrequest", "fractal_Markiz", function()
     permissionSatisfied = hasPermission("render.screen") and hasPermission("input")
-    //if hasPermission("render.screen") then
-    //    initHooks()
-    //end
 end)
 
-function get_coro()
+local function get_coro()
     return coroutine.wrap(function()
-            local I_ = 0
-            for y=0, Res_ / Detail do
-                for x=0, Res_ / Detail do
-                
-                    local I = 0
-                    local Z = complex.new(0,0)
-                    
-                    local x2 = (x*Detail - HalfRes_) / Res_ / Zoom_ + OffsetX / Res_
-                    local y2 = (y*Detail - HalfRes_) / Res_ / Zoom_ + OffsetY / Res_
-                    local p = math.sqrt(math.pow((x2-0.25), 2) + y2*y2)
-                    local OO = math.atan2(y2, x2-0.25)
-                    local pc = 0.5 - 0.5*math.cos(OO)
-                    
-                    
-                    while p > pc and I < CountSet and complex.abs(Z) < 2 do
-                        local Z1 = complex.pow(Z,2)
-                        Z = complex.add(Z1, complex.new(x2, y2))
+        local I_        = 0
+        local drawRect  = render.drawRectFast
+        local setColor  = render.setColor
+
+        -- Per-render constants (recomputed each time coroutine is rebuilt)
+        local invResZoom = 1 / (Res_ * Zoom_)
+        local stepXY     = Detail * invResZoom
+        local baseX      = OffsetX / Res_ - HalfRes_ * invResZoom
+        local baseY      = OffsetY / Res_ - HalfRes_ * invResZoom
+        local maxIter    = CountSet
+        local palette    = colorPalette
+        local black      = blackColor
+        local maxY       = Res_ / Detail
+
+        for y = 0, maxY do
+            local y2   = y * stepXY + baseY
+            local y2sq = y2 * y2
+            local drawY = y * Detail
+
+            for x = 0, maxY do
+                local x2  = x * stepXY + baseX
+                local dx  = x2 - 0.25
+                local p   = math_sqrt(dx * dx + y2sq)
+                local OO  = math_atan2(y2, dx)
+                local pc  = 0.5 - 0.5 * math_cos(OO)
+
+                local I = 0
+                local zr2, zi2 = 0, 0
+
+                if p > pc then
+                    -- Inline complex Mandelbrot iteration:
+                    --   z = z^2 + c   where c = x2 + i*y2
+                    local zr, zi = 0, 0
+                    while I < maxIter and zr2 + zi2 < 4 do
+                        local newzr = zr2 - zi2 + x2
+                        local newzi = 2 * zr * zi + y2
+                        zr, zi     = newzr, newzi
+                        zr2, zi2   = zr * zr, zi * zi
                         I = I + 1
                         I_ = I_ + 1
                         if I_ == Performance then
@@ -84,196 +115,176 @@ function get_coro()
                             coroutine.yield()
                         end
                     end
-                    
-                    
-                    if (x==100) then
-                        --print(''.. p..' '..pc..'   '..y)
-                    end
-                    
-                    if p > pc and complex.abs(Z) >= 2 then
-                        --print(I)
-                        Col = (CountSet - I) / CountSet
-                        //Color = hsv2rgb(Col*120 + 150, 1, 1)
-                        //W[X+Y*Res_]=rgb2digi(Color,3)
-                        render.setColor(Color(Col*360*2 + Zoom + 100,1,1):hsvToRGB())
-                        render.drawRectFast(x*Detail, y*Detail, Detail, Detail)
-                    else 
-                        render.setColor(Color(0,0,0))
-                        render.drawRectFast(x*Detail, y*Detail, Detail, Detail)
-                    end
                 end
-                //coroutine.yield()
-            end
-            return true
-        end)
-end
 
+                -- Equivalent to original: "p > pc and complex.abs(Z) >= 2"
+                if zr2 + zi2 >= 4 then
+                    setColor(palette[I])
+                else
+                    setColor(black)
+                end
+                drawRect(x * Detail, drawY, Detail, Detail)
+            end
+        end
+        return true
+    end)
+end
 
 local paint = get_coro()
 
-function reload_render()
+-- Forward-declare so reload_render captures the local upvalue
+local initHooks
+
+local function reload_render()
     paint = get_coro()
     initHooks()
 end
 
-function zoom_handler(curx, cury, nearler)
-    curx = curx*2 - HalfRes_
-    cury = cury*2 - HalfRes_
+local function zoom_handler(curx, cury, nearler)
+    curx = curx * 2 - HalfRes_
+    cury = cury * 2 - HalfRes_
     if nearler then
         OffsetX = OffsetX + curx / Zoom_
         OffsetY = OffsetY + cury / Zoom_
-        Zoom = Zoom + 1
+        Zoom  = Zoom + 1
         Zoom_ = 2 ^ Zoom - 1.8
     else
-        Zoom = Zoom - 1
+        Zoom  = Zoom - 1
         Zoom_ = 2 ^ Zoom - 1.8
     end
-        
+    rebuildPalette()
     reload_render()
 end
 
-function getMouse(curX, curY, scale)
+local function getMouse(curX, curY, scale)
     local copyMouse = table.copy(mouse)
-    for i=1, #copyMouse do
-        copyMouse[i].x = copyMouse[i].x*scale + curX
-        copyMouse[i].y = copyMouse[i].y*scale + curY
+    for i = 1, #copyMouse do
+        copyMouse[i].x = copyMouse[i].x * scale + curX
+        copyMouse[i].y = copyMouse[i].y * scale + curY
     end
     return copyMouse
 end
 
-function drawMouse(curX, curY)
+local function drawMouse(curX, curY)
     render.setRenderTargetTexture()
-
-    copyMouse = getMouse(curX, curY, 4)
-    render.setColor(Color(255, 255, 255))
+    local copyMouse = getMouse(curX, curY, 4)
+    render.setColor(whiteColor)
     render.drawPoly(copyMouse)
 end
 
-
-function initHooks()
-    hook.add("renderoffscreen","",function()
+-- ASSIGNMENT, not "local function"  this is the fix
+initHooks = function()
+    hook.add("renderoffscreen", "", function()
         render.selectRenderTarget("myrendertarget")
-        if  permissionSatisfied then
-            while math.max(quotaAverage(), quotaUsed()) < quotaMax() * Performance_Cpu_Limit do
+        if permissionSatisfied then
+            while math_max(quotaAverage(), quotaUsed()) < quotaMax() * Performance_Cpu_Limit do
                 if paint() then
-                    hook.remove("renderoffscreen","")
+                    hook.remove("renderoffscreen", "")
                     return
                 end
             end
         end
     end)
-    
-    hook.add("render","",function()
+
+    hook.add("render", "", function()
         if not permissionSatisfied then
-            render.setColor(Color(255, 255, 255))
+            render.setColor(whiteColor)
             render.setFont("DermaLarge")
             render.drawText(256, 256 - 32, "Use me", 1)
             return
         end
-        //if timer.curtime() > time1 then
-            //time1 = timer.curtime() + 0.1
-            render.setRenderTargetTexture("myrendertarget")
-            render.drawTexturedRect(0,0,512,512)
-        //end
-        
-        render.setColor(Color(255, 255, 255))
+
+        render.setFilterMin(1)
+        render.setFilterMag(1)
+        render.setRenderTargetTexture("myrendertarget")
+        render.drawTexturedRect(0, 0, 512, 512)
+
+        render.setColor(whiteColor)
         render.setFont("DermaLarge")
-        render.drawText(12, 0, "Zoom: 1:"..Zoom)
-        render.drawText(500, 0, "CountSet: "..CountSet, 2)
-        render.drawText(500, 480, "Detail: "..Detail, 2)
-        
-        
-        
-        
-        local curx,cury = render.cursorPos(player())
+        render.drawText(12,  0,   "Zoom: 1:" .. Zoom)
+        render.drawText(500, 0,   "CountSet: " .. CountSet, 2)
+        render.drawText(500, 480, "Detail: "   .. Detail,   2)
+
+        local curx, cury = render.cursorPos(player())
         local tr = player():getEyeTrace()
-        
+
         if curx and tr.Entity == render.getScreenEntity() then
             drawMouse(curx, cury)
-            
+
             local newIsPressed_MOUSE1 = input.isMouseDown(MOUSE.MOUSE1)
             local newIsPressed_MOUSE2 = input.isMouseDown(MOUSE.MOUSE2)
-            local newIsPressed_UP = input.isKeyDown(KEY.UP)
-            local newIsPressed_DOWN = input.isKeyDown(KEY.DOWN)
-            local newIsPressed_RIGHT = input.isKeyDown(KEY.RIGHT)
-            local newIsPressed_LEFT = input.isKeyDown(KEY.LEFT)
-            
-            if oldIsPressed_MOUSE1 != newIsPressed_MOUSE1 then
+            local newIsPressed_UP     = input.isKeyDown(KEY.UP)
+            local newIsPressed_DOWN   = input.isKeyDown(KEY.DOWN)
+            local newIsPressed_RIGHT  = input.isKeyDown(KEY.RIGHT)
+            local newIsPressed_LEFT   = input.isKeyDown(KEY.LEFT)
+
+            if oldIsPressed_MOUSE1 ~= newIsPressed_MOUSE1 then
                 oldIsPressed_MOUSE1 = newIsPressed_MOUSE1
-                if newIsPressed_MOUSE1 then
-                    if Zoom != 40 then
-                        zoom_handler(curx, cury, true)
-                    end
+                if newIsPressed_MOUSE1 and Zoom ~= 100 then
+                    zoom_handler(curx, cury, true)
                 end
             end
-            
-            if oldIsPressed_MOUSE2 != newIsPressed_MOUSE2 then
+
+            if oldIsPressed_MOUSE2 ~= newIsPressed_MOUSE2 then
                 oldIsPressed_MOUSE2 = newIsPressed_MOUSE2
-                if newIsPressed_MOUSE2 then
-                    if Zoom != 1 then
-                        zoom_handler(curx, cury, false)
-                    end
+                if newIsPressed_MOUSE2 and Zoom ~= 1 then
+                    zoom_handler(curx, cury, false)
                 end
             end
-            
-            
-            if oldIsPressed_UP != newIsPressed_UP then
+
+            if oldIsPressed_UP ~= newIsPressed_UP then
                 oldIsPressed_UP = newIsPressed_UP
                 if newIsPressed_UP then
-                    if CountSet >= 100 then
-                        CountSet = CountSet + 10
-                    else
-                        CountSet = CountSet + 1
-                    end
+                    CountSet = CountSet >= 100 and CountSet + 10 or CountSet + 1
                     oldIsPressed_Up_time = timer.curtime() + 1
+                    rebuildPalette()
                 else
                     oldIsPressed_Up_time = -1
                     reload_render()
                 end
             end
-            
-            if oldIsPressed_Up_time != -1 and timer.curtime() > oldIsPressed_Up_time  then
-                if CountSet >= 100 then
-                    CountSet = CountSet + 10
-                else
-                    CountSet = CountSet + 1
-                end
+
+            if oldIsPressed_Up_time ~= -1 and timer.curtime() > oldIsPressed_Up_time then
+                CountSet = CountSet >= 100 and CountSet + 10 or CountSet + 1
+                rebuildPalette()
             end
-            
-            if oldIsPressed_DOWN != newIsPressed_DOWN then
+
+            if oldIsPressed_DOWN ~= newIsPressed_DOWN then
                 oldIsPressed_DOWN = newIsPressed_DOWN
                 if newIsPressed_DOWN then
                     if CountSet > 100 then
                         CountSet = CountSet - 10
-                    elseif CountSet != 1 then
+                    elseif CountSet ~= 1 then
                         CountSet = CountSet - 1
                     end
                     oldIsPressed_Down_time = timer.curtime() + 1
+                    rebuildPalette()
                 else
                     oldIsPressed_Down_time = -1
                     reload_render()
                 end
             end
-            
-            if oldIsPressed_Down_time != -1 and timer.curtime() > oldIsPressed_Down_time  then
+
+            if oldIsPressed_Down_time ~= -1 and timer.curtime() > oldIsPressed_Down_time then
                 if CountSet > 100 then
                     CountSet = CountSet - 10
-                elseif CountSet != 1 then
+                elseif CountSet ~= 1 then
                     CountSet = CountSet - 1
                 end
+                rebuildPalette()
             end
-            
-            if oldIsPressed_LEFT != newIsPressed_LEFT then
+
+            if oldIsPressed_LEFT ~= newIsPressed_LEFT then
                 oldIsPressed_LEFT = newIsPressed_LEFT
                 if newIsPressed_LEFT then
-                    if Detail != 1 then
+                    if Detail ~= 1 then
                         Detail = Detail - 1
                     end
                     reload_render()
                 end
             end
-            
-            if oldIsPressed_RIGHT != newIsPressed_RIGHT then
+
+            if oldIsPressed_RIGHT ~= newIsPressed_RIGHT then
                 oldIsPressed_RIGHT = newIsPressed_RIGHT
                 if newIsPressed_RIGHT then
                     Detail = Detail + 1
@@ -285,6 +296,3 @@ function initHooks()
 end
 
 initHooks()
-
-
-
