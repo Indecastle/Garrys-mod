@@ -1,0 +1,935 @@
+--@name Chip Monitor
+--@author Markiz
+--@shared
+-- version 1.0.1
+
+--[[
+    CHIP MONITOR
+    Lists every active Starfall and Expression2 chip on the server.
+
+    Setup : link the chip to a Starfall screen (or weld it to one, it auto-links).
+    Use   : look at the screen
+              - click / press E on a tab to filter (ALL / STARFALL / EXPRESSION2)
+              - click a column header to sort, click again to flip direction
+              - click a row to pin it in the detail panel (hover also previews)
+              - mouse wheel scrolls the list; drag the scrollbar thumb (hold the button)
+                or click the scrollbar track to page up/down
+
+    Notes : SERVER = cpu on the server, CLIENT = cpu of the chip on your own client.
+            Starfall can't read E2 cpu directly, so on spawn this chip creates a tiny
+            helper Expression2 chip that reads cpuUsage(E) for every E2 and wires the
+            result back in. If the server blocks prop.createSent (or E2) the E2 rows
+            just show "-". E2 chips have no client cpu, so that column shows "-" for them.
+            At most 100 chips of each type are listed (the totals are always exact).
+]]
+
+------------------------------------------------------------------------------
+-- SERVER: scans chips and answers requests from screens that are being viewed
+------------------------------------------------------------------------------
+if SERVER then
+    local MAX_PER_KIND = 100
+    local MIN_INTERVAL = 0.5
+
+    local cache, cacheTime = nil, 0
+    local lastSent = {}
+
+    local function try(fn)
+        local ok, v = pcall(fn)
+        if ok then return v end
+    end
+
+    -- auto link to a screen we are welded to
+    local scr = try(function() return chip():isWeldedTo() end)
+    if isValid(scr) and scr:getClass() == "starfall_screen" then
+        pcall(function() scr:linkComponent(chip()) end)
+    end
+
+    ------------------------------------------------------------------
+    -- helper Expression2 chip: reports the server cpu of every E2 chip
+    ------------------------------------------------------------------
+    local E2_CODE = [==[@name Chip Monitor E2 Reporter
+@outputs Ids:array Cpu:array
+interval(1000)
+
+findByClass("gmod_wire_expression2")
+local Ents = findToArray()
+local I = array()
+local C = array()
+
+foreach(K, E:entity = Ents) {
+    if (E:isValid()) {
+        I:pushNumber(E:id())
+        C:pushNumber(round(E:cpuUsage() * 1000000))
+    }
+}
+
+Ids = I
+Cpu = C
+]==]
+
+    wire.adjustInputs({ "Ids", "Cpu" }, { "array", "array" })
+
+    local reporter = nil
+
+    local function spawnReporter()
+        if isValid(reporter) then return end
+        reporter = nil
+
+        local ok, ent = pcall(function()
+            return prop.createSent(chip():getPos() + Vector(0, 0, 12), Angle(0), "gmod_wire_expression2", true, { _original = E2_CODE })
+        end)
+        if not ok or not isValid(ent) then return end
+        reporter = ent
+
+        pcall(function() ent:setNocollideAll(true) end)
+        pcall(function() ent:setColor(Color(255, 255, 255, 0)) end)
+
+        -- give the E2 a moment to compile and create its ports before wiring
+        timer.simple(1, function()
+            if not isValid(reporter) then return end
+            pcall(function()
+                wire.create(chip(), reporter, "Ids", "Ids")
+                wire.create(chip(), reporter, "Cpu", "Cpu")
+            end)
+        end)
+    end
+
+    spawnReporter()
+    -- respawn it if somebody removes it
+    timer.create("cm_reporter", 5, 0, spawnReporter)
+
+    local function e2CpuMap()
+        local map = {}
+        local ids, cpus = wire.ports.Ids, wire.ports.Cpu
+        if type(ids) == "table" and type(cpus) == "table" then
+            for i = 1, #ids do
+                if type(ids[i]) == "number" and type(cpus[i]) == "number" then
+                    map[ids[i]] = cpus[i]
+                end
+            end
+        end
+        return map
+    end
+
+    local function ownerInfo(ent)
+        local o = try(function() return ent:getOwner() end)
+        if isValid(o) and o:isPlayer() then
+            return o:getName(), (try(function() return o:getSteamID() end) or "")
+        end
+        return "Unknown", ""
+    end
+
+    local function scan(class, kind, withCpu, e2cpu)
+        local out, total = {}, 0
+        for _, ent in ipairs(find.byClass(class)) do
+            if isValid(ent) then
+                total = total + 1
+                if #out < MAX_PER_KIND then
+                    local name = try(function() return ent:getChipName() end)
+                    if not name or name == "" then name = "Unnamed" end
+                    name = string.replace(name, "\n", " ")
+                    local ownerName, steam = ownerInfo(ent)
+
+                    local author = try(function() return ent:getChipAuthor() end)
+                    if type(author) ~= "string" then author = "" end
+
+                    local cpu = -1
+                    if kind == 2 then
+                        local v = e2cpu and e2cpu[ent:entIndex()]
+                        if v then cpu = v end
+                    elseif withCpu then
+                        local avg = try(function() return ent:getQuotaAverage() end)
+                        if avg then cpu = math.round(avg * 1000000) end
+                    end
+
+                    out[#out + 1] = {
+                        id = ent:entIndex(),
+                        k = kind,
+                        n = name,
+                        o = ownerName,
+                        s = steam,
+                        a = author,
+                        p = ent:getPos(),
+                        c = cpu,
+                    }
+                end
+            end
+        end
+        return out, total
+    end
+
+    local function build()
+        local sf, nSF = scan("starfall_processor", 1, true)
+        local e2, nE2 = scan("gmod_wire_expression2", 2, false, e2CpuMap())
+
+        local chips = sf
+        for _, c in ipairs(e2) do chips[#chips + 1] = c end
+
+        return {
+            host = try(function() return game.getHostname() end) or "Garry's Mod Server",
+            map = try(function() return game.getMap() end) or "",
+            pl = #find.allPlayers(),
+            mx = try(function() return game.getMaxPlayers() end) or 0,
+            qmax = math.round(quotaMax() * 1000000),
+            nSF = nSF,
+            nE2 = nE2,
+            chips = chips,
+        }
+    end
+
+    -- Starfall limits net bandwidth, so data is streamed to each viewer in small
+    -- chunks sized to whatever bandwidth is left (net.getBytesLeft).
+    local jobs = {}
+
+    local function strBytes(s) return #s + 1 end
+
+    local function chipBytes(c)
+        return 24 + strBytes(c.n) + strBytes(c.o) + strBytes(c.s) + strBytes(c.a)
+    end
+
+    local function sendMeta(ply, job)
+        local m = job.meta
+        local est = 40 + strBytes(m.host) + strBytes(m.map)
+        if net.getBytesLeft() < est + 64 then return false end
+
+        net.start("cm_meta")
+        net.writeString(m.host)
+        net.writeString(m.map)
+        net.writeUInt(m.pl, 8)
+        net.writeUInt(m.mx, 8)
+        net.writeUInt(m.qmax, 32)
+        net.writeUInt(m.nSF, 16)
+        net.writeUInt(m.nE2, 16)
+        net.send(ply)
+        return true
+    end
+
+    local function sendChunk(ply, job)
+        local chips = job.meta.chips
+        local left = net.getBytesLeft() - 96
+        if left < 200 then return false end
+
+        local budget = math.min(left, 1800)
+        local count, est = 0, 0
+        for i = job.i, math.min(#chips, job.i + 24) do
+            local b = chipBytes(chips[i])
+            if est + b > budget then break end
+            est = est + b
+            count = count + 1
+        end
+        if count == 0 then return false end
+
+        local final = (job.i + count - 1) >= #chips
+
+        net.start("cm_chunk")
+        net.writeUInt(count, 8)
+        for i = job.i, job.i + count - 1 do
+            local c = chips[i]
+            net.writeUInt(c.id, 16)
+            net.writeUInt(c.k, 2)
+            net.writeString(c.n)
+            net.writeString(c.o)
+            net.writeString(c.s)
+            net.writeString(c.a)
+            net.writeVector(c.p)
+            net.writeInt(c.c, 32)
+        end
+        net.writeBool(final)
+        net.send(ply)
+
+        job.i = job.i + count
+        return final
+    end
+
+    timer.create("cm_pump", 0.1, 0, function()
+        for ply, job in pairs(jobs) do
+            if not isValid(ply) then
+                jobs[ply] = nil
+            else
+                local ok, done = pcall(function()
+                    if not job.metaSent then
+                        job.metaSent = sendMeta(ply, job)
+                        if not job.metaSent then return false end
+                    end
+                    if #job.meta.chips == 0 then
+                        -- nothing to stream, send an empty final chunk
+                        net.start("cm_chunk")
+                        net.writeUInt(0, 8)
+                        net.writeBool(true)
+                        net.send(ply)
+                        return true
+                    end
+                    return sendChunk(ply, job)
+                end)
+                if not ok or done then jobs[ply] = nil end
+            end
+        end
+    end)
+
+    net.receive("cm_req", function(_, ply)
+        if not isValid(ply) then return end
+        if jobs[ply] then return end -- still streaming the previous update
+
+        local now = timer.curtime()
+        local idx = ply:entIndex()
+        if lastSent[idx] and now - lastSent[idx] < MIN_INTERVAL then return end
+        lastSent[idx] = now
+
+        if not cache or now - cacheTime > 0.9 then
+            cache = build()
+            cacheTime = now
+        end
+
+        jobs[ply] = { meta = cache, i = 1, metaSent = false }
+    end)
+
+    return
+end
+
+------------------------------------------------------------------------------
+-- CLIENT
+------------------------------------------------------------------------------
+local LEFT, CENTER, RIGHT = TEXT_ALIGN.LEFT, TEXT_ALIGN.CENTER, TEXT_ALIGN.RIGHT
+
+-- layout (virtual 1024x1024 canvas, scaled to the real screen resolution)
+local VIRT = 1024
+local ROW_Y0, ROW_H, ROWS = 312, 44, 13
+local TABLE_X, TABLE_W = 24, 976
+local ROW_W = 946
+local TRACK_X, TRACK_W = 978, 14
+
+-- Starfall limits how many unique fonts a player can create, so keep this list short.
+-- If creating one fails anyway, fall back to a font that was already created.
+local defaultFont = nil
+pcall(function() defaultFont = render.getDefaultFont() end)
+
+local firstFont = nil
+local function makeFont(size, weight)
+    local ok, f = pcall(render.createFont, "Roboto", size, weight, true)
+    if ok and f then
+        firstFont = firstFont or f
+        return f
+    end
+    return firstFont or defaultFont
+end
+
+local F = {}
+F.big   = makeFont(36, 700) -- title + big numbers
+F.h1    = makeFont(28, 700)
+F.text  = makeFont(23, 500)
+F.small = makeFont(20, 500)
+F.tiny  = makeFont(16, 700)
+F.title = F.big
+F.val   = F.big
+F.tab   = F.small
+
+local C = {
+    bg       = Color(10, 13, 20),
+    panel    = Color(18, 24, 36),
+    panel2   = Color(26, 35, 52),
+    rowA     = Color(16, 22, 33),
+    rowB     = Color(20, 27, 40),
+    rowHover = Color(32, 46, 72),
+    line     = Color(40, 52, 74),
+    text     = Color(228, 234, 246),
+    sub      = Color(128, 142, 170),
+    own      = Color(176, 188, 212),
+    sf       = Color(56, 214, 255),
+    e2       = Color(255, 98, 98),
+    all      = Color(167, 139, 250),
+    good     = Color(74, 222, 128),
+    warn     = Color(250, 204, 21),
+    bad      = Color(248, 113, 113),
+    white    = Color(255, 255, 255),
+    black    = Color(0, 0, 0),
+}
+
+local state = { tab = 1, sortKey = "cpu", sortDir = -1, scroll = 0, selected = nil }
+
+local raw, meta = {}, {}
+local hasData, recvTime = false, 0
+local rowCache, allRows, rows = {}, {}, {}
+local stats = { total = 0, sf = 0, e2 = 0, cpu = 0, e2cpu = 0, owners = 0 }
+
+local vx, vy = nil, nil
+local hover, hoverRow = nil, nil
+local lastFrame, lastReq = 0, 0
+local curFont = nil
+local thumbY, thumbH = 0, 0
+local drag = nil -- { key = <button that started the drag>, grab = <cursor offset inside the thumb> }
+local fitCache = {}
+local mtx = Matrix()
+local myIndex = chip():entIndex()
+
+------------------------------------------------------------------------------
+-- helpers
+------------------------------------------------------------------------------
+local function clamp(v, a, b) return math.max(a, math.min(b, v)) end
+
+local function lerpColor(a, b, t)
+    return Color(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t)
+end
+
+local function loadColor(f)
+    if f < 0.5 then return lerpColor(C.good, C.warn, f * 2) end
+    return lerpColor(C.warn, C.bad, (f - 0.5) * 2)
+end
+
+local function commas(n)
+    local s = tostring(math.floor(n + 0.5))
+    local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+    return (out:gsub("^,", ""))
+end
+
+local function inside(x, y, w, h)
+    return vx ~= nil and vx >= x and vx <= x + w and vy >= y and vy <= y + h
+end
+
+local function setFont(f)
+    curFont = f
+    local ok = f ~= nil and pcall(render.setFont, f)
+    if not ok and defaultFont then
+        pcall(render.setFont, defaultFont)
+    end
+end
+
+local function textW(f, s)
+    if f ~= curFont then setFont(f) end
+    return (render.getTextSize(s))
+end
+
+local function text(f, x, y, s, col, ax, ay)
+    if f ~= curFont then setFont(f) end
+    render.setColor(col)
+    render.drawSimpleText(x, y, s, ax or LEFT, ay or CENTER)
+end
+
+local function box(r, x, y, w, h, col)
+    render.setColor(col)
+    if r > 0 then render.drawRoundedBox(r, x, y, w, h) else render.drawRect(x, y, w, h) end
+end
+
+-- truncates a string with "..." so it fits in maxw (cached)
+local function fit(f, s, maxw)
+    local key = tostring(f) .. "|" .. maxw .. "|" .. s
+    local v = fitCache[key]
+    if v then return v end
+
+    if f ~= curFont then setFont(f) end
+    if (render.getTextSize(s)) > maxw then
+        local t = s
+        while #t > 1 do
+            t = t:sub(1, #t - 1)
+            if (render.getTextSize(t .. "...")) <= maxw then break end
+        end
+        s = t .. "..."
+    end
+    fitCache[key] = s
+    return s
+end
+
+local function poly(points, ox, oy, s, col)
+    local p = {}
+    for i = 1, #points do
+        p[i] = { x = ox + points[i][1] * s, y = oy + points[i][2] * s }
+    end
+    render.setColor(col)
+    render.setMaterial()
+    render.setRenderTargetTexture()
+    render.drawPoly(p)
+end
+
+local ARROW_DOWN = { { 0, 0 }, { 10, 0 }, { 5, 7 } }
+local ARROW_UP   = { { 5, 0 }, { 10, 7 }, { 0, 7 } }
+local CURSOR     = { { 0, 0 }, { 12, 11 }, { 7, 11 }, { 11, 18.5 }, { 8, 20 }, { 4, 12 }, { 0, 16 } }
+
+------------------------------------------------------------------------------
+-- data processing
+------------------------------------------------------------------------------
+local function refilter()
+    rows = {}
+    for _, r in ipairs(allRows) do
+        if state.tab == 1 or (state.tab == 2 and r.kind == 1) or (state.tab == 3 and r.kind == 2) then
+            rows[#rows + 1] = r
+        end
+    end
+
+    local key, dir = state.sortKey, state.sortDir
+    table.sort(rows, function(a, b)
+        local av, bv
+        if key == "name" then av, bv = a.nameL, b.nameL
+        elseif key == "owner" then av, bv = a.ownerL, b.ownerL
+        elseif key == "ccpu" then av, bv = a.ccpu or -1, b.ccpu or -1
+        elseif key == "type" then av, bv = a.kind, b.kind
+        else av, bv = a.cpu or -1, b.cpu or -1 end
+
+        if av ~= bv then
+            if dir > 0 then return av < bv end
+            return av > bv
+        end
+        if a.nameL ~= b.nameL then return a.nameL < b.nameL end
+        return a.id < b.id
+    end)
+
+    state.scroll = clamp(state.scroll, 0, math.max(0, #rows - ROWS))
+    fitCache = {}
+end
+
+local function process()
+    local newCache, list = {}, {}
+    local ownerSet, owners, cpuSum, e2Sum = {}, 0, 0, 0
+
+    for _, c in ipairs(raw) do
+        local old = rowCache[c.id]
+        local r = old or {}
+
+        r.id = c.id
+        r.kind = c.k
+        r.name = c.n
+        r.nameL = c.n:lower()
+        r.owner = c.o
+        r.ownerL = c.o:lower()
+        r.steam = c.s
+        r.author = c.a
+        r.pos = c.p
+        r.cpu = c.c >= 0 and c.c or nil
+
+        -- client-side cpu (only readable for Starfall chips running on this client)
+        r.ccpu = nil
+        if c.k == 1 then
+            local ok, avg = pcall(function() return entity(c.id):getQuotaAverage() end)
+            if ok and avg then r.ccpu = math.round(avg * 1000000) end
+        end
+        if r.ccpu then
+            r.cdisp = (old and old.cdisp) or r.ccpu
+        else
+            r.cdisp = nil
+        end
+
+        if r.cpu then
+            r.disp = (old and old.disp) or r.cpu
+            if r.kind == 1 then cpuSum = cpuSum + r.cpu else e2Sum = e2Sum + r.cpu end
+        else
+            r.disp = nil
+        end
+
+        local ok = c.s ~= "" and c.s or c.o
+        if not ownerSet[ok] then ownerSet[ok] = true owners = owners + 1 end
+
+        newCache[c.id] = r
+        list[#list + 1] = r
+    end
+
+    rowCache = newCache
+    allRows = list
+
+    local nSF, nE2 = meta.nSF or 0, meta.nE2 or 0
+    stats = { total = nSF + nE2, sf = nSF, e2 = nE2, cpu = cpuSum, e2cpu = e2Sum, owners = owners }
+
+    refilter()
+end
+
+local pending = nil
+
+net.receive("cm_meta", function()
+    pending = {
+        host = net.readString(),
+        map = net.readString(),
+        pl = net.readUInt(8),
+        mx = net.readUInt(8),
+        qmax = net.readUInt(32),
+        nSF = net.readUInt(16),
+        nE2 = net.readUInt(16),
+        chips = {},
+    }
+end)
+
+net.receive("cm_chunk", function()
+    local count = net.readUInt(8)
+    local chips = pending and pending.chips or {}
+
+    for _ = 1, count do
+        chips[#chips + 1] = {
+            id = net.readUInt(16),
+            k = net.readUInt(2),
+            n = net.readString(),
+            o = net.readString(),
+            s = net.readString(),
+            a = net.readString(),
+            p = net.readVector(),
+            c = net.readInt(32),
+        }
+    end
+
+    local final = net.readBool()
+    if final and pending then
+        meta = pending
+        raw = pending.chips
+        pending = nil
+        hasData = true
+        recvTime = timer.curtime()
+        process()
+    end
+end)
+
+local function requestData(now)
+    if now - lastReq < 1 then return end
+    lastReq = now
+    net.start("cm_req")
+    net.send()
+end
+
+------------------------------------------------------------------------------
+-- drawing
+------------------------------------------------------------------------------
+local function drawHeader(now)
+    box(0, 0, 0, VIRT, 96, C.panel)
+    for i = 0, 15 do
+        box(0, i * 64, 93, 64, 3, lerpColor(C.sf, C.e2, i / 15))
+    end
+
+    text(F.title, 40, 36, "CHIP MONITOR", C.text)
+
+    local parts = { meta.host or "Waiting for server..." }
+    if meta.map and meta.map ~= "" then parts[#parts + 1] = meta.map end
+    if meta.pl then parts[#parts + 1] = meta.pl .. "/" .. (meta.mx or 0) .. " players" end
+    text(F.small, 40, 74, fit(F.small, table.concat(parts, "   |   "), 640), C.sub)
+
+    local age = now - recvTime
+    local live = hasData and age < 4
+    local col = live and C.good or C.bad
+    local label = live and "LIVE" or (hasData and "STALE" or "CONNECTING")
+    local pulse = 0.55 + 0.45 * math.sin(now * 4)
+
+    local tw = textW(F.h1, label)
+    text(F.h1, 1000, 34, label, col, RIGHT)
+    box(7, 1000 - tw - 26, 27, 14, 14, Color(col.r, col.g, col.b, 255 * pulse))
+    text(F.tiny, 1000, 66, hasData and string.format("updated %.1fs ago", age) or "waiting for data...", C.sub, RIGHT)
+end
+
+local function drawCards()
+    local gap = 12
+    local cw = (TABLE_W - gap * 5) / 6
+    local cards = {
+        { "TOTAL CHIPS", commas(stats.total), C.text },
+        { "STARFALL", commas(stats.sf), C.sf },
+        { "EXPRESSION2", commas(stats.e2), C.e2 },
+        { "SF CPU (s)", commas(stats.cpu), C.good },
+        { "E2 CPU (s)", commas(stats.e2cpu), C.warn },
+        { "OWNERS", commas(stats.owners), C.all },
+    }
+    for i, c in ipairs(cards) do
+        local x = TABLE_X + (i - 1) * (cw + gap)
+        box(14, x, 112, cw, 96, C.panel)
+        box(0, x + 16, 112, 36, 3, c[3])
+        text(F.tiny, x + 16, 134, c[1], C.sub)
+        text(F.val, x + 16, 174, c[2], c[3])
+    end
+end
+
+local function drawTabs()
+    local labels = { "ALL", "STARFALL", "EXPRESSION2" }
+    local counts = { stats.total, stats.sf, stats.e2 }
+    local cols = { C.all, C.sf, C.e2 }
+    local x = TABLE_X
+
+    for i = 1, 3 do
+        local lbl = labels[i] .. "   " .. counts[i]
+        local w = textW(F.tab, lbl) + 36
+        local hov = inside(x, 224, w, 40)
+        if hov then hover = { t = "tab", i = i } end
+
+        if state.tab == i then
+            box(20, x, 224, w, 40, cols[i])
+            text(F.tab, x + w / 2, 244, lbl, C.bg, CENTER)
+        else
+            box(20, x, 224, w, 40, hov and C.panel2 or C.panel)
+            text(F.tab, x + w / 2, 244, lbl, hov and C.text or C.sub, CENTER)
+        end
+        x = x + w + 10
+    end
+
+    if #rows > 0 then
+        local first = state.scroll + 1
+        local last = math.min(state.scroll + ROWS, #rows)
+        text(F.small, TABLE_X + TABLE_W, 244, string.format("showing %d-%d of %d", first, last, #rows), C.sub, RIGHT)
+    end
+end
+
+local HEAD = {
+    { k = "type",  label = "TYPE",     x = 40,  ax = LEFT,  hx = 32,  hw = 68 },
+    { k = "name",  label = "NAME",     x = 108, ax = LEFT,  hx = 100, hw = 204 },
+    { k = "owner", label = "OWNER",    x = 312, ax = LEFT,  hx = 306, hw = 170 },
+    { k = "ccpu",  label = "CLIENT (s)", x = 560, ax = RIGHT, hx = 480, hw = 240 },
+    { k = "cpu",   label = "SERVER (s)", x = 802, ax = RIGHT, hx = 726, hw = 236 },
+}
+
+local function drawTableHeader()
+    render.setColor(C.panel)
+    render.drawRoundedBoxEx(12, TABLE_X, 276, TABLE_W, 36, true, true, false, false)
+
+    for _, h in ipairs(HEAD) do
+        local active = state.sortKey == h.k
+        local hov = inside(h.hx, 276, h.hw, 36)
+        if hov then hover = { t = "sort", k = h.k } end
+
+        local col = active and C.text or (hov and C.own or C.sub)
+        text(F.tiny, h.x, 294, h.label, col, h.ax)
+
+        if active then
+            local tw = textW(F.tiny, h.label)
+            local ax = (h.ax == LEFT) and (h.x + tw + 8) or (h.x - tw - 18)
+            poly(state.sortDir > 0 and ARROW_UP or ARROW_DOWN, ax, 291, 1, C.sf)
+        end
+    end
+end
+
+local function drawRows(dt)
+    box(0, TABLE_X, ROW_Y0, TABLE_W, ROWS * ROW_H, C.panel)
+
+    if #rows == 0 then
+        text(F.h1, TABLE_X + TABLE_W / 2, ROW_Y0 + ROWS * ROW_H / 2,
+            hasData and "No chips found" or "Waiting for server data...", C.sub, CENTER)
+        return
+    end
+
+    local smooth = math.min(1, dt * 8)
+    local qmax = math.max(1, meta.qmax or 4000)
+    local cqmax = math.max(1, quotaMax() * 1000000)
+
+    for i = 1, ROWS do
+        local r = rows[state.scroll + i]
+        if not r then break end
+
+        local y = ROW_Y0 + (i - 1) * ROW_H
+        local ym = y + ROW_H / 2
+        local kc = r.kind == 1 and C.sf or C.e2
+
+        local hov = inside(TABLE_X, y, ROW_W, ROW_H)
+        if hov then
+            hover = { t = "row", id = r.id }
+            hoverRow = r
+        end
+        local sel = state.selected == r.id
+
+        box(0, TABLE_X, y, ROW_W, ROW_H, hov and C.rowHover or ((i % 2 == 0) and C.rowB or C.rowA))
+        if sel then box(0, TABLE_X, y, ROW_W, ROW_H, Color(kc.r, kc.g, kc.b, 22)) end
+        if hov or sel then box(0, TABLE_X, y, 4, ROW_H, kc) end
+
+        -- type badge
+        box(6, 40, ym - 11, 44, 22, kc)
+        text(F.tiny, 62, ym, r.kind == 1 and "SF" or "E2", C.bg, CENTER)
+
+        -- name (+ "you" tag for this chip)
+        local isMe = r.id == myIndex
+        local nameW = isMe and 148 or 196
+        local shown = fit(F.text, r.name, nameW)
+        text(F.text, 108, ym, shown, C.text)
+        if isMe then
+            local tw = textW(F.text, shown)
+            box(5, 108 + tw + 8, ym - 9, 40, 18, C.all)
+            text(F.tiny, 108 + tw + 28, ym, "YOU", C.bg, CENTER)
+        end
+
+        text(F.small, 312, ym, fit(F.small, r.owner, 156), C.own)
+
+        -- client cpu (text + bar)
+        if r.ccpu then
+            r.cdisp = r.cdisp + (r.ccpu - r.cdisp) * smooth
+            local cfrac = clamp(r.cdisp / cqmax, 0, 1)
+            local cc = loadColor(cfrac)
+            text(F.small, 560, ym, commas(r.cdisp), cc, RIGHT)
+
+            box(6, 572, ym - 7, 140, 14, C.line)
+            if r.cdisp > 0.5 then
+                box(6, 572, ym - 7, math.max(8, cfrac * 140), 14, cc)
+            end
+        else
+            text(F.small, 560, ym, "-", C.sub, RIGHT)
+            render.setColor(C.line)
+            render.drawRect(572, ym - 1, 140, 2)
+        end
+
+        -- cpu
+        if r.cpu then
+            r.disp = r.disp + (r.cpu - r.disp) * smooth
+            local frac = clamp(r.disp / qmax, 0, 1)
+            local bc = loadColor(frac)
+            text(F.small, 802, ym, commas(r.disp), bc, RIGHT)
+
+            box(6, 814, ym - 7, 140, 14, C.line)
+            if r.disp > 0.5 then
+                box(6, 814, ym - 7, math.max(8, frac * 140), 14, bc)
+            end
+        else
+            text(F.small, 802, ym, "-", C.sub, RIGHT)
+            render.setColor(C.line)
+            render.drawRect(814, ym - 1, 140, 2)
+        end
+    end
+
+    -- scrollbar
+    box(7, TRACK_X, ROW_Y0 + 4, TRACK_W, ROWS * ROW_H - 8, C.panel2)
+    if #rows > ROWS then
+        local trackH = ROWS * ROW_H - 8
+        thumbH = math.max(40, trackH * ROWS / #rows)
+        local maxScroll = #rows - ROWS
+        thumbY = ROW_Y0 + 4 + (trackH - thumbH) * (state.scroll / maxScroll)
+        local over = inside(TRACK_X - 6, ROW_Y0, TRACK_W + 12, ROWS * ROW_H)
+        if over then hover = { t = "track" } end
+        box(7, TRACK_X, thumbY, TRACK_W, thumbH, (over or drag) and C.white or C.sf)
+    else
+        thumbY, thumbH = 0, 0
+    end
+end
+
+local function kv(x, y, label, value, maxw, col)
+    text(F.tiny, x, y, label, C.sub)
+    local lw = textW(F.tiny, label) + 10
+    text(F.small, x + lw, y, fit(F.small, value, maxw - lw), col or C.text)
+end
+
+local function drawDetail()
+    local y0 = 896
+    box(14, TABLE_X, y0, TABLE_W, 104, C.panel)
+
+    local r = hoverRow or (state.selected and rowCache[state.selected]) or nil
+    if not r then
+        text(F.small, TABLE_X + TABLE_W / 2, y0 + 38, "Point at a chip to inspect it, click or press E to pin it", C.sub, CENTER)
+        text(F.tiny, TABLE_X + TABLE_W / 2, y0 + 70, "MOUSE WHEEL SCROLLS   |   CLICK A COLUMN HEADER TO SORT", C.line, CENTER)
+        return
+    end
+
+    local kc = r.kind == 1 and C.sf or C.e2
+    box(0, TABLE_X, y0 + 12, 4, 80, kc)
+
+    box(6, 44, y0 + 12, 44, 24, kc)
+    text(F.tiny, 66, y0 + 24, r.kind == 1 and "SF" or "E2", C.bg, CENTER)
+    text(F.h1, 100, y0 + 24, fit(F.h1, r.name, 860), C.text)
+
+    local owner = r.owner
+    if r.steam ~= "" then owner = owner .. "  (" .. r.steam .. ")" end
+
+    kv(44, y0 + 56, "OWNER", owner, 370)
+    kv(430, y0 + 56, "AUTHOR", r.author ~= "" and r.author or "-", 270)
+    local ccpuStr = "-"
+    if r.ccpu then
+        ccpuStr = string.format("%s s", commas(r.ccpu))
+    end
+    kv(716, y0 + 56, "CLIENT CPU", ccpuStr, 270,
+        r.ccpu and loadColor(clamp(r.ccpu / math.max(1, quotaMax() * 1000000), 0, 1)) or C.sub)
+
+    local p = r.pos
+    local posStr = string.format("%d, %d, %d", math.floor(p.x), math.floor(p.y), math.floor(p.z))
+    local cpuStr = "-"
+    if r.cpu then
+        local qmax = math.max(1, meta.qmax or 4000)
+        if r.kind == 1 then
+            cpuStr = string.format("%s s  (%.1f%%)", commas(r.cpu), r.cpu / qmax * 100)
+        else
+            cpuStr = string.format("%s s", commas(r.cpu))
+        end
+    end
+
+    kv(44, y0 + 82, "ENTITY", "#" .. r.id .. (r.kind == 1 and "  starfall_processor" or "  gmod_wire_expression2"), 370)
+    kv(430, y0 + 82, "POS", posStr, 270)
+    kv(716, y0 + 82, "SERVER CPU", cpuStr, 270, r.cpu and loadColor(clamp(r.cpu / math.max(1, meta.qmax or 4000), 0, 1)) or C.sub)
+end
+
+local function drawCursor()
+    if not vx then return end
+    poly(CURSOR, vx - 1.5, vy - 1.5, 1.25, C.black)
+    poly(CURSOR, vx, vy, 1, C.white)
+end
+
+------------------------------------------------------------------------------
+-- hooks
+------------------------------------------------------------------------------
+hook.add("render", "chipmonitor", function()
+    local w, h = render.getResolution()
+    local now = timer.curtime()
+    local dt = math.min(now - lastFrame, 0.1)
+    lastFrame = now
+
+    local cx, cy = render.cursorPos(player())
+    if cx then
+        vx, vy = cx * VIRT / w, cy * VIRT / h
+    else
+        vx, vy = nil, nil
+    end
+
+    hover, hoverRow, curFont = nil, nil, nil
+    requestData(now)
+
+    -- scrollbar dragging
+    if drag then
+        -- safety net in case the release event was missed
+        local ok, down = pcall(input.isKeyDown, drag.key)
+        if ok and not down then
+            drag = nil
+        elseif vy and thumbH > 0 and #rows > ROWS then
+            local trackTop = ROW_Y0 + 4
+            local travel = ROWS * ROW_H - 8 - thumbH
+            local ratio = clamp((vy - drag.grab - trackTop) / travel, 0, 1)
+            state.scroll = math.floor(ratio * (#rows - ROWS) + 0.5)
+        end
+    end
+
+    mtx:setScale(Vector(w / VIRT, h / VIRT, 1))
+    render.pushMatrix(mtx)
+
+    box(0, 0, 0, VIRT, VIRT, C.bg)
+    drawHeader(now)
+    drawCards()
+    drawTabs()
+    drawTableHeader()
+    drawRows(dt)
+    drawDetail()
+    drawCursor()
+
+    render.popMatrix()
+end)
+
+local function pointing()
+    return vx ~= nil and timer.curtime() - lastFrame < 0.25
+end
+
+hook.add("inputPressed", "chipmonitor", function(key)
+    if key ~= MOUSE.MOUSE1 and key ~= KEY.E then return end
+    if not pointing() or not hover then return end
+
+    local t = hover.t
+    if t == "tab" then
+        state.tab = hover.i
+        state.scroll = 0
+        refilter()
+    elseif t == "sort" then
+        if state.sortKey == hover.k then
+            state.sortDir = -state.sortDir
+        else
+            state.sortKey = hover.k
+            state.sortDir = (hover.k == "cpu" or hover.k == "ccpu" or hover.k == "type") and -1 or 1
+        end
+        refilter()
+    elseif t == "row" then
+        state.selected = (state.selected == hover.id) and nil or hover.id
+    elseif t == "track" then
+        local page = ROWS - 1
+        if thumbH > 0 and vy >= thumbY and vy <= thumbY + thumbH then
+            drag = { key = key, grab = vy - thumbY }
+        elseif vy < thumbY then
+            state.scroll = clamp(state.scroll - page, 0, math.max(0, #rows - ROWS))
+        elseif vy > thumbY + thumbH then
+            state.scroll = clamp(state.scroll + page, 0, math.max(0, #rows - ROWS))
+        end
+    end
+end)
+
+hook.add("mouseWheeled", "chipmonitor", function(delta)
+    if not pointing() then return end
+    state.scroll = clamp(state.scroll - delta * 3, 0, math.max(0, #rows - ROWS))
+end)
+
+hook.add("inputReleased", "chipmonitor", function(key)
+    if drag and key == drag.key then drag = nil end
+end)

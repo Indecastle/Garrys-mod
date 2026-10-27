@@ -2,7 +2,7 @@
 --@author Markiz
 -- author STEAM_0:1:54066003
 --@shared
--- version 1.7.3
+-- version 1.7.5
 
 -- Third person
 local ThPersDist = 100
@@ -707,14 +707,20 @@ hook.add("huddisconnected", "", function ()
     hudConnecting(false)
 end)
 
-local _excludeBlockBinds = { "+use", "+zoom", "+attack" }
+local _excludeBlockBinds = { "+use", "+zoom", "+attack", "invprev", "invnext" }
 --local _blockBindList = { "+forward", "+back", "+moveleft", "+moveright", "+duck", "+walk", "impulse 100" }
 
 hook.add("InputBindPressed","block bind", function(bind)
-    if !ON or !render.isHUDActive() or (TargetPlayer == player() and !FreeCumOn) then return end
+    if !ON or !render.isHUDActive() then return false end
+    if !FreeCumOn and (!ThirdPerson or bind != "invprev" and bind != "invnext") then return false end
+
+    if bind == "invprev" or bind == "invnext" then
+        return true
+    end
+    
     local key, name = input.lookupBinding(bind)
     --print(bind)
-    
+
     return table.hasValue(KeyBindings, key)
     --return !table.hasValue(_excludeBlockBinds, bind)
 end)

@@ -275,8 +275,8 @@ net.receive("launched", function()
 
     -- Choreo rocket particles (from spacex_test.txt)  optional, may fail gracefully
     try(function()
-        particleEffect.attach(chip(), "choreo_launch_rocket_start", PATTACH.POINT, {})
-        _part1 = particleEffect.attach(chip(), "choreo_launch_rocket_jet", PATTACH.POINT_FOLLOW, {})
+        particleEffect.attach(_rocketHolo, "choreo_launch_rocket_start", PATTACH.POINT, {})
+        _part1 = particleEffect.attach(_rocketHolo, "choreo_launch_rocket_jet", PATTACH.POINT_FOLLOW, {})
     end)
 end)
 
@@ -293,13 +293,14 @@ net.receive("exploded", function()
 
     -- Choreo upsmoke on the rocket entity
     try(function()
-        particleEffect.attach(chip(), "choreo_launch_rocket_upsmoke", PATTACH.POINT, {})
-        _part1:destroy()
+        particleEffect.attach(_rocketHolo, "choreo_launch_rocket_upsmoke", PATTACH.POINT, {})
+        --_part1:destroy()
     end)
 
     shake(pos, 20, 1)
 
     if isValid(_rocketHolo) then
+        _rocketHolo:setParent(nil)
         timer.simple(TrailTime, function()
             if isValid(_rocketHolo) then _rocketHolo:remove() end
         end)

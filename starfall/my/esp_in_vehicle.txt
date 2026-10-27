@@ -12,7 +12,7 @@ local _o = owner()
 
 if SERVER then
     
-	function userHasGodMode(user)
+    function userHasGodMode(user)
         if user:hasGodMode()
                 or (user.isBUILD != nil and user:isBUILD())
                 or (user.isSafezoneSafe != nil and user:isSafezoneSafe()) then

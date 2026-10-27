@@ -19,7 +19,7 @@ local CFG = {
 
     health      = 200,
     minRadius   = 500,
-    maxRadius   = 11000,
+    maxRadius   = 15000,
     reloadTime  = 3,
     squareView  = true,     -- square viewfinder
 
@@ -182,7 +182,7 @@ if SERVER then
     local C_BLACK = Color(12, 12, 14)
     local C_WOOD  = Color(96, 72, 46)
     local C_GLASS = Color(80, 200, 255)
-    local C_RED   = Color(255, 70, 70)
+    local C_RED   = Color(100, 40, 40)
 
     -- bipod geometry (turret coordinates: x forward, y left, z up from the plate)
     local FOOT_X, FOOT_Y, FOOT_Z = 60, 32, -1   -- foot pad: forward offset, lateral spread, top height

@@ -1,7 +1,7 @@
 --@name Map Radar client GTA5 Style
 --@author Markiz
 --@shared
--- version 2.2.0
+-- version 2.2.1
 
 --      
 local DefaultMapConfig = {
@@ -10,8 +10,8 @@ local DefaultMapConfig = {
     SizeMap = 30000,      // Map width and height in world units. Used when AutoMap = false.
     BoundsMin = nil,      // Manual minimum map bounds: Vector(minX, minY, minZ). nil = automatically detected.
     BoundsMax = nil,      // Manual maximum map bounds: Vector(maxX, maxY, maxZ). nil = automatically detected.
-    CamHeight = nil,      // Camera height (Z coordinate) used to capture the map. nil = automatically calculated.
-    Z = 10000,             // Camera height offset above the chip when AutoMap = false.
+    CamHeight = nil,    // Camera height (Z coordinate) used to capture the map. nil = automatically calculated.
+    Z = 10000,            // Camera height offset above the chip when AutoMap = false.
     Zoom = 4              // Initial radar zoom level; higher values zoom in, lower values zoom out.
 }
 
@@ -34,6 +34,36 @@ local MapConfigs = {
         BoundsMin = nil,
         BoundsMax = nil,
         CamHeight = 10000,
+        Z = 10000,
+        Zoom = 4
+    },
+    ["gm_genesis"] = {
+        Detail = 5,
+        AutoMap = true,
+        SizeMap = 30000,
+        BoundsMin = nil,
+        BoundsMax = nil,
+        CamHeight = 10000,
+        Z = 10000,
+        Zoom = 4
+    },
+    ["gm_genesis_cb"] = {
+        Detail = 5,
+        AutoMap = true,
+        SizeMap = 30000,
+        BoundsMin = nil,
+        BoundsMax = nil,
+        CamHeight = 10000,
+        Z = 10000,
+        Zoom = 4
+    },
+    ["gm_vyten_cb"] = {
+        Detail = 5,
+        AutoMap = true,
+        SizeMap = 30000,
+        BoundsMin = nil,
+        BoundsMax = nil,
+        CamHeight = -10000,
         Z = 10000,
         Zoom = 4
     }
